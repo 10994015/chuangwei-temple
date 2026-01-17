@@ -1,0 +1,3 @@
+<template><div class="elem-carousel"><img v-if="data.images?.length" :src="data.images[0]" /><div v-if="data.images?.length" class="dots"><span v-for="(_, i) in data.images" :key="i" :class="['dot', {active: i===0}]"></span></div></div></template>
+<script setup>defineProps({ data: { type: Object, required: true }})</script>
+<style scoped>.elem-carousel { position: relative; min-height: 300px; } .elem-carousel img { width: 100%; height: 100%; object-fit: cover; } .dots { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; } .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.5); } .dot.active { background: #fff; }</style>

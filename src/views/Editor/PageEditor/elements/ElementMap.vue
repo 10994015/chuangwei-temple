@@ -1,0 +1,3 @@
+<template><div class="elem-map"><p>🗺️ Google Maps</p><small>{{ data.address }}</small></div></template>
+<script setup>defineProps({ data: { type: Object, required: true }})</script>
+<style scoped>.elem-map { min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0f0f0; border-radius: 8px; } .elem-map p { margin: 0 0 8px; font-size: 18px; } .elem-map small { color: #666; }</style>
