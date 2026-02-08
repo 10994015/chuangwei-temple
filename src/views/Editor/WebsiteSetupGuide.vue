@@ -1,18 +1,32 @@
-<script setup lang="ts">
-import { useRouter } from 'vue-router'
+<script setup>
+import { useRouter, useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 const router = useRouter()
+const route = useRoute()
+
+// 獲取當前的 templeId
+const currentTempleId = computed(() => route.params.templeId)
 
 const handleStartBuilding = () => {
-  // 導向到選擇網站風格頁面
-  router.push({ name: 'app.cms.template-selection' })
+  // 檢查是否有 templeId
+  if (currentTempleId.value) {
+    // 如果在宮廟路由中，跳轉到該宮廟的模板選擇
+    router.push({ 
+      name: 'app.temple.template-selection',
+      params: { templeId: currentTempleId.value }
+    })
+  } else {
+    // 如果不在宮廟路由中，提示用戶
+    alert('請先從管理後台選擇一個宮廟')
+  }
 }
 </script>
 
 <template>
   <div class="website-setup-guide">
     <div class="container">
-      <h1 class="title">建立您的官廳網站</h1>
+      <h1 class="title">建立您的宮廟網站</h1>
       
       <p class="subtitle">
         只需幾個簡單步驟即可完成網站的初始設定<br>
@@ -31,7 +45,7 @@ const handleStartBuilding = () => {
         <div class="step-card">
           <h2 class="step-number">2. 設定網站網址</h2>
           <p class="step-description">
-            為您的官廳建立專屬網站網<br>
+            為您的宮廟建立專屬網站網<br>
             址，作為對外公開的官方入<br>
             口。
           </p>

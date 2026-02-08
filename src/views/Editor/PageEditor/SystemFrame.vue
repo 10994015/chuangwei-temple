@@ -1,7 +1,17 @@
 <template>
   <div class="system-frame-container" :data-frame-type="frameType">
-    <!-- 頁首 (HEADER) -->
-    <NavbarBasemap v-if="frameType === 'HEADER'" v-bind="frameData" />
+    <!-- 頁首 (HEADER) - 可編輯版本 -->
+    <NavbarBasemap 
+      v-if="frameType === 'HEADER'" 
+      :frame-data="frameData"
+      :is-edit-mode="true"
+      :is-logo-selected="isLogoSelected"
+      :current-page-slug="currentPageSlug"
+      @select-logo="handleSelectLogo"
+      @update-logo="handleUpdateLogo"
+      @delete-logo="handleDeleteLogo"
+      @change-page="handleChangePage"
+    />
     
     <!-- 頁尾 (FOOTER) -->
     <FooterBasemap v-else-if="frameType === 'FOOTER'" v-bind="frameData" />
@@ -24,8 +34,15 @@
     <!-- 首頁-活動橫幅 (INDEX_EVENT) -->
     <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" />
     
-    <!-- 首頁-捐獻區 (INDEX_DONATION) -->
-    <DonationBasemap v-else-if="frameType === 'INDEX_DONATION'" v-bind="frameData" />
+    <!-- 首頁-捐獻區 (INDEX_DONATION) - 可編輯版本 -->
+    <DonationBasemap 
+      v-else-if="frameType === 'INDEX_DONATION'" 
+      v-bind="frameData"
+      :is-edit-mode="true"
+      :frame="frame"
+      :selected-element="selectedElement"
+      @select-element="handleSelectElement"
+    />
     
     <!-- 商品列表 (PRODUCT_LIST) -->
     <ProductsBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" />
@@ -50,6 +67,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import NavbarBasemap from './basemap/NavbarBasemap.vue'
 import FooterBasemap from './basemap/FooterBasemap.vue'
 import HeroBasemap from './basemap/HeroBasemap.vue'
@@ -68,8 +86,69 @@ const props = defineProps({
   frameData: {
     type: Object,
     default: () => ({})
+  },
+  frame: {
+    type: Object,
+    default: null
+  },
+  selectedElement: {
+    type: Object,
+    default: null
+  },
+  currentPageSlug: {
+    type: String,
+    default: null
   }
 })
+
+const emit = defineEmits(['select-element', 'update-element', 'delete-element', 'change-page'])
+
+// 檢查 Logo 是否被選中
+const isLogoSelected = computed(() => {
+  return props.selectedElement?.type === 'logo'
+})
+
+// 處理切換頁面
+const handleChangePage = (slug) => {
+  console.log('SystemFrame: 切換頁面', slug)
+  emit('change-page', slug)
+}
+
+
+// 選擇 Logo
+const handleSelectLogo = (data) => {
+  console.log('選擇 Logo:', data)
+  emit('select-element', {
+    type: 'logo',
+    frameType: props.frameType,
+    data: data.data
+  })
+}
+
+// 選擇元件（用於 INDEX_DONATION 等）
+const handleSelectElement = (data) => {
+  console.log('SystemFrame 選擇元件:', data)
+  emit('select-element', data)
+}
+
+// 更新 Logo
+const handleUpdateLogo = (newData) => {
+  console.log('更新 Logo:', newData)
+  emit('update-element', {
+    type: 'logo',
+    frameType: props.frameType,
+    data: newData
+  })
+}
+
+// 刪除 Logo
+const handleDeleteLogo = () => {
+  console.log('刪除 Logo')
+  emit('delete-element', {
+    type: 'logo',
+    frameType: props.frameType
+  })
+}
 </script>
 
 <style scoped>

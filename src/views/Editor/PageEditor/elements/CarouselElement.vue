@@ -5,7 +5,7 @@
       <div class="carousel-wrapper">
         <div class="carousel-track" :style="trackStyle">
           <div
-            v-for="(image, index) in images"
+            v-for="(image, index) in displayImages"
             :key="index"
             class="carousel-slide"
           >
@@ -17,9 +17,9 @@
           </div>
         </div>
 
-        <!-- 上一張按鈕 -->
+        <!-- 上一張按鈕 (超過1張才顯示) -->
         <button
-          v-if="images.length > 1"
+          v-if="displayImages.length > 1"
           class="carousel-btn prev-btn"
           @click="prevSlide"
         >
@@ -28,9 +28,9 @@
           </svg>
         </button>
 
-        <!-- 下一張按鈕 -->
+        <!-- 下一張按鈕 (超過1張才顯示) -->
         <button
-          v-if="images.length > 1"
+          v-if="displayImages.length > 1"
           class="carousel-btn next-btn"
           @click="nextSlide"
         >
@@ -39,10 +39,10 @@
           </svg>
         </button>
 
-        <!-- 指示器 -->
-        <div v-if="images.length > 1" class="carousel-indicators">
+        <!-- 指示器 (超過1張才顯示) -->
+        <div v-if="displayImages.length > 1" class="carousel-indicators">
           <button
-            v-for="(image, index) in images"
+            v-for="(image, index) in displayImages"
             :key="index"
             class="indicator"
             :class="{ active: currentIndex === index }"
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps({
   content: {
@@ -72,13 +72,25 @@ const props = defineProps({
 const currentIndex = ref(0)
 let autoplayTimer = null
 
-// 圖片列表（如果沒有圖片，使用預設的假圖片）
-const images = computed(() => {
-  if (props.content.images && props.content.images.length > 0) {
+// 輪播高度
+const carouselHeight = computed(() => {
+  return props.content?.height || 400
+})
+
+// 顯示的圖片列表
+const displayImages = computed(() => {
+  console.log('🖼️ CarouselElement - props.content:', props.content)
+  console.log('🖼️ CarouselElement - content.images:', props.content?.images)
+  
+  // 優先使用 content.images
+  if (props.content?.images && props.content.images.length > 0) {
+    console.log('✓ 使用上傳的圖片:', props.content.images.length, '張')
+    console.log('✓ 第一張圖片 URL:', props.content.images[0]?.substring(0, 100))
     return props.content.images
   }
   
-  // 預設輪播圖片（使用 Unsplash 的假圖）
+  // 如果沒有圖片，使用預設的假圖片
+  console.log('⚠️ 使用預設圖片')
   return [
     'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&h=450&fit=crop',
     'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&h=450&fit=crop',
@@ -88,11 +100,11 @@ const images = computed(() => {
 
 // 自動播放設定
 const autoPlay = computed(() => {
-  return props.content.autoPlay !== false
+  return props.content?.autoPlay !== false
 })
 
 const interval = computed(() => {
-  return props.content.interval || 3000
+  return props.content?.interval || 3000
 })
 
 // 軌道樣式
@@ -104,14 +116,14 @@ const trackStyle = computed(() => {
 
 // 下一張
 const nextSlide = () => {
-  if (images.value.length <= 1) return
-  currentIndex.value = (currentIndex.value + 1) % images.value.length
+  if (displayImages.value.length <= 1) return
+  currentIndex.value = (currentIndex.value + 1) % displayImages.value.length
 }
 
 // 上一張
 const prevSlide = () => {
-  if (images.value.length <= 1) return
-  currentIndex.value = (currentIndex.value - 1 + images.value.length) % images.value.length
+  if (displayImages.value.length <= 1) return
+  currentIndex.value = (currentIndex.value - 1 + displayImages.value.length) % displayImages.value.length
 }
 
 // 跳到指定張
@@ -121,7 +133,9 @@ const goToSlide = (index) => {
 
 // 開始自動播放
 const startAutoplay = () => {
-  if (!autoPlay.value || images.value.length <= 1) return
+  if (!autoPlay.value || displayImages.value.length <= 1) return
+  
+  stopAutoplay()  // 先清除舊的 timer
   autoplayTimer = setInterval(nextSlide, interval.value)
 }
 
@@ -132,6 +146,19 @@ const stopAutoplay = () => {
     autoplayTimer = null
   }
 }
+
+// 監聽圖片數量變化，重新啟動自動播放
+watch(() => displayImages.value.length, () => {
+  currentIndex.value = 0  // 重置到第一張
+  stopAutoplay()
+  startAutoplay()
+})
+
+// 監聽自動播放設定變化
+watch([autoPlay, interval], () => {
+  stopAutoplay()
+  startAutoplay()
+})
 
 // 生命週期
 onMounted(() => {
@@ -146,6 +173,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .carousel-element {
   width: 100%;
+  height: auto;
 }
 
 .carousel-container {
@@ -159,8 +187,9 @@ onUnmounted(() => {
 .carousel-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; // 16:9 比例
+  height: v-bind(carouselHeight + 'px');
   overflow: hidden;
+  background: #e0e0e0;  // 添加背景色，方便 debug
 }
 
 .carousel-track {

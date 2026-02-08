@@ -6,6 +6,7 @@
     <a
       :href="content.link || '#'"
       class="element-button"
+      target="_blank"
       :style="{
         color: content.textColor || '#fff',
         backgroundColor: content.bgColor || '#E8572A'

@@ -3,9 +3,10 @@
     <!-- 頂部工具列 -->
     <header class="toolbar">
       <div class="toolbar-left">
-        <select v-model="currentPageId" class="page-select">
-          <option v-for="page in pages" :key="page.id" :value="page.id">
-            {{ page.name }}
+        <!-- 語言選擇器 -->
+        <select v-model="pageEditorStore.currentLocale" class="locale-select" @change="handleLocaleChange">
+          <option v-for="locale in pageEditorStore.locales" :key="locale.locale" :value="locale.locale">
+            {{ locale.label }}
           </option>
         </select>
       </div>
@@ -39,460 +40,554 @@
       </div>
     </header>
 
+    <!-- 載入遮罩 -->
+    <div v-if="pageEditorStore.isLoading" class="loading-overlay">
+      <div class="loading-spinner">載入中...</div>
+    </div>
+
+    <!-- 錯誤提示 -->
+    <div v-if="pageEditorStore.error" class="error-banner">
+      <span>⚠️ {{ pageEditorStore.error }}</span>
+      <button @click="pageEditorStore.error = null" class="close-btn">✕</button>
+    </div>
+
     <!-- 主要內容區 -->
     <div class="editor-body">
-      <!-- 左側：元件庫 (固定 280px) -->
+      <!-- 左側：元件庫 -->
       <LeftSidebar @drag-start="handleDragStart" />
 
-      <!-- 中間：畫布區 (自動填滿剩餘空間) -->
+      <!-- 中間：畫布區 -->
       <CanvasArea
-        :canvases="currentPage.canvases"
-        :selected-canvas="selected.canvas"
-        :selected-frame="selected.frame"
-        :selected-element="selected.element"
-        @select-canvas="handleSelectCanvas"
+        :basemaps="pageEditorStore.currentPageBasemaps"
+        :selected-basemap="pageEditorStore.selected.basemap"
+        :selected-frame="pageEditorStore.selected.frame"
+        :selected-element="pageEditorStore.selected.element"
+        :current-page-slug="pageEditorStore.currentPageSlug"
+        @select-basemap="handleSelectBasemap"
         @select-frame="handleSelectFrame"
         @select-element="handleSelectElement"
+        @update-element="handleUpdateElement"
+        @update-background="handleUpdateBackground"
         @select-cell="handleSelectCell"
-        @drop-to-canvas="handleDropToCanvas"
+        @drop-to-basemap="handleDropToBasemap"
         @drop-to-cell="handleDropToCell"
-        @delete-canvas="handleDeleteCanvas"
-        @delete-frame="handleDeleteFrame"
+        @delete-basemap="handleDeleteBasemap"
         @delete-element="handleDeleteElement"
-        @move-frame="handleMoveFrame"
-        @add-canvas="handleAddCanvas"
-        @move-canvas="handleMoveCanvas"
+        @move-basemap-up="handleMoveBasemapUp"
+        @move-basemap-down="handleMoveBasemapDown"
+        @add-basemap="handleAddBasemap"
+        @change-page="handleHeaderPageChange"
       />
 
-      <!-- 右側：屬性面板 (固定 320px) -->
+      <!-- 右側：屬性面板 -->
       <PropsPanel
-        :selected-canvas="selected.canvas"
-        :selected-frame="selected.frame"
-        :selected-element="selected.element"
+        :selected-basemap="pageEditorStore.selected.basemap"
+        :selected-frame="pageEditorStore.selected.frame"
+        :selected-element="pageEditorStore.selected.element"
         @upload-background="handleUploadBackground"
         @upload-image="handleUploadImage"
         @upload-carousel="handleUploadCarousel"
+        @update-logo="handleUpdateLogo"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { usePageEditorStore } from '@/stores/pageEditor'
 import LeftSidebar from './PageEditor/LeftSidebar.vue'
 import CanvasArea from './PageEditor/CanvasArea.vue'
 import PropsPanel from './PageEditor/PropsPanel.vue'
 
 const router = useRouter()
-// ==================== Props ====================
-const props = defineProps({
-  // 初始頁面資料（可選）
-  initialData: {
-    type: Object,
-    default: () => ({})
+const route = useRoute()
+
+const pageEditorStore = usePageEditorStore()
+
+const emit = defineEmits(['save', 'publish', 'preview'])
+
+// ==================== 獲取 templeId ====================
+const getTempleId = () => {
+  const templeId = route.params.templeId
+  
+  if (!templeId) {
+    console.error('❌ 無法從路由獲取 templeId')
+    return null
   }
-})
-
-// ==================== Emits ====================
-const emit = defineEmits([
-  'save',      // 儲存時觸發
-  'publish',   // 發布時觸發
-  'preview'    // 預覽時觸發
-])
-
-// ==================== 頁面列表 ====================
-const pages = ref([
-  { id: 1, name: '首頁' },
-  { id: 2, name: '關於我們' },
-  { id: 3, name: '商品服務' },
-  { id: 4, name: '慶典活動' },
-  { id: 5, name: '最新消息' },
-  { id: 6, name: '集影牆' },
-  { id: 7, name: '宮廟捐款' }
-])
-
-const currentPageId = ref(1)
-
-// ==================== 頁面數據 ====================
-const pageData = ref({
-  1: {
-    id: 1,
-    canvases: [
-      {
-        id: 'canvas-header',
-        name: '頁首區域',
-        type: 'header',
-        frames: [
-          { 
-            id: 'frame-header',
-            type: 'HEADER', 
-            frameType: 'system',
-            component: 'NavbarBasemap' 
-          }
-        ]
-      },
-      {
-        id: 'canvas-1',
-        name: '內容區域',
-        type: 'content',
-        frames: []
-      },
-      {
-        id: 'canvas-footer',
-        name: '頁尾區域',
-        type: 'footer',
-        frames: [
-          { 
-            id: 'frame-footer',
-            type: 'FOOTER', 
-            frameType: 'system',
-            component: 'FooterBasemap' 
-          }
-        ]
-      }
-    ]
-  }
-})
-
-
-// ==================== 選擇狀態 ====================
-const selected = ref({
-  canvas: null,
-  frame: null,
-  element: null
-})
-
-// ==================== 計算屬性 ====================
-const currentPage = computed(() => {
-  return pageData.value[currentPageId.value] || { canvases: [] }
-})
-
-// ==================== 拖拽處理 ====================
-const handleDragStart = ({ event, item, type }) => {
-  console.log('開始拖拽:', type, item)
-  // 這裡可以添加拖拽開始的邏輯
+  
+  return templeId
 }
 
-const handleDropToCanvas = ({ event, canvas }) => {
-  event.preventDefault()
-  event.stopPropagation()
-
-  const data = JSON.parse(event.dataTransfer.getData('application/json'))
-
-  // 只允許框架拖到底圖
-  if (data.dragType !== 'frame') {
-    alert('只能將框架拖到底圖上')
+// ==================== 初始化 ====================
+onMounted(async () => {
+  console.log('🚀 PageEditor 初始化')
+  
+  const templeId = getTempleId()
+  
+  if (!templeId) {
+    pageEditorStore.error = '無法載入頁面：缺少宮廟 ID'
     return
   }
+  
+  pageEditorStore.setTenantId(templeId)
+  
+  try {
+    // ✅ 載入語言清單
+    await pageEditorStore.fetchLocales(templeId)
+    
+    // 載入 Header Tabs
+    await pageEditorStore.fetchHeaderTabs(templeId)
+    
+    // 初始化第一個頁面
+    if (pageEditorStore.headerTabs.length > 0) {
+      const firstTab = pageEditorStore.headerTabs[0]
+      await pageEditorStore.initializePage(firstTab.slug)
+      pageEditorStore.syncHeaderMenuFromTabs()
+      
+      console.log('✓ 已初始化頁面:', firstTab.slug)
+    } else {
+      console.warn('⚠️ 沒有 Header Tabs 數據')
+      pageEditorStore.error = '無法載入頁面列表'
+    }
+  } catch (error) {
+    console.error('❌ 初始化失敗:', error)
+    pageEditorStore.error = '載入頁面失敗，請稍後再試'
+  }
+})
 
-  // 創建新框架
-  const newFrame = {
-    id: `frame-${Date.now()}`,
-    name: data.name,
-    layout: data.layout,
-    columns: JSON.parse(JSON.stringify(data.columns)),
-    elements: {},
-    properties: {
-      'padding-top': '5%',
-      'padding-right': '5%',
-      'padding-bottom': '5%',
-      'padding-left': '5%'
+// 監聽頁面切換
+watch(
+  () => pageEditorStore.currentPageSlug,
+  (newSlug) => {
+    if (newSlug) {
+      console.log('✓ 當前頁面:', newSlug)
     }
   }
+)
 
-  canvas.frames.push(newFrame)
+// ==================== 頁面操作 ====================
+const handlePageChange = async () => {
+  const newSlug = pageEditorStore.currentPageSlug
+  await pageEditorStore.switchPage(newSlug)
 }
 
-const handleDropToCell = ({ event, frame, col }) => {
-  event.preventDefault()
-  event.stopPropagation()
-
-  const data = JSON.parse(event.dataTransfer.getData('application/json'))
-
-  // 只允許元件拖到格子
-  if (data.dragType !== 'element') {
-    alert('只能將元件拖到格子內')
-    return
+// ==================== Header 選單切換頁面 ====================
+const handleHeaderPageChange = async (slug) => {
+  console.log('📄 從 Header 切換頁面:', slug)
+  
+  try {
+    // 切換到新頁面
+    await pageEditorStore.switchPage(slug)
+    console.log('✓ 頁面切換完成')
+  } catch (error) {
+    console.error('❌ 頁面切換失敗:', error)
+    pageEditorStore.error = '頁面切換失敗，請重試'
   }
-
-  // 檢查格子是否已有元件
-  if (frame.elements && frame.elements[col.id]) {
-    if (!confirm('此格子已有元件，是否替換？')) return
-  }
-
-  // 初始化 elements 對象（如果不存在）
-  if (!frame.elements) {
-    frame.elements = {}
-  }
-
-  // 創建新元件（帶預設內容）
-  const newElement = {
-    id: `elem-${Date.now()}`,
-    name: data.name,
-    type: data.type,
-    content: getDefaultElementContent(data.type)
-  }
-
-  frame.elements[col.id] = newElement
 }
 
-// 獲取元件預設內容
-const getDefaultElementContent = (type) => {
-  const defaults = {
-    text: {
-      text: '這是文字內容，點擊右側編輯',
-      fontSize: '16px',
-      color: '#333333',
-      align: 'center'
-    },
-    image: {
-      src: 'https://via.placeholder.com/400x300/E8572A/FFF?text=預設圖片',
-      alt: '圖片'
-    },
-    button: {
-      text: '按鈕文字',
-      textColor: '#FFFFFF',
-      bgColor: '#E8572A',
-      link: ''
-    },
-    'h-line': { color: '#E0E0E0', thickness: '2px' },
-    'v-line': { color: '#E0E0E0', thickness: '2px' },
-    carousel: {
-      images: [
-        'https://via.placeholder.com/800x400/667eea/FFF?text=輪播1',
-        'https://via.placeholder.com/800x400/764ba2/FFF?text=輪播2'
-      ],
-      autoPlay: true
-    },
-    map: { address: '請輸入地址', lat: 25.033, lng: 121.565 },
-    album: { albumId: null, title: '相簿預覽' }
+// ==================== 語言切換 ====================
+const handleLocaleChange = async () => {
+  const newLocale = pageEditorStore.currentLocale
+  console.log('🌐 切換語言:', newLocale)
+  
+  try {
+    // 重新載入當前頁面（使用新語言）
+    await pageEditorStore.reloadCurrentPage(newLocale)
+    console.log('✓ 語言切換完成')
+  } catch (error) {
+    console.error('❌ 語言切換失敗:', error)
+    pageEditorStore.error = '語言切換失敗，請重試'
   }
-  return defaults[type] || {}
 }
 
 // ==================== 選擇處理 ====================
-const handleSelectCanvas = (canvas) => {
-  selected.value = { canvas, frame: null, element: null }
+const handleSelectBasemap = (basemap) => {
+  console.log('✓ 選擇底圖:', basemap.bg_type)
+  pageEditorStore.selectBasemap(basemap)
 }
 
 const handleSelectFrame = (frame) => {
-  selected.value = { canvas: null, frame, element: null }
+  console.log('✓ 選擇框架:', frame.type)
+  pageEditorStore.selectFrame(frame)
 }
 
-const handleSelectElement = (element) => {
-  selected.value = { canvas: null, frame: null, element }
+const handleSelectElement = (data) => {
+  console.log('✓ 選擇元件:', data)
+  pageEditorStore.selectElement(data)
 }
 
-const handleSelectCell = ({ frame, col }) => {
-  // 選擇空格子時，選中該框架
-  selected.value = { canvas: null, frame, element: null }
+const handleSelectCell = (data) => {
+  pageEditorStore.clearSelection()
 }
 
-// ==================== 底圖操作 ====================
-const handleDeleteCanvas = (index) => {
-  console.log('===== PageEditor: 收到刪除底圖請求 =====')
-  console.log('要刪除的索引:', index)
-  console.log('當前 canvases:', currentPage.value.canvases.map(c => ({ id: c.id, type: c.type })))
+// ==================== 元件更新 ====================
+const handleUpdateElement = (data) => {
+  console.log('✓ 更新元件:', data)
   
-  // 檢查索引是否有效
-  if (index < 0 || index >= currentPage.value.canvases.length) {
-    console.error('無效的底圖索引:', index)
-    alert('無效的底圖索引')
+  if (data.type === 'logo') {
+    // 更新 Logo（直接修改 API 數據結構）
+    if (data.frame && data.frame.data) {
+      data.frame.data.logo_img_src = data.data.src
+      data.frame.data.logo_img_id = data.data.id || null
+      console.log('✓ Logo 已更新')
+    }
+  }
+}
+
+// ==================== 拖曳處理 ====================
+const handleDragStart = ({ event, item, type }) => {
+  console.log('開始拖曳:', type, item)
+}
+
+const handleDropToBasemap = ({ basemap, basemapIndex, frame }) => {
+  console.log('✓ 放置框架到底圖:', frame)
+  
+  // 從拖曳數據中提取框架類型
+  let frameType = null
+  
+  // 自訂框架：layout → API type
+  if (frame.dragType === 'custom-frame' && frame.layout) {
+    // layout: "1_1" → type: "FRAME1_1"
+    // layout: "A" → type: "FRAME_A"
+    
+    // 移除可能存在的連字號或底線，統一處理
+    const cleanLayout = frame.layout.replace(/-/g, '_')
+    frameType = `FRAME${cleanLayout}`
+    
+    console.log(`✓ 自訂框架: ${frame.layout} → ${frameType}`)
+  }
+  // 系統框架：直接使用 type
+  else if (frame.dragType === 'system-frame' && frame.type) {
+    frameType = frame.type  // HEADER, FOOTER, INDEX_NEWS...
+  }
+  // 如果已經是 API 格式（有 type 屬性）
+  else if (frame.type) {
+    frameType = frame.type
+  }
+  
+  // 檢查 frameType 是否有效
+  if (!frameType) {
+    console.error('❌ 無法確定框架類型:', frame)
+    alert('框架數據錯誤，請重試')
     return
   }
   
-  const canvas = currentPage.value.canvases[index]
-  console.log('要刪除的底圖:', canvas)
+  console.log('✓ 最終框架類型:', frameType)
   
-  // CanvasArea 已經做過驗證了，這裡直接刪除
-  currentPage.value.canvases.splice(index, 1)
-  
-  // 清除選擇狀態
-  selected.value = { canvas: null, frame: null, element: null }
-  
-  console.log('刪除後的 canvases:', currentPage.value.canvases.map(c => ({ id: c.id, type: c.type })))
-  console.log('===== PageEditor: 底圖刪除完成 =====')
-}
-
-
-const handleAddCanvas = ({ index }) => {
-  console.log('===== PageEditor: 收到新增底圖請求 =====')
-  console.log('插入位置索引:', index)
-  
-  // 創建新的空白底圖
-  const newCanvas = {
-    id: `canvas-${Date.now()}`,
-    name: `內容區域 ${index}`,
-    type: 'content',
-    frames: []
+  // 創建新框架（使用 API 格式）
+  const newFrame = {
+    type: frameType,
+    is_deletable: true,
+    is_draggable: true,
+    data: {},
+    elements: []
   }
   
-  console.log('新建底圖:', newCanvas)
+  if (!basemap.frames) {
+    basemap.frames = []
+  }
   
-  // 插入到指定位置
-  currentPage.value.canvases.splice(index, 0, newCanvas)
+  basemap.frames.push(newFrame)
   
-  console.log('新增後的 canvases:', currentPage.value.canvases.map(c => ({ id: c.id, type: c.type })))
-  console.log('===== PageEditor: 底圖新增完成 =====')
+  console.log('✓ 框架已添加:', newFrame)
 }
 
-// ==================== 框架操作 ====================
-const handleDeleteFrame = ({ canvas, index }) => {
-  if (confirm('確定要刪除此框架嗎？')) {
-    canvas.frames.splice(index, 1)
-    selected.value = { canvas: null, frame: null, element: null }
+const handleDropToCell = ({ frame, cellIndex, element }) => {
+  console.log('✓ 放置元件到格子:', { frame, cellIndex, element })
+  
+  // 確保 frame.elements 是陣列
+  if (!frame.elements) {
+    frame.elements = []
+  }
+  
+  // 在指定位置插入元件（如果位置超出陣列長度，填充空值）
+  while (frame.elements.length < cellIndex) {
+    frame.elements.push(null)
+  }
+  
+  // 設置元件到指定位置
+  if (frame.elements[cellIndex]) {
+    alert('此格子已有元件')
+    return
+  }
+  
+  frame.elements[cellIndex] = element
+  console.log('✓ 元件已添加到索引:', cellIndex)
+}
+
+// ==================== 底圖操作 ====================
+const handleDeleteBasemap = (index) => {
+  if (confirm('確定要刪除此底圖嗎？')) {
+    pageEditorStore.deleteBasemap(index)
   }
 }
 
-const handleMoveFrame = ({ canvas, index, direction }) => {
-  const newIndex = index + direction
-  if (newIndex < 0 || newIndex >= canvas.frames.length) return
+const handleAddBasemap = (currentIndex) => {
+  pageEditorStore.addBasemap(currentIndex)
+}
 
-  const [frame] = canvas.frames.splice(index, 1)
-  canvas.frames.splice(newIndex, 0, frame)
+const handleMoveBasemapUp = (index) => {
+  pageEditorStore.moveBasemapUp(index)
+}
+
+const handleMoveBasemapDown = (index) => {
+  pageEditorStore.moveBasemapDown(index)
 }
 
 // ==================== 元件操作 ====================
-const handleDeleteElement = ({ frame, colId }) => {
-  if (confirm('確定要刪除此元件嗎？')) {
-    delete frame.elements[colId]
-    selected.value = { canvas: null, frame: null, element: null }
+const handleDeleteElement = (data) => {
+  if (data.type === 'logo') {
+    if (confirm('確定要刪除 Logo 嗎？')) {
+      if (data.frame && data.frame.data) {
+        data.frame.data.logo_img_src = null
+        data.frame.data.logo_img_id = null
+      }
+      pageEditorStore.clearSelection()
+    }
+    return
+  }
+  
+  // 處理自訂框架的元件刪除
+  if (data.frame && data.elementIndex !== undefined) {
+    if (confirm('確定要刪除此元件嗎？')) {
+      // ✅ 使用 null 替代元件，保持索引位置不變
+      if (data.frame.elements && data.frame.elements[data.elementIndex]) {
+        // 不使用 splice，而是設置為 null
+        data.frame.elements[data.elementIndex] = null
+        pageEditorStore.clearSelection()
+        console.log('✓ 元件已刪除（索引保留）')
+      }
+    }
   }
 }
 
-// ==================== 上传处理 ====================
+// ==================== 上傳處理 ====================
+
+// ⭐ 處理從 BasemapWrapper 上傳的背景（透過 CanvasArea emit）
+const handleUpdateBackground = (data) => {
+  console.log('PageEditor 收到背景更新:', data)
+  
+  const { basemap, type, imageData } = data
+  
+  if (!basemap) {
+    console.error('找不到底圖')
+    return
+  }
+  
+  // 找到 Store 中對應的底圖（確保響應式更新）
+  const basemaps = pageEditorStore.currentPageBasemaps
+  const targetBasemap = basemaps.find(b => 
+    b.bg_type === basemap.bg_type && b.bg_sequence === basemap.bg_sequence
+  )
+  
+  if (!targetBasemap) {
+    console.error('在 Store 中找不到對應的底圖')
+    return
+  }
+  
+  // 更新背景圖片
+  switch (type) {
+    case 'desktop':
+      targetBasemap.bg_pc_img_src = imageData
+      targetBasemap.bg_pc_img_id = null
+      break
+    case 'tablet':
+      targetBasemap.bg_tablet_img_src = imageData
+      targetBasemap.bg_tablet_img_id = null
+      break
+    case 'mobile':
+      targetBasemap.bg_phone_img_src = imageData
+      targetBasemap.bg_phone_img_id = null
+      break
+  }
+  
+  console.log('✓ 背景已更新到 Store')
+}
+
 const handleUploadBackground = () => {
-  console.log('上传背景图片')
-  // TODO: 实现文件上传逻辑
-  alert('上传背景功能待实作')
+  // 檢查是否有選中的底圖
+  const selectedBasemap = pageEditorStore.selected.basemap
+  
+  if (!selectedBasemap) {
+    alert('請先選擇一個底圖')
+    return
+  }
+  
+  if (!selectedBasemap.bg_can_change_img) {
+    alert('此底圖不允許更換背景圖片')
+    return
+  }
+  
+  // 創建檔案選擇器
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  
+  input.onchange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // 檢查檔案大小（限制 5MB）
+      if (file.size > 5 * 1024 * 1024) {
+        alert('圖片大小不能超過 5MB')
+        return
+      }
+      
+      // 讀取圖片
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        // 更新底圖的背景圖片（API 格式）
+        selectedBasemap.bg_pc_img_src = event.target.result
+        selectedBasemap.bg_pc_img_id = null // 本地圖片沒有 ID
+        
+        // 也可以同時設置平板和手機版本
+        selectedBasemap.bg_tablet_img_src = event.target.result
+        selectedBasemap.bg_phone_img_src = event.target.result
+        
+        console.log('✓ 底圖背景已更新')
+      }
+      
+      reader.onerror = () => {
+        alert('讀取圖片失敗，請重試')
+      }
+      
+      reader.readAsDataURL(file)
+    }
+  }
+  
+  input.click()
 }
 
 const handleUploadImage = () => {
-  console.log('上传图片')
-  // TODO: 实现文件上传逻辑
-  alert('上传图片功能待实作')
+  // 檢查是否有選中的元件
+  const selectedElement = pageEditorStore.selected.element
+  
+  if (!selectedElement || !selectedElement.element) {
+    alert('請先選擇一個圖片元件')
+    return
+  }
+  
+  if (selectedElement.element.type !== 'IMG') {
+    alert('只有圖片元件才能上傳圖片')
+    return
+  }
+  
+  // 創建檔案選擇器
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  
+  input.onchange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // 檢查檔案大小
+      if (file.size > 5 * 1024 * 1024) {
+        alert('圖片大小不能超過 5MB')
+        return
+      }
+      
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        // 更新元件的圖片（API 格式）
+        if (!selectedElement.element.value) {
+          selectedElement.element.value = {}
+        }
+        
+        selectedElement.element.value.src = event.target.result
+        selectedElement.element.value.id = null
+        
+        console.log('✓ 元件圖片已更新')
+      }
+      
+      reader.onerror = () => {
+        alert('讀取圖片失敗，請重試')
+      }
+      
+      reader.readAsDataURL(file)
+    }
+  }
+  
+  input.click()
 }
 
 const handleUploadCarousel = () => {
-  console.log('上传轮播图片')
-  // TODO: 实现文件上传逻辑
-  alert('上传轮播图片功能待实作')
+  // TODO: 實現輪播圖片上傳
+  alert('輪播圖片上傳功能待實作')
+}
+
+const handleUpdateLogo = (logoData) => {
+  pageEditorStore.updateHeaderLogo(logoData.src, logoData.id)
 }
 
 // ==================== 工具列操作 ====================
 const handleSettings = () => {
-  console.log('打開設定')
-  alert('設定功能待實作')
+  const templeId = getTempleId()
+  if (!templeId) {
+    console.error('❌ 無法取得 templeId')
+    return
+  }
+  
+  // 使用 router 導航到設定頁面
+  router.push({
+    name: 'app.temple.website-settings',
+    params: { templeId: templeId }
+  })
 }
 
 const handleSelectTemplate = () => {
-  console.log('選擇模板')
-  alert('選擇模板功能待實作')
+  const templeId = getTempleId()
+  if (templeId) {
+    router.push({
+      name: 'app.temple.template-selection',
+      params: { templeId }
+    })
+  }
 }
 
 const handleUpgrade = () => {
-  console.log('升級方案')
-  router.push('/pricing-plans')
+  const templeId = getTempleId()
+  if (templeId) {
+    router.push({
+      name: 'app.temple.pricing-plans',
+      params: { templeId }
+    })
+  }
 }
 
 const handlePreview = () => {
-  console.log('預覽網站')
-  emit('preview', {
-    pageId: currentPageId.value,
-    data: currentPage.value
-  })
   alert('預覽功能待實作')
 }
 
-const handleSave = () => {
-  console.log('儲存草稿', pageData.value)
-  emit('save', {
-    pageId: currentPageId.value,
-    data: pageData.value
-  })
-  alert('儲存成功！')
+const handleSave = async () => {
+  try {
+    const success = await pageEditorStore.saveCurrentPage()
+    
+    if (success) {
+      alert('儲存成功！')
+    } else {
+      alert('儲存失敗，請稍後再試')
+    }
+  } catch (error) {
+    alert('儲存失敗：' + error.message)
+  }
 }
 
 const handleDelete = () => {
   if (confirm('確定要刪除此草稿嗎？此操作無法復原！')) {
-    console.log('刪除草稿')
     alert('刪除草稿功能待實作')
   }
 }
 
 const handleGoToWebsite = () => {
-  console.log('前往網站')
-  // 這裡可以打開新視窗前往已發布的網站
   alert('前往網站功能待實作')
 }
 
 const handlePublish = () => {
   if (confirm('確定要發布網站嗎？')) {
-    console.log('發布網站', pageData.value)
-    emit('publish', {
-      data: pageData.value
-    })
     alert('網站已發布！')
   }
 }
-
-// ==================== 對外方法 ====================
-// 獲取所有頁面資料
-const getAllData = () => {
-  return pageData.value
-}
-
-// 獲取當前頁面資料
-const getCurrentPageData = () => {
-  return currentPage.value
-}
-
-// 設置頁面資料
-const setPageData = (data) => {
-  pageData.value = data
-}
-
-// 切換頁面
-const switchPage = (pageId) => {
-  currentPageId.value = pageId
-}
-// 處理底圖移動
-const handleMoveCanvas = ({ fromIndex, toIndex, direction }) => {
-  console.log('===== PageEditor: 收到移動底圖請求 =====')
-  console.log('從索引:', fromIndex, '到索引:', toIndex)
-  console.log('方向:', direction)
-  
-  const canvases = currentPage.value.canvases
-  
-  // 驗證索引
-  if (fromIndex < 0 || fromIndex >= canvases.length) {
-    console.error('無效的起始索引:', fromIndex)
-    return
-  }
-  
-  if (toIndex < 0 || toIndex >= canvases.length) {
-    console.error('無效的目標索引:', toIndex)
-    return
-  }
-  
-  // 取出要移動的底圖
-  const [movedCanvas] = canvases.splice(fromIndex, 1)
-  
-  // 插入到新位置
-  canvases.splice(toIndex, 0, movedCanvas)
-  
-  console.log('移動後的 canvases:', canvases.map(c => ({ id: c.id, type: c.type })))
-  console.log('===== PageEditor: 底圖移動完成 =====')
-}
-
-// 暴露方法給父組件
-defineExpose({
-  getAllData,
-  getCurrentPageData,
-  setPageData,
-  switchPage
-})
 </script>
 
 <style scoped>
@@ -510,9 +605,53 @@ defineExpose({
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
   background: #f5f5f5;
   overflow: hidden;
+  position: relative;
 }
 
-/* ========== 頂部工具列 ========== */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  background: #fff;
+  padding: 24px 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #fff3cd;
+  border-bottom: 1px solid #ffc107;
+  color: #856404;
+  font-size: 14px;
+  z-index: 100;
+}
+
+.error-banner .close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #856404;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -522,7 +661,6 @@ defineExpose({
   background: #fff;
   border-bottom: 1px solid #e5e5e5;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
 }
 
 .toolbar-left,
@@ -536,7 +674,6 @@ defineExpose({
   width: 1px;
   height: 24px;
   background: #e5e5e5;
-  margin: 0 4px;
 }
 
 .page-select {
@@ -544,14 +681,32 @@ defineExpose({
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
-  outline: none;
   cursor: pointer;
-  background: #fff;
-  color: #333;
 }
 
-.page-select:focus {
+.locale-select {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  min-width: 120px;
+}
+
+.locale-select:hover {
   border-color: #E8572A;
+}
+
+.page-select-mini {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  background: #f8f9fa;
+  min-width: 100px;
 }
 
 .btn {
@@ -560,20 +715,17 @@ defineExpose({
   border-radius: 6px;
   background: #fff;
   font-size: 14px;
-  color: #333;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   background: #f5f5f5;
 }
 
-.btn-icon {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-primary {
@@ -582,37 +734,18 @@ defineExpose({
   border-color: #E8572A;
 }
 
-.btn-primary:hover {
-  background: #d14a1f;
-}
-
 .btn-secondary {
-  background: #fff;
   color: #E8572A;
   border-color: #E8572A;
 }
 
-.btn-secondary:hover {
-  background: #fff5f2;
-}
-
 .btn-danger {
   color: #dc3545;
-  border-color: #ddd;
 }
 
-.btn-danger:hover {
-  background: #fff5f5;
-  border-color: #dc3545;
-}
-
-/* ========== 主要內容區 ========== */
 .editor-body {
   display: flex;
   flex: 1;
   overflow: hidden;
-  width: 100%;
-  height: calc(100vh - 60px); /* 扣除頂部工具列高度 */
 }
-
 </style>

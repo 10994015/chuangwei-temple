@@ -1,13 +1,32 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useTemplateStore } from '@/stores/template'
 
 const router = useRouter()
+const route = useRoute()
+const templateStore = useTemplateStore()
+
+// 獲取當前的 templeId 和 templateId
+const currentTempleId = computed(() => route.params.templeId)
+const currentTemplateId = computed(() => route.params.templateId)
 
 // 狀態管理
 const subdomain = ref('')
 const errorMessage = ref('')
 const showConfirmDialog = ref(false)
+const isCheckingSubdomain = ref(false) // 👈 新增：檢查子網域中
+
+// 組件掛載時記錄模板 ID
+onMounted(() => {
+  console.log('當前宮廟 ID:', currentTempleId.value)
+  console.log('選中的模板 ID:', currentTemplateId.value)
+  
+  // 驗證是否有 templateId
+  if (!currentTemplateId.value) {
+    console.warn('警告：未找到模板 ID')
+  }
+})
 
 // 驗證子網域
 const validateSubdomain = () => {
@@ -53,13 +72,48 @@ const isValid = computed(() => {
 // 處理上一步
 const handleBack = () => {
   console.log('返回上一步')
-  router.push({ name: 'app.cms.template-selection' })
+  if (currentTempleId.value) {
+    router.push({ 
+      name: 'app.temple.template-selection',
+      params: { templeId: currentTempleId.value }
+    })
+  } else {
+    alert('無法獲取宮廟資訊')
+  }
 }
 
-// 處理下一步 - 顯示確認對話框
-const handleNext = () => {
+// 👇 修改：處理下一步 - 先檢查子網域是否可用
+const handleNext = async () => {
   if (!isValid.value) return
-  showConfirmDialog.value = true
+  
+  // 防止重複檢查
+  if (isCheckingSubdomain.value) return
+  
+  isCheckingSubdomain.value = true
+  errorMessage.value = ''
+  
+  try {
+    console.log('開始檢查子網域是否可用...')
+    
+    // 調用 API 檢查子網域
+    const isAvailable = await templateStore.checkSubdomainAvailable(
+      currentTempleId.value,
+      subdomain.value
+    )
+    
+    if (isAvailable) {
+      console.log('子網域可用，顯示確認對話框')
+      showConfirmDialog.value = true
+    } else {
+      console.log('子網域已被使用')
+      errorMessage.value = '此網站名稱已被使用，請選擇其他名稱'
+    }
+  } catch (error) {
+    console.error('檢查子網域時發生錯誤:', error)
+    errorMessage.value = '檢查網站名稱時發生錯誤，請稍後再試'
+  } finally {
+    isCheckingSubdomain.value = false
+  }
 }
 
 // 取消確認
@@ -69,26 +123,44 @@ const cancelConfirm = () => {
 
 // 確認並開始編輯
 const confirmAndStart = async () => {
-  console.log('確認網站設定:', subdomain.value)
+  console.log('確認網站設定')
+  console.log('子網域:', subdomain.value)
+  console.log('模板 ID:', currentTemplateId.value)
+  console.log('宮廟 ID:', currentTempleId.value)
+  
+  // 防止重複提交
+  if (templateStore.isCreatingWebsite) return
   
   try {
-    // TODO: 實作API調用檢查子網域可用性
-    // const response = await api.post('/check-subdomain', { subdomain: subdomain.value })
-    // if (!response.available) {
-    //   errorMessage.value = '此網站名稱已被使用，請選擇其他名稱'
-    //   showConfirmDialog.value = false
-    //   return
-    // }
+    // 調用 store 中的建立網站方法
+    const result = await templateStore.createWebsite(
+      currentTempleId.value,
+      currentTemplateId.value,
+      subdomain.value
+    )
     
-    // TODO: 儲存子網域設定
-    // await api.post('/save-subdomain', { subdomain: subdomain.value })
+    if (result.success) {
+      console.log('網站建立成功！', result.data)
+      
+      // 關閉對話框
+      showConfirmDialog.value = false
+      
+      // 導航到頁面編輯器
+      router.push({ 
+        name: 'app.temple.page-editor',
+        params: { templeId: currentTempleId.value },
+        query: { templateId: currentTemplateId.value }
+      })
+    } else {
+      // 建立失敗，顯示錯誤訊息
+      console.error('建立失敗:', result.error)
+      errorMessage.value = result.error
+      showConfirmDialog.value = false
+    }
     
-    // 導航到頁面編輯器
-    showConfirmDialog.value = false
-    router.push({ name: 'app.cms.page-editor' })
   } catch (error) {
-    console.error('設定子網域時發生錯誤:', error)
-    errorMessage.value = '發生錯誤，請稍後再試'
+    console.error('建立網站時發生未預期的錯誤:', error)
+    errorMessage.value = '發生未預期的錯誤，請稍後再試'
     showConfirmDialog.value = false
   }
 }
@@ -115,6 +187,7 @@ const confirmAndStart = async () => {
                 class="subdomain-input"
                 placeholder="aaa"
                 @input="validateSubdomain"
+                :disabled="isCheckingSubdomain"
               />
               <span class="domain-suffix">.gongzhanggui.com</span>
             </div>
@@ -137,15 +210,21 @@ const confirmAndStart = async () => {
 
           <!-- 按鈕組 -->
           <div class="button-group">
-            <button class="btn btn-back" @click="handleBack">
+            <button 
+              class="btn btn-back" 
+              @click="handleBack"
+              :disabled="isCheckingSubdomain"
+            >
               上一步
             </button>
             <button 
               class="btn btn-next" 
-              :disabled="!isValid"
+              :disabled="!isValid || isCheckingSubdomain"
               @click="handleNext"
             >
-              下一步
+              <!-- 👇 顯示檢查中狀態 -->
+              <span v-if="isCheckingSubdomain" class="loading-spinner"></span>
+              <span v-else>下一步</span>
             </button>
           </div>
         </div>
@@ -167,11 +246,20 @@ const confirmAndStart = async () => {
           </div>
 
           <div class="dialog-actions">
-            <button class="btn btn-cancel" @click="cancelConfirm">
+            <button 
+              class="btn btn-cancel" 
+              @click="cancelConfirm"
+              :disabled="templateStore.isCreatingWebsite"
+            >
               取消
             </button>
-            <button class="btn btn-confirm" @click="confirmAndStart">
-              確認並開始編輯網站
+            <button 
+              class="btn btn-confirm" 
+              @click="confirmAndStart"
+              :disabled="templateStore.isCreatingWebsite"
+            >
+              <span v-if="templateStore.isCreatingWebsite" class="loading-spinner"></span>
+              <span v-else>確認並開始編輯網站</span>
             </button>
           </div>
         </div>
@@ -181,6 +269,7 @@ const confirmAndStart = async () => {
 </template>
 
 <style lang="scss" scoped>
+/* 樣式與之前相同，已包含 loading-spinner */
 .subdomain-setup-page {
   min-height: 100vh;
   display: flex;
@@ -268,6 +357,11 @@ const confirmAndStart = async () => {
   &::placeholder {
     color: #9ca3af;
   }
+  
+  &:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
+  }
 }
 
 .domain-suffix {
@@ -340,6 +434,7 @@ const confirmAndStart = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -355,9 +450,14 @@ const confirmAndStart = async () => {
   color: #4b5563;
   border: 1px solid #d1d5db;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #f9fafb;
     border-color: #9ca3af;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
@@ -473,9 +573,14 @@ const confirmAndStart = async () => {
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #f9fafb;
     border-color: #9ca3af;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
@@ -490,13 +595,36 @@ const confirmAndStart = async () => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #c45e30;
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: translateY(1px);
+  }
+  
+  &:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+  }
+}
+
+// Loading spinner 樣式
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

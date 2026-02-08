@@ -1,6 +1,12 @@
 <script setup>
 import router from '@/router'
-import { ref } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import LoginModal from './LoginModal.vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
 
 // 導航選單項目
 const navItems = [
@@ -17,8 +23,30 @@ const navItems = [
 const currentLanguage = ref('繁體中文')
 const showLanguageMenu = ref(false)
 
+// 登入彈窗狀態
+const showLoginModal = ref(false)
+
+// 管理後台下拉選單狀態
+const showAdminMenu = ref(false)
+
 // 語言選項
 const languages = ['繁體中文', 'English', '简体中文']
+
+// 計算是否已登入
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+
+// 計算當前的 templeId
+const currentTempleId = computed(() => route.params.templeId || null)
+
+// 判斷是否在宮廟路由中（顯示網站管理按鈕）
+const isInTempleRoute = computed(() => {
+  return !!currentTempleId.value
+})
+
+// 取得所有宮廟角色列表
+const templeRolesList = computed(() => {
+  return authStore.templeRoles || []
+})
 
 // 處理導航點擊
 const handleNavClick = (path) => {
@@ -27,15 +55,30 @@ const handleNavClick = (path) => {
   // router.push(path)
 }
 
-// 處理網站管理點擊
+// 處理網站管理點擊（動態路徑）
 const handleSiteManagement = () => {
-   router.push('/website-setup')
+  if (currentTempleId.value) {
+    router.push(`/${currentTempleId.value}/website-setup`)
+  } else {
+    alert('請先選擇一個宮廟')
+  }
 }
 
-// 處理管理後台點擊
-const handleAdminPanel = () => {
-  console.log('前往管理後台')
-  // TODO: 實作導航到管理後台
+// 切換管理後台選單
+const toggleAdminMenu = () => {
+  showAdminMenu.value = !showAdminMenu.value
+}
+
+// 處理管理後台選項點擊
+const handleAdminOption = (option) => {
+  if (option === 'customer-account') {
+    // 香客帳號管理
+    router.push('/customer-account')
+  } else {
+    // 宮廟後台（使用 templeId）
+    router.push(`/${option}/dashboard`)
+  }
+  showAdminMenu.value = false
 }
 
 // 切換語言選單
@@ -55,13 +98,66 @@ const selectLanguage = (language) => {
 const closeLanguageMenu = () => {
   showLanguageMenu.value = false
 }
+
+// 點擊外部關閉管理後台選單
+const closeAdminMenu = () => {
+  showAdminMenu.value = false
+}
+
+// 開啟登入彈窗
+const openLoginModal = () => {
+  showLoginModal.value = true
+  document.body.style.overflow = 'hidden' // 防止背景滾動
+}
+
+// 關閉登入彈窗
+const closeLoginModal = () => {
+  showLoginModal.value = false
+  document.body.style.overflow = '' // 恢復滾動
+}
+
+// 處理登入成功
+const handleLoginSuccess = () => {
+  console.log('Header: 登入成功')
+  // 可以在這裡處理登入成功後的邏輯
+}
+
+// 處理登出
+const handleLogout = async () => {
+  if (confirm('確定要登出嗎？')) {
+    await authStore.logout()
+    console.log('已登出')
+    
+    // 登出後檢查當前路由是否需要權限
+    const currentRoute = router.currentRoute.value
+    if (currentRoute.meta.requiresAuth) {
+      // 如果當前頁面需要登入，跳轉到首頁
+      router.push('/')
+    }
+  }
+}
+
+// 組件掛載時檢查登入狀態
+onMounted(async () => {
+  try {
+    await authStore.checkAuth()
+  } catch (error) {
+    console.log('未登入或 token 已過期')
+  }
+})
+
+// 監聽路由變化，關閉下拉選單
+watch(() => route.path, () => {
+  showAdminMenu.value = false
+  showLanguageMenu.value = false
+})
 </script>
 
 <template>
   <header class="app-header">
     <div class="header-container">
       <!-- Logo 區域 -->
-      <div class="logo-section">
+      <div class="logo-section" @click="router.push('/')">
         <div class="logo-icon">
           <svg viewBox="0 0 40 40" class="temple-icon">
             <rect x="5" y="10" width="30" height="25" fill="#E8572A" />
@@ -86,12 +182,67 @@ const closeLanguageMenu = () => {
 
       <!-- 右側按鈕區 -->
       <div class="actions-section">
-        <button class="btn btn-outline" @click="handleSiteManagement">
+        <!-- 未登入時顯示登入按鈕 -->
+        <button v-if="!isLoggedIn" class="btn btn-login" @click="openLoginModal">
+          <svg class="user-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+          </svg>
+          登入
+        </button>
+
+        <!-- 已登入時顯示用戶資訊和登出按鈕 -->
+        <div v-if="isLoggedIn" class="user-info">
+          <button class="btn btn-logout" @click="handleLogout">
+            <svg class="logout-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+            </svg>
+            登出
+          </button>
+        </div>
+        
+        <!-- 只有登入且在宮廟路由中才顯示網站管理按鈕 -->
+        <button 
+          v-if="isLoggedIn && isInTempleRoute" 
+          class="btn btn-outline" 
+          @click="handleSiteManagement"
+        >
           網站管理
         </button>
-        <button class="btn btn-primary" @click="handleAdminPanel">
-          管理後台
-        </button>
+        
+        <!-- 只有登入後才顯示管理後台下拉選單 -->
+        <div v-if="isLoggedIn" class="admin-selector" @click.stop>
+          <button class="admin-btn" @click="toggleAdminMenu">
+            <span>管理後台</span>
+          </button>
+          
+          <!-- 管理後台下拉選單 -->
+          <Transition name="dropdown">
+            <div v-if="showAdminMenu" class="admin-dropdown">
+              <!-- 香客帳號管理（固定選項） -->
+              <button 
+                class="admin-option"
+                :class="{ 'active': route.path === '/customer-account' }"
+                @click="handleAdminOption('customer-account')"
+              >
+                香客帳號管理
+              </button>
+              
+              <!-- 分隔線 -->
+              <div v-if="templeRolesList.length > 0" class="dropdown-divider"></div>
+              
+              <!-- 宮廟角色列表（動態生成） -->
+              <button 
+                v-for="temple in templeRolesList" 
+                :key="temple.templeId"
+                class="admin-option"
+                :class="{ 'active': currentTempleId === temple.templeId }"
+                @click="handleAdminOption(temple.templeId)"
+              >
+                {{ temple.templeName }}
+              </button>
+            </div>
+          </Transition>
+        </div>
         
         <!-- 語言選擇 -->
         <div class="language-selector" @click.stop>
@@ -122,6 +273,13 @@ const closeLanguageMenu = () => {
         </div>
       </div>
     </div>
+
+    <!-- 登入彈窗組件 -->
+    <LoginModal 
+      :show="showLoginModal" 
+      @close="closeLoginModal"
+      @login-success="handleLoginSuccess"
+    />
   </header>
 </template>
 
@@ -221,6 +379,19 @@ const closeLanguageMenu = () => {
   flex-shrink: 0;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+}
+
 .btn {
   padding: 8px 20px;
   border-radius: 6px;
@@ -235,6 +406,49 @@ const closeLanguageMenu = () => {
   &:active {
     transform: scale(0.98);
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-login {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: #374151;
+  border-color: #d1d5db;
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  .user-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: #dc2626;
+  border-color: #fecaca;
+
+  &:hover {
+    background-color: #fef2f2;
+    border-color: #fca5a5;
+  }
+
+  .logout-icon {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .btn-outline {
@@ -248,16 +462,90 @@ const closeLanguageMenu = () => {
   }
 }
 
-.btn-primary {
+// ========== 管理後台下拉選單 ==========
+.admin-selector {
+  position: relative;
+}
+
+.admin-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
   background-color: #E8572A;
   color: #ffffff;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  white-space: nowrap;
 
   &:hover {
     background-color: #d94b1f;
   }
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
+.admin-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1001;
+  padding: 4px 0;
+}
+
+.admin-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.2s ease;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+
+  &.active {
+    background-color: #fff7f3;
+    color: #E8572A;
+    font-weight: 500;
+  }
+}
+
+.option-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 4px 0;
+}
+
+// ========== 語言選擇器 ==========
 .language-selector {
   position: relative;
 }
@@ -378,7 +666,6 @@ const closeLanguageMenu = () => {
 
   .nav-menu {
     display: none;
-    // TODO: 可以加入 hamburger menu 的響應式設計
   }
 
   .logo-text {
@@ -392,6 +679,10 @@ const closeLanguageMenu = () => {
 
   .actions-section {
     gap: 8px;
+  }
+
+  .user-name {
+    display: none;
   }
 }
 </style>

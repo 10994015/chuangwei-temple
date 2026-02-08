@@ -307,19 +307,19 @@ const otherFrames = ref([
 
 // ==================== 自訂框架 ====================
 
-// 單層框架
+// ✅ 單層框架 - 使用底線格式
 const singleFrames = ref([
   {
     id: 'frame-1-1',
     name: '單層 1-1',
-    layout: '1-1',
+    layout: '1_1',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [{ id: 'col-1', span: 'normal' }]
   },
   {
     id: 'frame-1-2',
     name: '單層 1-2',
-    layout: '1-2',
+    layout: '1_2',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -329,7 +329,7 @@ const singleFrames = ref([
   {
     id: 'frame-1-3',
     name: '單層 1-3',
-    layout: '1-3',
+    layout: '1_3',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -340,7 +340,7 @@ const singleFrames = ref([
   {
     id: 'frame-1-4',
     name: '單層 1-4',
-    layout: '1-4',
+    layout: '1_4',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -351,12 +351,12 @@ const singleFrames = ref([
   }
 ])
 
-// 雙層框架
+// ✅ 雙層框架 - 使用底線格式
 const doubleFrames = ref([
   {
     id: 'frame-2-2',
     name: '雙層 2-2',
-    layout: '2-2',
+    layout: '2_2',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -368,7 +368,7 @@ const doubleFrames = ref([
   {
     id: 'frame-2-3',
     name: '雙層 2-3',
-    layout: '2-3',
+    layout: '2_3',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -382,7 +382,7 @@ const doubleFrames = ref([
   {
     id: 'frame-2-4',
     name: '雙層 2-4',
-    layout: '2-4',
+    layout: '2_4',  // ✅ 改用底線
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -397,12 +397,12 @@ const doubleFrames = ref([
   }
 ])
 
-// 複合框架
+// ✅ 複合框架 - 使用大寫字母
 const complexFrames = ref([
   {
     id: 'frame-a',
     name: '複合 A',
-    layout: 'A',  // ← 改為大寫 A
+    layout: 'A',  // ✅ 大寫字母
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'large' },
@@ -413,7 +413,7 @@ const complexFrames = ref([
   {
     id: 'frame-b',
     name: '複合 B',
-    layout: 'B',  // ← 改為大寫 B
+    layout: 'B',  // ✅ 大寫字母
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'small' },
@@ -424,26 +424,29 @@ const complexFrames = ref([
   {
     id: 'frame-c',
     name: '複合 C',
-    layout: 'C',  // ← 改為大寫 C
+    layout: 'C',  // ✅ 大寫字母
     dragType: 'custom-frame',
     columns: [
-      { id: 'col-1', span: 'large' },  // 上邊大格
-      { id: 'col-2', span: 'small' },  // 左下小格
-      { id: 'col-3', span: 'small' }   // 右下小格（只要 3 個！）
+      { id: 'col-1', span: 'large' },
+      { id: 'col-2', span: 'small' },
+      { id: 'col-3', span: 'small' },
+      { id: 'col-4', span: 'small' }
     ]
   },
   {
     id: 'frame-d',
     name: '複合 D',
-    layout: 'D',  // ← 改為大寫 D
+    layout: 'D',  // ✅ 大寫字母
     dragType: 'custom-frame',
     columns: [
-      { id: 'col-1', span: 'small' },  // 左上小格
-      { id: 'col-2', span: 'small' },  // 右上小格
-      { id: 'col-3', span: 'large' }   // 下邊大格（只要 3 個！）
+      { id: 'col-1', span: 'small' },
+      { id: 'col-2', span: 'small' },
+      { id: 'col-3', span: 'small' },
+      { id: 'col-4', span: 'large' }
     ]
   }
 ])
+
 // ==================== 元件列表 ====================
 const elements = ref([
   { id: 'text', name: '文字', icon: 'T', color: '#3b82f6', type: 'text', dragType: 'element' },
@@ -470,7 +473,7 @@ const handleDragStart = (event, item) => {
 </script>
 
 <style scoped>
-/* ... 樣式保持不變 ... */
+/* 樣式保持不變，只更新 layout class 名稱 */
 .sidebar-left {
   width: 280px;
   flex-shrink: 0;
@@ -481,7 +484,6 @@ const handleDragStart = (event, item) => {
   overflow: hidden;
 }
 
-/* ========== 標題 ========== */
 .sidebar-header {
   padding: 20px;
   border-bottom: 1px solid #e5e5e5;
@@ -495,7 +497,6 @@ const handleDragStart = (event, item) => {
   color: #333;
 }
 
-/* ========== 標籤 ========== */
 .tabs {
   display: flex;
   border-bottom: 1px solid #e5e5e5;
@@ -536,7 +537,6 @@ const handleDragStart = (event, item) => {
   background: #E8572A;
 }
 
-/* ========== 標籤內容 ========== */
 .tab-content {
   flex: 1;
   overflow-y: auto;
@@ -564,7 +564,6 @@ const handleDragStart = (event, item) => {
   letter-spacing: 0.5px;
 }
 
-/* ========== 系統框架列表 ========== */
 .system-frame-list {
   display: flex;
   flex-direction: column;
@@ -619,7 +618,6 @@ const handleDragStart = (event, item) => {
   font-weight: 500;
 }
 
-/* ========== 自訂框架列表 ========== */
 .frame-list {
   display: flex;
   flex-direction: column;
@@ -647,7 +645,6 @@ const handleDragStart = (event, item) => {
   cursor: grabbing;
 }
 
-/* ========== 框架預覽 ========== */
 .frame-preview {
   display: grid;
   gap: 4px;
@@ -663,58 +660,59 @@ const handleDragStart = (event, item) => {
   border-radius: 2px;
 }
 
-/* 單層框架 */
-.frame-preview.layout-1-1 {
+/* ✅ 單層框架 - 使用底線 */
+.frame-preview.layout-1_1 {
   grid-template-columns: 1fr;
 }
 
-.frame-preview.layout-1-2 {
+.frame-preview.layout-1_2 {
   grid-template-columns: repeat(2, 1fr);
 }
 
-.frame-preview.layout-1-3 {
+.frame-preview.layout-1_3 {
   grid-template-columns: repeat(3, 1fr);
 }
 
-.frame-preview.layout-1-4 {
+.frame-preview.layout-1_4 {
   grid-template-columns: repeat(4, 1fr);
 }
 
-/* 雙層框架 */
-.frame-preview.layout-2-2 {
+/* ✅ 雙層框架 - 使用底線 */
+.frame-preview.layout-2_2 {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
 }
 
-.frame-preview.layout-2-3 {
+.frame-preview.layout-2_3 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
 }
 
-.frame-preview.layout-2-4 {
+.frame-preview.layout-2_4 {
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(2, 1fr);
 }
+
+/* ✅ 複合框架 - 使用大寫字母 */
 .frame-preview.layout-A {
   grid-template-columns: 2fr 1fr;
   grid-template-rows: repeat(2, 1fr);
 }
 
 .frame-preview.layout-A .frame-col:nth-child(1) {
-  grid-row: 1 / 3;  /* 左邊大格佔兩行 */
+  grid-row: 1 / 3;
 }
 
 .frame-preview.layout-A .frame-col:nth-child(2) {
   grid-column: 2;
-  grid-row: 1;  /* 右上小格 */
+  grid-row: 1;
 }
 
 .frame-preview.layout-A .frame-col:nth-child(3) {
   grid-column: 2;
-  grid-row: 2;  /* 右下小格 */
+  grid-row: 2;
 }
 
-/* 複合框架 B - 左小右大 */
 .frame-preview.layout-B {
   grid-template-columns: 1fr 2fr;
   grid-template-rows: repeat(2, 1fr);
@@ -722,62 +720,77 @@ const handleDragStart = (event, item) => {
 
 .frame-preview.layout-B .frame-col:nth-child(1) {
   grid-column: 1;
-  grid-row: 1;  /* 左上小格 */
+  grid-row: 1;
 }
 
 .frame-preview.layout-B .frame-col:nth-child(2) {
   grid-column: 1;
-  grid-row: 2;  /* 左下小格 */
+  grid-row: 2;
 }
 
 .frame-preview.layout-B .frame-col:nth-child(3) {
   grid-column: 2;
-  grid-row: 1 / 3;  /* 右邊大格佔兩行 */
+  grid-row: 1 / 3;
 }
 
-/* 複合框架 C - 上大下小 */
 .frame-preview.layout-C {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: 2fr 1fr;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: repeat(3, 1fr);
 }
 
 .frame-preview.layout-C .frame-col:nth-child(1) {
-  grid-column: 1 / 3;  /* 上邊大格佔兩列 */
-  grid-row: 1;
+  grid-column: 1;
+  grid-row: 1 / 4;
 }
 
 .frame-preview.layout-C .frame-col:nth-child(2) {
-  grid-column: 1;
-  grid-row: 2;  /* 左下小格 */
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .frame-preview.layout-C .frame-col:nth-child(3) {
   grid-column: 2;
-  grid-row: 2;  /* 右下小格 */
+  grid-row: 2;
 }
 
-/* 複合框架 D - 上小下大 */
+.frame-preview.layout-C .frame-col:nth-child(4) {
+  grid-column: 2;
+  grid-row: 3;
+}
+
 .frame-preview.layout-D {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: 1fr 2fr;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: repeat(3, 1fr);
 }
 
 .frame-preview.layout-D .frame-col:nth-child(1) {
   grid-column: 1;
-  grid-row: 1;  /* 左上小格 */
+  grid-row: 1;
 }
 
 .frame-preview.layout-D .frame-col:nth-child(2) {
-  grid-column: 2;
-  grid-row: 1;  /* 右上小格 */
-}
-
-.frame-preview.layout-D .frame-col:nth-child(3) {
-  grid-column: 1 / 3;  /* 下邊大格佔兩列 */
+  grid-column: 1;
   grid-row: 2;
 }
 
-/* ========== 元件列表 ========== */
+.frame-preview.layout-D .frame-col:nth-child(3) {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.frame-preview.layout-D .frame-col:nth-child(4) {
+  grid-column: 2;
+  grid-row: 1 / 4;
+}
+
+.frame-name {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
+}
+
 .element-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -826,7 +839,6 @@ const handleDragStart = (event, item) => {
   font-weight: 500;
 }
 
-/* ========== 滾動條 ========== */
 .tab-content::-webkit-scrollbar {
   width: 6px;
 }

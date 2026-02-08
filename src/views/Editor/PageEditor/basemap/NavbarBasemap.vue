@@ -1,16 +1,48 @@
 <template>
-  <header class="navbar">
+  <header class="navbar" :class="{ 'edit-mode': isEditMode }">
     <div class="navbar-container">
-      <div class="logo">LOGO</div>
+      <!-- Logo 區域 - 可點擊編輯 -->
+      <div 
+        class="logo-wrapper"
+        :class="{ 'selected': isLogoSelected }"
+        @click.stop="handleSelectLogo"
+      >
+        <div class="logo">
+          <img 
+            v-if="logoSrc" 
+            :src="logoSrc" 
+            alt="Logo"
+            class="logo-image"
+          />
+          <span v-else class="logo-placeholder">{{ templeName || 'LOGO' }}</span>
+        </div>
+        
+        <!-- 編輯模式下顯示刪除按鈕 -->
+        <button
+          v-if="isEditMode && logoSrc"
+          class="delete-logo-btn"
+          @click.stop="handleDeleteLogo"
+          title="刪除 Logo"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- 導航選單 - 使用 tabs 數據 -->
       <nav class="nav-menu">
-        <a href="#" class="nav-item">桃園某某宮</a>
-        <a href="#" class="nav-item">最新消息</a>
-        <a href="#" class="nav-item">慶典活動</a>
-        <a href="#" class="nav-item">商品與服務</a>
-        <a href="#" class="nav-item">捐款護持</a>
-        <a href="#" class="nav-item">集影牆</a>
-        <a href="#" class="nav-item">關於我們</a>
+        <a 
+          v-for="tab in tabs" 
+          :key="tab.slug"
+          href="#" 
+          class="nav-item"
+          :class="{ 'active': tab.slug === currentPageSlug }"
+          @click.prevent="handleTabClick(tab)"
+        >
+          {{ tab.name }}
+        </a>
       </nav>
+
+      <!-- 右側操作區 -->
       <div class="nav-actions">
         <button class="cart-btn">🛒</button>
         <button class="login-btn">會員登入</button>
@@ -20,25 +52,75 @@
 </template>
 
 <script setup>
-// 可以接收 props 來自定義導航欄內容
+import { computed } from 'vue'
+
 const props = defineProps({
-  logo: {
-    type: String,
-    default: 'LOGO'
+  // 框架數據
+  frameData: {
+    type: Object,
+    default: () => ({})
   },
-  menuItems: {
-    type: Array,
-    default: () => [
-      '桃園某某宮',
-      '最新消息',
-      '慶典活動',
-      '商品與服務',
-      '捐款護持',
-      '集影牆',
-      '關於我們'
-    ]
+  // 是否為編輯模式
+  isEditMode: {
+    type: Boolean,
+    default: true
+  },
+  // Logo 是否被選中
+  isLogoSelected: {
+    type: Boolean,
+    default: false
+  },
+  // 當前頁面 slug
+  currentPageSlug: {
+    type: String,
+    default: null
   }
 })
+
+const emit = defineEmits(['select-logo', 'update-logo', 'delete-logo', 'change-page'])
+
+// Logo 圖片來源（從 API 數據）
+const logoSrc = computed(() => {
+  return props.frameData.logo_img_src || null
+})
+
+// 宮廟名稱
+const templeName = computed(() => {
+  return props.frameData.temple_name || 'LOGO'
+})
+
+// 選單項目（從 API 的 tabs 數據）
+const tabs = computed(() => {
+  return props.frameData.tabs || []
+})
+
+// 選擇 Logo
+const handleSelectLogo = () => {
+  if (props.isEditMode) {
+    emit('select-logo', {
+      type: 'logo',
+      data: {
+        src: logoSrc.value,
+        id: props.frameData.logo_img_id
+      }
+    })
+  }
+}
+
+// 刪除 Logo
+const handleDeleteLogo = () => {
+  if (confirm('確定要刪除 Logo 嗎？')) {
+    emit('delete-logo')
+  }
+}
+
+// 點擊選單項目切換頁面
+const handleTabClick = (tab) => {
+  if (props.isEditMode) {
+    console.log('🔄 切換頁面:', tab.slug)
+    emit('change-page', tab.slug)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -59,7 +141,43 @@ const props = defineProps({
     height: 70px;
   }
 
+  // Logo 區域
+  .logo-wrapper {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    transition: all 0.2s;
+    padding: 4px;
+
+    &:hover {
+      border-color: #E8572A;
+      background: #fff5f2;
+    }
+
+    &.selected {
+      border-color: #E8572A;
+      box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.1);
+    }
+  }
+
   .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    min-height: 50px;
+  }
+
+  .logo-image {
+    max-width: 150px;
+    max-height: 50px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .logo-placeholder {
     background: #f5f5f5;
     padding: 0.5rem 1.5rem;
     border-radius: 4px;
@@ -67,6 +185,36 @@ const props = defineProps({
     color: #999;
   }
 
+  .delete-logo-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    color: #666;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+
+    &:hover {
+      background: #dc3545;
+      color: #fff;
+      transform: scale(1.1);
+    }
+  }
+
+  .logo-wrapper:hover .delete-logo-btn {
+    opacity: 1;
+  }
+
+  // 導航選單
   .nav-menu {
     display: flex;
     gap: 2rem;
@@ -78,13 +226,36 @@ const props = defineProps({
     color: #666;
     text-decoration: none;
     font-size: 15px;
-    transition: color 0.3s;
+    transition: all 0.3s;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
 
     &:hover {
-      color: #8b6f47;
+      color: #E8572A;
+      background: #fff5f2;
+    }
+
+    &.active {
+      color: #E8572A;
+      font-weight: 600;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 3px;
+        background: #E8572A;
+        border-radius: 2px;
+      }
     }
   }
 
+  // 右側操作
   .nav-actions {
     display: flex;
     gap: 1rem;
@@ -99,6 +270,7 @@ const props = defineProps({
     font-size: 14px;
     color: #666;
     transition: color 0.3s;
+    pointer-events: none;
 
     &:hover {
       color: #8b6f47;
@@ -107,6 +279,22 @@ const props = defineProps({
 
   .login-btn {
     padding: 0.5rem 1rem;
+  }
+
+  // 編輯模式樣式
+  &.edit-mode {
+    // ✅ 選單項目在編輯模式下可以點擊（用於切換頁面）
+    .nav-item {
+      pointer-events: auto;  // 允許點擊
+      opacity: 1;            // 完全可見
+    }
+    
+    // 右側按鈕在編輯模式下禁用
+    .cart-btn,
+    .login-btn {
+      pointer-events: none;
+      opacity: 0.6;
+    }
   }
 }
 </style>
