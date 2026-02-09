@@ -85,7 +85,7 @@
             <!-- ALBUM 元件 -->
             <div v-else-if="element.type === 'ALBUM'" class="element-album">
               <div class="album-placeholder">
-                <span>📸</span>
+                <span></span>
                 <p>{{ element.value?.title || '相簿' }}</p>
               </div>
             </div>

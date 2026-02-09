@@ -12,82 +12,6 @@
         <p class="hint">點擊畫布中的項目來編輯屬性</p>
       </div>
 
-      <!-- ✅ 選擇了格子（調整 padding） -->
-      <div v-else-if="selectedCell" class="props-section">
-        <h4 class="section-title">格子間距設定</h4>
-        
-        <div class="padding-controls">
-          <div class="padding-visual">
-            <div class="padding-box">
-              <div class="padding-input-group top">
-                <label>上</label>
-                <input 
-                  v-model.number="cellPadding.top" 
-                  type="number" 
-                  min="0"
-                  max="200"
-                  step="5"
-                  class="padding-input"
-                  @input="updateCellPadding"
-                />
-              </div>
-              
-              <div class="padding-sides">
-                <div class="padding-input-group left">
-                  <label>左</label>
-                  <input 
-                    v-model.number="cellPadding.left" 
-                    type="number" 
-                    min="0"
-                    max="200"
-                    step="5"
-                    class="padding-input"
-                    @input="updateCellPadding"
-                  />
-                </div>
-                
-                <div class="content-preview">
-                  內容區域
-                </div>
-                
-                <div class="padding-input-group right">
-                  <label>右</label>
-                  <input 
-                    v-model.number="cellPadding.right" 
-                    type="number" 
-                    min="0"
-                    max="200"
-                    step="5"
-                    class="padding-input"
-                    @input="updateCellPadding"
-                  />
-                </div>
-              </div>
-              
-              <div class="padding-input-group bottom">
-                <label>下</label>
-                <input 
-                  v-model.number="cellPadding.bottom" 
-                  type="number" 
-                  min="0"
-                  max="200"
-                  step="5"
-                  class="padding-input"
-                  @input="updateCellPadding"
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div class="padding-presets">
-            <button @click="setCellPadding(0)" class="preset-btn">無間距</button>
-            <button @click="setCellPadding(10)" class="preset-btn">小</button>
-            <button @click="setCellPadding(20)" class="preset-btn">中</button>
-            <button @click="setCellPadding(40)" class="preset-btn">大</button>
-          </div>
-        </div>
-      </div>
-
       <!-- 選擇了底圖 -->
       <div v-else-if="selectedBasemap" class="props-section">
         <h4 class="section-title">底圖設定</h4>
@@ -105,17 +29,216 @@
 
       <!-- 選擇了框架 -->
       <div v-else-if="selectedFrame" class="props-section">
-        <h4 class="section-title">框架設定</h4>
+        <!-- ✅ 首圖框架 (FIRST_PICTURE) -->
+        <template v-if="selectedFrame.type === 'FIRST_PICTURE'">
+          <h4 class="section-title">首圖設定</h4>
+          
+          <!-- 背景圖片 -->
+          <div class="prop-group">
+            <label>背景圖片</label>
+            <div class="image-upload">
+              <img 
+                v-if="selectedFrame.data?.hero_bg_img_src"
+                :src="selectedFrame.data.hero_bg_img_src" 
+                alt="背景預覽"
+                class="preview-image"
+              />
+              <div v-else class="no-image">
+                <span>尚未上傳背景圖片</span>
+              </div>
+              <button @click="handleUploadHeroBackground" class="upload-btn">
+                {{ selectedFrame.data?.hero_bg_img_src ? '更換背景' : '上傳背景' }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- 標題 -->
+          <div class="prop-group">
+            <label>標題</label>
+            <input 
+              v-model="heroTitle" 
+              type="text" 
+              class="prop-input"
+              placeholder="輸入首圖標題"
+              @input="updateHeroData"
+            />
+          </div>
+          
+          <!-- 副標題 -->
+          <div class="prop-group">
+            <label>副標題</label>
+            <textarea 
+              v-model="heroSubtitle" 
+              class="prop-textarea"
+              rows="3"
+              placeholder="輸入首圖副標題"
+              @input="updateHeroData"
+            ></textarea>
+          </div>
+          
+          <!-- 樣式設定區塊 -->
+          <div class="metadata-section">
+            <h5 class="subsection-title">樣式設定</h5>
+            
+            <!-- 首圖高度 -->
+            <div class="prop-group">
+              <label>首圖高度</label>
+              <div class="height-selector">
+                <input 
+                  v-model="heroHeight" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="600px"
+                  @input="updateHeroData"
+                />
+                <span class="unit-hint">例如: 600px, 80vh</span>
+              </div>
+              <div class="height-presets">
+                <button @click="setHeroHeight('500px')" class="preset-btn">小</button>
+                <button @click="setHeroHeight('600px')" class="preset-btn">中</button>
+                <button @click="setHeroHeight('700px')" class="preset-btn">大</button>
+                <button @click="setHeroHeight('100vh')" class="preset-btn">全螢幕</button>
+              </div>
+            </div>
+            
+            <!-- 遮罩透明度 -->
+            <div class="prop-group">
+              <label>遮罩透明度 ({{ overlayOpacity }}%)</label>
+              <input 
+                v-model.number="overlayOpacity" 
+                type="range" 
+                min="0"
+                max="100"
+                class="prop-slider"
+                @input="updateHeroData"
+              />
+              <div class="slider-labels">
+                <span>透明</span>
+                <span>不透明</span>
+              </div>
+            </div>
+            
+            <!-- 遮罩顏色 -->
+            <div class="prop-group">
+              <label>遮罩顏色</label>
+              <div class="color-input-group">
+                <input 
+                  v-model="overlayColor" 
+                  type="color" 
+                  class="prop-color"
+                  @input="updateHeroData"
+                />
+                <input 
+                  v-model="overlayColor" 
+                  type="text" 
+                  class="prop-input color-text"
+                  placeholder="#000000"
+                  @input="updateHeroData"
+                />
+              </div>
+            </div>
+            
+            <!-- 文字框圓角 -->
+            <div class="prop-group">
+              <label>文字框圓角</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="textBoxBorderRadius" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="12px"
+                  @input="updateHeroData"
+                />
+                <span class="unit-hint">例如: 0px, 12px, 20px</span>
+              </div>
+            </div>
+            
+            <!-- 標題顏色 -->
+            <div class="prop-group">
+              <label>標題顏色</label>
+              <div class="color-input-group">
+                <input 
+                  v-model="titleColor" 
+                  type="color" 
+                  class="prop-color"
+                  @input="updateHeroData"
+                />
+                <input 
+                  v-model="titleColor" 
+                  type="text" 
+                  class="prop-input color-text"
+                  placeholder="#333333"
+                  @input="updateHeroData"
+                />
+              </div>
+            </div>
+            
+            <!-- 標題字體大小 -->
+            <div class="prop-group">
+              <label>標題字體大小</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="titleFontSize" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="48px"
+                  @input="updateHeroData"
+                />
+                <span class="unit-hint">例如: 36px, 48px, 3rem</span>
+              </div>
+            </div>
+            
+            <!-- 副標題顏色 -->
+            <div class="prop-group">
+              <label>副標題顏色</label>
+              <div class="color-input-group">
+                <input 
+                  v-model="subtitleColor" 
+                  type="color" 
+                  class="prop-color"
+                  @input="updateHeroData"
+                />
+                <input 
+                  v-model="subtitleColor" 
+                  type="text" 
+                  class="prop-input color-text"
+                  placeholder="#666666"
+                  @input="updateHeroData"
+                />
+              </div>
+            </div>
+            
+            <!-- 副標題字體大小 -->
+            <div class="prop-group">
+              <label>副標題字體大小</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="subtitleFontSize" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="20px"
+                  @input="updateHeroData"
+                />
+                <span class="unit-hint">例如: 16px, 20px, 1.25rem</span>
+              </div>
+            </div>
+          </div>
+        </template>
         
-        <div class="prop-group">
-          <label>框架類型</label>
-          <input 
-            :value="selectedFrame.type" 
-            type="text" 
-            class="prop-input"
-            disabled
-          />
-        </div>
+        <!-- ✅ 其他框架類型 -->
+        <template v-else>
+          <h4 class="section-title">框架設定</h4>
+          
+          <div class="prop-group">
+            <label>框架類型</label>
+            <input 
+              :value="selectedFrame.type" 
+              type="text" 
+              class="prop-input"
+              disabled
+            />
+          </div>
+        </template>
       </div>
 
       <!-- 選擇了元件 -->
@@ -272,6 +395,82 @@
               </div>
             </div>
           </div>
+
+          <!-- ✅ 新增：元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+              </div>
+            </div>
+          </div>
         </template>
 
         <!-- IMG 元件 -->
@@ -294,6 +493,19 @@
                 {{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}
               </button>
             </div>
+          </div>
+
+          <!-- ✅ 新增：Alt 文字設定 -->
+          <div class="prop-group">
+            <label>Alt 文字（替代文字）</label>
+            <input 
+              v-model="imageAlt" 
+              type="text" 
+              class="prop-input"
+              placeholder="描述圖片內容，用於無障礙輔助"
+              @input="updateImageAlt"
+            />
+            <span class="hint-text">用於螢幕閱讀器和圖片無法顯示時</span>
           </div>
 
           <!-- ✅ Metadata 樣式設定 -->
@@ -327,6 +539,82 @@
                   @input="updateMetadata"
                 />
                 <span class="unit-hint">例如: auto, 300px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ 新增：元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
               </div>
             </div>
           </div>
@@ -433,6 +721,82 @@
               </select>
             </div>
           </div>
+
+          <!-- ✅ 新增：元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+              </div>
+            </div>
+          </div>
         </template>
 
         <!-- H_LINE 元件 -->
@@ -457,6 +821,82 @@
               placeholder="例如: 2px"
             />
           </div>
+
+          <!-- ✅ 新增：元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+              </div>
+            </div>
+          </div>
         </template>
 
         <!-- V_LINE 元件 -->
@@ -480,6 +920,82 @@
               class="prop-input"
               placeholder="例如: 2px"
             />
+          </div>
+
+          <!-- ✅ 新增：元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+              </div>
+            </div>
           </div>
         </template>
 
@@ -565,6 +1081,82 @@
               @input="updateCarouselSettings"
             />
           </div>
+
+          <!-- ✅ 新增：元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+              </div>
+            </div>
+          </div>
         </template>
 
         <!-- 未知元件類型 -->
@@ -581,12 +1173,26 @@
           </div>
         </template>
       </div>
+
+      <!-- ✅ 選擇了空格子（保留，用於顯示提示） -->
+      <div v-else-if="selectedCell" class="props-section">
+        <h4 class="section-title">空格子</h4>
+        <div class="empty-cell-hint">
+          <p>此格子尚未放置元件</p>
+          <p class="hint">從左側拖曳元件至格子中</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, inject } from 'vue'
+import { useRoute } from 'vue-router'
+
+// ✅ 注入 pageEditorStore
+const pageEditorStore = inject('pageEditorStore')
+const route = useRoute()
 
 const props = defineProps({
   selectedBasemap: {
@@ -620,8 +1226,20 @@ const carouselAutoPlay = ref(true)
 const carouselInterval = ref(3000)
 const carouselHeight = ref(400)
 
-// ✅ 格子 padding 響應式數據
-const cellPadding = ref({
+// ✅ 首圖 (FIRST_PICTURE) 相關的響應式數據
+const heroTitle = ref('')
+const heroSubtitle = ref('')
+const heroHeight = ref('600px')
+const overlayOpacity = ref(40)
+const overlayColor = ref('#000000')
+const textBoxBorderRadius = ref('12px')
+const titleColor = ref('#333333')
+const titleFontSize = ref('48px')
+const subtitleColor = ref('#666666')
+const subtitleFontSize = ref('20px')
+
+// ✅ 元件 padding 響應式數據（從 selectedElement.element.padding 讀取）
+const elementPadding = ref({
   top: 20,
   right: 20,
   bottom: 20,
@@ -638,6 +1256,9 @@ const elementMetadata = ref({
   height: null,
   background_color: null
 })
+
+// ✅ IMG 元件 alt 文字
+const imageAlt = ref('')
 
 // 高度預設選項
 const heightPresets = [
@@ -665,6 +1286,14 @@ watch(() => props.selectedElement, (newVal) => {
     carouselHeight.value = value.height || 400
   }
 
+  // ✅ IMG 元件 - 載入 alt 文字
+  if (newVal?.element?.type === 'IMG') {
+    const value = newVal.element.value || {}
+    imageAlt.value = value.alt || ''
+  } else {
+    imageAlt.value = ''
+  }
+
   // ✅ 載入元件的 metadata
   if (newVal?.element?.metadata) {
     elementMetadata.value = {
@@ -688,27 +1317,21 @@ watch(() => props.selectedElement, (newVal) => {
       background_color: null
     }
   }
-}, { immediate: true, deep: true })
 
-// ✅ 監聽選中格子的變化
-watch(() => props.selectedCell, (newVal) => {
-  if (newVal) {
-    const element = newVal.frame?.elements?.[newVal.cellIndex]
-    
-    if (element?.padding) {
-      cellPadding.value = { ...element.padding }
-    } else {
-      // 默認值
-      cellPadding.value = {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20
-      }
+  // ✅ 載入元件的 padding
+  if (newVal?.element?.padding) {
+    elementPadding.value = { ...newVal.element.padding }
+  } else {
+    // 默認值
+    elementPadding.value = {
+      top: 20,
+      right: 20,
+      bottom: 20,
+      left: 20
     }
-    
-    console.log('✓ 格子 padding 已載入:', cellPadding.value)
   }
+  
+  console.log('✓ 元件 padding 已載入:', elementPadding.value)
 }, { immediate: true, deep: true })
 
 // 額外監聽 CAROUSEL 的 images 陣列變化
@@ -718,6 +1341,24 @@ watch(() => props.selectedElement?.element?.value?.images, (newImages) => {
     console.log('✓ 圖片陣列已同步:', carouselImages.value.length, '張')
   }
 }, { deep: true })
+
+// ✅ 監聽選中框架的變化（用於載入首圖數據）
+watch(() => props.selectedFrame, (newVal) => {
+  if (newVal?.type === 'FIRST_PICTURE' && newVal.data) {
+    heroTitle.value = newVal.data.hero_title || ''
+    heroSubtitle.value = newVal.data.hero_subtitle || ''
+    heroHeight.value = newVal.data.hero_height || '600px'
+    overlayOpacity.value = newVal.data.overlay_opacity !== undefined ? newVal.data.overlay_opacity : 40
+    overlayColor.value = newVal.data.overlay_color || '#000000'
+    textBoxBorderRadius.value = newVal.data.text_box_border_radius || '12px'
+    titleColor.value = newVal.data.title_color || '#333333'
+    titleFontSize.value = newVal.data.title_font_size || '48px'
+    subtitleColor.value = newVal.data.subtitle_color || '#666666'
+    subtitleFontSize.value = newVal.data.subtitle_font_size || '20px'
+    
+    console.log('✓ 首圖數據已載入')
+  }
+}, { immediate: true, deep: true })
 
 // ==================== ✅ Metadata 更新 ====================
 
@@ -734,6 +1375,53 @@ const updateMetadata = () => {
     
     console.log('✓ Metadata 已更新:', props.selectedElement.element.metadata)
   }
+}
+
+// ✅ 更新 IMG 元件的 alt 文字
+const updateImageAlt = () => {
+  if (props.selectedElement?.element?.type === 'IMG') {
+    if (!props.selectedElement.element.value) {
+      props.selectedElement.element.value = {}
+    }
+    
+    // 更新 alt
+    props.selectedElement.element.value.alt = imageAlt.value
+    
+    console.log('✓ IMG alt 已更新:', imageAlt.value)
+  }
+}
+
+// ==================== ✅ 元件 Padding 更新 ====================
+
+const updateElementPadding = () => {
+  if (props.selectedElement?.element) {
+    // 確保 padding 存在
+    if (!props.selectedElement.element.padding) {
+      props.selectedElement.element.padding = {}
+    }
+    
+    // 更新 padding
+    props.selectedElement.element.padding = { ...elementPadding.value }
+    
+    // 發送事件給父組件（用於同步更新）
+    emit('update-cell-padding', {
+      frame: props.selectedElement.frame,
+      cellIndex: props.selectedElement.cellIndex,
+      padding: { ...elementPadding.value }
+    })
+    
+    console.log('✓ 元件 Padding 已更新:', props.selectedElement.element.padding)
+  }
+}
+
+const setElementPadding = (value) => {
+  elementPadding.value = {
+    top: value,
+    right: value,
+    bottom: value,
+    left: value
+  }
+  updateElementPadding()
 }
 
 // ==================== Logo 操作 ====================
@@ -763,63 +1451,88 @@ const handleUploadLogo = () => {
 
 // ==================== 圖片操作 ====================
 
-const handleUploadImage = () => {
+const handleUploadImage = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.onchange = (e) => {
+  
+  input.onchange = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        if (props.selectedElement?.element?.value) {
-          props.selectedElement.element.value.src = event.target.result
-          props.selectedElement.element.value.id = null
-        }
+    if (!file) return
+    
+    try {
+      // ✅ 使用 Store 的 uploadImage 方法
+      const uploadedFile = await pageEditorStore.uploadImage(file)
+      
+      if (!uploadedFile) {
+        // Store 已經處理錯誤訊息
+        alert('圖片上傳失敗，請稍後再試')
+        return
       }
-      reader.readAsDataURL(file)
+      
+      // ✅ 更新元件的圖片資訊
+      if (props.selectedElement?.element?.value) {
+        props.selectedElement.element.value.id = uploadedFile.id
+        props.selectedElement.element.value.src = uploadedFile.fileDir
+        
+        console.log('✓ 圖片已更新:', {
+          id: uploadedFile.id,
+          src: uploadedFile.fileDir
+        })
+      }
+      
+    } catch (error) {
+      console.error('❌ 圖片上傳失敗:', error)
+      alert('圖片上傳失敗: ' + error.message)
     }
   }
+  
   input.click()
 }
 
 // ==================== CAROUSEL 操作 ====================
 
-const addCarouselImage = () => {
+const addCarouselImage = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.onchange = (e) => {
+  
+  input.onchange = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('圖片大小不能超過 5MB')
+    if (!file) return
+    
+    try {
+      // ✅ 使用 Store 的 uploadImage 方法
+      const uploadedFile = await pageEditorStore.uploadImage(file)
+      
+      if (!uploadedFile) {
+        // Store 已經處理錯誤訊息
+        alert('輪播圖片上傳失敗，請稍後再試')
         return
       }
-
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const imageData = event.target.result
-        
-        // 確保 value 和 images 存在
-        if (!props.selectedElement.element.value) {
-          props.selectedElement.element.value = {}
-        }
-        if (!props.selectedElement.element.value.images) {
-          props.selectedElement.element.value.images = []
-        }
-        
-        // 添加到 element.value.images
-        props.selectedElement.element.value.images.push(imageData)
-        
-        // 手動更新本地響應式數據（確保視圖立即更新）
-        carouselImages.value = [...props.selectedElement.element.value.images]
-        
-        console.log('✓ 圖片已添加，共', carouselImages.value.length, '張')
+      
+      // ✅ 確保 value 和 images 存在
+      if (!props.selectedElement.element.value) {
+        props.selectedElement.element.value = {}
       }
-      reader.readAsDataURL(file)
+      if (!props.selectedElement.element.value.images) {
+        props.selectedElement.element.value.images = []
+      }
+      
+      // ✅ 添加圖片 URL 到 images 陣列
+      props.selectedElement.element.value.images.push(uploadedFile.fileDir)
+      
+      // ✅ 手動更新本地響應式數據（確保視圖立即更新）
+      carouselImages.value = [...props.selectedElement.element.value.images]
+      
+      console.log('✓ 圖片已添加到輪播，共', carouselImages.value.length, '張')
+      
+    } catch (error) {
+      console.error('❌ 輪播圖片上傳失敗:', error)
+      alert('輪播圖片上傳失敗: ' + error.message)
     }
   }
+  
   input.click()
 }
 
@@ -856,27 +1569,72 @@ const setCarouselHeight = (height) => {
   updateCarouselSettings()
 }
 
-// ==================== 格子 Padding 操作 ====================
+// ==================== ✅ 首圖操作 ====================
 
-const updateCellPadding = () => {
-  if (props.selectedCell) {
-    emit('update-cell-padding', {
-      frame: props.selectedCell.frame,
-      cellIndex: props.selectedCell.cellIndex,
-      padding: { ...cellPadding.value }
-    })
+// 更新首圖數據
+const updateHeroData = () => {
+  if (props.selectedFrame?.data) {
+    props.selectedFrame.data.hero_title = heroTitle.value
+    props.selectedFrame.data.hero_subtitle = heroSubtitle.value
+    props.selectedFrame.data.hero_height = heroHeight.value
+    props.selectedFrame.data.overlay_opacity = overlayOpacity.value
+    props.selectedFrame.data.overlay_color = overlayColor.value
+    props.selectedFrame.data.text_box_border_radius = textBoxBorderRadius.value
+    props.selectedFrame.data.title_color = titleColor.value
+    props.selectedFrame.data.title_font_size = titleFontSize.value
+    props.selectedFrame.data.subtitle_color = subtitleColor.value
+    props.selectedFrame.data.subtitle_font_size = subtitleFontSize.value
+    
+    console.log('✓ 首圖數據已更新')
   }
 }
 
-const setCellPadding = (value) => {
-  cellPadding.value = {
-    top: value,
-    right: value,
-    bottom: value,
-    left: value
-  }
-  updateCellPadding()
+// 設定首圖高度
+const setHeroHeight = (height) => {
+  heroHeight.value = height
+  updateHeroData()
 }
+
+// 上傳首圖背景
+const handleUploadHeroBackground = async () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    try {
+      // ✅ 使用 Store 的 uploadImage 方法
+      const uploadedFile = await pageEditorStore.uploadImage(file)
+      
+      if (!uploadedFile) {
+        // Store 已經處理錯誤訊息
+        alert('首圖背景上傳失敗，請稍後再試')
+        return
+      }
+      
+      // ✅ 更新首圖背景資訊
+      if (props.selectedFrame?.data) {
+        props.selectedFrame.data.hero_bg_img_id = uploadedFile.id
+        props.selectedFrame.data.hero_bg_img_src = uploadedFile.fileDir
+        
+        console.log('✓ 首圖背景已更新:', {
+          id: uploadedFile.id,
+          src: uploadedFile.fileDir
+        })
+      }
+      
+    } catch (error) {
+      console.error('❌ 首圖背景上傳失敗:', error)
+      alert('首圖背景上傳失敗: ' + error.message)
+    }
+  }
+  
+  input.click()
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -934,6 +1692,32 @@ const setCellPadding = (value) => {
   }
 }
 
+// ✅ 提示文字樣式
+.hint-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+// ✅ 空格子提示
+.empty-cell-hint {
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+
+  p {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #bbb;
+  }
+}
+
 .props-section {
   animation: fadeIn 0.2s;
 }
@@ -969,6 +1753,13 @@ const setCellPadding = (value) => {
 }
 
 .metadata-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px dashed #e5e5e5;
+}
+
+// ✅ Padding 區塊樣式
+.padding-section {
   margin-top: 24px;
   padding-top: 20px;
   border-top: 2px dashed #e5e5e5;
@@ -1273,7 +2064,7 @@ const setCellPadding = (value) => {
   }
 }
 
-// Padding 控制樣式
+// ✅ Padding 控制樣式
 .padding-controls {
   display: flex;
   flex-direction: column;
@@ -1373,4 +2164,58 @@ const setCellPadding = (value) => {
     background: #ccc;
   }
 }
+
+// ✅ 滑桿樣式（用於遮罩透明度等）
+.prop-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e5e5;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #E8572A;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
+    }
+  }
+  
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #E8572A;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
+    }
+  }
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  
+  span {
+    font-size: 11px;
+    color: #999;
+  }
+}
+
 </style>

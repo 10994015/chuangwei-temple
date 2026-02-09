@@ -15,8 +15,12 @@
     <!-- 輪播牆 (CAROUSEL_WALL) -->
     <HeroBasemap v-else-if="frameType === 'CAROUSEL_WALL'" v-bind="frameData" />
     
-    <!-- 首圖 (FIRST_PICTURE) -->
-    <HeroBasemap v-else-if="frameType === 'FIRST_PICTURE'" v-bind="frameData" />
+    <!-- ✅ 首圖 (FIRST_PICTURE) - 使用 HeroBannerElement -->
+    <HeroBannerElement 
+      v-else-if="frameType === 'FIRST_PICTURE'" 
+      :frame-data="frameData"
+      :is-selected="false"
+    />
     
     <!-- 首頁-最新消息 (INDEX_NEWS) -->
     <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
@@ -69,6 +73,7 @@ import ProductsBasemap from '../Editor/PageEditor/basemap/ProductsBasemap.vue'
 import DonationBasemap from '../Editor/PageEditor/basemap/DonationBasemap.vue'
 import AboutBasemap from '../Editor/PageEditor/basemap/AboutBasemap.vue'
 import AlbumListBasemap from '../Editor/PageEditor/basemap/AlbumListBasemap.vue'
+import HeroBannerElement from '../Editor/PageEditor/elements/HeroBannerElement.vue'  // ✅ 新增引入
 
 const props = defineProps({
   frameType: {

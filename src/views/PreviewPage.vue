@@ -3,18 +3,6 @@
     <!-- 頂部工具列 -->
     <header class="preview-toolbar">
       <div class="toolbar-left">
-        <button class="btn-back" @click="handleBack">
-          ← 返回編輯器
-        </button>
-        
-        <div class="toolbar-divider"></div>
-        
-        <!-- 語言切換 -->
-        <select v-model="currentLocale" class="locale-select" @change="handleLocaleChange">
-          <option v-for="locale in locales" :key="locale.locale" :value="locale.locale">
-            {{ locale.label }}
-          </option>
-        </select>
       </div>
       
       <div class="toolbar-center">
@@ -87,8 +75,7 @@ const route = useRoute()
 const isLoading = ref(false)
 const error = ref(null)
 const basemaps = ref([])
-const locales = ref([])
-const currentLocale = ref('ZH-TW')
+const currentLocale = ref('zh-TW')  // 使用固定語言
 const currentSlug = ref('home')
 
 // ==================== 獲取參數 ====================
@@ -101,37 +88,6 @@ const getSlug = () => {
 }
 
 // ==================== API 調用 ====================
-
-/**
- * 載入語言清單
- */
-const fetchLocales = async (tid) => {
-  try {
-    const response = await fetch(`/api/tenant/${tid}/web-site/locale`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    })
-
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-    const result = await response.json()
-
-    if (result.statusCode === 200 && result.data) {
-      locales.value = result.data
-      
-      if (result.data.length > 0 && !currentLocale.value) {
-        currentLocale.value = result.data[0].locale
-      }
-      
-      console.log('✓ 語言清單:', result.data)
-      return result.data
-    }
-    throw new Error(result.message || '載入語言清單失敗')
-  } catch (err) {
-    console.error('❌ 載入語言清單失敗:', err)
-    return []
-  }
-}
 
 /**
  * 載入頁面內容
@@ -179,9 +135,6 @@ const loadPreviewData = async () => {
   error.value = null
 
   try {
-    // 載入語言清單
-    await fetchLocales(templeId)
-    
     // 載入頁面內容
     const data = await fetchPageContent(templeId, slug, currentLocale.value)
     
@@ -217,30 +170,6 @@ const handleBack = () => {
 }
 
 /**
- * 切換語言
- */
-const handleLocaleChange = async () => {
-  const templeId = getTempleId()
-  const slug = getSlug()
-  
-  isLoading.value = true
-  
-  try {
-    const data = await fetchPageContent(templeId, slug, currentLocale.value)
-    
-    if (data && Array.isArray(data)) {
-      basemaps.value = data
-      console.log('✓ 語言已切換:', currentLocale.value)
-    }
-  } catch (err) {
-    console.error('❌ 切換語言失敗:', err)
-    error.value = '切換語言失敗'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-/**
  * 切換頁面
  */
 const handleChangePage = async (slug) => {
@@ -249,6 +178,7 @@ const handleChangePage = async (slug) => {
   console.log('🔄 切換預覽頁面:', slug)
   
   isLoading.value = true
+  error.value = null
   
   try {
     const data = await fetchPageContent(templeId, slug, currentLocale.value)
@@ -385,21 +315,6 @@ onMounted(() => {
   background: #f5f5f5;
   color: #333;
   border-color: #bbb;
-}
-
-.locale-select {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #fff;
-  min-width: 120px;
-}
-
-.locale-select:hover {
-  border-color: #E8572A;
 }
 
 .btn {

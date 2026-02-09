@@ -7,6 +7,7 @@
       :is-edit-mode="true"
       :is-logo-selected="isLogoSelected"
       :current-page-slug="currentPageSlug"
+      :frame="frame"
       @select-logo="handleSelectLogo"
       @update-logo="handleUpdateLogo"
       @delete-logo="handleDeleteLogo"
@@ -19,8 +20,14 @@
     <!-- 輪播牆 (CAROUSEL_WALL) -->
     <HeroBasemap v-else-if="frameType === 'CAROUSEL_WALL'" v-bind="frameData" />
     
-    <!-- 首圖 (FIRST_PICTURE) -->
-    <HeroBasemap v-else-if="frameType === 'FIRST_PICTURE'" v-bind="frameData" />
+    <!-- ✅ 首圖 (FIRST_PICTURE) - 使用新的 HeroBannerElement -->
+    <HeroBannerElement 
+      v-else-if="frameType === 'FIRST_PICTURE'" 
+      :frame-data="frameData"
+      :frame="frame"
+      :is-selected="isFrameSelected"
+      @select-frame="handleSelectFrame"
+    />
     
     <!-- 首頁-最新消息 (INDEX_NEWS) -->
     <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
@@ -77,6 +84,7 @@ import ProductsBasemap from './basemap/ProductsBasemap.vue'
 import DonationBasemap from './basemap/DonationBasemap.vue'
 import AboutBasemap from './basemap/AboutBasemap.vue'
 import AlbumListBasemap from './basemap/AlbumListBasemap.vue'
+import HeroBannerElement from './elements/HeroBannerElement.vue'  // ✅ 新增引入
 
 const props = defineProps({
   frameType: {
@@ -101,12 +109,23 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['select-element', 'update-element', 'delete-element', 'change-page'])
+const emit = defineEmits(['select-element', 'update-element', 'delete-element', 'change-page', 'select-frame'])
 
 // 檢查 Logo 是否被選中
 const isLogoSelected = computed(() => {
   return props.selectedElement?.type === 'logo'
 })
+
+// ✅ 檢查框架是否被選中
+const isFrameSelected = computed(() => {
+  return props.frame === props.selectedElement?.frame
+})
+
+// ✅ 處理選擇框架
+const handleSelectFrame = (frame) => {
+  console.log('SystemFrame: 選擇框架', frame?.type)
+  emit('select-frame', frame)
+}
 
 // 處理切換頁面
 const handleChangePage = (slug) => {

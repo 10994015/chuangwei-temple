@@ -139,19 +139,31 @@ onMounted(async () => {
 
 // ==================== 工具列事件處理 ====================
 
-// 語言切換
+// ✅ 語言切換
 const handleLocaleChange = async (newLocale) => {
-  console.log('🌐 切換語言:', newLocale)
+  console.log('🌐 EditorLayout: 切換語言:', newLocale, '| 當前頁面:', pageEditorStore.currentPageSlug)
   
-  pageEditorStore.currentLocale = newLocale
+  const templeId = getTempleId()
+  const currentSlug = pageEditorStore.currentPageSlug
+  
+  if (!templeId || !currentSlug) {
+    console.error('❌ 缺少必要參數')
+    return
+  }
   
   try {
+    // 更新語言
+    pageEditorStore.currentLocale = newLocale
+    
+    // 重新載入當前頁面
+    console.log('📥 重新載入頁面:', currentSlug, '語言:', newLocale)
     await pageEditorStore.reloadCurrentPage(newLocale)
+    
     console.log('✓ 語言切換完成')
     hasUnsavedChanges.value = false
   } catch (error) {
     console.error('❌ 語言切換失敗:', error)
-    pageEditorStore.error = '語言切換失敗，請重試'
+    pageEditorStore.error = '語言切換失敗：' + error.message
   }
 }
 

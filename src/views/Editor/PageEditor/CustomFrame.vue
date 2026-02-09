@@ -10,130 +10,133 @@
     ]"
     @click.stop="handleFrameClick"
   >
-    <!-- 根據框架佈局渲染格子和元件 -->
-    <div class="frame-grid" :style="gridStyle">
-      <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
-        <!-- 渲染格子 -->
-        <div 
-          class="grid-cell"
-          :class="{ 
-            'has-element': element && element.type,
-            'is-selected': isElementSelected(index) || isCellSelected(index),
-            'empty-cell': !element || !element.type
-          }"
-          :style="{
-            margin: '0',
-            padding: getCellPadding(element)
-          }"
-          @click.stop="handleCellClick(index, element)"
-          @dragover="handleDragOver($event, index)"
-          @dragleave="handleDragLeave"
-          @drop="handleDrop($event, index)"
-        >
-          <!-- 有元件：顯示元件內容 -->
-          <div v-if="element && element.type" class="element-content">
-            <!-- IMG 元件 -->
-            <div v-if="element.type === 'IMG'" class="element-image" :style="getElementStyle(element)">
-              <img 
-                v-if="element.value?.src" 
-                :src="element.value.src" 
-                alt="圖片"
-                class="element-img"
-              />
-              <div v-else class="placeholder-image">
-                <span>🖼️ 圖片</span>
-                <p>請在右側上傳圖片</p>
+    <!-- ✅ 新增 container 來限制內容最大寬度 -->
+    <div class="frame-container">
+      <!-- 根據框架佈局渲染格子和元件 -->
+      <div class="frame-grid" :style="gridStyle">
+        <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
+          <!-- 渲染格子 -->
+          <div 
+            class="grid-cell"
+            :class="{ 
+              'has-element': element && element.type,
+              'is-selected': isElementSelected(index) || isCellSelected(index),
+              'empty-cell': !element || !element.type
+            }"
+            :style="{
+              margin: '0',
+              padding: getCellPadding(element)
+            }"
+            @click.stop="handleCellClick(index, element)"
+            @dragover="handleDragOver($event, index)"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop($event, index)"
+          >
+            <!-- 有元件：顯示元件內容 -->
+            <div v-if="element && element.type" class="element-content">
+              <!-- IMG 元件 -->
+              <div v-if="element.type === 'IMG'" class="element-image" :style="getElementStyle(element)">
+                <img 
+                  v-if="element.value?.src" 
+                  :src="element.value.src" 
+                  :alt="element.value?.alt || '圖片'"
+                  class="element-img"
+                />
+                <div v-else class="placeholder-image">
+                  <span>🖼️ 圖片</span>
+                  <p>請在右側上傳圖片</p>
+                </div>
               </div>
-            </div>
 
-            <!-- TEXT 元件 -->
-            <div 
-              v-else-if="element.type === 'TEXT'" 
-              class="element-text"
-              :style="getElementStyle(element)"
-              v-html="element.value?.text || '文字內容'"
-            ></div>
+              <!-- TEXT 元件 -->
+              <div 
+                v-else-if="element.type === 'TEXT'" 
+                class="element-text"
+                :style="getElementStyle(element)"
+                v-html="element.value?.text || '文字內容'"
+              ></div>
 
-            <!-- BUTTON 元件 -->
-            <div v-else-if="element.type === 'BUTTON'" class="element-button">
-              <a 
-                :href="element.value?.url || '#'" 
-                class="button-link"
-                :style="getButtonStyle(element)"
-                @click.prevent
+              <!-- BUTTON 元件 -->
+              <div v-else-if="element.type === 'BUTTON'" class="element-button">
+                <a 
+                  :href="element.value?.url || '#'" 
+                  class="button-link"
+                  :style="getButtonStyle(element)"
+                  @click.prevent
+                >
+                  {{ element.value?.text || '按鈕' }}
+                </a>
+              </div>
+
+              <!-- H_LINE 元件 -->
+              <div v-else-if="element.type === 'H_LINE'" class="element-hline">
+                <hr :style="{ 
+                  borderColor: element.value?.color || '#ddd',
+                  borderWidth: element.value?.thickness || '2px'
+                }" />
+              </div>
+
+              <!-- V_LINE 元件 -->
+              <div v-else-if="element.type === 'V_LINE'" class="element-vline">
+                <div class="vertical-line" :style="{ 
+                  backgroundColor: element.value?.color || '#ddd',
+                  width: element.value?.thickness || '2px'
+                }"></div>
+              </div>
+
+              <!-- CAROUSEL 元件 -->
+              <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
+                <CarouselElement 
+                  :content="{
+                    images: element.value?.images || [],
+                    autoPlay: element.value?.autoPlay !== false,
+                    interval: element.value?.interval || 3000,
+                    height: element.value?.height || 400
+                  }"
+                  :element="element"
+                  :key="`carousel-${index}-${element.value?.images?.length || 0}`"
+                  @vue:mounted="console.log('🎪 CAROUSEL mounted, element.value:', element.value)"
+                />
+              </div>
+
+              <!-- MAP 元件 -->
+              <div v-else-if="element.type === 'MAP'" class="element-map">
+                <div class="map-placeholder">
+                  <span>地圖</span>
+                  <p>{{ element.value?.address || '請設定地址' }}</p>
+                </div>
+              </div>
+
+              <!-- ALBUM 元件 -->
+              <div v-else-if="element.type === 'ALBUM'" class="element-album">
+                <div class="album-placeholder">
+                  <span>相簿</span>
+                  <p>{{ element.value?.title || '相簿標題' }}</p>
+                </div>
+              </div>
+
+              <!-- 未知類型 -->
+              <div v-else class="element-unknown">
+                <span>未知元件：{{ element.type }}</span>
+              </div>
+
+              <!-- 刪除按鈕 -->
+              <button 
+                class="delete-element-btn"
+                @click.stop="handleDeleteElement(index)"
+                title="刪除元件"
               >
-                {{ element.value?.text || '按鈕' }}
-              </a>
+                ✕
+              </button>
             </div>
 
-            <!-- H_LINE 元件 -->
-            <div v-else-if="element.type === 'H_LINE'" class="element-hline">
-              <hr :style="{ 
-                borderColor: element.value?.color || '#ddd',
-                borderWidth: element.value?.thickness || '2px'
-              }" />
+            <!-- 沒有元件：顯示空格子 -->
+            <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === index }">
+              <span class="drop-hint">📦 拖曳元件至此</span>
             </div>
-
-            <!-- V_LINE 元件 -->
-            <div v-else-if="element.type === 'V_LINE'" class="element-vline">
-              <div class="vertical-line" :style="{ 
-                backgroundColor: element.value?.color || '#ddd',
-                width: element.value?.thickness || '2px'
-              }"></div>
-            </div>
-
-            <!-- CAROUSEL 元件 -->
-            <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
-              <CarouselElement 
-                :content="{
-                  images: element.value?.images || [],
-                  autoPlay: element.value?.autoPlay !== false,
-                  interval: element.value?.interval || 3000,
-                  height: element.value?.height || 400
-                }"
-                :element="element"
-                :key="`carousel-${index}-${element.value?.images?.length || 0}`"
-                @vue:mounted="console.log('🎪 CAROUSEL mounted, element.value:', element.value)"
-              />
-            </div>
-
-            <!-- MAP 元件 -->
-            <div v-else-if="element.type === 'MAP'" class="element-map">
-              <div class="map-placeholder">
-                <span>地圖</span>
-                <p>{{ element.value?.address || '請設定地址' }}</p>
-              </div>
-            </div>
-
-            <!-- ALBUM 元件 -->
-            <div v-else-if="element.type === 'ALBUM'" class="element-album">
-              <div class="album-placeholder">
-                <span>相簿</span>
-                <p>{{ element.value?.title || '相簿標題' }}</p>
-              </div>
-            </div>
-
-            <!-- 未知類型 -->
-            <div v-else class="element-unknown">
-              <span>未知元件：{{ element.type }}</span>
-            </div>
-
-            <!-- 刪除按鈕 -->
-            <button 
-              class="delete-element-btn"
-              @click.stop="handleDeleteElement(index)"
-              title="刪除元件"
-            >
-              ✕
-            </button>
           </div>
-
-          <!-- 沒有元件：顯示空格子 -->
-          <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === index }">
-            <span class="drop-hint">📦 拖曳元件至此</span>
-          </div>
-        </div>
-      </template>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -530,7 +533,7 @@ const createElementFromDrag = (dragData, index) => {
       value = { text: '<p>這是文字內容，點擊右側屬性面板進行編輯</p>' }
       break
     case 'image':
-      value = { id: null, src: null }
+      value = { id: null, src: null, alt: '' }  // ✅ 加上 alt 初始化
       break
     case 'button':
       value = { text: '按鈕文字', url: '#' }
@@ -583,19 +586,27 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
+// ✅ 新增：內容容器限制最大寬度
+.frame-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 .frame-grid {
   width: 100%;
-  min-height: 500px;
+  // ✅ 移除固定 min-height，讓內容自動撐開
 }
 
 // ==================== 複合框架特殊佈局 ====================
 
 .custom-frame.layout-A {
   .frame-grid {
-    min-height: 600px;
+    // ✅ 移除固定 min-height
     
     .grid-cell {
-      height: 100%;
+      // ✅ 移除 height: 100%，改為 min-height
+      min-height: 200px;
     }
     
     .grid-cell:nth-child(1) {
@@ -615,10 +626,10 @@ const createElementFromDrag = (dragData, index) => {
 
 .custom-frame.layout-B {
   .frame-grid {
-    min-height: 600px;
+    // ✅ 移除固定 min-height
     
     .grid-cell {
-      height: 100%;
+      min-height: 200px;
     }
     
     .grid-cell:nth-child(1) {
@@ -638,10 +649,10 @@ const createElementFromDrag = (dragData, index) => {
 
 .custom-frame.layout-C {
   .frame-grid {
-    min-height: 750px;
+    // ✅ 移除固定 min-height
     
     .grid-cell {
-      height: 100%;
+      min-height: 200px;
     }
     
     .grid-cell:nth-child(1) {
@@ -665,10 +676,10 @@ const createElementFromDrag = (dragData, index) => {
 
 .custom-frame.layout-D {
   .frame-grid {
-    min-height: 750px;
+    // ✅ 移除固定 min-height
     
     .grid-cell {
-      height: 100%;
+      min-height: 200px;
     }
     
     .grid-cell:nth-child(1) {
@@ -690,14 +701,14 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// ✅ grid-cell 樣式 - 確保 margin: 0 和 box-sizing
+// ✅ grid-cell 樣式 - 讓內容自動撐開高度
 .grid-cell {
-  min-height: 250px;
+  min-height: 150px;  // ✅ 改為較小的 min-height，方便內容撐開
   position: relative;
   border-radius: 8px;
   transition: all 0.2s;
-  margin: 0;  // ✅ 確保 margin 為 0
-  box-sizing: border-box;  // ✅ padding 包含在寬度內
+  margin: 0;
+  box-sizing: border-box;
   border: 2px solid transparent;
   
   &.has-element {
@@ -720,14 +731,13 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// ✅ element-content 移除內部 padding
+// ✅ element-content 移除固定高度，讓內容自動撐開
 .element-content {
   position: relative;
-  padding: 0;  // ✅ 移除內部 padding，改由 grid-cell 控制
+  padding: 0;
   background: #fff;
   border-radius: 8px;
-  height: 100%;
-  min-height: 150px;
+  // ✅ 移除 height: 100% 和 min-height，讓內容決定高度
   
   &:hover .delete-element-btn {
     opacity: 1;
@@ -736,7 +746,7 @@ const createElementFromDrag = (dragData, index) => {
 
 .element-carousel {
   width: 100%;
-  min-height: 300px;
+  // ✅ 移除 min-height，讓輪播組件自己決定高度
 }
 
 .delete-element-btn {
@@ -770,9 +780,9 @@ const createElementFromDrag = (dragData, index) => {
   .element-img {
     width: 100%;
     height: auto;
-    max-height: 300px;
+    // ✅ 移除 max-height，讓圖片完整顯示
     border-radius: 4px;
-    object-fit: cover;
+    object-fit: contain;  // ✅ 改為 contain，完整顯示圖片
   }
   
   .placeholder-image {
@@ -803,7 +813,7 @@ const createElementFromDrag = (dragData, index) => {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
-  min-height: 100px;
+  // ✅ 移除 min-height，讓文字內容決定高度
   
   ::v-deep(p) {
     margin: 0 0 1em;

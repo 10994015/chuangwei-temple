@@ -893,6 +893,100 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       isLoading.value = false
     }
   }
+  /**
+   * ✅ 上傳圖片檔案
+   * POST /api/tenant/{tid}/web-site/draft-page/file
+   * @param {File} file - 要上傳的圖片檔案
+   * @param {string} tid - 租戶 ID (可選，不提供時使用 store 中的 tenantId)
+   * @returns {Object|null} 上傳成功返回 { id, fileDir, filename, size }，失敗返回 null
+   */
+  const uploadImage = async (file, tid = null) => {
+    const targetTid = tid || tenantId.value
+    
+    if (!targetTid) {
+      console.error('❌ 缺少宮廟 ID')
+      error.value = '缺少宮廟 ID'
+      return null
+    }
+
+    if (!file) {
+      console.error('❌ 缺少檔案')
+      error.value = '缺少檔案'
+      return null
+    }
+
+    // 檢查檔案大小 (最大 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      const errorMsg = '圖片大小不能超過 10MB'
+      console.error(`❌ ${errorMsg}`)
+      error.value = errorMsg
+      return null
+    }
+
+    try {
+      console.log(`📤 開始上傳圖片: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`)
+      
+      // 準備 FormData
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      // 呼叫 API
+      const response = await fetch(`/api/tenant/${targetTid}/web-site/draft-page/file`, {
+        method: 'POST',
+        body: formData
+      })
+
+      console.log(`📥 回應狀態: ${response.status}`)
+
+      if (response.status === 401) {
+        const errorMsg = '未授權，請重新登入'
+        console.error(`❌ ${errorMsg}`)
+        error.value = errorMsg
+        return null
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ HTTP ${response.status}: ${errorText}`)
+        error.value = `上傳失敗: HTTP ${response.status}`
+        return null
+      }
+
+      const result = await response.json()
+      
+      console.log('📥 上傳回應:', result)
+
+      // 檢查回應格式
+      if (result.statusCode === 200 && result.data && result.data.length > 0) {
+        const uploadedFile = result.data[0]
+        
+        console.log('✓ 圖片上傳成功:', {
+          id: uploadedFile.id,
+          fileDir: uploadedFile.fileDir,
+          filename: uploadedFile.filename,
+          size: `${(uploadedFile.size / 1024).toFixed(2)} KB`
+        })
+        
+        return {
+          id: uploadedFile.id,
+          fileDir: uploadedFile.fileDir,
+          filename: uploadedFile.filename,
+          originalName: uploadedFile.originalName,
+          size: uploadedFile.size
+        }
+      }
+
+      const errorMsg = result.message || '上傳失敗'
+      console.error(`❌ ${errorMsg}`)
+      error.value = errorMsg
+      return null
+
+    } catch (err) {
+      console.error('❌ 上傳失敗:', err)
+      error.value = err.message || '上傳失敗'
+      return null
+    }
+  }
 
   return {
     tenantId,
@@ -930,6 +1024,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     resetStore,
     fetchWebsiteSettings,
     updateWebsiteSettings,
-    publishWebsite
+    publishWebsite,
+    uploadImage
   }
 })

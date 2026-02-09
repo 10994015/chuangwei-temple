@@ -96,6 +96,7 @@ const handleBasemapClick = (basemap) => {
 }
 
 const handleSelectFrame = (frame) => {
+  console.log('CanvasArea: 選擇框架', frame?.type)
   emit('select-frame', frame)
 }
 
@@ -351,12 +352,14 @@ const getBasemapKey = (basemap, index) => {
                 :frame-data="frame.data || {}"
                 :frame="frame"
                 :selected-element="selectedElement"
+                :selected-frame="selectedFrame"
                 :current-page-slug="currentPageSlug"
                 class="relative-frame"
                 @select-element="handleSelectElement"
                 @update-element="handleUpdateElement"
                 @delete-element="handleDeleteElement"
                 @change-page="handleChangePage"
+                @select-frame="handleSelectFrame"
               />
               
               <!-- 自訂框架 -->
