@@ -204,12 +204,16 @@ const handleUpgrade = () => {
 const handlePreview = () => {
   const templeId = getTempleId()
   const slug = pageEditorStore.currentPageSlug
+  const locale = pageEditorStore.currentLocale  // ✅ 加上語言
   
   if (templeId && slug) {
     const route = router.resolve({
       name: 'app.temple.preview',
       params: { templeId },
-      query: { slug }
+      query: { 
+        slug,
+        locale  // ✅ 傳遞語言參數
+      }
     })
     window.open(route.href, '_blank')
   } else {

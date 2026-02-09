@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import SystemFramePreview from './PreviewPage/SystemFramePreview.vue'
 import CustomFramePreview from './PreviewPage/CustomFramePreview.vue'
@@ -71,12 +71,49 @@ import CustomFramePreview from './PreviewPage/CustomFramePreview.vue'
 const router = useRouter()
 const route = useRoute()
 
+// ✅ 注入 Store（如果有）
+const pageEditorStore = inject('pageEditorStore', null)
+
 // ==================== 狀態 ====================
 const isLoading = ref(false)
 const error = ref(null)
 const basemaps = ref([])
-const currentLocale = ref('zh-TW')  // 使用固定語言
 const currentSlug = ref('home')
+
+// ✅ 從 URL query 或 Store 獲取語言
+const currentLocale = ref(
+  route.query.locale || 
+  pageEditorStore?.currentLocale || 
+  'zh-TW'
+)
+
+// ✅ 監聽 Store 的語言變化（如果有 Store）
+if (pageEditorStore) {
+  watch(
+    () => pageEditorStore.currentLocale,
+    (newLocale) => {
+      if (newLocale && newLocale !== currentLocale.value) {
+        console.log('🌐 PreviewPage: 檢測到語言變化:', newLocale)
+        currentLocale.value = newLocale
+        // 重新載入當前頁面
+        loadPreviewData()
+      }
+    }
+  )
+}
+
+// ✅ 監聽 URL query 的語言變化
+watch(
+  () => route.query.locale,
+  (newLocale) => {
+    if (newLocale && newLocale !== currentLocale.value) {
+      console.log('🌐 PreviewPage: URL 語言變化:', newLocale)
+      currentLocale.value = newLocale
+      // 重新載入當前頁面
+      loadPreviewData()
+    }
+  }
+)
 
 // ==================== 獲取參數 ====================
 const getTempleId = () => {

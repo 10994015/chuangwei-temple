@@ -18,7 +18,7 @@
               <img 
                 v-if="element.value?.src" 
                 :src="element.value.src" 
-                alt="圖片"
+                :alt="element.value?.alt || '圖片'"
                 class="element-img"
               />
               <div v-else class="placeholder-image">
@@ -85,7 +85,7 @@
             <!-- ALBUM 元件 -->
             <div v-else-if="element.type === 'ALBUM'" class="element-album">
               <div class="album-placeholder">
-                <span></span>
+                <span>📷</span>
                 <p>{{ element.value?.title || '相簿' }}</p>
               </div>
             </div>
@@ -308,98 +308,112 @@ const getButtonStyle = (element) => {
 
 .frame-grid {
   width: 100%;
-  min-height: 500px;
+  min-height: auto;
 }
 
 /* 複合框架特殊佈局 */
 .custom-frame-preview.layout-A .frame-grid {
-  min-height: 600px;
+  min-height: auto;
 }
 
 .custom-frame-preview.layout-A .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1 / 3;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-A .grid-cell:nth-child(2) {
   grid-column: 2;
   grid-row: 1;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-A .grid-cell:nth-child(3) {
   grid-column: 2;
   grid-row: 2;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-B .frame-grid {
-  min-height: 600px;
+  min-height: auto;
 }
 
 .custom-frame-preview.layout-B .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-B .grid-cell:nth-child(2) {
   grid-column: 1;
   grid-row: 2;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-B .grid-cell:nth-child(3) {
   grid-column: 2;
   grid-row: 1 / 3;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-C .frame-grid {
-  min-height: 750px;
+  min-height: auto;
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1 / 4;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(2) {
   grid-column: 2;
   grid-row: 1;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(3) {
   grid-column: 2;
   grid-row: 2;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(4) {
   grid-column: 2;
   grid-row: 3;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-D .frame-grid {
-  min-height: 750px;
+  min-height: auto;
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(2) {
   grid-column: 1;
   grid-row: 2;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(3) {
   grid-column: 1;
   grid-row: 3;
+  min-height: 200px;
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(4) {
   grid-column: 2;
   grid-row: 1 / 4;
+  min-height: 200px;
 }
 
 .grid-cell {
-  min-height: 250px;
+  min-height: 150px;
   box-sizing: border-box;
   margin: 0;
 }
@@ -409,22 +423,18 @@ const getButtonStyle = (element) => {
   padding: 0;
   background: #fff;
   border-radius: 8px;
-  height: 100%;
-  min-height: 150px;
 }
 
 .element-carousel {
   width: 100%;
-  min-height: 300px;
 }
 
 /* 元件樣式 */
 .element-image .element-img {
   width: 100%;
   height: auto;
-  max-height: 300px;
   border-radius: 4px;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .placeholder-image {
@@ -445,7 +455,6 @@ const getButtonStyle = (element) => {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
-  min-height: 100px;
 }
 
 .element-text :deep(p) {
