@@ -1,53 +1,68 @@
 <template>
-  <div class="system-frame-container" :data-frame-type="frameType">
-    <!-- 頁首 (HEADER) - 可編輯版本 -->
-    <NavbarBasemap 
-      v-if="frameType === 'HEADER'" 
-      :frame-data="frameData"
-      :is-edit-mode="true"
-      :is-logo-selected="isLogoSelected"
-      :current-page-slug="currentPageSlug"
-      :frame="frame"
-      @select-logo="handleSelectLogo"
-      @update-logo="handleUpdateLogo"
-      @delete-logo="handleDeleteLogo"
-      @change-page="handleChangePage"
-    />
-    
-    <!-- 頁尾 (FOOTER) -->
-    <FooterBasemap v-else-if="frameType === 'FOOTER'" v-bind="frameData" />
-    
-    <!-- 輪播牆 (CAROUSEL_WALL) -->
-    <HeroBasemap v-else-if="frameType === 'CAROUSEL_WALL'" v-bind="frameData" />
-    
-    <!-- ✅ 首圖 (FIRST_PICTURE) - 使用新的 HeroBannerElement -->
-    <HeroBannerElement 
-      v-else-if="frameType === 'FIRST_PICTURE'" 
-      :frame-data="frameData"
-      :frame="frame"
-      :is-selected="isFrameSelected"
-      @select-frame="handleSelectFrame"
-    />
-    
-    <!-- 首頁-最新消息 (INDEX_NEWS) -->
-    <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
-    
-    <!-- 消息列表 (NEWS_LIST) -->
-    <NewsBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
-    
-    <!-- 首頁-商品標幅 (INDEX_PRODUCT) -->
-    <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" />
-    
-    <!-- 首頁-活動橫幅 (INDEX_EVENT) -->
-    <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" />
-    
-    <!-- 首頁-捐獻區 (INDEX_DONATION) - 可編輯版本 -->
-    <DonationBasemap 
-      v-else-if="frameType === 'INDEX_DONATION'" 
-      v-bind="frameData"
-      :is-edit-mode="true"
-      :frame="frame"
-      :selected-element="selectedElement"
+  <div 
+    class="system-frame-wrapper" 
+    :class="{ 'is-selected': isFrameSelected && frame?.is_deletable }"
+    :data-frame-type="frameType"
+  >
+    <!-- ✅ 刪除系統框架按鈕（只在框架可刪除且被選中時顯示） -->
+    <button
+      v-if="isFrameSelected && frame?.is_deletable"
+      class="delete-system-frame-btn"
+      @click.stop="handleDeleteFrame"
+      title="刪除框架"
+    >
+      ✕
+    </button>
+
+    <div class="system-frame-container" :data-frame-type="frameType">
+      <!-- 頁首 (HEADER) - 可編輯版本 -->
+      <NavbarBasemap 
+        v-if="frameType === 'HEADER'" 
+        :frame-data="frameData"
+        :is-edit-mode="true"
+        :is-logo-selected="isLogoSelected"
+        :current-page-slug="currentPageSlug"
+        :frame="frame"
+        @select-logo="handleSelectLogo"
+        @update-logo="handleUpdateLogo"
+        @delete-logo="handleDeleteLogo"
+        @change-page="handleChangePage"
+      />
+      
+      <!-- 頁尾 (FOOTER) -->
+      <FooterBasemap v-else-if="frameType === 'FOOTER'" v-bind="frameData" />
+      
+      <!-- 輪播牆 (CAROUSEL_WALL) -->
+      <HeroBasemap v-else-if="frameType === 'CAROUSEL_WALL'" v-bind="frameData" />
+      
+      <!-- ✅ 首圖 (FIRST_PICTURE) - 使用新的 HeroBannerElement -->
+      <HeroBannerElement 
+        v-else-if="frameType === 'FIRST_PICTURE'" 
+        :frame-data="frameData"
+        :frame="frame"
+        :is-selected="isFrameSelected"
+        @select-frame="handleSelectFrame"
+      />
+      
+      <!-- 首頁-最新消息 (INDEX_NEWS) -->
+      <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
+      
+      <!-- 消息列表 (NEWS_LIST) -->
+      <NewsBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
+      
+      <!-- 首頁-商品標幅 (INDEX_PRODUCT) -->
+      <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" />
+      
+      <!-- 首頁-活動橫幅 (INDEX_EVENT) -->
+      <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" />
+      
+      <!-- 首頁-捐獻區 (INDEX_DONATION) - 可編輯版本 -->
+      <DonationBasemap 
+        v-else-if="frameType === 'INDEX_DONATION'" 
+        v-bind="frameData"
+        :is-edit-mode="true"
+        :frame="frame"
+        :selected-element="selectedElement"
       @select-element="handleSelectElement"
     />
     
@@ -69,6 +84,7 @@
     <!-- 未知類型 -->
     <div v-else class="unknown-frame">
       <p>未知系統框架類型: {{ frameType }}</p>
+    </div>
     </div>
   </div>
 </template>
@@ -109,7 +125,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['select-element', 'update-element', 'delete-element', 'change-page', 'select-frame'])
+const emit = defineEmits([
+  'select-element', 
+  'update-element', 
+  'delete-element', 
+  'change-page', 
+  'select-frame',
+  'delete-frame'  // ✅ 新增：刪除框架事件
+])
 
 // 檢查 Logo 是否被選中
 const isLogoSelected = computed(() => {
@@ -125,6 +148,17 @@ const isFrameSelected = computed(() => {
 const handleSelectFrame = (frame) => {
   console.log('SystemFrame: 選擇框架', frame?.type)
   emit('select-frame', frame)
+}
+
+// ✅ 處理刪除框架
+const handleDeleteFrame = () => {
+  if (confirm('確定要刪除此系統框架嗎？')) {
+    console.log('SystemFrame: 刪除框架', props.frameType)
+    emit('delete-frame', {
+      frame: props.frame,
+      frameType: props.frameType
+    })
+  }
 }
 
 // 處理切換頁面
@@ -171,6 +205,47 @@ const handleDeleteLogo = () => {
 </script>
 
 <style scoped>
+/* ✅ 系統框架包裝容器 */
+.system-frame-wrapper {
+  position: relative;
+  
+  &.is-selected {
+    outline: 3px solid rgba(232, 87, 42, 0.5);
+    outline-offset: -3px;
+    
+    /* 框架被選中時，顯示刪除按鈕 */
+    .delete-system-frame-btn {
+      opacity: 1;
+    }
+  }
+}
+
+/* ✅ 刪除系統框架按鈕 */
+.delete-system-frame-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  
+  &:hover {
+    background: #dc3545;
+    color: #fff;
+    transform: scale(1.1);
+  }
+}
+
 .system-frame-container {
   position: relative;
 }

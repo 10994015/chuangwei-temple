@@ -42,6 +42,7 @@ const emit = defineEmits([
   'drop-to-cell',
   'delete-basemap',
   'delete-element',
+  'delete-frame',  // ✅ 新增：刪除框架
   'update-element',
   'update-background',
   'update-cell-padding',
@@ -248,6 +249,16 @@ const handleDeleteElement = (data) => {
   emit('delete-element', data)
 }
 
+// ✅ 刪除框架
+const handleDeleteFrame = (data, basemap, basemapIndex) => {
+  console.log('CanvasArea: 刪除框架', data)
+  emit('delete-frame', {
+    ...data,
+    basemap,
+    basemapIndex
+  })
+}
+
 // ==================== 輔助函數 ====================
 
 // 判斷框架類型
@@ -360,6 +371,7 @@ const getBasemapKey = (basemap, index) => {
                 @delete-element="handleDeleteElement"
                 @change-page="handleChangePage"
                 @select-frame="handleSelectFrame"
+                @delete-frame="(data) => handleDeleteFrame(data, basemap, index)"
               />
               
               <!-- 自訂框架 -->
@@ -373,6 +385,7 @@ const getBasemapKey = (basemap, index) => {
                 class="relative-frame"
                 @drop-to-cell="handleDropToCell"
                 @delete-element="handleDeleteElement"
+                @delete-frame="(data) => handleDeleteFrame(data, basemap, index)"
                 @select-frame="handleSelectFrame"
                 @select-element="handleSelectElement"
                 @select-cell="handleSelectCell"

@@ -3,23 +3,26 @@
     class="custom-frame-preview"
     :class="`layout-${frameLayout}`"
   >
-    <div class="frame-grid" :style="gridStyle">
-      <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
-        <div 
-          class="grid-cell"
-          :style="{
-            margin: '0',
-            padding: getCellPadding(element)
-          }"
-        >
-          <div v-if="element && element.type" class="element-content">
+    <!-- ✅ 新增 frame-container 來限制寬度和添加最小高度 -->
+    <div class="frame-container">
+      <div class="frame-grid" :style="gridStyle">
+        <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
+          <div 
+            class="grid-cell"
+            :style="{
+              margin: '0',
+              padding: getCellPadding(element)
+            }"
+          >
+            <div v-if="element && element.type" class="element-content">
             <!-- IMG 元件 -->
-            <div v-if="element.type === 'IMG'" class="element-image" :style="getElementStyle(element)">
+            <div v-if="element.type === 'IMG'" class="element-image" :style="getImageContainerStyle(element)">
               <img 
                 v-if="element.value?.src" 
                 :src="element.value.src" 
                 :alt="element.value?.alt || '圖片'"
                 class="element-img"
+                :style="getElementStyle(element)"
               />
               <div v-else class="placeholder-image">
                 <span>🖼️</span>
@@ -96,6 +99,7 @@
         </div>
       </template>
     </div>
+    </div>  <!-- ✅ 結束 frame-container -->
   </div>
 </template>
 
@@ -265,6 +269,21 @@ const getCellPadding = (element) => {
   return `${top}px ${right}px ${bottom}px ${left}px`
 }
 
+// ✅ 獲取圖片容器的樣式（用於對齊）
+const getImageContainerStyle = (element) => {
+  if (!element || !element.metadata) return {}
+  
+  const metadata = element.metadata
+  const style = {}
+  
+  // 使用 text_align 來控制圖片對齊
+  if (metadata.text_align) {
+    style.textAlign = metadata.text_align
+  }
+  
+  return style
+}
+
 // 獲取元件樣式
 const getElementStyle = (element) => {
   if (!element || !element.metadata) return {}
@@ -275,7 +294,10 @@ const getElementStyle = (element) => {
   if (metadata.color) style.color = metadata.color
   if (metadata.font_size) style.fontSize = metadata.font_size
   if (metadata.font_weight) style.fontWeight = metadata.font_weight
-  if (metadata.text_align) style.textAlign = metadata.text_align
+  // ✅ 文字元件使用 text_align，圖片不使用（已在容器處理）
+  if (element.type === 'TEXT' && metadata.text_align) {
+    style.textAlign = metadata.text_align
+  }
   if (metadata.width) style.width = metadata.width
   if (metadata.height) style.height = metadata.height
   if (metadata.background_color) style.backgroundColor = metadata.background_color
@@ -301,9 +323,18 @@ const getButtonStyle = (element) => {
 
 <style scoped>
 .custom-frame-preview {
-  padding: 40px;
+  padding: 20px;  /* ✅ 改為 20px */
   background: #fff;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto，適應內容高度 */
+  position: relative;
+}
+
+/* ✅ 新增：內容容器限制最大寬度 */
+.frame-container {
+  max-width: 1200px;  /* ✅ 限制最大寬度為 1200px */
+  margin: 0 auto;
+  width: 100%;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .frame-grid {
@@ -319,19 +350,19 @@ const getButtonStyle = (element) => {
 .custom-frame-preview.layout-A .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1 / 3;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-A .grid-cell:nth-child(2) {
   grid-column: 2;
   grid-row: 1;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-A .grid-cell:nth-child(3) {
   grid-column: 2;
   grid-row: 2;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-B .frame-grid {
@@ -341,19 +372,19 @@ const getButtonStyle = (element) => {
 .custom-frame-preview.layout-B .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-B .grid-cell:nth-child(2) {
   grid-column: 1;
   grid-row: 2;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-B .grid-cell:nth-child(3) {
   grid-column: 2;
   grid-row: 1 / 3;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-C .frame-grid {
@@ -363,25 +394,25 @@ const getButtonStyle = (element) => {
 .custom-frame-preview.layout-C .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1 / 4;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(2) {
   grid-column: 2;
   grid-row: 1;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(3) {
   grid-column: 2;
   grid-row: 2;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-C .grid-cell:nth-child(4) {
   grid-column: 2;
   grid-row: 3;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-D .frame-grid {
@@ -391,29 +422,29 @@ const getButtonStyle = (element) => {
 .custom-frame-preview.layout-D .grid-cell:nth-child(1) {
   grid-column: 1;
   grid-row: 1;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(2) {
   grid-column: 1;
   grid-row: 2;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(3) {
   grid-column: 1;
   grid-row: 3;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .custom-frame-preview.layout-D .grid-cell:nth-child(4) {
   grid-column: 2;
   grid-row: 1 / 4;
-  min-height: 200px;
+  min-height: auto;  /* ✅ 改為 auto */
 }
 
 .grid-cell {
-  min-height: 150px;
+  min-height: auto;  /* ✅ 改為 auto，適應內容高度 */
   box-sizing: border-box;
   margin: 0;
 }
@@ -430,11 +461,17 @@ const getButtonStyle = (element) => {
 }
 
 /* 元件樣式 */
-.element-image .element-img {
+.element-image {
   width: 100%;
-  height: auto;
-  border-radius: 4px;
-  object-fit: contain;
+  
+  .element-img {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    object-fit: contain;
+    vertical-align: middle;
+  }
 }
 
 .placeholder-image {

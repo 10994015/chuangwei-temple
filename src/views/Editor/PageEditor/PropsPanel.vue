@@ -37,17 +37,34 @@
           <div class="prop-group">
             <label>背景圖片</label>
             <div class="image-upload">
+              <!-- ✅ Loading 狀態 -->
+              <div v-if="isUploadingHeroBackground" class="uploading-state">
+                <div class="spinner"></div>
+                <span>上傳中...</span>
+              </div>
+              
+              <!-- ✅ 預覽圖片 -->
               <img 
-                v-if="selectedFrame.data?.hero_bg_img_src"
+                v-else-if="selectedFrame.data?.hero_bg_img_src"
                 :src="selectedFrame.data.hero_bg_img_src" 
                 alt="背景預覽"
                 class="preview-image"
               />
+              
+              <!-- ✅ 無圖片狀態 -->
               <div v-else class="no-image">
                 <span>尚未上傳背景圖片</span>
               </div>
-              <button @click="handleUploadHeroBackground" class="upload-btn">
-                {{ selectedFrame.data?.hero_bg_img_src ? '更換背景' : '上傳背景' }}
+              
+              <button 
+                @click="handleUploadHeroBackground" 
+                class="upload-btn"
+                :disabled="isUploadingHeroBackground"
+              >
+                <template v-if="isUploadingHeroBackground">上傳中...</template>
+                <template v-else>
+                  {{ selectedFrame.data?.hero_bg_img_src ? '更換背景' : '上傳背景' }}
+                </template>
               </button>
             </div>
           </div>
@@ -250,18 +267,45 @@
           <div class="prop-group">
             <label>Logo 圖片</label>
             <div class="image-upload">
+              <!-- ✅ Loading 狀態 -->
+              <div v-if="isUploadingLogo" class="uploading-state">
+                <div class="spinner"></div>
+                <span>上傳中...</span>
+              </div>
+              
+              <!-- ✅ 預覽圖片 - 使用本地響應式狀態 -->
               <img 
-                v-if="selectedElement.data?.src" 
-                :src="selectedElement.data.src" 
-                alt="Logo 預覽"
+                v-else-if="localLogoSrc" 
+                :src="localLogoSrc" 
+                :alt="selectedElement.frame?.data?.temple_name || 'Logo'"
                 class="preview-image logo-preview"
+                @error="handleLogoImageError"
               />
+              
+              <!-- ✅ 無圖片狀態 -->
               <div v-else class="no-image">
                 <span>尚未上傳 Logo</span>
               </div>
-              <button @click="handleUploadLogo" class="upload-btn">
-                {{ selectedElement.data?.src ? '更換 Logo' : '上傳 Logo' }}
+              
+              <button 
+                @click="handleUploadLogo" 
+                class="upload-btn"
+                :disabled="isUploadingLogo"
+              >
+                <template v-if="isUploadingLogo">上傳中...</template>
+                <template v-else>
+                  {{ localLogoSrc ? '更換 Logo' : '上傳 Logo' }}
+                </template>
               </button>
+            </div>
+            
+            <!-- ✅ Debug 資訊（開發時可用） -->
+            <div v-if="false" class="debug-info">
+              <small>
+                Local Logo: {{ localLogoSrc ? '有' : '無' }}<br>
+                Frame Logo: {{ selectedElement.frame?.data?.logo_img_src ? '有' : '無' }}<br>
+                Data Logo: {{ selectedElement.data?.src ? '有' : '無' }}
+              </small>
             </div>
           </div>
         </template>
@@ -480,23 +524,40 @@
           <div class="prop-group">
             <label>圖片</label>
             <div class="image-upload">
+              <!-- ✅ Loading 狀態 -->
+              <div v-if="isUploadingImage" class="uploading-state">
+                <div class="spinner"></div>
+                <span>上傳中...</span>
+              </div>
+              
+              <!-- ✅ 預覽圖片 -->
               <img 
-                v-if="selectedElement.element.value?.src"
+                v-else-if="selectedElement.element.value?.src"
                 :src="selectedElement.element.value.src" 
                 alt="圖片預覽"
                 class="preview-image"
               />
+              
+              <!-- ✅ 無圖片狀態 -->
               <div v-else class="no-image">
                 <span>尚未上傳圖片</span>
               </div>
-              <button @click="handleUploadImage" class="upload-btn">
-                {{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}
+              
+              <button 
+                @click="handleUploadImage" 
+                class="upload-btn"
+                :disabled="isUploadingImage"
+              >
+                <template v-if="isUploadingImage">上傳中...</template>
+                <template v-else>
+                  {{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}
+                </template>
               </button>
             </div>
           </div>
 
           <!-- ✅ 新增：Alt 文字設定 -->
-          <div class="prop-group">
+          <div class="prop-group" v-if="false">
             <label>Alt 文字（替代文字）</label>
             <input 
               v-model="imageAlt" 
@@ -511,6 +572,44 @@
           <!-- ✅ Metadata 樣式設定 -->
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
+            
+            <!-- ✅ 圖片對齊 -->
+            <div class="prop-group">
+              <label>圖片對齊</label>
+              <div class="align-buttons">
+                <button 
+                  @click="elementMetadata.text_align = 'left'; updateMetadata()" 
+                  class="align-btn"
+                  :class="{ active: elementMetadata.text_align === 'left' }"
+                  title="靠左"
+                >
+                  靠左
+                </button>
+                <button 
+                  @click="elementMetadata.text_align = 'center'; updateMetadata()" 
+                  class="align-btn"
+                  :class="{ active: elementMetadata.text_align === 'center' }"
+                  title="置中"
+                >
+                  置中
+                </button>
+                <button 
+                  @click="elementMetadata.text_align = 'right'; updateMetadata()" 
+                  class="align-btn"
+                  :class="{ active: elementMetadata.text_align === 'right' }"
+                  title="靠右"
+                >
+                  靠右
+                </button>
+                <button 
+                  @click="elementMetadata.text_align = null; updateMetadata()" 
+                  class="align-btn clear"
+                  title="清除（預設靠左）"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
             
             <!-- 寬度 -->
             <div class="prop-group">
@@ -1052,8 +1151,18 @@
               </div>
             </div>
 
-            <button @click="addCarouselImage" class="upload-btn">
-              ＋ 新增圖片
+            <button 
+              @click="addCarouselImage" 
+              class="upload-btn"
+              :disabled="isUploadingCarousel"
+            >
+              <template v-if="isUploadingCarousel">
+                <span class="btn-spinner"></span>
+                上傳中...
+              </template>
+              <template v-else>
+                ＋ 新增圖片
+              </template>
             </button>
           </div>
 
@@ -1219,6 +1328,13 @@ const emit = defineEmits(['update-logo', 'update-cell-padding'])
 const logoAlt = ref('')
 const logoWidth = ref('')
 const logoHeight = ref('')
+const isUploadingLogo = ref(false)  // ✅ Logo 上傳中狀態
+const localLogoSrc = ref(null)      // ✅ 本地 Logo src（確保預覽更新）
+
+// ✅ 圖片上傳 loading 狀態
+const isUploadingImage = ref(false)           // IMG 元件圖片上傳中
+const isUploadingHeroBackground = ref(false)  // 首圖背景上傳中
+const isUploadingCarousel = ref(false)        // 輪播圖片上傳中
 
 // CAROUSEL 相關的響應式數據
 const carouselImages = ref([])
@@ -1334,6 +1450,38 @@ watch(() => props.selectedElement, (newVal) => {
   console.log('✓ 元件 padding 已載入:', elementPadding.value)
 }, { immediate: true, deep: true })
 
+// ✅ 額外監聽 Logo data 的變化（用於上傳後更新預覽）
+watch(() => props.selectedElement?.data, (newData) => {
+  if (props.selectedElement?.type === 'logo' && newData) {
+    console.log('✓ Logo data 變化檢測:', newData)
+    // 觸發響應式更新（雖然理論上 deep: true 應該捕捉到，但為了保險）
+  }
+}, { deep: true })
+
+// ✅ 監聽 frame.data.logo_img_src 的變化（確保預覽更新）
+watch(
+  () => props.selectedElement?.frame?.data?.logo_img_src,
+  (newSrc) => {
+    if (props.selectedElement?.type === 'logo') {
+      console.log('🔄 Logo src 變化檢測:', newSrc)
+      localLogoSrc.value = newSrc || null
+    }
+  },
+  { immediate: true }
+)
+
+// ✅ 監聽選中元件切換（重置本地 Logo src）
+watch(
+  () => props.selectedElement?.type,
+  (newType) => {
+    if (newType === 'logo') {
+      localLogoSrc.value = props.selectedElement?.frame?.data?.logo_img_src || null
+      console.log('✓ Logo 被選中，載入 src:', localLogoSrc.value)
+    }
+  },
+  { immediate: true }
+)
+
 // 額外監聽 CAROUSEL 的 images 陣列變化
 watch(() => props.selectedElement?.element?.value?.images, (newImages) => {
   if (props.selectedElement?.element?.type === 'CAROUSEL' && newImages) {
@@ -1426,27 +1574,70 @@ const setElementPadding = (value) => {
 
 // ==================== Logo 操作 ====================
 
-const handleUploadLogo = () => {
+const handleUploadLogo = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.onchange = (e) => {
+  
+  input.onchange = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        emit('update-logo', {
-          src: event.target.result,
-          id: null,
-          alt: logoAlt.value || 'Logo',
-          width: logoWidth.value || '120px',
-          height: logoHeight.value || 'auto'
-        })
+    if (!file) return
+    
+    try {
+      // ✅ 開始上傳，顯示 loading
+      isUploadingLogo.value = true
+      console.log('📤 開始上傳 Logo...')
+      
+      // ✅ 使用 Store 的 uploadImage 方法
+      const uploadedFile = await pageEditorStore.uploadImage(file)
+      
+      if (!uploadedFile) {
+        // Store 已經處理錯誤訊息
+        alert('Logo 上傳失敗，請稍後再試')
+        return
       }
-      reader.readAsDataURL(file)
+      
+      console.log('✓ Logo 上傳成功:', uploadedFile)
+      
+      // ✅ 立即更新本地預覽（不等待 Store 更新）
+      localLogoSrc.value = uploadedFile.fileDir
+      console.log('✓ 本地預覽已更新:', localLogoSrc.value)
+      
+      // ✅ 發送更新事件給父組件
+      emit('update-logo', {
+        id: uploadedFile.id,
+        src: uploadedFile.fileDir
+      })
+      
+      console.log('✓ Logo 已上傳:', {
+        id: uploadedFile.id,
+        src: uploadedFile.fileDir
+      })
+      
+      // ✅ 等待一下，確保 DOM 和 Store 都更新
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      console.log('✓ 檢查更新結果:')
+      console.log('  - localLogoSrc:', localLogoSrc.value)
+      console.log('  - frame.data.logo_img_src:', props.selectedElement?.frame?.data?.logo_img_src)
+      console.log('  - selectedElement.data.src:', props.selectedElement?.data?.src)
+      
+    } catch (error) {
+      console.error('❌ Logo 上傳失敗:', error)
+      alert('Logo 上傳失敗: ' + error.message)
+    } finally {
+      // ✅ 結束 loading
+      isUploadingLogo.value = false
     }
   }
+  
   input.click()
+}
+
+// ✅ 處理圖片載入錯誤
+const handleLogoImageError = (e) => {
+  console.error('❌ Logo 圖片載入失敗:', e.target.src)
+  alert('Logo 圖片載入失敗，請重新上傳')
 }
 
 // ==================== 圖片操作 ====================
@@ -1461,11 +1652,14 @@ const handleUploadImage = async () => {
     if (!file) return
     
     try {
+      // ✅ 開始上傳，顯示 loading
+      isUploadingImage.value = true
+      console.log('📤 開始上傳圖片...')
+      
       // ✅ 使用 Store 的 uploadImage 方法
       const uploadedFile = await pageEditorStore.uploadImage(file)
       
       if (!uploadedFile) {
-        // Store 已經處理錯誤訊息
         alert('圖片上傳失敗，請稍後再試')
         return
       }
@@ -1484,6 +1678,9 @@ const handleUploadImage = async () => {
     } catch (error) {
       console.error('❌ 圖片上傳失敗:', error)
       alert('圖片上傳失敗: ' + error.message)
+    } finally {
+      // ✅ 結束 loading
+      isUploadingImage.value = false
     }
   }
   
@@ -1502,11 +1699,14 @@ const addCarouselImage = async () => {
     if (!file) return
     
     try {
+      // ✅ 開始上傳，顯示 loading
+      isUploadingCarousel.value = true
+      console.log('📤 開始上傳輪播圖片...')
+      
       // ✅ 使用 Store 的 uploadImage 方法
       const uploadedFile = await pageEditorStore.uploadImage(file)
       
       if (!uploadedFile) {
-        // Store 已經處理錯誤訊息
         alert('輪播圖片上傳失敗，請稍後再試')
         return
       }
@@ -1530,6 +1730,9 @@ const addCarouselImage = async () => {
     } catch (error) {
       console.error('❌ 輪播圖片上傳失敗:', error)
       alert('輪播圖片上傳失敗: ' + error.message)
+    } finally {
+      // ✅ 結束 loading
+      isUploadingCarousel.value = false
     }
   }
   
@@ -1606,11 +1809,14 @@ const handleUploadHeroBackground = async () => {
     if (!file) return
     
     try {
+      // ✅ 開始上傳，顯示 loading
+      isUploadingHeroBackground.value = true
+      console.log('📤 開始上傳首圖背景...')
+      
       // ✅ 使用 Store 的 uploadImage 方法
       const uploadedFile = await pageEditorStore.uploadImage(file)
       
       if (!uploadedFile) {
-        // Store 已經處理錯誤訊息
         alert('首圖背景上傳失敗，請稍後再試')
         return
       }
@@ -1629,6 +1835,9 @@ const handleUploadHeroBackground = async () => {
     } catch (error) {
       console.error('❌ 首圖背景上傳失敗:', error)
       alert('首圖背景上傳失敗: ' + error.message)
+    } finally {
+      // ✅ 結束 loading
+      isUploadingHeroBackground.value = false
     }
   }
   
@@ -1867,7 +2076,7 @@ const handleUploadHeroBackground = async () => {
     background: #f5f5f5;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
 
@@ -1929,6 +2138,50 @@ const handleUploadHeroBackground = async () => {
   font-size: 13px;
 }
 
+// ✅ 上傳中狀態
+.uploading-state {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f9f9f9;
+  border: 2px solid #E8572A;
+  border-radius: 4px;
+  color: #E8572A;
+  font-size: 13px;
+  gap: 12px;
+}
+
+// ✅ Loading 旋轉動畫
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #E8572A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+// ✅ 按鈕內的小 spinner
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .upload-btn {
   padding: 8px 16px;
   background: #E8572A;
@@ -1939,10 +2192,32 @@ const handleUploadHeroBackground = async () => {
   cursor: pointer;
   transition: background 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #d14a1f;
   }
+  
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
+
+// ✅ Debug 資訊樣式
+.debug-info {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-family: monospace;
+  
+  small {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.6;
+  }
+}
+
 
 .checkbox-label {
   display: flex;

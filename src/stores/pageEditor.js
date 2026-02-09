@@ -527,11 +527,21 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     const headerBasemap = basemaps.find(b => b.bg_type === 'HEADER')
     
     if (headerBasemap?.frames?.[0]) {
-      if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
+      if (!headerBasemap.frames[0].data) {
+        headerBasemap.frames[0].data = {}
+      }
+      
+      // ✅ 更新 logo_img_src 和 logo_img_id
       headerBasemap.frames[0].data.logo_img_src = logoSrc
       headerBasemap.frames[0].data.logo_img_id = logoId
+      
+      console.log('✓ Store: Logo 已更新:', {
+        logo_img_src: logoSrc,
+        logo_img_id: logoId
+      })
     }
   }
+
 
   const syncHeaderMenuFromTabs = () => {
     const basemaps = currentPageBasemaps.value
@@ -988,6 +998,111 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
+  /**
+   * ✅ 刪除草稿頁面（回溯到上一個發布版本）
+   * DELETE /api/tenant/{tid}/web-site/draft-page/{slug}
+   * @param {string} slug - 頁面 slug (例如: 'home', 'about-us')
+   * @param {string} tid - 租戶 ID (可選，不提供時使用 store 中的 tenantId)
+   * @returns {boolean} 刪除成功返回 true，失敗返回 false
+   */
+  const deleteDraft = async (slug, tid = null) => {
+    const targetTid = tid || tenantId.value
+    
+    if (!targetTid) {
+      console.error('❌ 缺少宮廟 ID')
+      error.value = '缺少宮廟 ID'
+      return false
+    }
+
+    if (!slug) {
+      console.error('❌ 缺少頁面 slug')
+      error.value = '缺少頁面 slug'
+      return false
+    }
+
+    try {
+      console.log(`🗑️ 開始刪除草稿: ${slug}`)
+      isLoading.value = true
+      error.value = null
+      
+      // ✅ 呼叫刪除 API
+      const response = await fetch(`/api/tenant/${targetTid}/web-site/draft-page/${slug}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          locale: currentLocale.value || 'any'
+        })
+      })
+
+      console.log(`📥 刪除回應狀態: ${response.status}`)
+
+      if (response.status === 401) {
+        const errorMsg = '未授權，請重新登入'
+        console.error(`❌ ${errorMsg}`)
+        error.value = errorMsg
+        isLoading.value = false
+        return false
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ HTTP ${response.status}: ${errorText}`)
+        error.value = `刪除失敗: HTTP ${response.status}`
+        isLoading.value = false
+        return false
+      }
+
+      const result = await response.json()
+      console.log('📥 刪除回應:', result)
+
+      if (result.statusCode === 200) {
+        console.log('✓ 草稿已刪除，即將重新載入...')
+        
+        // ✅ 刪除成功後，重新載入草稿（會回溯到上一個發布版本）
+        // 使用 reloadCurrentPage 或 initializePage 重新載入
+        try {
+          console.log('📥 重新載入頁面:', slug)
+          
+          // 方法 1: 使用 reloadCurrentPage（推薦）
+          if (typeof reloadCurrentPage === 'function') {
+            await reloadCurrentPage(currentLocale.value)
+          } 
+          // 方法 2: 使用 initializePage（如果沒有 reloadCurrentPage）
+          else if (typeof initializePage === 'function') {
+            await initializePage(slug, currentLocale.value, targetTid)
+          }
+          // 方法 3: 直接載入草稿（備用）
+          else {
+            await loadDraft(slug, currentLocale.value, targetTid)
+          }
+          
+          console.log('✓ 草稿已重新載入')
+          isLoading.value = false
+          return true
+          
+        } catch (reloadError) {
+          console.error('❌ 重新載入草稿失敗:', reloadError)
+          error.value = '草稿已刪除，但重新載入失敗'
+          isLoading.value = false
+          return false
+        }
+      }
+
+      const errorMsg = result.message || '刪除失敗'
+      console.error(`❌ ${errorMsg}`)
+      error.value = errorMsg
+      isLoading.value = false
+      return false
+
+    } catch (err) {
+      console.error('❌ 刪除草稿失敗:', err)
+      error.value = err.message || '刪除草稿失敗'
+      isLoading.value = false
+      return false
+    }
+  }
   return {
     tenantId,
     headerTabs,
@@ -1025,6 +1140,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     fetchWebsiteSettings,
     updateWebsiteSettings,
     publishWebsite,
-    uploadImage
+    uploadImage,
+    deleteDraft
   }
 })

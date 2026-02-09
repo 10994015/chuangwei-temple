@@ -204,7 +204,7 @@ const handleUpgrade = () => {
 const handlePreview = () => {
   const templeId = getTempleId()
   const slug = pageEditorStore.currentPageSlug
-  const locale = pageEditorStore.currentLocale  // ✅ 加上語言
+  const locale = pageEditorStore.currentLocale  
   
   if (templeId && slug) {
     const route = router.resolve({
@@ -237,10 +237,40 @@ const handleSave = async () => {
   }
 }
 
-// 刪除
-const handleDelete = () => {
-  if (confirm('確定要刪除此草稿嗎？此操作無法復原！')) {
-    alert('刪除草稿功能待實作')
+// 刪除草稿
+const handleDelete = async () => {
+  // 確認提示
+  const confirmed = confirm(
+    '確定要刪除草稿嗎？'
+  )
+  
+  if (!confirmed) {
+    return
+  }
+  
+  const templeId = getTempleId()
+  const currentSlug = pageEditorStore.currentPageSlug
+  
+  if (!templeId || !currentSlug) {
+    alert('無法刪除草稿：缺少必要資訊')
+    return
+  }
+  
+  try {
+    
+    // ✅ 調用 Store 的 deleteDraft 方法
+    const success = await pageEditorStore.deleteDraft(currentSlug, templeId)
+    
+    if (success) {
+      // alert('刪除成功')
+      hasUnsavedChanges.value = false
+    } else {
+      alert('刪除失敗：' + (pageEditorStore.error || '未知錯誤'))
+    }
+    
+  } catch (error) {
+    console.error('❌ 刪除草稿時發生錯誤:', error)
+    alert('刪除失敗：' + error.message)
   }
 }
 

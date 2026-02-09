@@ -10,6 +10,16 @@
     ]"
     @click.stop="handleFrameClick"
   >
+    <!-- ✅ 刪除框架按鈕（只在框架被選中且沒有元件時顯示） -->
+    <button
+      v-if="isFrameSelected && !hasAnyElement && frame.is_deletable"
+      class="delete-frame-btn"
+      @click.stop="handleDeleteFrame"
+      title="刪除框架"
+    >
+      ✕
+    </button>
+
     <!-- ✅ 新增 container 來限制內容最大寬度 -->
     <div class="frame-container">
       <!-- 根據框架佈局渲染格子和元件 -->
@@ -35,12 +45,13 @@
             <!-- 有元件：顯示元件內容 -->
             <div v-if="element && element.type" class="element-content">
               <!-- IMG 元件 -->
-              <div v-if="element.type === 'IMG'" class="element-image" :style="getElementStyle(element)">
+              <div v-if="element.type === 'IMG'" class="element-image" :style="getImageContainerStyle(element)">
                 <img 
                   v-if="element.value?.src" 
                   :src="element.value.src" 
                   :alt="element.value?.alt || '圖片'"
                   class="element-img"
+                  :style="getElementStyle(element)"
                 />
                 <div v-else class="placeholder-image">
                   <span>🖼️ 圖片</span>
@@ -173,7 +184,8 @@ const emit = defineEmits([
   'select-element',
   'select-cell',
   'drop-to-cell',
-  'delete-element'
+  'delete-element',
+  'delete-frame'  // ✅ 新增：刪除框架事件
 ])
 
 // 拖曳狀態
@@ -261,6 +273,12 @@ const displayElements = computed(() => {
   }
   
   return result.slice(0, cellCount.value)
+})
+
+// ✅ 檢查是否有任何元件（用於控制刪除按鈕顯示）
+const hasAnyElement = computed(() => {
+  const elements = props.frame.elements || []
+  return elements.some(el => el && el.type)
 })
 
 // ✅ Grid 樣式 - 所有 gap 改為 0
@@ -376,6 +394,21 @@ const isCellSelected = (index) => {
 
 // ==================== ✅ 樣式相關方法 ====================
 
+// ✅ 獲取圖片容器的樣式（用於對齊）
+const getImageContainerStyle = (element) => {
+  if (!element || !element.metadata) return {}
+  
+  const metadata = element.metadata
+  const style = {}
+  
+  // 使用 text_align 來控制圖片對齊
+  if (metadata.text_align) {
+    style.textAlign = metadata.text_align
+  }
+  
+  return style
+}
+
 // ✅ 獲取元件的動態樣式（基於 metadata）
 const getElementStyle = (element) => {
   if (!element || !element.metadata) return {}
@@ -386,7 +419,8 @@ const getElementStyle = (element) => {
   if (metadata.color) style.color = metadata.color
   if (metadata.font_size) style.fontSize = metadata.font_size
   if (metadata.font_weight) style.fontWeight = metadata.font_weight
-  if (metadata.text_align) style.textAlign = metadata.text_align
+  // ✅ 圖片不使用 text_align（已在容器處理）
+  // if (metadata.text_align) style.textAlign = metadata.text_align
   if (metadata.width) style.width = metadata.width
   if (metadata.height) style.height = metadata.height
   if (metadata.background_color) style.backgroundColor = metadata.background_color
@@ -513,6 +547,17 @@ const handleDeleteElement = (index) => {
   })
 }
 
+// ✅ 刪除框架
+const handleDeleteFrame = () => {
+  if (confirm('確定要刪除此框架嗎？')) {
+    emit('delete-frame', {
+      frame: props.frame,
+      basemap: props.basemap,
+      basemapIndex: props.basemapIndex
+    })
+  }
+}
+
 // 從拖曳數據創建元件
 const createElementFromDrag = (dragData, index) => {
   const typeMap = {
@@ -570,9 +615,9 @@ const createElementFromDrag = (dragData, index) => {
 
 <style lang="scss" scoped>
 .custom-frame {
-  padding: 40px;
+  padding: 20px;  // ✅ 改為 20px
   background: #fff;
-  min-height: 200px;
+  min-height: auto;  // ✅ 改為 auto，適應內容高度
   position: relative;
   transition: all 0.2s;
   cursor: pointer;
@@ -583,12 +628,43 @@ const createElementFromDrag = (dragData, index) => {
   
   &.is-selected {
     box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.5);
+    
+    // ✅ 框架被選中時，顯示刪除按鈕
+    .delete-frame-btn {
+      opacity: 1;
+    }
+  }
+}
+
+// ✅ 刪除框架按鈕
+.delete-frame-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  
+  &:hover {
+    background: #dc3545;
+    color: #fff;
+    transform: scale(1.1);
   }
 }
 
 // ✅ 新增：內容容器限制最大寬度
 .frame-container {
-  max-width: 1400px;
+  max-width: 1200px;  // ✅ 限制最大寬度為 1200px
   margin: 0 auto;
   width: 100%;
 }
@@ -605,8 +681,8 @@ const createElementFromDrag = (dragData, index) => {
     // ✅ 移除固定 min-height
     
     .grid-cell {
-      // ✅ 移除 height: 100%，改為 min-height
-      min-height: 200px;
+      // ✅ 移除 min-height，讓內容自動撐開
+      min-height: auto;
     }
     
     .grid-cell:nth-child(1) {
@@ -629,7 +705,7 @@ const createElementFromDrag = (dragData, index) => {
     // ✅ 移除固定 min-height
     
     .grid-cell {
-      min-height: 200px;
+      min-height: auto;
     }
     
     .grid-cell:nth-child(1) {
@@ -652,7 +728,7 @@ const createElementFromDrag = (dragData, index) => {
     // ✅ 移除固定 min-height
     
     .grid-cell {
-      min-height: 200px;
+      min-height: auto;
     }
     
     .grid-cell:nth-child(1) {
@@ -679,7 +755,7 @@ const createElementFromDrag = (dragData, index) => {
     // ✅ 移除固定 min-height
     
     .grid-cell {
-      min-height: 200px;
+      min-height: auto;
     }
     
     .grid-cell:nth-child(1) {
@@ -703,7 +779,7 @@ const createElementFromDrag = (dragData, index) => {
 
 // ✅ grid-cell 樣式 - 讓內容自動撐開高度
 .grid-cell {
-  min-height: 150px;  // ✅ 改為較小的 min-height，方便內容撐開
+  min-height: auto;  // ✅ 改為 auto，完全適應內容高度
   position: relative;
   border-radius: 8px;
   transition: all 0.2s;
@@ -777,12 +853,17 @@ const createElementFromDrag = (dragData, index) => {
 // ==================== 元件樣式 ====================
 
 .element-image {
+  // ✅ 圖片容器使用 text-align 來控制圖片對齊
+  width: 100%;
+  
   .element-img {
-    width: 100%;
+    // ✅ 使用 inline-block 讓 text-align 生效
+    display: inline-block;
+    max-width: 100%;  // ✅ 限制最大寬度不超過容器
     height: auto;
-    // ✅ 移除 max-height，讓圖片完整顯示
     border-radius: 4px;
-    object-fit: contain;  // ✅ 改為 contain，完整顯示圖片
+    object-fit: contain;
+    vertical-align: middle;  // ✅ 垂直置中對齊
   }
   
   .placeholder-image {
@@ -945,8 +1026,8 @@ const createElementFromDrag = (dragData, index) => {
 // ==================== 空格子樣式 ====================
 
 .empty-cell {
-  height: 100%;
-  min-height: 150px;
+  height: auto;  // ✅ 改為 auto
+  min-height: 100px;  // ✅ 降低最小高度到 100px
   display: flex;
   align-items: center;
   justify-content: center;

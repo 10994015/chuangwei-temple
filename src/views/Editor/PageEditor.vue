@@ -210,6 +210,36 @@ const handleDeleteElement = (data) => {
   }
 }
 
+// ✅ 刪除框架
+const handleDeleteFrame = (data) => {
+  console.log('PageEditor: 刪除框架', data)
+  
+  const { basemap, frame } = data
+  
+  if (!basemap || !basemap.frames) {
+    console.error('❌ 底圖或框架列表不存在')
+    return
+  }
+  
+  // 找到框架在 basemap.frames 中的索引
+  const frameIndex = basemap.frames.findIndex(f => f === frame)
+  
+  if (frameIndex === -1) {
+    console.error('❌ 找不到要刪除的框架')
+    return
+  }
+  
+  console.log(`✓ 找到框架索引: ${frameIndex}`)
+  
+  // 從 frames 陣列中移除框架
+  basemap.frames.splice(frameIndex, 1)
+  
+  // 清除選中狀態
+  pageEditorStore.clearSelection()
+  
+  console.log('✓ 框架已刪除')
+}
+
 // ==================== 上傳處理 ====================
 const handleUpdateBackground = (data) => {
   console.log('PageEditor 收到背景更新:', data)
@@ -348,8 +378,14 @@ const handleUploadCarousel = () => {
 }
 
 const handleUpdateLogo = (logoData) => {
+  console.log('✓ PageEditor: 更新 Logo', logoData)
+  
+  // 更新 Store 中的 Header Logo
   pageEditorStore.updateHeaderLogo(logoData.src, logoData.id)
+  
+  console.log('✓ Logo 已更新到 Store')
 }
+
 </script>
 
 <template>
@@ -376,6 +412,7 @@ const handleUpdateLogo = (logoData) => {
       @drop-to-cell="handleDropToCell"
       @delete-basemap="handleDeleteBasemap"
       @delete-element="handleDeleteElement"
+      @delete-frame="handleDeleteFrame"
       @move-basemap-up="handleMoveBasemapUp"
       @move-basemap-down="handleMoveBasemapDown"
       @add-basemap="handleAddBasemap"
