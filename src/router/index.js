@@ -11,6 +11,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useTemplateStore } from '@/stores/template'
 import DashboardView from '@/views/Temple/DashboardView.vue'
 import Websitesettings from '@/views/Editor/PageEditor/Websitesettings.vue'
+import PreviewPage from '@/views/PreviewPage.vue'
+import EditorLayout from '@/layouts/EditorLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -117,37 +119,50 @@ const router = createRouter({
                 ],
                 requiresAuth: true
               }
-            },
-            {
-              path: '/:templeId/website-settings',
-              name: 'app.temple.website-settings',
-              component: Websitesettings,
-              meta: { 
-                title: '網站設定',
-                breadcrumbs: [
-                  { text: '網站設定', to: null },
-                ],
-                requiresAuth: true
-              }
-            },
+            }
           ]
         }
       ]
     },
-    // 👇 頁面編輯器獨立路由（不套用 AppLayout）
     {
-      path: '/:templeId/page-editor',
-      name: 'app.temple.page-editor',
-      component: PageEditor,
-      meta: { 
-        title: '頁面編輯器',
-        breadcrumbs: [
-          { text: '頁面編輯器', to: null },
-        ],
-        requiresAuth: true
-      }
+      path: '/editor',
+      component: EditorLayout,
+      children: [
+        {
+          path: ':templeId/page-editor',
+          name: 'app.temple.page-editor',
+          component: PageEditor,
+          meta: { 
+            title: '頁面編輯器',
+            breadcrumbs: [
+              { text: '頁面編輯器', to: null },
+            ],
+            requiresAuth: true
+          }
+        },
+        {
+          path: ':templeId/website-settings',
+          name: 'app.temple.website-settings',
+          component: Websitesettings,
+          meta: { 
+            title: '網站設定',
+            breadcrumbs: [
+              { text: '網站設定', to: null },
+            ],
+            requiresAuth: true
+          }
+        },
+        {
+          path: ':templeId/preview',
+          name: 'app.temple.preview',
+          component: PreviewPage,
+          meta: {
+            title: '頁面預覽',
+            requiresAuth: true
+          }
+        }
+      ]
     },
-    
     // 初始密碼設定（首次登入或密碼過期）
     {
       path: '/init-password/:token',
@@ -160,7 +175,6 @@ const router = createRouter({
     },
   ],
 })
-
 // 全域路由守衛
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()

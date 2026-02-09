@@ -22,6 +22,10 @@ const props = defineProps({
     type: Object,
     default: null
   },
+  selectedCell: {
+    type: Object,
+    default: null
+  },
   currentPageSlug: {
     type: String,
     default: null
@@ -40,6 +44,7 @@ const emit = defineEmits([
   'delete-element',
   'update-element',
   'update-background',
+  'update-cell-padding',
   'add-basemap',
   'move-basemap-up',
   'move-basemap-down',
@@ -104,6 +109,11 @@ const handleUpdateElement = (data) => {
 
 const handleSelectCell = (data) => {
   emit('select-cell', data)
+}
+
+// ✅ 更新格子 padding
+const handleUpdateCellPadding = (data) => {
+  emit('update-cell-padding', data)
 }
 
 // ==================== 底圖操作 ====================
@@ -356,6 +366,7 @@ const getBasemapKey = (basemap, index) => {
                 :basemap="basemap"
                 :basemap-index="index"
                 :selected-element="selectedElement"
+                :selected-cell="selectedCell"
                 class="relative-frame"
                 @drop-to-cell="handleDropToCell"
                 @delete-element="handleDeleteElement"
@@ -392,8 +403,8 @@ const getBasemapKey = (basemap, index) => {
 
 .blank-basemap {
   min-height: 300px;
-  background: transparent;  // ✅ 默認透明
-  border: 2px dashed transparent;  // ✅ 默認透明邊框
+  background: transparent;
+  border: 2px dashed transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,7 +412,6 @@ const getBasemapKey = (basemap, index) => {
   transition: all 0.3s ease;
   cursor: pointer;
   
-  // ✅ 懸浮時顯示（鼠標懸停）
   &:hover {
     background: #fafafa;
     border-color: #ddd;
@@ -415,7 +425,6 @@ const getBasemapKey = (basemap, index) => {
     }
   }
   
-  // 選中狀態
   &.is-selected {
     background: #fafafa;
     border-color: #E8572A;
@@ -431,7 +440,6 @@ const getBasemapKey = (basemap, index) => {
     }
   }
   
-  // ✅ 拖曳框架經過時顯示（更明顯）
   &.drag-over {
     background: #fff5f2;
     border-color: #E8572A;
@@ -452,7 +460,6 @@ const getBasemapKey = (basemap, index) => {
   }
 }
 
-// ✅ 當全局正在拖曳時，顯示所有空底圖的邊框
 .canvas-area.is-dragging .blank-basemap {
   background: #fafafa;
   border-color: #ddd;
@@ -475,7 +482,7 @@ const getBasemapKey = (basemap, index) => {
 .blank-icon {
   font-size: 48px;
   margin-bottom: 1rem;
-  opacity: 0;  // ✅ 默認隱藏
+  opacity: 0;
   transition: all 0.3s ease;
 }
 
@@ -484,7 +491,7 @@ const getBasemapKey = (basemap, index) => {
   color: #666;
   margin: 0 0 0.5rem;
   font-weight: 500;
-  opacity: 0;  // ✅ 默認隱藏
+  opacity: 0;
   transition: all 0.3s ease;
 }
 
@@ -492,7 +499,7 @@ const getBasemapKey = (basemap, index) => {
   font-size: 14px;
   color: #999;
   margin: 0 0 0.5rem;
-  opacity: 0;  // ✅ 默認隱藏
+  opacity: 0;
   transition: all 0.3s ease;
 }
 
@@ -511,7 +518,6 @@ const getBasemapKey = (basemap, index) => {
   background-position: center;
   background-repeat: no-repeat;
   
-  // 選中狀態
   &.is-selected {
     outline: 3px solid #E8572A;
     outline-offset: -3px;
@@ -523,7 +529,6 @@ const getBasemapKey = (basemap, index) => {
   }
 }
 
-// 底圖選擇疊加層
 .basemap-overlay {
   position: absolute;
   top: 0;
@@ -535,7 +540,7 @@ const getBasemapKey = (basemap, index) => {
   transition: opacity 0.2s ease;
   cursor: pointer;
   z-index: 1;
-  pointer-events: none;  // ✅ 允許拖放事件穿透
+  pointer-events: none;
   
   &:hover {
     opacity: 1;
@@ -544,11 +549,10 @@ const getBasemapKey = (basemap, index) => {
   
   &.show {
     opacity: 1;
-    pointer-events: auto;  // ✅ 選中狀態時允許點擊
+    pointer-events: auto;
   }
 }
 
-// 確保框架在疊加層上方
 .relative-frame {
   position: relative;
   z-index: 2;

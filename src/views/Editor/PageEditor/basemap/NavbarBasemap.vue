@@ -4,7 +4,10 @@
       <!-- Logo 區域 - 可點擊編輯 -->
       <div 
         class="logo-wrapper"
-        :class="{ 'selected': isLogoSelected }"
+        :class="{ 
+          'selected': isLogoSelected,
+          'clickable': isEditMode
+        }"
         @click.stop="handleSelectLogo"
       >
         <div class="logo">
@@ -44,8 +47,8 @@
 
       <!-- 右側操作區 -->
       <div class="nav-actions">
-        <button class="cart-btn">🛒</button>
-        <button class="login-btn">會員登入</button>
+        <button class="cart-btn" :class="{ 'disabled': isEditMode }">🛒</button>
+        <button class="login-btn" :class="{ 'disabled': isEditMode }">會員登入</button>
       </div>
     </div>
   </header>
@@ -74,10 +77,20 @@ const props = defineProps({
   currentPageSlug: {
     type: String,
     default: null
+  },
+  // 完整的 frame 對象（用於傳遞給父組件）
+  frame: {
+    type: Object,
+    default: null
   }
 })
 
-const emit = defineEmits(['select-logo', 'update-logo', 'delete-logo', 'change-page'])
+const emit = defineEmits([
+  'select-logo', 
+  'update-logo', 
+  'delete-logo', 
+  'change-page'
+])
 
 // Logo 圖片來源（從 API 數據）
 const logoSrc = computed(() => {
@@ -96,13 +109,15 @@ const tabs = computed(() => {
 
 // 選擇 Logo
 const handleSelectLogo = () => {
+  // 只有在編輯模式下才能選擇 Logo
   if (props.isEditMode) {
     emit('select-logo', {
       type: 'logo',
       data: {
         src: logoSrc.value,
         id: props.frameData.logo_img_id
-      }
+      },
+      frame: props.frame
     })
   }
 }
@@ -110,16 +125,18 @@ const handleSelectLogo = () => {
 // 刪除 Logo
 const handleDeleteLogo = () => {
   if (confirm('確定要刪除 Logo 嗎？')) {
-    emit('delete-logo')
+    emit('delete-logo', {
+      frame: props.frame
+    })
   }
 }
 
-// 點擊選單項目切換頁面
+// ✅ 點擊選單項目切換頁面
 const handleTabClick = (tab) => {
-  if (props.isEditMode) {
-    console.log('🔄 切換頁面:', tab.slug)
-    emit('change-page', tab.slug)
-  }
+  console.log('🔄 NavbarBasemap: 切換頁面:', tab.slug, '| 編輯模式:', props.isEditMode)
+  
+  // ✅ 不管是編輯模式還是預覽模式，都發送切換頁面事件
+  emit('change-page', tab.slug)
 }
 </script>
 
@@ -144,20 +161,24 @@ const handleTabClick = (tab) => {
   // Logo 區域
   .logo-wrapper {
     position: relative;
-    cursor: pointer;
     border: 2px solid transparent;
     border-radius: 4px;
     transition: all 0.2s;
     padding: 4px;
+    
+    // ✅ 只有在編輯模式下才顯示可點擊樣式
+    &.clickable {
+      cursor: pointer;
+      
+      &:hover {
+        border-color: #E8572A;
+        background: #fff5f2;
+      }
 
-    &:hover {
-      border-color: #E8572A;
-      background: #fff5f2;
-    }
-
-    &.selected {
-      border-color: #E8572A;
-      box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.1);
+      &.selected {
+        border-color: #E8572A;
+        box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.1);
+      }
     }
   }
 
@@ -231,6 +252,7 @@ const handleTabClick = (tab) => {
     border-radius: 4px;
     cursor: pointer;
     position: relative;
+    pointer-events: auto;  // ✅ 永遠可以點擊
 
     &:hover {
       color: #E8572A;
@@ -269,11 +291,17 @@ const handleTabClick = (tab) => {
     cursor: pointer;
     font-size: 14px;
     color: #666;
-    transition: color 0.3s;
-    pointer-events: none;
-
-    &:hover {
+    transition: all 0.3s;
+    
+    &:hover:not(.disabled) {
       color: #8b6f47;
+    }
+    
+    // ✅ 禁用狀態樣式
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   }
 
@@ -283,17 +311,27 @@ const handleTabClick = (tab) => {
 
   // 編輯模式樣式
   &.edit-mode {
-    // ✅ 選單項目在編輯模式下可以點擊（用於切換頁面）
+    // 選單項目在編輯模式下可以點擊（用於切換頁面）
     .nav-item {
-      pointer-events: auto;  // 允許點擊
-      opacity: 1;            // 完全可見
+      pointer-events: auto;
+      opacity: 1;
+    }
+  }
+  
+  // ✅ 預覽模式樣式（非編輯模式）
+  &:not(.edit-mode) {
+    // 選單項目在預覽模式下也可以點擊（用於切換頁面）
+    .nav-item {
+      pointer-events: auto;
+      opacity: 1;
     }
     
-    // 右側按鈕在編輯模式下禁用
+    // 右側按鈕在預覽模式下可以點擊（但暫時無功能）
     .cart-btn,
     .login-btn {
-      pointer-events: none;
-      opacity: 0.6;
+      pointer-events: auto;
+      opacity: 1;
+      cursor: pointer;
     }
   }
 }

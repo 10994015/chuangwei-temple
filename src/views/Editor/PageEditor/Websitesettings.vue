@@ -38,7 +38,7 @@
       <section class="settings-section">
         <div class="section-header">
           <h2 class="section-title">SEO 設定</h2>
-          <p class="section-description">優化您的網站在搜尋引擎中的表現</p>
+          <p class="section-description">優化您的網站在搜尋引擎中的排名</p>
         </div>
 
         <div class="form-group">
@@ -51,15 +51,15 @@
             v-model="formData.seo_title"
             type="text"
             class="form-input"
-            placeholder="例如：慈惠堂 - 台灣傳統寺廟"
+            placeholder=""
             maxlength="60"
             @input="markAsChanged"
           />
           <div class="input-hint">
             <span :class="{ 'text-warning': formData.seo_title.length > 50 }">
-              {{ formData.seo_title.length }} / 60 字元
+              {{ formData.seo_title.length }} / 60 字
             </span>
-            <span class="hint-text">建議長度 50-60 字元</span>
+            <span class="hint-text"></span>
           </div>
         </div>
 
@@ -72,16 +72,16 @@
             id="seo-description"
             v-model="formData.seo_description"
             class="form-textarea"
-            placeholder="例如：慈惠堂位於台北，提供祭祀服務、法會活動及心靈諮詢..."
+            placeholder=""
             maxlength="160"
             rows="4"
             @input="markAsChanged"
           ></textarea>
           <div class="input-hint">
             <span :class="{ 'text-warning': formData.seo_description.length > 150 }">
-              {{ formData.seo_description.length }} / 160 字元
+              {{ formData.seo_description.length }} / 160 字
             </span>
-            <span class="hint-text">建議長度 120-160 字元</span>
+            <span class="hint-text"></span>
           </div>
         </div>
 
@@ -94,11 +94,11 @@
             v-model="formData.seo_keywords"
             type="text"
             class="form-input"
-            placeholder="例如：寺廟, 祈福, 法會, 台北寺廟"
+            placeholder=""
             @input="markAsChanged"
           />
           <p class="input-hint">
-            <span class="hint-text">用逗號分隔多個關鍵字</span>
+            <span class="hint-text"></span>
           </p>
         </div>
 

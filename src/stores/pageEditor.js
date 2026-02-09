@@ -21,11 +21,15 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   // 頁面數據，直接使用 API 格式：{ slug: { data: [...] } }
   const pageData = ref({})
   
+  // ✅ 系統框架列表（按頁面存儲）
+  const systemFrames = ref({})  // { slug: ['FIRST_PICTURE', 'INDEX_NEWS', ...] }
+  
   // 選擇狀態
   const selected = ref({
     basemap: null,
     frame: null,
-    element: null
+    element: null,
+    cell: null
   })
 
   // ==================== Computed ====================
@@ -33,6 +37,11 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   // 當前頁面的 basemaps（就是 API 返回的 data 陣列）
   const currentPageBasemaps = computed(() => {
     return pageData.value[currentPageSlug.value]?.data || []
+  })
+
+  // ✅ 當前頁面的系統框架列表
+  const currentPageSystemFrames = computed(() => {
+    return systemFrames.value[currentPageSlug.value] || []
   })
 
   // ==================== API Functions ====================
@@ -117,6 +126,55 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   }
 
   /**
+   * ✅ GET /api/tenant/{tid}/web-site/draft-page/{slug}/system-frame
+   * 獲取指定頁面可用的系統框架列表
+   * @param {string} tid - 租戶 ID
+   * @param {string} slug - 頁面 slug
+   * @returns {Array} 系統框架類型陣列，例如：['FIRST_PICTURE', 'INDEX_NEWS', 'PRODUCT_LIST']
+   */
+  const fetchSystemFrames = async (tid, slug) => {
+    if (!tid || !slug) {
+      console.warn('⚠️ fetchSystemFrames: 缺少 tid 或 slug')
+      return []
+    }
+
+    // 不使用全局 loading，避免影響其他操作
+    try {
+      console.log(`📥 載入系統框架列表: ${slug}`)
+      
+      const response = await fetch(
+        `/api/tenant/${tid}/web-site/draft-page/${slug}/system-frame`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      if (result.statusCode === 200 && Array.isArray(result.data)) {
+        // 存儲到 systemFrames
+        systemFrames.value[slug] = result.data
+        
+        console.log(`✓ 系統框架列表 (${slug}):`, result.data)
+        return result.data
+      }
+      
+      throw new Error(result.message || '載入系統框架失敗')
+      
+    } catch (err) {
+      console.error(`❌ 載入系統框架失敗 (${slug}):`, err)
+      // 發生錯誤時返回空陣列，不阻斷其他操作
+      systemFrames.value[slug] = []
+      return []
+    }
+  }
+
+  /**
    * GET /api/tenant/{tid}/web-site/draft-page/{slug}
    * @param {string} tid - 租戶 ID
    * @param {string} slug - 頁面 slug
@@ -175,22 +233,22 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     try {
       console.log(`💾 保存頁面: ${slug}`)
       
-      //   驗證和修正數據
+      // 驗證和修正數據
       const contentJson = validateAndFixContent(pageData.value[slug].data)
       
       // 準備請求 body（符合 API 格式）
       const requestBody = {
-        locale: currentLocale.value,  //   使用當前選擇的語言
+        locale: currentLocale.value,
         slug: slug,
-        deleteFileIds: [],  // 要刪除的檔案 ID 陣列
-        contentJson: contentJson  //   傳送驗證後的 basemaps 陣列
+        deleteFileIds: [],
+        contentJson: contentJson
       }
       
-      //   完整輸出送出的 JSON（格式化）
+      // 完整輸出送出的 JSON（格式化）
       console.log('📤 完整請求 JSON:')
       console.log(JSON.stringify(requestBody, null, 2))
       
-      //   Debug: 檢查數據大小
+      // Debug: 檢查數據大小
       const jsonString = JSON.stringify(requestBody)
       const sizeInKB = (jsonString.length / 1024).toFixed(2)
       const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2)
@@ -199,7 +257,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       console.log('  總大小:', sizeInKB, 'KB (', sizeInMB, 'MB )')
       console.log('  字元數:', jsonString.length)
       
-      //   Debug: 檢查每個 basemap 的大小
+      // Debug: 檢查每個 basemap 的大小
       contentJson.forEach((basemap, index) => {
         const basemapString = JSON.stringify(basemap)
         const basemapSizeKB = (basemapString.length / 1024).toFixed(2)
@@ -224,7 +282,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       })
       
       // ⚠️ 如果數據太大，警告並停止
-      const maxSizeMB = 10  // 資料庫限制（根據實際情況調整）
+      const maxSizeMB = 10
       if (jsonString.length > maxSizeMB * 1024 * 1024) {
         const errorMsg = `數據量太大 (${sizeInMB} MB)，超過限制 (${maxSizeMB} MB)。請減少圖片數量或壓縮圖片大小。`
         console.error('❌', errorMsg)
@@ -255,7 +313,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       console.log('📥 回應內容:', result)
 
       if (result.statusCode === 200) {
-        console.log('  保存成功！')
+        console.log('✓ 保存成功！')
         return true
       }
       
@@ -365,7 +423,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
           }
 
           return element
-        }).filter(el => el !== null)  // 移除 null 元素
+        }).filter(el => el !== null)
 
         return frame
       })
@@ -390,12 +448,20 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     // 除非指定了 locale，則強制重新載入
     if (pageData.value[slug] && !locale) {
       currentPageSlug.value = slug
+      
+      // ✅ 即使頁面已載入，也要確保有系統框架
+      if (!systemFrames.value[slug]) {
+        await fetchSystemFrames(tenantId.value, slug)
+      }
       return
     }
 
     const data = await fetchPageContent(tenantId.value, slug, locale)
     if (data) {
       currentPageSlug.value = slug
+      
+      // ✅ 載入系統框架列表
+      await fetchSystemFrames(tenantId.value, slug)
     }
   }
 
@@ -431,19 +497,29 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   }
 
   const selectBasemap = (basemap) => {
-    selected.value = { basemap, frame: null, element: null }
+    selected.value = { basemap, frame: null, element: null, cell: null }
   }
 
   const selectFrame = (frame) => {
-    selected.value = { basemap: null, frame, element: null }
+    selected.value = { basemap: null, frame, element: null, cell: null }
   }
 
   const selectElement = (element) => {
-    selected.value = { basemap: null, frame: null, element }
+    selected.value = { basemap: null, frame: null, element, cell: null }
+  }
+
+  const selectCell = (cellData) => {
+    selected.value = { 
+      basemap: null, 
+      frame: null, 
+      element: null, 
+      cell: cellData 
+    }
+    console.log('✓ Store: 選中格子', cellData)
   }
 
   const clearSelection = () => {
-    selected.value = { basemap: null, frame: null, element: null }
+    selected.value = { basemap: null, frame: null, element: null, cell: null }
   }
 
   const updateHeaderLogo = (logoSrc, logoId) => {
@@ -610,28 +686,13 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
     currentPageSlug.value = null
     pageData.value = {}
-    selected.value = { basemap: null, frame: null, element: null }
+    systemFrames.value = {}  // ✅ 重置系統框架
+    selected.value = { basemap: null, frame: null, element: null, cell: null }
   }
-   /**
+
+  /**
    * 獲取網站設定
    * GET /api/tenant/{tid}/web-site/
-   * 
-   * @param {string} tid - 宮廟 ID
-   * @returns {Object|null} 網站設定資料或 null
-   * 
-   * 回應格式:
-   * {
-   *   "timestamp": "2025-06-11 11:08:25",
-   *   "statusCode": 200,
-   *   "message": "string",
-   *   "data": {
-   *     "domain": "localhost",
-   *     "seo_title": "網站SEO標題",
-   *     "seo_description": "網站 SEO 敘述",
-   *     "seo_keywords": "網站 SEO 關鍵字",
-   *     "meta_pixel": "臉書 pixel"
-   *   }
-   * }
    */
   const fetchWebsiteSettings = async (tid) => {
     if (!tid) {
@@ -655,7 +716,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       console.log(`📥 回應狀態: ${response.status}`)
 
-      // 處理 401 Unauthorized
       if (response.status === 401) {
         const errorMsg = '未授權，請重新登入'
         console.error(`❌ ${errorMsg}`)
@@ -674,15 +734,11 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       
       console.log('📥 完整回應:', result)
 
-      // 檢查 statusCode
       if (result.statusCode === 200 && result.data) {
         console.log('✓ 網站設定:', result.data)
-        
-        // 返回 data 物件
         return result.data
       }
 
-      // 其他 statusCode
       const errorMsg = result.message || '載入設定失敗'
       console.error(`❌ ${errorMsg}`)
       error.value = errorMsg
@@ -700,10 +756,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   /**
    * 保存網站設定
    * PATCH /api/tenant/{tid}/web-site/
-   * 
-   * @param {string} tid - 宮廟 ID
-   * @param {Object} settingsData - 設定資料
-   * @returns {boolean} 是否保存成功
    */
   const updateWebsiteSettings = async (tid, settingsData) => {
     if (!tid) {
@@ -735,7 +787,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       console.log(`📥 回應狀態: ${response.status}`)
 
-      // 處理 401 Unauthorized
       if (response.status === 401) {
         const errorMsg = '未授權，請重新登入'
         console.error(`❌ ${errorMsg}`)
@@ -754,15 +805,82 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       
       console.log('📥 完整回應:', result)
 
-      // 檢查 statusCode
       if (result.statusCode === 200) {
-        console.log('  網站設定已保存！')
+        console.log('✓ 網站設定已保存！')
         console.log('📊 更新後的資料:', result.data)
         return true
       }
 
-      // 其他 statusCode
       const errorMsg = result.message || '保存設定失敗'
+      console.error(`❌ ${errorMsg}`)
+      error.value = errorMsg
+      return false
+
+    } catch (err) {
+      console.error('❌ 網路錯誤:', err)
+      error.value = err.message || '網路連線失敗'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * 發布網站
+   * PATCH /api/tenant/{tid}/web-site/publish
+   * @param {string} tid - 租戶 ID
+   * @param {string} locale - 語言代碼
+   * @returns {boolean} 是否發布成功
+   */
+  const publishWebsite = async (tid, locale) => {
+    if (!tid || !locale) {
+      console.error('❌ 缺少必要參數')
+      error.value = '缺少必要參數'
+      return false
+    }
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      console.log(`🚀 發布網站 (tid: ${tid}, locale: ${locale})`)
+      
+      const response = await fetch(`/api/tenant/${tid}/web-site/publish`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          locale: locale
+        })
+      })
+
+      console.log(`📥 回應狀態: ${response.status}`)
+
+      if (response.status === 401) {
+        const errorMsg = '未授權，請重新登入'
+        console.error(`❌ ${errorMsg}`)
+        error.value = errorMsg
+        return false
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ HTTP ${response.status}: ${errorText}`)
+        error.value = `HTTP ${response.status}: 發布失敗`
+        return false
+      }
+
+      const result = await response.json()
+      
+      console.log('📥 完整回應:', result)
+
+      if (result.statusCode === 200) {
+        console.log('✓ 網站發布成功！')
+        return true
+      }
+
+      const errorMsg = result.message || '發布失敗'
       console.error(`❌ ${errorMsg}`)
       error.value = errorMsg
       return false
@@ -785,19 +903,22 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     pageData,
     selected,
     currentPageBasemaps,
-    locales,              //   語言清單
-    currentLocale,        //   當前語言
+    currentPageSystemFrames,  // ✅ 導出
+    locales,
+    currentLocale,
     fetchHeaderTabs,
     fetchPageContent,
+    fetchSystemFrames,        // ✅ 導出
     savePageContent,
-    fetchLocales,         //   獲取語言清單
+    fetchLocales,
     setTenantId,
     initializePage,
     switchPage,
-    reloadCurrentPage,    //   重新載入當前頁面（語言切換用）
+    reloadCurrentPage,
     selectBasemap,
     selectFrame,
     selectElement,
+    selectCell,
     clearSelection,
     updateHeaderLogo,
     syncHeaderMenuFromTabs,
@@ -808,6 +929,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     moveBasemapDown,
     resetStore,
     fetchWebsiteSettings,
-    updateWebsiteSettings
+    updateWebsiteSettings,
+    publishWebsite
   }
 })

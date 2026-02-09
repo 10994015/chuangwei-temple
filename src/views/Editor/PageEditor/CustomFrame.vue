@@ -18,7 +18,12 @@
           class="grid-cell"
           :class="{ 
             'has-element': element && element.type,
-            'is-selected': isElementSelected(index)
+            'is-selected': isElementSelected(index) || isCellSelected(index),
+            'empty-cell': !element || !element.type
+          }"
+          :style="{
+            margin: '0',
+            padding: getCellPadding(element)
           }"
           @click.stop="handleCellClick(index, element)"
           @dragover="handleDragOver($event, index)"
@@ -28,7 +33,7 @@
           <!-- 有元件：顯示元件內容 -->
           <div v-if="element && element.type" class="element-content">
             <!-- IMG 元件 -->
-            <div v-if="element.type === 'IMG'" class="element-image">
+            <div v-if="element.type === 'IMG'" class="element-image" :style="getElementStyle(element)">
               <img 
                 v-if="element.value?.src" 
                 :src="element.value.src" 
@@ -42,15 +47,19 @@
             </div>
 
             <!-- TEXT 元件 -->
-            <div v-else-if="element.type === 'TEXT'" class="element-text">
-              <div v-html="element.value?.text || '文字內容'"></div>
-            </div>
+            <div 
+              v-else-if="element.type === 'TEXT'" 
+              class="element-text"
+              :style="getElementStyle(element)"
+              v-html="element.value?.text || '文字內容'"
+            ></div>
 
             <!-- BUTTON 元件 -->
             <div v-else-if="element.type === 'BUTTON'" class="element-button">
               <a 
                 :href="element.value?.url || '#'" 
                 class="button-link"
+                :style="getButtonStyle(element)"
                 @click.prevent
               >
                 {{ element.value?.text || '按鈕' }}
@@ -91,7 +100,7 @@
             <!-- MAP 元件 -->
             <div v-else-if="element.type === 'MAP'" class="element-map">
               <div class="map-placeholder">
-                <span>🗺️ 地圖</span>
+                <span>地圖</span>
                 <p>{{ element.value?.address || '請設定地址' }}</p>
               </div>
             </div>
@@ -99,7 +108,7 @@
             <!-- ALBUM 元件 -->
             <div v-else-if="element.type === 'ALBUM'" class="element-album">
               <div class="album-placeholder">
-                <span>📸 相簿</span>
+                <span>相簿</span>
                 <p>{{ element.value?.title || '相簿標題' }}</p>
               </div>
             </div>
@@ -149,6 +158,10 @@ const props = defineProps({
   selectedElement: {
     type: Object,
     default: null
+  },
+  selectedCell: {
+    type: Object,
+    default: null
   }
 })
 
@@ -185,35 +198,22 @@ if (typeof window !== 'undefined') {
 
 // 框架佈局類型
 const frameLayout = computed(() => {
-  // 防禦性檢查：確保 frame.type 存在
   if (!props.frame || !props.frame.type) {
     console.warn('⚠️ 框架缺少 type 屬性:', props.frame)
-    return 'A' // 預設值
+    return 'A'
   }
   
   const type = props.frame.type
   
-  // 處理多種格式：
-  // "FRAME1_1" → "1_1"  (後端新格式)
-  // "FRAME_A" → "A"     (後端新格式)
-  // "FRAME1-2" → "1_2"  (舊格式，轉換為新格式)
-  // "FRAME-1-2" → "1_2" (舊格式，轉換為新格式)
-  
   if (type.startsWith('FRAME')) {
-    // 移除 FRAME 前綴
     let layout = type.replace(/^FRAME/, '')
-    
-    // 移除可能的連字號或底線前綴
     layout = layout.replace(/^[-_]/, '')
-    
-    // 將連字號轉換為底線（統一格式）
     layout = layout.replace(/-/g, '_')
     
     console.log(`✓ 框架類型解析: ${type} → ${layout}`)
     return layout
   }
   
-  // 如果都不匹配，直接返回 type
   return type
 })
 
@@ -222,15 +222,12 @@ const cellCount = computed(() => {
   const layout = frameLayout.value
   
   switch (layout) {
-    // 複合框架（大寫字母）
     case 'A':
     case 'B':
       return 3
     case 'C':
     case 'D':
       return 4
-    
-    // 單層框架（底線格式）
     case '1_1':
       return 1
     case '1_2':
@@ -239,28 +236,23 @@ const cellCount = computed(() => {
       return 3
     case '1_4':
       return 4
-    
-    // 雙層框架（底線格式）
     case '2_2':
       return 4
     case '2_3':
       return 6
     case '2_4':
       return 8
-    
-    // 預設值
     default:
       console.warn('⚠️ 未知框架佈局:', layout)
       return 4
   }
 })
 
-// 顯示用的元件陣列（補齊到指定格子數）
+// 顯示用的元件陣列
 const displayElements = computed(() => {
   const elements = props.frame.elements || []
   const result = [...elements]
   
-  // 補齊到指定格子數
   while (result.length < cellCount.value) {
     result.push(null)
   }
@@ -268,103 +260,96 @@ const displayElements = computed(() => {
   return result.slice(0, cellCount.value)
 })
 
-// Grid 樣式
+// ✅ Grid 樣式 - 所有 gap 改為 0
 const gridStyle = computed(() => {
   const layout = frameLayout.value
   
   switch (layout) {
-    // ✅ 複合框架 A - 左大右2小
     case 'A':
       return {
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
         gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     
-    // ✅ 複合框架 B - 左2小右大
     case 'B':
       return {
         display: 'grid',
         gridTemplateColumns: '1fr 2fr',
         gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     
-    // ✅ 複合框架 C - 左大右3小
     case 'C':
       return {
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
         gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     
-    // ✅ 複合框架 D - 左3小右大
     case 'D':
       return {
         display: 'grid',
         gridTemplateColumns: '1fr 2fr',
         gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     
-    // ✅ 單層框架
     case '1_1':
       return {
         display: 'grid',
         gridTemplateColumns: '1fr',
-        gap: '20px'
+        gap: '0'
       }
     case '1_2':
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     case '1_3':
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     case '1_4':
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     
-    // ✅ 雙層框架
     case '2_2':
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
         gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     case '2_3':
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
         gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     case '2_4':
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '20px'
+        gap: '0'
       }
     
-    // 預設
     default:
       console.warn('⚠️ 未知框架佈局 gridStyle:', layout)
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px'
+        gap: '0'
       }
   }
 })
@@ -380,6 +365,47 @@ const isElementSelected = (index) => {
          props.selectedElement?.frame?.type === props.frame.type
 }
 
+// ✅ 是否選中格子
+const isCellSelected = (index) => {
+  return props.selectedCell?.cellIndex === index && 
+         props.selectedCell?.frame?.type === props.frame.type
+}
+
+// ==================== ✅ 樣式相關方法 ====================
+
+// ✅ 獲取元件的動態樣式（基於 metadata）
+const getElementStyle = (element) => {
+  if (!element || !element.metadata) return {}
+  
+  const metadata = element.metadata
+  const style = {}
+  
+  if (metadata.color) style.color = metadata.color
+  if (metadata.font_size) style.fontSize = metadata.font_size
+  if (metadata.font_weight) style.fontWeight = metadata.font_weight
+  if (metadata.text_align) style.textAlign = metadata.text_align
+  if (metadata.width) style.width = metadata.width
+  if (metadata.height) style.height = metadata.height
+  if (metadata.background_color) style.backgroundColor = metadata.background_color
+  
+  return style
+}
+
+// ✅ 獲取按鈕的動態樣式
+const getButtonStyle = (element) => {
+  if (!element || !element.metadata) return {}
+  
+  const metadata = element.metadata
+  const style = {}
+  
+  if (metadata.color) style.color = metadata.color
+  if (metadata.font_size) style.fontSize = metadata.font_size
+  if (metadata.font_weight) style.fontWeight = metadata.font_weight
+  if (metadata.background_color) style.backgroundColor = metadata.background_color
+  
+  return style
+}
+
 // ==================== 事件處理 ====================
 
 // 點擊框架
@@ -387,17 +413,18 @@ const handleFrameClick = () => {
   emit('select-frame', props.frame)
 }
 
-// 點擊格子
+// ✅ 點擊格子 - 發送 cellIndex，阻止冒泡
 const handleCellClick = (index, element) => {
   if (element && element.type) {
-    // 有元件：選擇元件
+    // 有元件：選擇元件，同時傳遞格子信息
     emit('select-element', {
       element: element,
       frame: props.frame,
-      elementIndex: index
+      elementIndex: index,
+      cellIndex: index
     })
   } else {
-    // 空格子：選擇格子
+    // 空格子：選擇格子（用於調整 padding）
     emit('select-cell', {
       frame: props.frame,
       cellIndex: index
@@ -405,31 +432,34 @@ const handleCellClick = (index, element) => {
   }
 }
 
+// ✅ 獲取格子的 padding 樣式
+const getCellPadding = (element) => {
+  if (!element || !element.padding) {
+    return '20px'
+  }
+  
+  const { top = 20, right = 20, bottom = 20, left = 20 } = element.padding
+  return `${top}px ${right}px ${bottom}px ${left}px`
+}
+
 // 拖曳進入格子
 const handleDragOver = (event, index) => {
   event.preventDefault()
-  // ❌ 移除 stopPropagation，讓框架拖曳可以冒泡到底圖
-  // event.stopPropagation()
   
-  // ✅ 直接設置視覺反饋，不需要檢查 dataTransfer
-  // 在拖曳過程中，某些瀏覽器不允許訪問 getData()
   const element = displayElements.value[index]
   
-  // 檢查格子是否已有元件
   if (element && element.type) {
     event.dataTransfer.dropEffect = 'none'
     dragOverCell.value = null
   } else {
     event.dataTransfer.dropEffect = 'copy'
-    dragOverCell.value = index  // ✅ 立即顯示視覺反饋
+    dragOverCell.value = index
   }
 }
 
 // 拖曳離開格子
 const handleDragLeave = (event) => {
   event.preventDefault()
-  // ❌ 移除 stopPropagation
-  // event.stopPropagation()
   dragOverCell.value = null
 }
 
@@ -442,31 +472,25 @@ const handleDrop = (event, index) => {
     const dragData = JSON.parse(data)
     console.log('📦 CustomFrame 收到 drop:', dragData.dragType)
     
-    // ✅ 只處理元件，框架讓它冒泡到底圖
     if (dragData.dragType !== 'element') {
       console.log('❌ 不是元件，讓事件冒泡到底圖處理')
-      // 不調用 preventDefault()，讓事件繼續冒泡
       return
     }
     
-    // ✅ 是元件，阻止冒泡，由 CustomFrame 處理
     event.preventDefault()
     event.stopPropagation()
     dragOverCell.value = null
     
     console.log('📦 放置元件到格子 ' + index + ':', dragData)
     
-    // 檢查格子是否已有元件
     const element = displayElements.value[index]
     if (element && element.type) {
       alert('此格子已有元件')
       return
     }
     
-    // 創建新元件（API 格式）
     const newElement = createElementFromDrag(dragData, index)
     
-    // 發送事件到 PageEditor
     emit('drop-to-cell', {
       frame: props.frame,
       cellIndex: index,
@@ -486,78 +510,57 @@ const handleDeleteElement = (index) => {
   })
 }
 
-// ==================== 工具函數 ====================
-
-// 從拖曳數據創建元件（API 格式）
+// 從拖曳數據創建元件
 const createElementFromDrag = (dragData, index) => {
-  // 元件類型映射
   const typeMap = {
     'text': 'TEXT',
     'image': 'IMG',
     'button': 'BUTTON',
     'h-line': 'H_LINE',
     'v-line': 'V_LINE',
-    'carousel': 'CAROUSEL'  // ✅ 添加映射
+    'carousel': 'CAROUSEL'
   }
   
   const apiType = typeMap[dragData.type] || dragData.type.toUpperCase()
   
-  // 根據類型創建預設值
   let value = {}
   
   switch (dragData.type) {
     case 'text':
-      value = {
-        text: '<p>這是文字內容，點擊右側屬性面板進行編輯</p>'
-      }
+      value = { text: '<p>這是文字內容，點擊右側屬性面板進行編輯</p>' }
       break
-    
     case 'image':
-      value = {
-        id: null,
-        src: null
-      }
+      value = { id: null, src: null }
       break
-    
     case 'button':
-      value = {
-        text: '按鈕文字',
-        url: '#'
-      }
+      value = { text: '按鈕文字', url: '#' }
       break
-    
     case 'h-line':
-      value = {
-        color: '#ddd',
-        thickness: '2px'
-      }
+      value = { color: '#ddd', thickness: '2px' }
       break
-    
     case 'v-line':
-      value = {
-        color: '#ddd',
-        thickness: '2px'
-      }
+      value = { color: '#ddd', thickness: '2px' }
       break
-    
     case 'carousel':
-      value = {
-        images: [],  // ✅ 初始化空陣列
-        autoPlay: true,
-        interval: 3000,
-        height: 400
-      }
+      value = { images: [], autoPlay: true, interval: 3000, height: 400 }
       break
-    
     default:
       value = {}
   }
   
   return {
     type: apiType,
-    sequence: index + 1,
     value: value,
-    metadata: {}
+    metadata: {  // ✅ 初始化 metadata
+      color: null,
+      font_size: null,
+      font_weight: null,
+      text_align: null,
+      width: null,
+      height: null,
+      background_color: null
+    },
+    padding: { top: 20, right: 20, bottom: 20, left: 20 }
   }
 }
 </script>
@@ -582,23 +585,22 @@ const createElementFromDrag = (dragData, index) => {
 
 .frame-grid {
   width: 100%;
-  min-height: 500px;  // ✅ 設置最小高度，確保有足夠空間
+  min-height: 500px;
 }
 
 // ==================== 複合框架特殊佈局 ====================
 
-// 複合框架 A - 左大右2小
 .custom-frame.layout-A {
   .frame-grid {
-    min-height: 600px;  // ✅ 複合框架需要更高
+    min-height: 600px;
     
     .grid-cell {
-      height: 100%;  // ✅ 格子填滿可用空間
+      height: 100%;
     }
     
     .grid-cell:nth-child(1) {
       grid-column: 1;
-      grid-row: 1 / 3;  // 跨2行
+      grid-row: 1 / 3;
     }
     .grid-cell:nth-child(2) {
       grid-column: 2;
@@ -611,7 +613,6 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// 複合框架 B - 左2小右大
 .custom-frame.layout-B {
   .frame-grid {
     min-height: 600px;
@@ -630,15 +631,14 @@ const createElementFromDrag = (dragData, index) => {
     }
     .grid-cell:nth-child(3) {
       grid-column: 2;
-      grid-row: 1 / 3;  // 跨2行
+      grid-row: 1 / 3;
     }
   }
 }
 
-// 複合框架 C - 左大右3小
 .custom-frame.layout-C {
   .frame-grid {
-    min-height: 750px;  // ✅ 3行需要更高
+    min-height: 750px;
     
     .grid-cell {
       height: 100%;
@@ -646,7 +646,7 @@ const createElementFromDrag = (dragData, index) => {
     
     .grid-cell:nth-child(1) {
       grid-column: 1;
-      grid-row: 1 / 4;  // 跨3行
+      grid-row: 1 / 4;
     }
     .grid-cell:nth-child(2) {
       grid-column: 2;
@@ -663,7 +663,6 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// 複合框架 D - 左3小右大
 .custom-frame.layout-D {
   .frame-grid {
     min-height: 750px;
@@ -686,19 +685,22 @@ const createElementFromDrag = (dragData, index) => {
     }
     .grid-cell:nth-child(4) {
       grid-column: 2;
-      grid-row: 1 / 4;  // 跨3行
+      grid-row: 1 / 4;
     }
   }
 }
 
+// ✅ grid-cell 樣式 - 確保 margin: 0 和 box-sizing
 .grid-cell {
-  min-height: 250px;  // ✅ 從 150px 增加到 250px
+  min-height: 250px;
   position: relative;
   border-radius: 8px;
   transition: all 0.2s;
+  margin: 0;  // ✅ 確保 margin 為 0
+  box-sizing: border-box;  // ✅ padding 包含在寬度內
+  border: 2px solid transparent;
   
   &.has-element {
-    border: 2px solid transparent;
     cursor: pointer;
     
     &:hover {
@@ -710,11 +712,18 @@ const createElementFromDrag = (dragData, index) => {
       box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.1);
     }
   }
+  
+  // ✅ 空格子被選中時的樣式
+  &.empty-cell.is-selected {
+    border: 2px dashed #E8572A;
+    background: rgba(232, 87, 42, 0.05);
+  }
 }
 
+// ✅ element-content 移除內部 padding
 .element-content {
   position: relative;
-  padding: 20px;
+  padding: 0;  // ✅ 移除內部 padding，改由 grid-cell 控制
   background: #fff;
   border-radius: 8px;
   height: 100%;
@@ -725,12 +734,9 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// ✅ 輪播元件的 content 特殊處理（使用相鄰選擇器）
 .element-carousel {
   width: 100%;
   min-height: 300px;
-  
-  // CarouselElement 內部會處理高度
 }
 
 .delete-element-btn {
@@ -929,25 +935,24 @@ const createElementFromDrag = (dragData, index) => {
 // ==================== 空格子樣式 ====================
 
 .empty-cell {
-  height: 100%;  // ✅ 佔滿整個格子高度
+  height: 100%;
   min-height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;  // ✅ 默認透明
-  border: 2px dashed transparent;  // ✅ 默認透明邊框
+  background: transparent;
+  border: 2px dashed transparent;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   
   .drop-hint {
-    color: transparent;  // ✅ 默認隱藏文字
+    color: transparent;
     font-size: 14px;
     pointer-events: none;
     transition: all 0.2s;
   }
   
-  // ✅ 懸浮時顯示（鼠標懸停）
   &:hover {
     background: #fafafa;
     border-color: #ddd;
@@ -957,7 +962,6 @@ const createElementFromDrag = (dragData, index) => {
     }
   }
   
-  // ✅ 拖曳元件經過時顯示（更明顯）
   &.drag-over {
     background: #fff5f2;
     border-color: #E8572A;
@@ -973,7 +977,6 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// ✅ 當全局正在拖曳時，顯示所有空格子的邊框
 .custom-frame.is-dragging .empty-cell {
   background: #fafafa;
   border-color: #ddd;

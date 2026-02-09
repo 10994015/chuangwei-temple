@@ -31,59 +31,38 @@
     <div class="tab-content">
       <!-- 系統框架列表 -->
       <div v-show="activeTab === 'system-frames'" class="tab-panel">
-        <!-- 首頁區塊 -->
-        <div class="section">
-          <h4 class="section-title">首頁區塊</h4>
-          <div class="system-frame-list">
-            <div
-              v-for="frame in indexFrames"
-              :key="frame.id"
-              class="system-frame-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, frame)"
-            >
-              <div class="system-frame-preview">
-                <div class="preview-label">{{ frame.label }}</div>
-              </div>
-              <span class="system-frame-name">{{ frame.name }}</span>
-            </div>
-          </div>
+        <!-- ✅ 載入中 -->
+        <div v-if="isLoadingSystemFrames" class="loading-state">
+          <div class="loading-spinner">載入中...</div>
         </div>
 
-        <!-- 列表頁 -->
-        <div class="section">
-          <h4 class="section-title">列表頁</h4>
-          <div class="system-frame-list">
-            <div
-              v-for="frame in listFrames"
-              :key="frame.id"
-              class="system-frame-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, frame)"
-            >
-              <div class="system-frame-preview">
-                <div class="preview-label">{{ frame.label }}</div>
-              </div>
-              <span class="system-frame-name">{{ frame.name }}</span>
-            </div>
-          </div>
+        <!-- ✅ 載入失敗 -->
+        <div v-else-if="systemFramesError" class="error-state">
+          <p class="error-text">⚠️ {{ systemFramesError }}</p>
+          <button @click="loadSystemFrames" class="retry-btn">重試</button>
         </div>
 
-        <!-- 其他 -->
-        <div class="section">
-          <h4 class="section-title">其他</h4>
-          <div class="system-frame-list">
-            <div
-              v-for="frame in otherFrames"
-              :key="frame.id"
-              class="system-frame-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, frame)"
-            >
-              <div class="system-frame-preview">
-                <div class="preview-label">{{ frame.label }}</div>
+        <!-- ✅ 沒有可用框架 -->
+        <div v-else-if="!availableSystemFrames || availableSystemFrames.length === 0" class="empty-state">
+          <p>此頁面沒有可用的系統框架</p>
+        </div>
+
+        <!-- ✅ 顯示系統框架 -->
+        <div v-else class="system-frames-container">
+          <div class="section">
+            <div class="system-frame-list">
+              <div
+                v-for="frameType in availableSystemFrames"
+                :key="`${pageEditorStore.currentPageSlug}-${frameType}`"
+                class="system-frame-card"
+                draggable="true"
+                @dragstart="handleDragStart($event, createSystemFrameData(frameType))"
+              >
+                <div class="system-frame-preview">
+                  <div class="preview-label">{{ frameType }}</div>
+                </div>
+                <span class="system-frame-name">{{ getFrameDisplayName(frameType) }}</span>
               </div>
-              <span class="system-frame-name">{{ frame.name }}</span>
             </div>
           </div>
         </div>
@@ -187,139 +166,117 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 
 // ==================== Props & Emits ====================
 const emit = defineEmits(['drag-start'])
 
+// ==================== ✅ 從父組件注入 Store ====================
+const pageEditorStore = inject('pageEditorStore')
+
 // ==================== 狀態 ====================
 const activeTab = ref('system-frames')
 
-// ==================== 系統框架 ====================
+// ✅ 從 Store 獲取系統框架列表 - 使用 computed 確保響應式
+const availableSystemFrames = computed(() => {
+  const frames = pageEditorStore.currentPageSystemFrames
+  console.log('🔄 LeftSidebar computed 更新:', {
+    slug: pageEditorStore.currentPageSlug,
+    frames: frames,
+    count: frames?.length || 0
+  })
+  return frames || []
+})
 
-// 首頁區塊
-const indexFrames = ref([
-  {
-    id: 'sys-carousel',
-    name: '輪播牆',
-    label: 'CAROUSEL_WALL',
-    type: 'CAROUSEL_WALL',
-    dragType: 'system-frame',
-    component: 'HeroBasemap'
-  },
-  {
-    id: 'sys-first-picture',
-    name: '首圖',
-    label: 'FIRST_PICTURE',
-    type: 'FIRST_PICTURE',
-    dragType: 'system-frame',
-    component: 'HeroBasemap'
-  },
-  {
-    id: 'sys-index-news',
-    name: '首頁-最新消息',
-    label: 'INDEX_NEWS',
-    type: 'INDEX_NEWS',
-    dragType: 'system-frame',
-    component: 'NewsBasemap'
-  },
-  {
-    id: 'sys-index-product',
-    name: '首頁-商品標幅',
-    label: 'INDEX_PRODUCT',
-    type: 'INDEX_PRODUCT',
-    dragType: 'system-frame',
-    component: 'ProductsBasemap'
-  },
-  {
-    id: 'sys-index-event',
-    name: '首頁-活動橫幅',
-    label: 'INDEX_EVENT',
-    type: 'INDEX_EVENT',
-    dragType: 'system-frame',
-    component: 'EventsBasemap'
-  },
-  {
-    id: 'sys-index-donation',
-    name: '首頁-捐獻區',
-    label: 'INDEX_DONATION',
-    type: 'INDEX_DONATION',
-    dragType: 'system-frame',
-    component: 'DonationBasemap'
-  }
-])
+const isLoadingSystemFrames = computed(() => pageEditorStore.isLoading)
+const systemFramesError = computed(() => pageEditorStore.error)
 
-// 列表頁
-const listFrames = ref([
-  {
-    id: 'sys-product-list',
-    name: '商品列表',
-    label: 'PRODUCT_LIST',
-    type: 'PRODUCT_LIST',
-    dragType: 'system-frame',
-    component: 'ProductsBasemap'
+// ✅ 監聽當前頁面 slug 變化
+watch(
+  () => pageEditorStore.currentPageSlug,
+  (newSlug, oldSlug) => {
+    console.log('🔄 LeftSidebar 檢測到頁面切換:', {
+      from: oldSlug,
+      to: newSlug,
+      frames: pageEditorStore.currentPageSystemFrames
+    })
   },
-  {
-    id: 'sys-news-list',
-    name: '消息列表',
-    label: 'NEWS_LIST',
-    type: 'NEWS_LIST',
-    dragType: 'system-frame',
-    component: 'NewsBasemap'
-  },
-  {
-    id: 'sys-album-list',
-    name: '相簿列表',
-    label: 'ALBUM_LIST',
-    type: 'ALBUM_LIST',
-    dragType: 'system-frame',
-    component: 'AlbumListBasemap'
-  },
-  {
-    id: 'sys-event-list',
-    name: '活動列表',
-    label: 'EVENT_LIST',
-    type: 'EVENT_LIST',
-    dragType: 'system-frame',
-    component: 'EventsBasemap'
-  }
-])
+  { immediate: true }
+)
 
-// 其他
-const otherFrames = ref([
-  {
-    id: 'sys-donation-product',
-    name: '捐款商品',
-    label: 'DONATION_PRODUCT',
-    type: 'DONATION_PRODUCT',
-    dragType: 'system-frame',
-    component: 'DonationBasemap'
+// ✅ 監聽系統框架變化
+watch(
+  () => pageEditorStore.currentPageSystemFrames,
+  (newFrames) => {
+    console.log('🔄 LeftSidebar 檢測到系統框架更新:', {
+      slug: pageEditorStore.currentPageSlug,
+      frames: newFrames,
+      count: newFrames?.length || 0
+    })
   },
-  {
-    id: 'sys-bright-lamp',
-    name: '光明燈',
-    label: 'BRIGHT_LAMP',
-    type: 'BRIGHT_LAMP',
-    dragType: 'system-frame',
-    component: 'AboutBasemap'
+  { immediate: true, deep: true }
+)
+
+// ✅ 系統框架顯示名稱對照表
+const frameDisplayNames = {
+  'CAROUSEL_WALL': '輪播牆',
+  'FIRST_PICTURE': '首圖',
+  'INDEX_NEWS': '首頁-最新消息',
+  'INDEX_PRODUCT': '首頁-商品標幅',
+  'INDEX_EVENT': '首頁-活動橫幅',
+  'INDEX_DONATION': '首頁-捐獻區',
+  'PRODUCT_LIST': '商品列表',
+  'NEWS_LIST': '消息列表',
+  'ALBUM_LIST': '相簿列表',
+  'EVENT_LIST': '活動列表',
+  'DONATION_PRODUCT': '捐款商品',
+  'BRIGHT_LAMP': '光明燈'
+}
+
+// ✅ 獲取框架顯示名稱
+const getFrameDisplayName = (frameType) => {
+  return frameDisplayNames[frameType] || frameType
+}
+
+// ✅ 創建系統框架拖曳數據
+const createSystemFrameData = (frameType) => {
+  return {
+    id: `sys-${frameType.toLowerCase()}`,
+    name: getFrameDisplayName(frameType),
+    label: frameType,
+    type: frameType,
+    dragType: 'system-frame'
   }
-])
+}
+
+// ✅ 重新載入系統框架
+const loadSystemFrames = async () => {
+  if (!pageEditorStore.tenantId || !pageEditorStore.currentPageSlug) {
+    console.warn('⚠️ 缺少 tenantId 或 currentPageSlug')
+    return
+  }
+  
+  console.log('🔄 手動重新載入系統框架')
+  await pageEditorStore.fetchSystemFrames(
+    pageEditorStore.tenantId,
+    pageEditorStore.currentPageSlug
+  )
+}
 
 // ==================== 自訂框架 ====================
 
-// ✅ 單層框架 - 使用底線格式
 const singleFrames = ref([
   {
     id: 'frame-1-1',
     name: '單層 1-1',
-    layout: '1_1',  // ✅ 改用底線
+    layout: '1_1',
     dragType: 'custom-frame',
     columns: [{ id: 'col-1', span: 'normal' }]
   },
   {
     id: 'frame-1-2',
     name: '單層 1-2',
-    layout: '1_2',  // ✅ 改用底線
+    layout: '1_2',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -329,7 +286,7 @@ const singleFrames = ref([
   {
     id: 'frame-1-3',
     name: '單層 1-3',
-    layout: '1_3',  // ✅ 改用底線
+    layout: '1_3',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -340,7 +297,7 @@ const singleFrames = ref([
   {
     id: 'frame-1-4',
     name: '單層 1-4',
-    layout: '1_4',  // ✅ 改用底線
+    layout: '1_4',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -351,12 +308,11 @@ const singleFrames = ref([
   }
 ])
 
-// ✅ 雙層框架 - 使用底線格式
 const doubleFrames = ref([
   {
     id: 'frame-2-2',
     name: '雙層 2-2',
-    layout: '2_2',  // ✅ 改用底線
+    layout: '2_2',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -368,7 +324,7 @@ const doubleFrames = ref([
   {
     id: 'frame-2-3',
     name: '雙層 2-3',
-    layout: '2_3',  // ✅ 改用底線
+    layout: '2_3',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -382,7 +338,7 @@ const doubleFrames = ref([
   {
     id: 'frame-2-4',
     name: '雙層 2-4',
-    layout: '2_4',  // ✅ 改用底線
+    layout: '2_4',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'normal' },
@@ -397,12 +353,11 @@ const doubleFrames = ref([
   }
 ])
 
-// ✅ 複合框架 - 使用大寫字母
 const complexFrames = ref([
   {
     id: 'frame-a',
     name: '複合 A',
-    layout: 'A',  // ✅ 大寫字母
+    layout: 'A',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'large' },
@@ -413,7 +368,7 @@ const complexFrames = ref([
   {
     id: 'frame-b',
     name: '複合 B',
-    layout: 'B',  // ✅ 大寫字母
+    layout: 'B',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'small' },
@@ -424,7 +379,7 @@ const complexFrames = ref([
   {
     id: 'frame-c',
     name: '複合 C',
-    layout: 'C',  // ✅ 大寫字母
+    layout: 'C',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'large' },
@@ -436,7 +391,7 @@ const complexFrames = ref([
   {
     id: 'frame-d',
     name: '複合 D',
-    layout: 'D',  // ✅ 大寫字母
+    layout: 'D',
     dragType: 'custom-frame',
     columns: [
       { id: 'col-1', span: 'small' },
@@ -467,13 +422,12 @@ const handleDragStart = (event, item) => {
     JSON.stringify(item)
   )
   
-  // 發送事件給父組件
   emit('drag-start', { event, item, type: item.dragType })
 }
 </script>
 
 <style scoped>
-/* 樣式保持不變，只更新 layout class 名稱 */
+/* 樣式保持不變 */
 .sidebar-left {
   width: 280px;
   flex-shrink: 0;
@@ -545,6 +499,48 @@ const handleDragStart = (event, item) => {
 
 .tab-panel {
   padding: 20px;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  font-size: 14px;
+  color: #666;
+}
+
+.error-text {
+  color: #dc3545;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.retry-btn {
+  padding: 6px 16px;
+  background: #E8572A;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-btn:hover {
+  background: #d14a1f;
+}
+
+.empty-state p {
+  color: #999;
+  font-size: 13px;
 }
 
 .section {
@@ -660,7 +656,6 @@ const handleDragStart = (event, item) => {
   border-radius: 2px;
 }
 
-/* ✅ 單層框架 - 使用底線 */
 .frame-preview.layout-1_1 {
   grid-template-columns: 1fr;
 }
@@ -677,7 +672,6 @@ const handleDragStart = (event, item) => {
   grid-template-columns: repeat(4, 1fr);
 }
 
-/* ✅ 雙層框架 - 使用底線 */
 .frame-preview.layout-2_2 {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
@@ -693,7 +687,6 @@ const handleDragStart = (event, item) => {
   grid-template-rows: repeat(2, 1fr);
 }
 
-/* ✅ 複合框架 - 使用大寫字母 */
 .frame-preview.layout-A {
   grid-template-columns: 2fr 1fr;
   grid-template-rows: repeat(2, 1fr);
