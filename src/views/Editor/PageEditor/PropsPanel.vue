@@ -390,7 +390,7 @@
                   :class="{ active: elementMetadata.text_align === 'left' }"
                   title="靠左"
                 >
-                  ≡
+                  靠左
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'center'; updateMetadata()" 
@@ -398,7 +398,7 @@
                   :class="{ active: elementMetadata.text_align === 'center' }"
                   title="置中"
                 >
-                  ≡
+                  置中
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'right'; updateMetadata()" 
@@ -406,7 +406,7 @@
                   :class="{ active: elementMetadata.text_align === 'right' }"
                   title="靠右"
                 >
-                  ≡
+                  靠右
                 </button>
                 <button 
                   @click="elementMetadata.text_align = null; updateMetadata()" 

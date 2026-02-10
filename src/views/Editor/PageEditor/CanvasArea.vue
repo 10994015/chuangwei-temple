@@ -382,6 +382,7 @@ const getBasemapKey = (basemap, index) => {
                 :basemap-index="index"
                 :selected-element="selectedElement"
                 :selected-cell="selectedCell"
+                :selected-frame="selectedFrame"
                 class="relative-frame"
                 @drop-to-cell="handleDropToCell"
                 @delete-element="handleDeleteElement"

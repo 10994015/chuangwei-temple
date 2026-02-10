@@ -294,10 +294,13 @@ const getElementStyle = (element) => {
   if (metadata.color) style.color = metadata.color
   if (metadata.font_size) style.fontSize = metadata.font_size
   if (metadata.font_weight) style.fontWeight = metadata.font_weight
-  // ✅ 文字元件使用 text_align，圖片不使用（已在容器處理）
-  if (element.type === 'TEXT' && metadata.text_align) {
+  
+  // ✅ 圖片不使用 text_align（已在容器處理）
+  // 其他元件（TEXT, BUTTON）可以使用 text_align
+  if (metadata.text_align && element.type !== 'IMG') {
     style.textAlign = metadata.text_align
   }
+  
   if (metadata.width) style.width = metadata.width
   if (metadata.height) style.height = metadata.height
   if (metadata.background_color) style.backgroundColor = metadata.background_color

@@ -119,6 +119,10 @@ const props = defineProps({
     type: Object,
     default: null
   },
+  selectedFrame: {  // ✅ 新增：選中的框架
+    type: Object,
+    default: null
+  },
   currentPageSlug: {
     type: String,
     default: null
@@ -139,9 +143,9 @@ const isLogoSelected = computed(() => {
   return props.selectedElement?.type === 'logo'
 })
 
-// ✅ 檢查框架是否被選中
+// ✅ 檢查框架是否被選中（直接比較框架對象）
 const isFrameSelected = computed(() => {
-  return props.frame === props.selectedElement?.frame
+  return props.selectedFrame === props.frame
 })
 
 // ✅ 處理選擇框架

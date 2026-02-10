@@ -176,6 +176,10 @@ const props = defineProps({
   selectedCell: {
     type: Object,
     default: null
+  },
+  selectedFrame: {  // ✅ 新增：選中的框架
+    type: Object,
+    default: null
   }
 })
 
@@ -376,8 +380,9 @@ const gridStyle = computed(() => {
 })
 
 // 是否選中框架
+// ✅ 是否選中框架（直接比較框架對象）
 const isFrameSelected = computed(() => {
-  return props.selectedElement?.frame?.type === props.frame.type
+  return props.selectedFrame === props.frame
 })
 
 // 是否選中元件
@@ -419,8 +424,13 @@ const getElementStyle = (element) => {
   if (metadata.color) style.color = metadata.color
   if (metadata.font_size) style.fontSize = metadata.font_size
   if (metadata.font_weight) style.fontWeight = metadata.font_weight
+  
   // ✅ 圖片不使用 text_align（已在容器處理）
-  // if (metadata.text_align) style.textAlign = metadata.text_align
+  // 其他元件（TEXT, BUTTON）可以使用 text_align
+  if (metadata.text_align && element.type !== 'IMG') {
+    style.textAlign = metadata.text_align
+  }
+  
   if (metadata.width) style.width = metadata.width
   if (metadata.height) style.height = metadata.height
   if (metadata.background_color) style.backgroundColor = metadata.background_color
@@ -461,11 +471,14 @@ const handleCellClick = (index, element) => {
       cellIndex: index
     })
   } else {
-    // 空格子：選擇格子（用於調整 padding）
+    // ✅ 空格子：選擇格子（用於調整 padding）+ 選擇框架
     emit('select-cell', {
       frame: props.frame,
       cellIndex: index
     })
+    
+    // ✅ 同時選中框架，這樣才能顯示刪除按鈕
+    emit('select-frame', props.frame)
   }
 }
 
