@@ -314,6 +314,46 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       if (result.statusCode === 200) {
         console.log('✓ 保存成功！')
+        
+        // ✅ 關鍵修正：用 API 回傳的數據更新編輯器
+        if (result.data && Array.isArray(result.data)) {
+          console.log('🔄 更新編輯器數據...')
+          
+          // 保存前的數據快照（用於對比）
+          const beforeSave = JSON.stringify(pageData.value[slug].data)
+          
+          // 更新 Store 中的數據
+          pageData.value[slug] = { data: result.data }
+          
+          // 保存後的數據快照
+          const afterSave = JSON.stringify(pageData.value[slug].data)
+          
+          // 檢查數據是否有變化
+          if (beforeSave !== afterSave) {
+            console.log('✓ 編輯器數據已更新（API 回傳的數據與送出的不同）')
+            
+            // 詳細對比變化
+            const beforeLength = beforeSave.length
+            const afterLength = afterSave.length
+            const diff = afterLength - beforeLength
+            const diffPercent = ((diff / beforeLength) * 100).toFixed(2)
+            
+            console.log('📊 數據變化:')
+            console.log(`  保存前: ${(beforeLength / 1024).toFixed(2)} KB`)
+            console.log(`  保存後: ${(afterLength / 1024).toFixed(2)} KB`)
+            console.log(`  差異: ${diff > 0 ? '+' : ''}${(diff / 1024).toFixed(2)} KB (${diffPercent}%)`)
+          } else {
+            console.log('✓ 編輯器數據已更新（與送出的數據相同）')
+          }
+          
+          // ✅ 清除選中狀態（避免指向舊的對象引用）
+          clearSelection()
+          
+          console.log('✓ 數據同步完成')
+        } else {
+          console.warn('⚠️ API 沒有返回 contentJson，保留編輯器中的數據')
+        }
+        
         return true
       }
       
