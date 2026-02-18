@@ -32,6 +32,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     cell: null
   })
 
+  // ✅ 待刪除的檔案 ID 清單
+  const pendingDeleteFileIds = ref([])
+
   // ==================== Computed ====================
   
   // 當前頁面的 basemaps（就是 API 返回的 data 陣列）
@@ -43,6 +46,28 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   const currentPageSystemFrames = computed(() => {
     return systemFrames.value[currentPageSlug.value] || []
   })
+
+  // ==================== ✅ 檔案刪除追蹤 ====================
+
+  /**
+   * 標記一個檔案 ID 為待刪除
+   * @param {string|null} fileId - 要刪除的檔案 ID
+   */
+  const markFileForDeletion = (fileId) => {
+    if (!fileId) return
+    if (!pendingDeleteFileIds.value.includes(fileId)) {
+      pendingDeleteFileIds.value.push(fileId)
+      console.log('🗑️ 標記待刪除 ID:', fileId, '| 目前清單:', pendingDeleteFileIds.value)
+    }
+  }
+
+  /**
+   * 清空待刪除清單（儲存成功後呼叫）
+   */
+  const clearPendingDeleteFileIds = () => {
+    console.log('🧹 清空待刪除清單，共', pendingDeleteFileIds.value.length, '個')
+    pendingDeleteFileIds.value = []
+  }
 
   // ==================== API Functions ====================
   
@@ -240,13 +265,14 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const requestBody = {
         locale: currentLocale.value,
         slug: slug,
-        deleteFileIds: [],
+        deleteFileIds: [...pendingDeleteFileIds.value],  // ✅ 帶入待刪除清單（原本是 []）
         contentJson: contentJson
       }
       
       // 完整輸出送出的 JSON（格式化）
       console.log('📤 完整請求 JSON:')
       console.log(JSON.stringify(requestBody, null, 2))
+      console.log('🗑️ 待刪除檔案 IDs:', pendingDeleteFileIds.value)  // ✅ 新增 log
       
       // Debug: 檢查數據大小
       const jsonString = JSON.stringify(requestBody)
@@ -314,6 +340,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       if (result.statusCode === 200) {
         console.log('✓ 保存成功！')
+
+        // ✅ 清空待刪除清單
+        clearPendingDeleteFileIds()
         
         // ✅ 關鍵修正：用 API 回傳的數據更新編輯器
         if (result.data && Array.isArray(result.data)) {
@@ -654,6 +683,11 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       console.error('此底圖不可刪除')
       return false
     }
+
+    // ✅ 刪除底圖時，標記所有背景圖片 ID 待刪除
+    markFileForDeletion(basemap.bg_pc_img_id)
+    markFileForDeletion(basemap.bg_tablet_img_id)
+    markFileForDeletion(basemap.bg_phone_img_id)
     
     basemaps.splice(index, 1)
     clearSelection()
@@ -738,6 +772,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     pageData.value = {}
     systemFrames.value = {}  // ✅ 重置系統框架
     selected.value = { basemap: null, frame: null, element: null, cell: null }
+    pendingDeleteFileIds.value = []  // ✅ 重置待刪除清單
   }
 
   /**
@@ -1143,6 +1178,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       return false
     }
   }
+
   return {
     tenantId,
     headerTabs,
@@ -1155,9 +1191,10 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     currentPageSystemFrames,  // ✅ 導出
     locales,
     currentLocale,
+    pendingDeleteFileIds,       // ✅ 新增導出
     fetchHeaderTabs,
     fetchPageContent,
-    fetchSystemFrames,        // ✅ 導出
+    fetchSystemFrames,          // ✅ 導出
     savePageContent,
     fetchLocales,
     setTenantId,
@@ -1181,6 +1218,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     updateWebsiteSettings,
     publishWebsite,
     uploadImage,
-    deleteDraft
+    deleteDraft,
+    markFileForDeletion,        // ✅ 新增導出
+    clearPendingDeleteFileIds,  // ✅ 新增導出
   }
 })

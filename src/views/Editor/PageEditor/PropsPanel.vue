@@ -29,8 +29,49 @@
 
       <!-- 選擇了框架 -->
       <div v-else-if="selectedFrame" class="props-section">
+        <!-- ✅ 自訂框架 (FRAME 開頭) -->
+        <template v-if="selectedFrame.type && selectedFrame.type.startsWith('FRAME')">
+          <h4 class="section-title">自訂框架設定</h4>
+          
+          <div class="prop-group">
+            <label>框架類型</label>
+            <input 
+              :value="selectedFrame.type" 
+              type="text" 
+              class="prop-input"
+              disabled
+            />
+          </div>
+
+          <!-- ✅ 框架寬度設定 -->
+          <div class="metadata-section">
+            <h5 class="subsection-title">框架寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="frameWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="1200px"
+                  @input="updateFrameWidth"
+                />
+                <span class="unit-hint">例如: 1200px, 100%, 80vw</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setFrameWidth('900px')" class="preset-btn">窄</button>
+              <button @click="setFrameWidth('1200px')" class="preset-btn">中</button>
+              <button @click="setFrameWidth('1400px')" class="preset-btn">寬</button>
+              <button @click="setFrameWidth('100%')" class="preset-btn">全寬</button>
+            </div>
+          </div>
+        </template>
+        
         <!-- ✅ 首圖框架 (FIRST_PICTURE) -->
-        <template v-if="selectedFrame.type === 'FIRST_PICTURE'">
+        <template v-else-if="selectedFrame.type === 'FIRST_PICTURE'">
           <h4 class="section-title">首圖設定</h4>
           
           <!-- 背景圖片 -->
@@ -241,6 +282,54 @@
             </div>
           </div>
         </template>
+
+        <!-- ✅ 輪播牆 (CAROUSEL_WALL) -->
+        <template v-else-if="selectedFrame.type === 'CAROUSEL_WALL'">
+          <h4 class="section-title">輪播牆設定</h4>
+
+          <div class="prop-group">
+            <label>輪播圖片 ({{ carouselWallImages.length }} 張)</label>
+
+            <!-- 圖片縮圖列表 -->
+            <div v-if="carouselWallImages.length > 0" class="carousel-images-list">
+              <div
+                v-for="(img, index) in carouselWallImages"
+                :key="img.id || index"
+                class="carousel-image-item"
+              >
+                <img
+                  :src="img.src"
+                  :alt="`圖片 ${index + 1}`"
+                  class="carousel-thumbnail"
+                />
+                <button
+                  class="remove-image-btn"
+                  @click="removeCarouselWallImage(index)"
+                  title="刪除圖片"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <!-- 無圖片時的空狀態 -->
+            <div v-else class="no-image">
+              <span>尚未上傳圖片</span>
+            </div>
+
+            <!-- 上傳按鈕 -->
+            <button
+              @click="handleUploadCarouselWall"
+              class="upload-btn"
+              :disabled="isUploadingCarouselWall"
+            >
+              <template v-if="isUploadingCarouselWall">
+                <span class="btn-spinner"></span>上傳中...
+              </template>
+              <template v-else>＋ 新增圖片</template>
+            </button>
+          </div>
+        </template>
         
         <!-- ✅ 其他框架類型 -->
         <template v-else>
@@ -390,7 +479,7 @@
                   :class="{ active: elementMetadata.text_align === 'left' }"
                   title="靠左"
                 >
-                  靠左
+                  ≡
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'center'; updateMetadata()" 
@@ -398,7 +487,7 @@
                   :class="{ active: elementMetadata.text_align === 'center' }"
                   title="置中"
                 >
-                  置中
+                  ≡
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'right'; updateMetadata()" 
@@ -406,7 +495,7 @@
                   :class="{ active: elementMetadata.text_align === 'right' }"
                   title="靠右"
                 >
-                  靠右
+                  ≡
                 </button>
                 <button 
                   @click="elementMetadata.text_align = null; updateMetadata()" 
@@ -515,6 +604,32 @@
               </div>
             </div>
           </div>
+
+          <!-- ✅ 新增：元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+            </div>
+          </div>
         </template>
 
         <!-- IMG 元件 -->
@@ -557,7 +672,7 @@
           </div>
 
           <!-- ✅ 新增：Alt 文字設定 -->
-          <div class="prop-group" v-if="false">
+          <div class="prop-group">
             <label>Alt 文字（替代文字）</label>
             <input 
               v-model="imageAlt" 
@@ -583,7 +698,7 @@
                   :class="{ active: elementMetadata.text_align === 'left' }"
                   title="靠左"
                 >
-                  靠左
+                  ⬅
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'center'; updateMetadata()" 
@@ -591,7 +706,7 @@
                   :class="{ active: elementMetadata.text_align === 'center' }"
                   title="置中"
                 >
-                  置中
+                  ↔
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'right'; updateMetadata()" 
@@ -599,7 +714,7 @@
                   :class="{ active: elementMetadata.text_align === 'right' }"
                   title="靠右"
                 >
-                  靠右
+                  ➡
                 </button>
                 <button 
                   @click="elementMetadata.text_align = null; updateMetadata()" 
@@ -715,6 +830,32 @@
                 <button @click="setElementPadding(20)" class="preset-btn">中</button>
                 <button @click="setElementPadding(40)" class="preset-btn">大</button>
               </div>
+            </div>
+          </div>
+
+          <!-- ✅ 新增：元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
             </div>
           </div>
         </template>
@@ -896,6 +1037,32 @@
               </div>
             </div>
           </div>
+
+          <!-- ✅ 新增：元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+            </div>
+          </div>
         </template>
 
         <!-- H_LINE 元件 -->
@@ -994,6 +1161,32 @@
                 <button @click="setElementPadding(20)" class="preset-btn">中</button>
                 <button @click="setElementPadding(40)" class="preset-btn">大</button>
               </div>
+            </div>
+          </div>
+
+          <!-- ✅ 新增：元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
             </div>
           </div>
         </template>
@@ -1096,6 +1289,32 @@
               </div>
             </div>
           </div>
+
+          <!-- ✅ 新增：元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+            </div>
+          </div>
         </template>
 
         <!-- CAROUSEL 元件 -->
@@ -1137,10 +1356,10 @@
             <div v-if="carouselImages.length > 0" class="carousel-images-list">
               <div 
                 v-for="(image, index) in carouselImages" 
-                :key="index"
+                :key="image.id || index"
                 class="carousel-image-item"
               >
-                <img :src="image" :alt="`圖片 ${index + 1}`" class="carousel-thumbnail" />
+                <img :src="image.src || image" :alt="`圖片 ${index + 1}`" class="carousel-thumbnail" />
                 <button 
                   @click="removeCarouselImage(index)" 
                   class="remove-image-btn"
@@ -1266,6 +1485,204 @@
               </div>
             </div>
           </div>
+
+          <!-- ✅ 新增：元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+            </div>
+          </div>
+        </template>
+
+        <!-- MAP 元件 -->
+        <template v-else-if="selectedElement.element?.type === 'MAP'">
+          <h4 class="section-title">地圖設定</h4>
+          
+          <!-- 地址 -->
+          <div class="prop-group">
+            <label>地址</label>
+            <textarea 
+              v-model="mapAddress" 
+              class="prop-textarea"
+              rows="2"
+              placeholder="輸入地址（例如：台北市中山區南京東路一段1號）"
+              @input="updateMapData"
+            ></textarea>
+          </div>
+
+          <!-- 經緯度 -->
+          <div class="metadata-section">
+            <h5 class="subsection-title">經緯度設定</h5>
+            
+            <div class="prop-group">
+              <label>緯度 (Latitude)</label>
+              <input 
+                v-model.number="mapLat" 
+                type="number" 
+                class="prop-input"
+                placeholder="25.033"
+                step="0.001"
+                @input="updateMapData"
+              />
+              <span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span>
+            </div>
+
+            <div class="prop-group">
+              <label>經度 (Longitude)</label>
+              <input 
+                v-model.number="mapLng" 
+                type="number" 
+                class="prop-input"
+                placeholder="121.565"
+                step="0.001"
+                @input="updateMapData"
+              />
+              <span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span>
+            </div>
+
+            <div class="prop-group">
+              <label>縮放級別 ({{ mapZoom }})</label>
+              <input 
+                v-model.number="mapZoom" 
+                type="range" 
+                min="10"
+                max="18"
+                class="prop-slider"
+                @input="updateMapData"
+              />
+              <div class="slider-labels">
+                <span>遠</span>
+                <span>近</span>
+              </div>
+            </div>
+
+            <div class="zoom-presets">
+              <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">城市</button>
+              <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">街區</button>
+              <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">建築</button>
+            </div>
+          </div>
+
+          <!-- 元件間距設定 -->
+          <div class="padding-section">
+            <h5 class="subsection-title">元件間距</h5>
+            
+            <div class="padding-controls">
+              <div class="padding-visual">
+                <div class="padding-box">
+                  <div class="padding-input-group top">
+                    <label>上</label>
+                    <input 
+                      v-model.number="elementPadding.top" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                  
+                  <div class="padding-sides">
+                    <div class="padding-input-group left">
+                      <label>左</label>
+                      <input 
+                        v-model.number="elementPadding.left" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                    
+                    <div class="content-preview">
+                      內容區域
+                    </div>
+                    
+                    <div class="padding-input-group right">
+                      <label>右</label>
+                      <input 
+                        v-model.number="elementPadding.right" 
+                        type="number" 
+                        min="0"
+                        max="200"
+                        step="5"
+                        class="padding-input"
+                        @input="updateElementPadding"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="padding-input-group bottom">
+                    <label>下</label>
+                    <input 
+                      v-model.number="elementPadding.bottom" 
+                      type="number" 
+                      min="0"
+                      max="200"
+                      step="5"
+                      class="padding-input"
+                      @input="updateElementPadding"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
+                <button @click="setElementPadding(10)" class="preset-btn">小</button>
+                <button @click="setElementPadding(20)" class="preset-btn">中</button>
+                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 元件寬度設定 -->
+          <div class="width-section">
+            <h5 class="subsection-title">元件寬度</h5>
+            
+            <div class="prop-group">
+              <label>最大寬度</label>
+              <div class="input-with-unit">
+                <input 
+                  v-model="elementWidth" 
+                  type="text" 
+                  class="prop-input"
+                  placeholder="100%"
+                  @input="updateElementWidth"
+                />
+                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+              </div>
+            </div>
+
+            <div class="width-presets">
+              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+            </div>
+          </div>
         </template>
 
         <!-- 未知元件類型 -->
@@ -1328,21 +1745,25 @@ const emit = defineEmits(['update-logo', 'update-cell-padding'])
 const logoAlt = ref('')
 const logoWidth = ref('')
 const logoHeight = ref('')
-const isUploadingLogo = ref(false)  // ✅ Logo 上傳中狀態
-const localLogoSrc = ref(null)      // ✅ 本地 Logo src（確保預覽更新）
+const isUploadingLogo = ref(false)
+const localLogoSrc = ref(null)
 
 // ✅ 圖片上傳 loading 狀態
-const isUploadingImage = ref(false)           // IMG 元件圖片上傳中
-const isUploadingHeroBackground = ref(false)  // 首圖背景上傳中
-const isUploadingCarousel = ref(false)        // 輪播圖片上傳中
+const isUploadingImage = ref(false)
+const isUploadingHeroBackground = ref(false)
+const isUploadingCarousel = ref(false)
 
-// CAROUSEL 相關的響應式數據
+// ✅ CAROUSEL_WALL 輪播牆
+const carouselWallImages = ref([])
+const isUploadingCarouselWall = ref(false)
+
+// CAROUSEL 元件相關
 const carouselImages = ref([])
 const carouselAutoPlay = ref(true)
 const carouselInterval = ref(3000)
 const carouselHeight = ref(400)
 
-// ✅ 首圖 (FIRST_PICTURE) 相關的響應式數據
+// ✅ 首圖 (FIRST_PICTURE) 相關
 const heroTitle = ref('')
 const heroSubtitle = ref('')
 const heroHeight = ref('600px')
@@ -1354,15 +1775,13 @@ const titleFontSize = ref('48px')
 const subtitleColor = ref('#666666')
 const subtitleFontSize = ref('20px')
 
-// ✅ 元件 padding 響應式數據（從 selectedElement.element.padding 讀取）
-const elementPadding = ref({
-  top: 20,
-  right: 20,
-  bottom: 20,
-  left: 20
-})
+// ✅ 元件 padding
+const elementPadding = ref({ top: 20, right: 20, bottom: 20, left: 20 })
 
-// ✅ 元件 metadata 響應式數據
+// ✅ 元件寬度
+const elementWidth = ref('100%')
+
+// ✅ 元件 metadata
 const elementMetadata = ref({
   color: null,
   font_size: null,
@@ -1376,6 +1795,15 @@ const elementMetadata = ref({
 // ✅ IMG 元件 alt 文字
 const imageAlt = ref('')
 
+// ✅ 框架寬度設定
+const frameWidth = ref('1200px')
+
+// ✅ MAP 元件
+const mapAddress = ref('')
+const mapLat = ref(25.033)
+const mapLng = ref(121.565)
+const mapZoom = ref(15)
+
 // 高度預設選項
 const heightPresets = [
   { label: '小', value: 300 },
@@ -1384,16 +1812,15 @@ const heightPresets = [
   { label: '特大', value: 600 }
 ]
 
-// 監聽選中元件的變化
+// ==================== 監聽選中元件 ====================
+
 watch(() => props.selectedElement, (newVal) => {
-  // Logo
   if (newVal?.type === 'logo' && newVal.data) {
     logoAlt.value = newVal.data.alt || 'Logo'
     logoWidth.value = newVal.data.width || '120px'
     logoHeight.value = newVal.data.height || 'auto'
   }
   
-  // CAROUSEL
   if (newVal?.element?.type === 'CAROUSEL') {
     const value = newVal.element.value || {}
     carouselImages.value = value.images || []
@@ -1402,15 +1829,21 @@ watch(() => props.selectedElement, (newVal) => {
     carouselHeight.value = value.height || 400
   }
 
-  // ✅ IMG 元件 - 載入 alt 文字
-  if (newVal?.element?.type === 'IMG') {
+  // ✅ MAP 元件
+  if (newVal?.element?.type === 'MAP') {
     const value = newVal.element.value || {}
-    imageAlt.value = value.alt || ''
+    mapAddress.value = value.address || ''
+    mapLat.value = value.lat !== undefined ? value.lat : 25.033
+    mapLng.value = value.lng !== undefined ? value.lng : 121.565
+    mapZoom.value = value.zoom !== undefined ? value.zoom : 15
+  }
+
+  if (newVal?.element?.type === 'IMG') {
+    imageAlt.value = newVal.element.value?.alt || ''
   } else {
     imageAlt.value = ''
   }
 
-  // ✅ 載入元件的 metadata
   if (newVal?.element?.metadata) {
     elementMetadata.value = {
       color: newVal.element.metadata.color || null,
@@ -1422,76 +1855,61 @@ watch(() => props.selectedElement, (newVal) => {
       background_color: newVal.element.metadata.background_color || null
     }
   } else {
-    // 重置為空
     elementMetadata.value = {
-      color: null,
-      font_size: null,
-      font_weight: null,
-      text_align: null,
-      width: null,
-      height: null,
-      background_color: null
+      color: null, font_size: null, font_weight: null,
+      text_align: null, width: null, height: null, background_color: null
     }
   }
 
-  // ✅ 載入元件的 padding
-  if (newVal?.element?.padding) {
-    elementPadding.value = { ...newVal.element.padding }
-  } else {
-    // 默認值
-    elementPadding.value = {
-      top: 20,
-      right: 20,
-      bottom: 20,
-      left: 20
-    }
-  }
-  
-  console.log('✓ 元件 padding 已載入:', elementPadding.value)
+  elementPadding.value = newVal?.element?.padding
+    ? { ...newVal.element.padding }
+    : { top: 20, right: 20, bottom: 20, left: 20 }
+
+  elementWidth.value = newVal?.element?.width || '100%'
+
 }, { immediate: true, deep: true })
 
-// ✅ 額外監聽 Logo data 的變化（用於上傳後更新預覽）
 watch(() => props.selectedElement?.data, (newData) => {
   if (props.selectedElement?.type === 'logo' && newData) {
     console.log('✓ Logo data 變化檢測:', newData)
-    // 觸發響應式更新（雖然理論上 deep: true 應該捕捉到，但為了保險）
   }
 }, { deep: true })
 
-// ✅ 監聽 frame.data.logo_img_src 的變化（確保預覽更新）
 watch(
   () => props.selectedElement?.frame?.data?.logo_img_src,
   (newSrc) => {
     if (props.selectedElement?.type === 'logo') {
-      console.log('🔄 Logo src 變化檢測:', newSrc)
       localLogoSrc.value = newSrc || null
     }
   },
   { immediate: true }
 )
 
-// ✅ 監聽選中元件切換（重置本地 Logo src）
 watch(
   () => props.selectedElement?.type,
   (newType) => {
     if (newType === 'logo') {
       localLogoSrc.value = props.selectedElement?.frame?.data?.logo_img_src || null
-      console.log('✓ Logo 被選中，載入 src:', localLogoSrc.value)
     }
   },
   { immediate: true }
 )
 
-// 額外監聽 CAROUSEL 的 images 陣列變化
 watch(() => props.selectedElement?.element?.value?.images, (newImages) => {
   if (props.selectedElement?.element?.type === 'CAROUSEL' && newImages) {
     carouselImages.value = [...newImages]
-    console.log('✓ 圖片陣列已同步:', carouselImages.value.length, '張')
   }
 }, { deep: true })
 
-// ✅ 監聽選中框架的變化（用於載入首圖數據）
+// ==================== 監聽選中框架 ====================
+
 watch(() => props.selectedFrame, (newVal) => {
+  // 自訂框架寬度
+  if (newVal?.type?.startsWith('FRAME')) {
+    frameWidth.value = newVal.metadata?.frame_width || '1200px'
+  }
+
+  // 首圖資料
   if (newVal?.type === 'FIRST_PICTURE' && newVal.data) {
     heroTitle.value = newVal.data.hero_title || ''
     heroSubtitle.value = newVal.data.hero_subtitle || ''
@@ -1503,73 +1921,122 @@ watch(() => props.selectedFrame, (newVal) => {
     titleFontSize.value = newVal.data.title_font_size || '48px'
     subtitleColor.value = newVal.data.subtitle_color || '#666666'
     subtitleFontSize.value = newVal.data.subtitle_font_size || '20px'
-    
-    console.log('✓ 首圖數據已載入')
   }
+
+  // ✅ 輪播牆資料
+  if (newVal?.type === 'CAROUSEL_WALL') {
+    carouselWallImages.value = Array.isArray(newVal.data?.caroisel_wall_imgs)
+      ? [...newVal.data.caroisel_wall_imgs]
+      : []
+    console.log('✓ 輪播牆圖片已載入:', carouselWallImages.value.length, '張')
+  }
+
 }, { immediate: true, deep: true })
 
-// ==================== ✅ Metadata 更新 ====================
+// ==================== 框架寬度更新 ====================
+
+const updateFrameWidth = () => {
+  if (props.selectedFrame) {
+    if (!props.selectedFrame.metadata) props.selectedFrame.metadata = {}
+    props.selectedFrame.metadata.frame_width = frameWidth.value
+  }
+}
+
+const setFrameWidth = (width) => {
+  frameWidth.value = width
+  updateFrameWidth()
+}
+
+// ==================== Metadata 更新 ====================
 
 const updateMetadata = () => {
   if (props.selectedElement?.element) {
-    if (!props.selectedElement.element.metadata) {
-      props.selectedElement.element.metadata = {}
-    }
-    
-    // 更新 metadata
-    props.selectedElement.element.metadata = {
-      ...elementMetadata.value
-    }
-    
-    console.log('✓ Metadata 已更新:', props.selectedElement.element.metadata)
+    if (!props.selectedElement.element.metadata) props.selectedElement.element.metadata = {}
+    props.selectedElement.element.metadata = { ...elementMetadata.value }
   }
 }
 
-// ✅ 更新 IMG 元件的 alt 文字
 const updateImageAlt = () => {
   if (props.selectedElement?.element?.type === 'IMG') {
-    if (!props.selectedElement.element.value) {
-      props.selectedElement.element.value = {}
-    }
-    
-    // 更新 alt
+    if (!props.selectedElement.element.value) props.selectedElement.element.value = {}
     props.selectedElement.element.value.alt = imageAlt.value
-    
-    console.log('✓ IMG alt 已更新:', imageAlt.value)
   }
 }
 
-// ==================== ✅ 元件 Padding 更新 ====================
+// ==================== 元件 Padding 更新 ====================
 
 const updateElementPadding = () => {
   if (props.selectedElement?.element) {
-    // 確保 padding 存在
-    if (!props.selectedElement.element.padding) {
-      props.selectedElement.element.padding = {}
-    }
-    
-    // 更新 padding
+    if (!props.selectedElement.element.padding) props.selectedElement.element.padding = {}
     props.selectedElement.element.padding = { ...elementPadding.value }
-    
-    // 發送事件給父組件（用於同步更新）
     emit('update-cell-padding', {
       frame: props.selectedElement.frame,
       cellIndex: props.selectedElement.cellIndex,
       padding: { ...elementPadding.value }
     })
-    
-    console.log('✓ 元件 Padding 已更新:', props.selectedElement.element.padding)
   }
 }
 
 const setElementPadding = (value) => {
-  elementPadding.value = {
-    top: value,
-    right: value,
-    bottom: value,
-    left: value
-  }
+  elementPadding.value = { top: value, right: value, bottom: value, left: value }
   updateElementPadding()
+}
+
+// ==================== 元件寬度更新 ====================
+
+const updateElementWidth = () => {
+  if (props.selectedElement?.element) {
+    props.selectedElement.element.width = elementWidth.value
+    adjustSiblingCellsWidth()
+  }
+}
+
+const adjustSiblingCellsWidth = () => {
+  const frame = props.selectedElement?.frame
+  const cellIndex = props.selectedElement?.cellIndex
+  if (!frame || cellIndex === undefined) return
+  const frameType = frame.type
+  if (!frameType || !frameType.startsWith('FRAME')) return
+  let layout = frameType.replace(/^FRAME/, '').replace(/^[-_]/, '').replace(/-/g, '_')
+  const singleRowLayouts = ['1_1', '1_2', '1_3', '1_4']
+  if (!singleRowLayouts.includes(layout)) return
+  const rowCells = getRowCells(layout, cellIndex)
+  if (rowCells.length <= 1) return
+  if (!frame.elements) frame.elements = []
+  const currentWidth = parseWidth(elementWidth.value)
+  if (currentWidth === null || currentWidth >= 100) return
+  const remainingWidth = 100 - currentWidth
+  const otherCellsCount = rowCells.length - 1
+  const widthPerCell = remainingWidth / otherCellsCount
+  rowCells.forEach(index => {
+    if (index !== cellIndex && frame.elements[index]?.type) {
+      frame.elements[index].width = widthPerCell.toFixed(1) + '%'
+    }
+  })
+}
+
+const parseWidth = (widthStr) => {
+  if (!widthStr || widthStr === 'auto') return null
+  if (widthStr.includes('%')) {
+    const num = parseFloat(widthStr)
+    return isNaN(num) ? null : num
+  }
+  return null
+}
+
+const getRowCells = (layout, currentIndex) => {
+  switch (layout) {
+    case '1_1': return [0]
+    case '1_2': return [0, 1]
+    case '1_3': return [0, 1, 2]
+    case '1_4': return [0, 1, 2, 3]
+    default: return [currentIndex]
+  }
+}
+
+const setElementWidth = (width) => {
+  elementWidth.value = width
+  updateElementWidth()
 }
 
 // ==================== Logo 操作 ====================
@@ -1578,63 +2045,27 @@ const handleUploadLogo = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  
   input.onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    
     try {
-      // ✅ 開始上傳，顯示 loading
       isUploadingLogo.value = true
-      console.log('📤 開始上傳 Logo...')
-      
-      // ✅ 使用 Store 的 uploadImage 方法
+      pageEditorStore.markFileForDeletion(props.selectedElement?.frame?.data?.logo_img_id)
       const uploadedFile = await pageEditorStore.uploadImage(file)
-      
-      if (!uploadedFile) {
-        // Store 已經處理錯誤訊息
-        alert('Logo 上傳失敗，請稍後再試')
-        return
-      }
-      
-      console.log('✓ Logo 上傳成功:', uploadedFile)
-      
-      // ✅ 立即更新本地預覽（不等待 Store 更新）
+      if (!uploadedFile) { alert('Logo 上傳失敗，請稍後再試'); return }
       localLogoSrc.value = uploadedFile.fileDir
-      console.log('✓ 本地預覽已更新:', localLogoSrc.value)
-      
-      // ✅ 發送更新事件給父組件
-      emit('update-logo', {
-        id: uploadedFile.id,
-        src: uploadedFile.fileDir
-      })
-      
-      console.log('✓ Logo 已上傳:', {
-        id: uploadedFile.id,
-        src: uploadedFile.fileDir
-      })
-      
-      // ✅ 等待一下，確保 DOM 和 Store 都更新
+      emit('update-logo', { id: uploadedFile.id, src: uploadedFile.fileDir })
       await new Promise(resolve => setTimeout(resolve, 100))
-      
-      console.log('✓ 檢查更新結果:')
-      console.log('  - localLogoSrc:', localLogoSrc.value)
-      console.log('  - frame.data.logo_img_src:', props.selectedElement?.frame?.data?.logo_img_src)
-      console.log('  - selectedElement.data.src:', props.selectedElement?.data?.src)
-      
     } catch (error) {
       console.error('❌ Logo 上傳失敗:', error)
       alert('Logo 上傳失敗: ' + error.message)
     } finally {
-      // ✅ 結束 loading
       isUploadingLogo.value = false
     }
   }
-  
   input.click()
 }
 
-// ✅ 處理圖片載入錯誤
 const handleLogoImageError = (e) => {
   console.error('❌ Logo 圖片載入失敗:', e.target.src)
   alert('Logo 圖片載入失敗，請重新上傳')
@@ -1646,111 +2077,93 @@ const handleUploadImage = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  
   input.onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    
     try {
-      // ✅ 開始上傳，顯示 loading
       isUploadingImage.value = true
-      console.log('📤 開始上傳圖片...')
-      
-      // ✅ 使用 Store 的 uploadImage 方法
+      pageEditorStore.markFileForDeletion(props.selectedElement?.element?.value?.id)
       const uploadedFile = await pageEditorStore.uploadImage(file)
-      
-      if (!uploadedFile) {
-        alert('圖片上傳失敗，請稍後再試')
-        return
-      }
-      
-      // ✅ 更新元件的圖片資訊
+      if (!uploadedFile) { alert('圖片上傳失敗，請稍後再試'); return }
       if (props.selectedElement?.element?.value) {
         props.selectedElement.element.value.id = uploadedFile.id
         props.selectedElement.element.value.src = uploadedFile.fileDir
-        
-        console.log('✓ 圖片已更新:', {
-          id: uploadedFile.id,
-          src: uploadedFile.fileDir
-        })
       }
-      
     } catch (error) {
       console.error('❌ 圖片上傳失敗:', error)
       alert('圖片上傳失敗: ' + error.message)
     } finally {
-      // ✅ 結束 loading
       isUploadingImage.value = false
     }
   }
-  
   input.click()
 }
 
-// ==================== CAROUSEL 操作 ====================
+// ==================== CAROUSEL 元件操作 ====================
 
 const addCarouselImage = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
+  input.multiple = true  // ✅ 支援多選
   
   input.onchange = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
     
     try {
-      // ✅ 開始上傳，顯示 loading
       isUploadingCarousel.value = true
-      console.log('📤 開始上傳輪播圖片...')
+      console.log(`📤 開始上傳 ${files.length} 張輪播圖片...`)
       
-      // ✅ 使用 Store 的 uploadImage 方法
-      const uploadedFile = await pageEditorStore.uploadImage(file)
+      // ✅ 確保 value 和 images 陣列存在
+      if (!props.selectedElement.element.value) props.selectedElement.element.value = {}
+      if (!props.selectedElement.element.value.images) props.selectedElement.element.value.images = []
       
-      if (!uploadedFile) {
-        alert('輪播圖片上傳失敗，請稍後再試')
-        return
+      // ✅ 依序上傳每張圖片
+      for (const file of files) {
+        const uploadedFile = await pageEditorStore.uploadImage(file)
+        if (!uploadedFile) {
+          console.warn(`⚠️ 圖片 ${file.name} 上傳失敗，跳過`)
+          continue
+        }
+        
+        // ✅ 儲存完整資料（id + src）
+        props.selectedElement.element.value.images.push({
+          id: uploadedFile.id,
+          src: uploadedFile.fileDir
+        })
       }
       
-      // ✅ 確保 value 和 images 存在
-      if (!props.selectedElement.element.value) {
-        props.selectedElement.element.value = {}
-      }
-      if (!props.selectedElement.element.value.images) {
-        props.selectedElement.element.value.images = []
-      }
-      
-      // ✅ 添加圖片 URL 到 images 陣列
-      props.selectedElement.element.value.images.push(uploadedFile.fileDir)
-      
-      // ✅ 手動更新本地響應式數據（確保視圖立即更新）
+      // ✅ 同步本地響應式陣列
       carouselImages.value = [...props.selectedElement.element.value.images]
       
-      console.log('✓ 圖片已添加到輪播，共', carouselImages.value.length, '張')
-      
+      console.log('✓ 輪播圖片已新增，共', carouselImages.value.length, '張')
     } catch (error) {
       console.error('❌ 輪播圖片上傳失敗:', error)
       alert('輪播圖片上傳失敗: ' + error.message)
     } finally {
-      // ✅ 結束 loading
       isUploadingCarousel.value = false
     }
   }
-  
   input.click()
 }
 
 const removeCarouselImage = (index) => {
-  if (confirm('確定要刪除這張圖片嗎？')) {
-    // 從 element.value.images 刪除
-    if (props.selectedElement?.element?.value?.images) {
-      props.selectedElement.element.value.images.splice(index, 1)
-      
-      // 手動更新本地響應式數據（確保視圖立即更新）
-      carouselImages.value = [...props.selectedElement.element.value.images]
-    }
-    
-    console.log('✓ 圖片已刪除，剩餘', carouselImages.value.length, '張')
+  if (!confirm('確定要刪除這張圖片嗎？')) return
+  
+  const images = props.selectedElement?.element?.value?.images
+  if (!images) return
+  
+  // ✅ 標記舊檔案 ID 待刪除
+  const removedImg = images[index]
+  if (removedImg?.id) {
+    pageEditorStore.markFileForDeletion(removedImg.id)
   }
+  
+  images.splice(index, 1)
+  carouselImages.value = [...images]
+  
+  console.log('✓ 輪播圖片已刪除，剩餘', carouselImages.value.length, '張')
 }
 
 const updateCarouselSettings = () => {
@@ -1758,12 +2171,6 @@ const updateCarouselSettings = () => {
     props.selectedElement.element.value.autoPlay = carouselAutoPlay.value
     props.selectedElement.element.value.interval = carouselInterval.value
     props.selectedElement.element.value.height = carouselHeight.value
-    
-    console.log('✓ 輪播設定已更新:', {
-      autoPlay: carouselAutoPlay.value,
-      interval: carouselInterval.value,
-      height: carouselHeight.value
-    })
   }
 }
 
@@ -1772,9 +2179,8 @@ const setCarouselHeight = (height) => {
   updateCarouselSettings()
 }
 
-// ==================== ✅ 首圖操作 ====================
+// ==================== 首圖操作 ====================
 
-// 更新首圖數據
 const updateHeroData = () => {
   if (props.selectedFrame?.data) {
     props.selectedFrame.data.hero_title = heroTitle.value
@@ -1787,61 +2193,123 @@ const updateHeroData = () => {
     props.selectedFrame.data.title_font_size = titleFontSize.value
     props.selectedFrame.data.subtitle_color = subtitleColor.value
     props.selectedFrame.data.subtitle_font_size = subtitleFontSize.value
-    
-    console.log('✓ 首圖數據已更新')
   }
 }
 
-// 設定首圖高度
 const setHeroHeight = (height) => {
   heroHeight.value = height
   updateHeroData()
 }
 
-// 上傳首圖背景
 const handleUploadHeroBackground = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  
   input.onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    
     try {
-      // ✅ 開始上傳，顯示 loading
       isUploadingHeroBackground.value = true
-      console.log('📤 開始上傳首圖背景...')
-      
-      // ✅ 使用 Store 的 uploadImage 方法
+      pageEditorStore.markFileForDeletion(props.selectedFrame?.data?.hero_bg_img_id)
       const uploadedFile = await pageEditorStore.uploadImage(file)
-      
-      if (!uploadedFile) {
-        alert('首圖背景上傳失敗，請稍後再試')
-        return
-      }
-      
-      // ✅ 更新首圖背景資訊
+      if (!uploadedFile) { alert('首圖背景上傳失敗，請稍後再試'); return }
       if (props.selectedFrame?.data) {
         props.selectedFrame.data.hero_bg_img_id = uploadedFile.id
         props.selectedFrame.data.hero_bg_img_src = uploadedFile.fileDir
-        
-        console.log('✓ 首圖背景已更新:', {
-          id: uploadedFile.id,
-          src: uploadedFile.fileDir
-        })
       }
-      
     } catch (error) {
       console.error('❌ 首圖背景上傳失敗:', error)
       alert('首圖背景上傳失敗: ' + error.message)
     } finally {
-      // ✅ 結束 loading
       isUploadingHeroBackground.value = false
     }
   }
-  
   input.click()
+}
+
+// ==================== ✅ 輪播牆操作 ====================
+
+const handleUploadCarouselWall = async () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.multiple = true  // ✅ 支援多選
+  
+  input.onchange = async (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
+    
+    try {
+      isUploadingCarouselWall.value = true
+      console.log(`📤 開始上傳 ${files.length} 張輪播牆圖片...`)
+
+      // ✅ 確保 frame.data 與 caroisel_wall_imgs 陣列存在
+      if (!props.selectedFrame.data) props.selectedFrame.data = {}
+      if (!Array.isArray(props.selectedFrame.data.caroisel_wall_imgs)) {
+        props.selectedFrame.data.caroisel_wall_imgs = []
+      }
+
+      // ✅ 依序上傳每張圖片
+      for (const file of files) {
+        const uploadedFile = await pageEditorStore.uploadImage(file)
+        if (!uploadedFile) {
+          console.warn(`⚠️ 圖片 ${file.name} 上傳失敗，跳過`)
+          continue
+        }
+
+        // 新增圖片項目（後端格式：id + src）
+        const newImage = {
+          id: uploadedFile.id,
+          src: uploadedFile.fileDir
+        }
+        props.selectedFrame.data.caroisel_wall_imgs.push(newImage)
+      }
+
+      // ✅ 同步本地響應式陣列
+      carouselWallImages.value = [...props.selectedFrame.data.caroisel_wall_imgs]
+
+      console.log('✓ 輪播牆圖片已新增，共', carouselWallImages.value.length, '張')
+    } catch (error) {
+      console.error('❌ 輪播牆圖片上傳失敗:', error)
+      alert('輪播牆圖片上傳失敗: ' + error.message)
+    } finally {
+      isUploadingCarouselWall.value = false
+    }
+  }
+  input.click()
+}
+
+const removeCarouselWallImage = (index) => {
+  if (!confirm('確定要刪除這張圖片嗎？')) return
+  const imgs = props.selectedFrame?.data?.caroisel_wall_imgs
+  if (!imgs) return
+
+  // ✅ 標記待刪除
+  const removedImg = imgs[index]
+  if (removedImg?.id) {
+    pageEditorStore.markFileForDeletion(removedImg.id)
+  }
+
+  imgs.splice(index, 1)
+  carouselWallImages.value = [...imgs]
+
+  console.log('✓ 輪播牆圖片已刪除，剩餘', carouselWallImages.value.length, '張')
+}
+
+// ==================== MAP 元件操作 ====================
+
+const updateMapData = () => {
+  if (props.selectedElement?.element?.value) {
+    props.selectedElement.element.value.address = mapAddress.value
+    props.selectedElement.element.value.lat = mapLat.value
+    props.selectedElement.element.value.lng = mapLng.value
+    props.selectedElement.element.value.zoom = mapZoom.value
+  }
+}
+
+const setMapZoom = (zoom) => {
+  mapZoom.value = zoom
+  updateMapData()
 }
 
 </script>
@@ -1901,7 +2369,6 @@ const handleUploadHeroBackground = async () => {
   }
 }
 
-// ✅ 提示文字樣式
 .hint-text {
   display: block;
   margin-top: 6px;
@@ -1910,7 +2377,6 @@ const handleUploadHeroBackground = async () => {
   font-style: italic;
 }
 
-// ✅ 空格子提示
 .empty-cell-hint {
   padding: 40px 20px;
   text-align: center;
@@ -1932,14 +2398,8 @@ const handleUploadHeroBackground = async () => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .section-title {
@@ -1951,7 +2411,6 @@ const handleUploadHeroBackground = async () => {
   border-bottom: 2px solid #E8572A;
 }
 
-// ✅ Metadata 子區塊標題
 .subsection-title {
   margin: 20px 0 12px;
   font-size: 13px;
@@ -1967,8 +2426,13 @@ const handleUploadHeroBackground = async () => {
   border-top: 2px dashed #e5e5e5;
 }
 
-// ✅ Padding 區塊樣式
 .padding-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px dashed #e5e5e5;
+}
+
+.width-section {
   margin-top: 24px;
   padding-top: 20px;
   border-top: 2px dashed #e5e5e5;
@@ -1997,14 +2461,8 @@ const handleUploadHeroBackground = async () => {
   outline: none;
   transition: border-color 0.2s;
 
-  &:focus {
-    border-color: #E8572A;
-  }
-
-  &:disabled {
-    background: #f5f5f5;
-    cursor: not-allowed;
-  }
+  &:focus { border-color: #E8572A; }
+  &:disabled { background: #f5f5f5; cursor: not-allowed; }
 }
 
 .prop-textarea {
@@ -2021,19 +2479,13 @@ const handleUploadHeroBackground = async () => {
   cursor: pointer;
 }
 
-// ✅ 顏色輸入組
 .color-input-group {
   display: flex;
   gap: 8px;
   align-items: center;
 
-  .prop-color {
-    flex-shrink: 0;
-  }
-
-  .color-text {
-    flex: 1;
-  }
+  .prop-color { flex-shrink: 0; }
+  .color-text { flex: 1; }
 
   .clear-btn {
     flex-shrink: 0;
@@ -2048,14 +2500,10 @@ const handleUploadHeroBackground = async () => {
     color: #999;
     transition: all 0.2s;
 
-    &:hover {
-      background: #e8e8e8;
-      color: #666;
-    }
+    &:hover { background: #e8e8e8; color: #666; }
   }
 }
 
-// ✅ 帶單位的輸入框
 .input-with-unit {
   .unit-hint {
     display: block;
@@ -2065,7 +2513,18 @@ const handleUploadHeroBackground = async () => {
   }
 }
 
-// ✅ 對齊按鈕組
+.width-hint {
+  margin-top: 8px;
+  margin-bottom: 0;
+  font-size: 12px;
+  color: #666;
+  background: #f0f8ff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid #4a90e2;
+  line-height: 1.4;
+}
+
 .align-buttons {
   display: flex;
   gap: 8px;
@@ -2076,30 +2535,17 @@ const handleUploadHeroBackground = async () => {
     background: #f5f5f5;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.2s;
 
-    &:hover {
-      background: #e8e8e8;
-      border-color: #ccc;
-    }
-
-    &.active {
-      background: #E8572A;
-      border-color: #E8572A;
-      color: #fff;
-    }
-
+    &:hover { background: #e8e8e8; border-color: #ccc; }
+    &.active { background: #E8572A; border-color: #E8572A; color: #fff; }
     &.clear {
       flex: 0 0 40px;
       font-size: 14px;
       color: #999;
-
-      &:hover {
-        background: #e8e8e8;
-        color: #666;
-      }
+      &:hover { background: #e8e8e8; color: #666; }
     }
   }
 }
@@ -2138,7 +2584,6 @@ const handleUploadHeroBackground = async () => {
   font-size: 13px;
 }
 
-// ✅ 上傳中狀態
 .uploading-state {
   width: 100%;
   height: 100px;
@@ -2154,7 +2599,6 @@ const handleUploadHeroBackground = async () => {
   gap: 12px;
 }
 
-// ✅ Loading 旋轉動畫
 .spinner {
   width: 32px;
   height: 32px;
@@ -2164,7 +2608,6 @@ const handleUploadHeroBackground = async () => {
   animation: spin 1s linear infinite;
 }
 
-// ✅ 按鈕內的小 spinner
 .btn-spinner {
   display: inline-block;
   width: 14px;
@@ -2192,18 +2635,10 @@ const handleUploadHeroBackground = async () => {
   cursor: pointer;
   transition: background 0.2s;
 
-  &:hover:not(:disabled) {
-    background: #d14a1f;
-  }
-  
-  &:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
+  &:hover:not(:disabled) { background: #d14a1f; }
+  &:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
 }
 
-// ✅ Debug 資訊樣式
 .debug-info {
   margin-top: 8px;
   padding: 8px;
@@ -2211,13 +2646,8 @@ const handleUploadHeroBackground = async () => {
   border-radius: 4px;
   font-family: monospace;
   
-  small {
-    font-size: 11px;
-    color: #666;
-    line-height: 1.6;
-  }
+  small { font-size: 11px; color: #666; line-height: 1.6; }
 }
-
 
 .checkbox-label {
   display: flex;
@@ -2225,16 +2655,8 @@ const handleUploadHeroBackground = async () => {
   gap: 8px;
   cursor: pointer;
   
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
-  
-  span {
-    font-size: 13px;
-    color: #666;
-  }
+  input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+  span { font-size: 13px; color: #666; }
 }
 
 .height-selector {
@@ -2242,22 +2664,21 @@ const handleUploadHeroBackground = async () => {
   align-items: center;
   gap: 8px;
   
-  .prop-input {
-    flex: 1;
-  }
-  
-  .unit {
-    font-size: 13px;
-    color: #666;
-    font-weight: 500;
-  }
+  .prop-input { flex: 1; }
+  .unit { font-size: 13px; color: #666; font-weight: 500; }
 }
 
-.height-presets {
+.height-presets,
+.width-presets,
+.zoom-presets {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-top: 12px;
+}
+
+.zoom-presets {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .preset-btn {
@@ -2270,17 +2691,8 @@ const handleUploadHeroBackground = async () => {
   cursor: pointer;
   transition: all 0.2s;
   
-  &:hover {
-    background: #e8e8e8;
-    border-color: #ccc;
-  }
-  
-  &.active {
-    background: #E8572A;
-    border-color: #E8572A;
-    color: #fff;
-    font-weight: 500;
-  }
+  &:hover { background: #e8e8e8; border-color: #ccc; }
+  &.active { background: #E8572A; border-color: #E8572A; color: #fff; font-weight: 500; }
 }
 
 .carousel-images-list {
@@ -2300,10 +2712,7 @@ const handleUploadHeroBackground = async () => {
   
   &:hover {
     border-color: #E8572A;
-    
-    .remove-image-btn {
-      opacity: 1;
-    }
+    .remove-image-btn { opacity: 1; }
   }
 }
 
@@ -2333,13 +2742,9 @@ const handleUploadHeroBackground = async () => {
   opacity: 0;
   transition: all 0.2s;
   
-  &:hover {
-    background: #dc2626;
-    transform: scale(1.1);
-  }
+  &:hover { background: #dc2626; transform: scale(1.1); }
 }
 
-// ✅ Padding 控制樣式
 .padding-controls {
   display: flex;
   flex-direction: column;
@@ -2364,24 +2769,10 @@ const handleUploadHeroBackground = async () => {
   align-items: center;
   gap: 8px;
   
-  label {
-    font-size: 12px;
-    color: #666;
-    min-width: 24px;
-    margin: 0;
-  }
-  
-  &.top, &.bottom {
-    justify-content: center;
-  }
-  
-  &.left {
-    justify-content: flex-start;
-  }
-  
-  &.right {
-    justify-content: flex-end;
-  }
+  label { font-size: 12px; color: #666; min-width: 24px; margin: 0; }
+  &.top, &.bottom { justify-content: center; }
+  &.left { justify-content: flex-start; }
+  &.right { justify-content: flex-end; }
 }
 
 .padding-input {
@@ -2393,9 +2784,7 @@ const handleUploadHeroBackground = async () => {
   text-align: center;
   outline: none;
   
-  &:focus {
-    border-color: #E8572A;
-  }
+  &:focus { border-color: #E8572A; }
 }
 
 .padding-sides {
@@ -2423,24 +2812,14 @@ const handleUploadHeroBackground = async () => {
   gap: 8px;
 }
 
-.panel-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.panel-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
+.panel-body::-webkit-scrollbar { width: 6px; }
+.panel-body::-webkit-scrollbar-track { background: #f1f1f1; }
 .panel-body::-webkit-scrollbar-thumb {
   background: #ddd;
   border-radius: 3px;
-  
-  &:hover {
-    background: #ccc;
-  }
+  &:hover { background: #ccc; }
 }
 
-// ✅ 滑桿樣式（用於遮罩透明度等）
 .prop-slider {
   width: 100%;
   height: 6px;
@@ -2459,11 +2838,7 @@ const handleUploadHeroBackground = async () => {
     background: #E8572A;
     cursor: pointer;
     transition: all 0.2s;
-    
-    &:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
-    }
+    &:hover { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1); }
   }
   
   &::-moz-range-thumb {
@@ -2474,11 +2849,7 @@ const handleUploadHeroBackground = async () => {
     cursor: pointer;
     border: none;
     transition: all 0.2s;
-    
-    &:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
-    }
+    &:hover { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1); }
   }
 }
 
@@ -2486,11 +2857,6 @@ const handleUploadHeroBackground = async () => {
   display: flex;
   justify-content: space-between;
   margin-top: 4px;
-  
-  span {
-    font-size: 11px;
-    color: #999;
-  }
+  span { font-size: 11px; color: #999; }
 }
-
 </style>

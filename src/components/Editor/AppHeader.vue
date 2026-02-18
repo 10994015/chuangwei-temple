@@ -158,14 +158,7 @@ watch(() => route.path, () => {
     <div class="header-container">
       <!-- Logo 區域 -->
       <div class="logo-section" @click="router.push('/')">
-        <div class="logo-icon">
-          <svg viewBox="0 0 40 40" class="temple-icon">
-            <rect x="5" y="10" width="30" height="25" fill="#E8572A" />
-            <path d="M 2 10 L 20 2 L 38 10 Z" fill="#E8572A" />
-            <rect x="15" y="20" width="10" height="15" fill="#fff" opacity="0.3" />
-          </svg>
-        </div>
-        <span class="logo-text">宮掌櫃</span>
+        <img src="/home-logo.png" width="150" alt="宮掌櫃">
       </div>
 
       <!-- 導航選單 -->

@@ -2,7 +2,7 @@
   <div class="carousel-element">
     <div class="carousel-container">
       <!-- 輪播主體 -->
-      <div class="carousel-wrapper">
+      <div class="carousel-wrapper" :style="{ height: carouselHeight + 'px' }">
         <div class="carousel-track" :style="trackStyle">
           <div
             v-for="(image, index) in displayImages"
@@ -77,16 +77,28 @@ const carouselHeight = computed(() => {
   return props.content?.height || 400
 })
 
-// 顯示的圖片列表
+// ✅ 顯示的圖片列表（支援 {id, src} 和純字串兩種格式）
 const displayImages = computed(() => {
   console.log('🖼️ CarouselElement - props.content:', props.content)
   console.log('🖼️ CarouselElement - content.images:', props.content?.images)
   
   // 優先使用 content.images
   if (props.content?.images && props.content.images.length > 0) {
-    console.log('✓ 使用上傳的圖片:', props.content.images.length, '張')
-    console.log('✓ 第一張圖片 URL:', props.content.images[0]?.substring(0, 100))
-    return props.content.images
+    const images = props.content.images
+    
+    // ✅ 判斷是新格式 {id, src} 還是舊格式純字串
+    const firstImage = images[0]
+    
+    if (typeof firstImage === 'object' && firstImage.src) {
+      // 新格式：{id, src}
+      const urls = images.map(img => img.src).filter(Boolean)
+      console.log('✓ 使用新格式圖片 (id+src):', urls.length, '張')
+      return urls
+    } else if (typeof firstImage === 'string') {
+      // 舊格式：純 URL 字串
+      console.log('✓ 使用舊格式圖片 (純URL):', images.length, '張')
+      return images
+    }
   }
   
   // 如果沒有圖片，使用預設的假圖片
@@ -187,9 +199,9 @@ onUnmounted(() => {
 .carousel-wrapper {
   position: relative;
   width: 100%;
-  height: v-bind(carouselHeight + 'px');
+  /* height 改用 inline style 綁定 */
   overflow: hidden;
-  background: #e0e0e0;  // 添加背景色，方便 debug
+  background: #e0e0e0;
 }
 
 .carousel-track {

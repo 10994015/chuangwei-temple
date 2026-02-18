@@ -20,8 +20,8 @@
       ✕
     </button>
 
-    <!-- ✅ 新增 container 來限制內容最大寬度 -->
-    <div class="frame-container">
+    <!-- ✅ 新增 container 來限制內容最大寬度，支持動態寬度 -->
+    <div class="frame-container" :style="frameContainerStyle">
       <!-- 根據框架佈局渲染格子和元件 -->
       <div class="frame-grid" :style="gridStyle">
         <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
@@ -34,7 +34,6 @@
               'empty-cell': !element || !element.type
             }"
             :style="{
-              margin: '0',
               padding: getCellPadding(element)
             }"
             @click.stop="handleCellClick(index, element)"
@@ -105,17 +104,23 @@
                     height: element.value?.height || 400
                   }"
                   :element="element"
-                  :key="`carousel-${index}-${element.value?.images?.length || 0}`"
+                  :key="`carousel-${index}-${element.value?.images?.length || 0}-${element.value?.images?.[element.value.images.length - 1]?.id || 'empty'}`"
                   @vue:mounted="console.log('🎪 CAROUSEL mounted, element.value:', element.value)"
                 />
               </div>
 
               <!-- MAP 元件 -->
               <div v-else-if="element.type === 'MAP'" class="element-map">
-                <div class="map-placeholder">
-                  <span>地圖</span>
-                  <p>{{ element.value?.address || '請設定地址' }}</p>
-                </div>
+                <MapElement 
+                  :content="{
+                    address: element.value?.address || '',
+                    lat: element.value?.lat || 25.033,
+                    lng: element.value?.lng || 121.565,
+                    zoom: element.value?.zoom || 15
+                  }"
+                  :element="element"
+                  :key="`map-${index}-${element.value?.lat}-${element.value?.lng}`"
+                />
               </div>
 
               <!-- ALBUM 元件 -->
@@ -155,6 +160,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import CarouselElement from './elements/CarouselElement.vue'
+import MapElement from './elements/MapElement.vue'
 
 const props = defineProps({
   frame: {
@@ -285,10 +291,44 @@ const hasAnyElement = computed(() => {
   return elements.some(el => el && el.type)
 })
 
-// ✅ Grid 樣式 - 所有 gap 改為 0
+// ✅ 框架容器樣式（支持自訂寬度）
+const frameContainerStyle = computed(() => {
+  const style = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    width: '100%'
+  }
+  
+  // 如果 frame.metadata 有設定寬度，使用自訂寬度
+  if (props.frame.metadata?.frame_width) {
+    style.maxWidth = props.frame.metadata.frame_width
+  }
+  
+  return style
+})
+
+// ✅ Grid 樣式 - 根據元件 width 動態生成列宽
 const gridStyle = computed(() => {
   const layout = frameLayout.value
   
+  // ✅ 單行佈局：使用元件的 width 來決定列寬
+  const singleRowLayouts = ['1_1', '1_2', '1_3', '1_4']
+  
+  if (singleRowLayouts.includes(layout)) {
+    const elements = displayElements.value
+    const widths = elements.map(el => el && el.width ? el.width : '1fr')
+    const columns = widths.join(' ')
+    
+    console.log(`✓ 動態 Grid 列寬 (${layout}):`, columns)
+    
+    return {
+      display: 'grid',
+      gridTemplateColumns: columns,
+      gap: '0'
+    }
+  }
+  
+  // ✅ 複雜佈局：使用固定列寬
   switch (layout) {
     case 'A':
       return {
@@ -319,31 +359,6 @@ const gridStyle = computed(() => {
         display: 'grid',
         gridTemplateColumns: '1fr 2fr',
         gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '0'
-      }
-    
-    case '1_1':
-      return {
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: '0'
-      }
-    case '1_2':
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '0'
-      }
-    case '1_3':
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '0'
-      }
-    case '1_4':
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '0'
       }
     
@@ -492,6 +507,7 @@ const getCellPadding = (element) => {
   return `${top}px ${right}px ${bottom}px ${left}px`
 }
 
+// ✅ 獲取格子的寬度（從 element.width 读取）
 // 拖曳進入格子
 const handleDragOver = (event, index) => {
   event.preventDefault()
@@ -605,9 +621,23 @@ const createElementFromDrag = (dragData, index) => {
     case 'carousel':
       value = { images: [], autoPlay: true, interval: 3000, height: 400 }
       break
+    case 'map':
+      // ✅ MAP 元件預設台北 101 地址
+      value = { 
+        address: '台北市信義區信義路五段7號（台北 101）',
+        lat: 25.0339639,
+        lng: 121.5644722,
+        zoom: 17
+      }
+      break
     default:
       value = {}
   }
+  
+  // ✅ 根据布局计算初始宽度
+  const initialWidth = getInitialCellWidth(frameLayout.value, cellCount.value)
+  
+  console.log(`✓ 創建元件，佈局: ${frameLayout.value}, 初始寬度: ${initialWidth}`)
   
   return {
     type: apiType,
@@ -621,15 +651,69 @@ const createElementFromDrag = (dragData, index) => {
       height: null,
       background_color: null
     },
-    padding: { top: 20, right: 20, bottom: 20, left: 20 }
+    padding: { top: 20, right: 20, bottom: 20, left: 20 },
+    width: initialWidth  // ✅ 使用计算出的初始宽度
   }
+}
+
+// ✅ 根据布局计算格子的初始宽度
+const getInitialCellWidth = (layout, totalCells) => {
+  // 单行布局：需要考虑已有元件的宽度
+  const singleRowLayouts = {
+    '1_1': 1,
+    '1_2': 2,
+    '1_3': 3,
+    '1_4': 4
+  }
+  
+  if (singleRowLayouts[layout]) {
+    const cellsInRow = singleRowLayouts[layout]
+    
+    // ✅ 检查已有元件的总宽度
+    const existingElements = displayElements.value.filter(el => el && el.type)
+    
+    if (existingElements.length > 0) {
+      // 有已存在的元件，计算它们占用的宽度
+      let usedWidth = 0
+      let elementsWithWidth = 0
+      
+      existingElements.forEach(el => {
+        if (el.width && el.width.includes('%')) {
+          const width = parseFloat(el.width)
+          if (!isNaN(width)) {
+            usedWidth += width
+            elementsWithWidth++
+          }
+        }
+      })
+      
+      // 计算剩余宽度和剩余格子数
+      const remainingWidth = 100 - usedWidth
+      const remainingCells = cellsInRow - elementsWithWidth
+      
+      if (remainingCells > 0 && remainingWidth > 0) {
+        const widthPerCell = (remainingWidth / remainingCells).toFixed(1)
+        console.log(`✓ 單行佈局 ${layout}: 已用 ${usedWidth}%, 剩餘 ${remainingWidth}%, 新元件 ${widthPerCell}%`)
+        return widthPerCell + '%'
+      }
+    }
+    
+    // 没有已存在的元件，平均分配
+    const widthPerCell = (100 / cellsInRow).toFixed(1)
+    console.log(`✓ 單行佈局 ${layout}: 每格 ${widthPerCell}%`)
+    return widthPerCell + '%'
+  }
+  
+  // 非单行布局：默认 100%
+  console.log(`✓ 非單行佈局 ${layout}: 默認 100%`)
+  return '100%'
 }
 </script>
 
 <style lang="scss" scoped>
 .custom-frame {
-  padding: 20px;  // ✅ 改為 20px
-  background: #fff;
+  padding: 0;  // ✅ 改為 0，讓內容完全貼邊
+  background: transparent;  // ✅ 透明，讓底圖背景圖顯示
   min-height: auto;  // ✅ 改為 auto，適應內容高度
   position: relative;
   transition: all 0.2s;
@@ -796,7 +880,6 @@ const createElementFromDrag = (dragData, index) => {
   position: relative;
   border-radius: 8px;
   transition: all 0.2s;
-  margin: 0;
   box-sizing: border-box;
   border: 2px solid transparent;
   
@@ -824,7 +907,7 @@ const createElementFromDrag = (dragData, index) => {
 .element-content {
   position: relative;
   padding: 0;
-  background: #fff;
+  background: transparent;  // ✅ 透明，讓底圖背景圖顯示
   border-radius: 8px;
   // ✅ 移除 height: 100% 和 min-height，讓內容決定高度
   
@@ -835,6 +918,7 @@ const createElementFromDrag = (dragData, index) => {
 
 .element-carousel {
   width: 100%;
+  height: 100%;  // ✅ 填滿格子高度
   // ✅ 移除 min-height，讓輪播組件自己決定高度
 }
 
@@ -1058,8 +1142,8 @@ const createElementFromDrag = (dragData, index) => {
   }
   
   &:hover {
-    background: #fafafa;
-    border-color: #ddd;
+    background: rgba(255, 255, 255, 0.4);  // ✅ 半透明，不蓋住底圖背景
+    border-color: rgba(255, 255, 255, 0.6);
     
     .drop-hint {
       color: #999;
@@ -1067,7 +1151,7 @@ const createElementFromDrag = (dragData, index) => {
   }
   
   &.drag-over {
-    background: #fff5f2;
+    background: rgba(232, 87, 42, 0.15);  // ✅ 半透明橘色
     border-color: #E8572A;
     border-width: 3px;
     border-style: solid;
@@ -1082,8 +1166,8 @@ const createElementFromDrag = (dragData, index) => {
 }
 
 .custom-frame.is-dragging .empty-cell {
-  background: #fafafa;
-  border-color: #ddd;
+  background: rgba(255, 255, 255, 0.3);  // ✅ 半透明
+  border-color: rgba(200, 200, 200, 0.5);
   
   .drop-hint {
     color: #ccc;

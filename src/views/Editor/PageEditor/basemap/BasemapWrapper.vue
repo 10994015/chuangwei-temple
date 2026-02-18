@@ -18,7 +18,6 @@
     >
       <div class="divider-line"></div>
       
-      <!-- 按鈕組容器 -->
       <div class="divider-buttons">
         <!-- 上移按鈕 -->
         <button 
@@ -106,9 +105,21 @@
                 />
                 <div v-else class="no-preview">尚未上傳</div>
               </div>
-              <button class="upload-btn" @click="uploadImage('desktop')">
-                {{ backgrounds.desktop ? '更換圖片' : '上傳圖片' }}
-              </button>
+              <div v-if="uploadingState.desktop" class="uploading-row">
+                <div class="upload-spinner"></div>
+                <span>上傳中...</span>
+              </div>
+              <div v-else class="btn-row">
+                <button class="upload-btn" @click="uploadImage('desktop')">
+                  {{ backgrounds.desktop ? '更換圖片' : '上傳圖片' }}
+                </button>
+                <button 
+                  v-if="backgrounds.desktop"
+                  class="clear-img-btn"
+                  @click="clearBackground('desktop')"
+                  title="清除背景"
+                >✕</button>
+              </div>
             </div>
 
             <!-- 平板版背景 -->
@@ -121,11 +132,23 @@
                   alt="平板版背景"
                   class="preview-img"
                 />
-                <div v-else class="no-preview">尚未上傳</div>
+                <div v-else class="no-preview">未設定（使用桌面版）</div>
               </div>
-              <button class="upload-btn" @click="uploadImage('tablet')">
-                {{ backgrounds.tablet ? '更換圖片' : '上傳圖片' }}
-              </button>
+              <div v-if="uploadingState.tablet" class="uploading-row">
+                <div class="upload-spinner"></div>
+                <span>上傳中...</span>
+              </div>
+              <div v-else class="btn-row">
+                <button class="upload-btn" @click="uploadImage('tablet')">
+                  {{ backgrounds.tablet ? '更換圖片' : '上傳圖片' }}
+                </button>
+                <button 
+                  v-if="backgrounds.tablet"
+                  class="clear-img-btn"
+                  @click="clearBackground('tablet')"
+                  title="清除背景"
+                >✕</button>
+              </div>
             </div>
 
             <!-- 手機版背景 -->
@@ -138,15 +161,28 @@
                   alt="手機版背景"
                   class="preview-img"
                 />
-                <div v-else class="no-preview">尚未上傳</div>
+                <div v-else class="no-preview">未設定（使用桌面版）</div>
               </div>
-              <button class="upload-btn" @click="uploadImage('mobile')">
-                {{ backgrounds.mobile ? '更換圖片' : '上傳圖片' }}
-              </button>
+              <div v-if="uploadingState.mobile" class="uploading-row">
+                <div class="upload-spinner"></div>
+                <span>上傳中...</span>
+              </div>
+              <div v-else class="btn-row">
+                <button class="upload-btn" @click="uploadImage('mobile')">
+                  {{ backgrounds.mobile ? '更換圖片' : '上傳圖片' }}
+                </button>
+                <button 
+                  v-if="backgrounds.mobile"
+                  class="clear-img-btn"
+                  @click="clearBackground('mobile')"
+                  title="清除背景"
+                >✕</button>
+              </div>
             </div>
           </div>
 
           <div class="modal-footer">
+            <p class="hint-text">💡 建議圖片寬度 1920px 以上，格式 JPG/PNG/WebP</p>
             <button class="btn-close" @click="closeModal">關閉</button>
           </div>
         </div>
@@ -156,84 +192,32 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 
 const props = defineProps({
-  isFooter: {
-    type: Boolean,
-    default: false
-  },
-  isHeader: {
-    type: Boolean,
-    default: false
-  },
-  isDeletable: {
-    type: Boolean,
-    default: true
-  },
-  index: {
-    type: Number,
-    required: true
-  },
-  basemapId: {
-    type: String,
-    required: true
-  },
-  basemap: {
-    type: Object,
-    default: null
-  },
-  totalBasemaps: {
-    type: Number,
-    required: true
-  }
+  isFooter: { type: Boolean, default: false },
+  isHeader: { type: Boolean, default: false },
+  isDeletable: { type: Boolean, default: true },
+  index: { type: Number, required: true },
+  basemapId: { type: String, required: true },
+  basemap: { type: Object, default: null },
+  totalBasemaps: { type: Number, required: true }
 })
 
 const emit = defineEmits(['add-basemap', 'delete-basemap', 'move-basemap', 'update-background'])
+
+// ✅ 注入 Store
+const pageEditorStore = inject('pageEditorStore')
 
 const isHovered = ref(false)
 const isContentHovered = ref(false)
 const showModal = ref(false)
 
-// 背景圖片（響應式）
-const backgrounds = ref({
-  desktop: null,
-  tablet: null,
-  mobile: null
-})
+const backgrounds = ref({ desktop: null, tablet: null, mobile: null })
+const uploadingState = ref({ desktop: false, tablet: false, mobile: false })
 
-// 計算是否可以上移
-const canMoveUp = computed(() => {
-  return props.index > 1
-})
-
-// 計算是否可以下移
-const canMoveDown = computed(() => {
-  return props.index < props.totalBasemaps - 2
-})
-
-// 是否可以更換背景（改為永遠 true，讓所有底圖都能上傳背景）
-const canChangeBackground = computed(() => {
-  // 暫時忽略 bg_can_change_img 限制，讓所有底圖都能上傳背景
-  return true
-  // 原邏輯：return props.basemap?.bg_can_change_img !== false
-})
-
-// Debug: 顯示所有按鈕狀態
-const logButtonStates = () => {
-  console.log('按鈕狀態:', {
-    isHeader: props.isHeader,
-    isFooter: props.isFooter,
-    isDeletable: props.isDeletable,
-    canChangeBackground: canChangeBackground.value,
-    canMoveUp: canMoveUp.value,
-    canMoveDown: canMoveDown.value,
-    index: props.index,
-    totalBasemaps: props.totalBasemaps
-  })
-}
-
-logButtonStates()
+const canMoveUp = computed(() => props.index > 1)
+const canMoveDown = computed(() => props.index < props.totalBasemaps - 2)
 
 // 監聽 basemap 變化，同步背景圖片
 watch(
@@ -245,125 +229,150 @@ watch(
         tablet: newBasemap.bg_tablet_img_src,
         mobile: newBasemap.bg_phone_img_src
       }
-      logButtonStates()
     }
   },
   { immediate: true, deep: true }
 )
 
-const handleMouseEnter = () => {
-  isHovered.value = true
-}
+const handleMouseEnter = () => { isHovered.value = true }
+const handleMouseLeave = () => { isHovered.value = false }
+const handleContentMouseEnter = () => { isContentHovered.value = true }
+const handleContentMouseLeave = () => { isContentHovered.value = false }
 
-const handleMouseLeave = () => {
-  isHovered.value = false
-}
+const addBlankBasemap = () => { emit('add-basemap', props.index) }
 
-const handleContentMouseEnter = () => {
-  isContentHovered.value = true
-}
-
-const handleContentMouseLeave = () => {
-  isContentHovered.value = false
-}
-
-// 新增空白底圖
-const addBlankBasemap = () => {
-  emit('add-basemap', props.index)
-}
-
-// 刪除底圖
 const handleDelete = () => {
-  // 檢查是否可刪除
-  if (!props.isDeletable) {
-    alert('此底圖不可刪除')
-    return
-  }
-  
-  // 二次確認
-  if (confirm('確定要刪除此底圖嗎？')) {
-    emit('delete-basemap', props.basemapId)
-  }
+  if (!props.isDeletable) { alert('此底圖不可刪除'); return }
+  if (confirm('確定要刪除此底圖嗎？')) { emit('delete-basemap', props.basemapId) }
 }
 
-// 上移底圖
 const handleMoveUp = () => {
   if (canMoveUp.value) {
-    console.log('上移底圖，當前索引:', props.index)
-    emit('move-basemap', {
-      basemapId: props.basemapId,
-      fromIndex: props.index,
-      toIndex: props.index - 1,
-      direction: 'up'
-    })
+    emit('move-basemap', { basemapId: props.basemapId, fromIndex: props.index, toIndex: props.index - 1, direction: 'up' })
   }
 }
 
-// 下移底圖
 const handleMoveDown = () => {
   if (canMoveDown.value) {
-    console.log('下移底圖，當前索引:', props.index)
-    emit('move-basemap', {
-      basemapId: props.basemapId,
-      fromIndex: props.index,
-      toIndex: props.index + 1,
-      direction: 'down'
-    })
+    emit('move-basemap', { basemapId: props.basemapId, fromIndex: props.index, toIndex: props.index + 1, direction: 'down' })
   }
 }
 
 // ==================== 背景圖片處理 ====================
 
-const openBackgroundModal = () => {
-  // 所有底圖都可以上傳背景，直接打開 modal
-  showModal.value = true
-}
+const openBackgroundModal = () => { showModal.value = true }
+const closeModal = () => { showModal.value = false }
 
-const closeModal = () => {
-  showModal.value = false
-}
-
+// ✅ 上傳背景圖片（更換前先標記舊 ID 待刪除）
 const uploadImage = (type) => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
 
-  input.onchange = (e) => {
+  input.onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // 檢查檔案大小
-    if (file.size > 5 * 1024 * 1024) {
-      alert('圖片大小不能超過 5MB')
+    if (!pageEditorStore?.uploadImage) {
+      console.error('❌ pageEditorStore.uploadImage 不可用')
+      alert('上傳功能初始化失敗，請重新整理頁面')
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const imageData = event.target.result
+    // ✅ 標記舊圖片 ID 待刪除
+    if (props.basemap) {
+      switch (type) {
+        case 'desktop':
+          pageEditorStore.markFileForDeletion(props.basemap.bg_pc_img_id)
+          break
+        case 'tablet':
+          pageEditorStore.markFileForDeletion(props.basemap.bg_tablet_img_id)
+          break
+        case 'mobile':
+          pageEditorStore.markFileForDeletion(props.basemap.bg_phone_img_id)
+          break
+      }
+    }
 
-      // 更新本地響應式數據（用於預覽）
-      backgrounds.value[type] = imageData
+    uploadingState.value[type] = true
 
-      // ⭐ 通過 emit 讓父組件更新數據（觸發響應式）
+    try {
+      console.log(`📤 開始上傳底圖背景 (${type}):`, file.name)
+
+      const uploadedFile = await pageEditorStore.uploadImage(file)
+
+      if (!uploadedFile) {
+        alert('背景圖片上傳失敗，請稍後再試')
+        return
+      }
+
+      console.log(`✓ 底圖背景上傳成功 (${type}):`, uploadedFile)
+
+      // 更新本地預覽
+      backgrounds.value[type] = uploadedFile.fileDir
+
+      // 直接更新 basemap 物件
+      if (props.basemap) {
+        switch (type) {
+          case 'desktop':
+            props.basemap.bg_pc_img_src = uploadedFile.fileDir
+            props.basemap.bg_pc_img_id = uploadedFile.id
+            break
+          case 'tablet':
+            props.basemap.bg_tablet_img_src = uploadedFile.fileDir
+            props.basemap.bg_tablet_img_id = uploadedFile.id
+            break
+          case 'mobile':
+            props.basemap.bg_phone_img_src = uploadedFile.fileDir
+            props.basemap.bg_phone_img_id = uploadedFile.id
+            break
+        }
+      }
+
       emit('update-background', {
         basemapId: props.basemapId,
         basemap: props.basemap,
-        type: type,  // 'desktop', 'tablet', 'mobile'
-        imageData: imageData
+        type: type,
+        imageData: uploadedFile.fileDir,
+        imageId: uploadedFile.id
       })
 
-      console.log(`✓ ${type} 背景已更新`)
+    } catch (error) {
+      console.error(`❌ 底圖背景上傳失敗 (${type}):`, error)
+      alert('上傳失敗：' + error.message)
+    } finally {
+      uploadingState.value[type] = false
     }
-
-    reader.onerror = () => {
-      alert('讀取圖片失敗，請重試')
-    }
-
-    reader.readAsDataURL(file)
   }
 
   input.click()
+}
+
+// ✅ 清除背景圖片（標記舊 ID 待刪除）
+const clearBackground = (type) => {
+  // ✅ 清除前先標記舊 ID 待刪除
+  if (props.basemap) {
+    switch (type) {
+      case 'desktop':
+        pageEditorStore.markFileForDeletion(props.basemap.bg_pc_img_id)
+        props.basemap.bg_pc_img_src = null
+        props.basemap.bg_pc_img_id = null
+        break
+      case 'tablet':
+        pageEditorStore.markFileForDeletion(props.basemap.bg_tablet_img_id)
+        props.basemap.bg_tablet_img_src = null
+        props.basemap.bg_tablet_img_id = null
+        break
+      case 'mobile':
+        pageEditorStore.markFileForDeletion(props.basemap.bg_phone_img_id)
+        props.basemap.bg_phone_img_src = null
+        props.basemap.bg_phone_img_id = null
+        break
+    }
+  }
+
+  backgrounds.value[type] = null
+  console.log(`✓ 底圖背景已清除 (${type})`)
 }
 </script>
 
@@ -376,7 +385,6 @@ const uploadImage = (type) => {
   position: relative;
 }
 
-// 分隔線 + 按鈕組
 .basemap-divider {
   position: absolute;
   bottom: 0;
@@ -390,7 +398,6 @@ const uploadImage = (type) => {
   z-index: 50;
   pointer-events: none;
   
-  // 擴大滑鼠感應區域（上下各 20px）
   &::before {
     content: '';
     position: absolute;
@@ -401,11 +408,7 @@ const uploadImage = (type) => {
     pointer-events: auto;
   }
   
-  &:hover {
-    .divider-line {
-      opacity: 1;
-    }
-  }
+  &:hover .divider-line { opacity: 1; }
 }
 
 .divider-line {
@@ -417,7 +420,6 @@ const uploadImage = (type) => {
   pointer-events: none;
 }
 
-// 按鈕組容器
 .divider-buttons {
   display: flex;
   align-items: center;
@@ -426,7 +428,6 @@ const uploadImage = (type) => {
   pointer-events: auto;
 }
 
-// 分隔線上的按鈕通用樣式
 .divider-btn {
   width: 32px;
   height: 32px;
@@ -449,10 +450,7 @@ const uploadImage = (type) => {
     transform: scale(1);
   }
   
-  &.active {
-    opacity: 1;
-    transform: scale(1);
-  }
+  &.active { opacity: 1; transform: scale(1); }
   
   &:disabled {
     opacity: 0.4;
@@ -460,98 +458,47 @@ const uploadImage = (type) => {
     border-color: #ccc;
     color: #ccc;
     
-    // 禁用狀態下仍然顯示，只是顏色變灰
-    .basemap-divider:hover & {
-      opacity: 0.4;
-      transform: scale(1);
-    }
-    
-    &:hover {
-      transform: scale(1);
-      border-color: #ccc;
-      color: #ccc;
-      background: #fff;
-      box-shadow: none;
-    }
+    .basemap-divider:hover & { opacity: 0.4; transform: scale(1); }
+    &:hover { transform: scale(1); border-color: #ccc; color: #ccc; background: #fff; box-shadow: none; }
   }
   
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-  
-  span.icon {
-    font-size: 16px;
-    font-weight: bold;
-    line-height: 1;
-  }
+  .icon { width: 16px; height: 16px; }
+  span.icon { font-size: 16px; font-weight: bold; line-height: 1; }
 }
 
-// 上移按鈕樣式
 .move-up-btn {
   &:hover:not(:disabled) {
-    background: #3b82f6;
-    border-color: #3b82f6;
-    color: #fff;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    background: #3b82f6; border-color: #3b82f6; color: #fff;
+    transform: scale(1.05); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
-  
-  &:active:not(:disabled) {
-    transform: scale(0.95);
-  }
+  &:active:not(:disabled) { transform: scale(0.95); }
 }
 
-// 背景圖片按鈕樣式
 .bg-btn {
   &:hover {
-    background: #9C27B0;
-    border-color: #9C27B0;
-    color: #fff;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+    background: #9C27B0; border-color: #9C27B0; color: #fff;
+    transform: scale(1.05); box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
   }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-  
-  span.icon {
-    font-size: 14px;
-  }
+  &:active { transform: scale(0.95); }
+  span.icon { font-size: 14px; }
 }
 
-// 下移按鈕樣式
 .move-down-btn {
   &:hover:not(:disabled) {
-    background: #10b981;
-    border-color: #10b981;
-    color: #fff;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    background: #10b981; border-color: #10b981; color: #fff;
+    transform: scale(1.05); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   }
-  
-  &:active:not(:disabled) {
-    transform: scale(0.95);
-  }
+  &:active:not(:disabled) { transform: scale(0.95); }
 }
 
-// 刪除按鈕樣式（在分隔線上）
 .delete-btn-divider {
   &:hover {
-    background: #ef4444;
-    border-color: #ef4444;
-    color: #fff;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    background: #ef4444; border-color: #ef4444; color: #fff;
+    transform: scale(1.05); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
-  
-  &:active {
-    transform: scale(0.95);
-  }
+  &:active { transform: scale(0.95); }
 }
 
-// 新增按鈕
 .add-basemap-btn {
   width: 32px;
   height: 32px;
@@ -569,25 +516,10 @@ const uploadImage = (type) => {
   position: relative;
   z-index: 10;
   
-  .basemap-divider:hover & {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  &.active {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  &:hover {
-    background: #000;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
+  .basemap-divider:hover & { opacity: 1; transform: scale(1); }
+  &.active { opacity: 1; transform: scale(1); }
+  &:hover { background: #000; transform: scale(1.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+  &:active { transform: scale(0.95); }
 }
 
 .plus-icon {
@@ -600,10 +532,7 @@ const uploadImage = (type) => {
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
@@ -630,14 +559,8 @@ const uploadImage = (type) => {
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
@@ -647,12 +570,7 @@ const uploadImage = (type) => {
   padding: 20px 24px;
   border-bottom: 1px solid #e5e5e5;
 
-  h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-  }
+  h3 { margin: 0; font-size: 18px; font-weight: 600; color: #333; }
 }
 
 .modal-close-btn {
@@ -666,10 +584,7 @@ const uploadImage = (type) => {
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    background: #e5e5e5;
-    color: #333;
-  }
+  &:hover { background: #e5e5e5; color: #333; }
 }
 
 .modal-body {
@@ -682,13 +597,7 @@ const uploadImage = (type) => {
 }
 
 .bg-item {
-  label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
-    margin-bottom: 12px;
-  }
+  label { display: block; font-size: 14px; font-weight: 500; color: #666; margin-bottom: 12px; }
 }
 
 .preview-box {
@@ -704,19 +613,44 @@ const uploadImage = (type) => {
   background: #fafafa;
 }
 
-.preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.preview-img { width: 100%; height: 100%; object-fit: cover; }
+.no-preview { color: #999; font-size: 14px; }
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-.no-preview {
-  color: #999;
+.uploading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #fff5f2;
+  border: 1px solid #E8572A;
+  border-radius: 6px;
+  color: #E8572A;
   font-size: 14px;
 }
 
+.upload-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fde0d7;
+  border-top: 2px solid #E8572A;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .upload-btn {
-  width: 100%;
+  flex: 1;
   padding: 10px 16px;
   border: none;
   border-radius: 6px;
@@ -727,17 +661,33 @@ const uploadImage = (type) => {
   cursor: pointer;
   transition: background 0.2s;
 
-  &:hover {
-    background: #d14a1f;
-  }
+  &:hover { background: #d14a1f; }
+}
+
+.clear-img-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; }
 }
 
 .modal-footer {
   padding: 16px 24px;
   border-top: 1px solid #e5e5e5;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
 }
+
+.hint-text { font-size: 12px; color: #999; margin: 0; }
 
 .btn-close {
   padding: 10px 24px;
@@ -749,9 +699,6 @@ const uploadImage = (type) => {
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    background: #f5f5f5;
-    border-color: #ccc;
-  }
+  &:hover { background: #f5f5f5; border-color: #ccc; }
 }
 </style>

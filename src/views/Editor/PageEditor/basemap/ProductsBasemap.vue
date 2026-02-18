@@ -148,7 +148,7 @@ const props = defineProps({
   },
   visibleCount: {
     type: Number,
-    default: 4
+    default: 3  // ✅ 改成預設顯示 3 個
   }
 })
 

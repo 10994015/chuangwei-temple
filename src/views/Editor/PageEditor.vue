@@ -190,6 +190,9 @@ const handleMoveBasemapDown = (index) => {
 const handleDeleteElement = (data) => {
   if (data.type === 'logo') {
     if (confirm('確定要刪除 Logo 嗎？')) {
+      // ✅ 標記舊 Logo ID 待刪除
+      pageEditorStore.markFileForDeletion(data.frame?.data?.logo_img_id)
+
       if (data.frame && data.frame.data) {
         data.frame.data.logo_img_src = null
         data.frame.data.logo_img_id = null
@@ -202,6 +205,12 @@ const handleDeleteElement = (data) => {
   if (data.frame && data.elementIndex !== undefined) {
     if (confirm('確定要刪除此元件嗎？')) {
       if (data.frame.elements && data.frame.elements[data.elementIndex]) {
+        // ✅ 如果是 IMG 元件，標記圖片 ID 待刪除
+        const element = data.frame.elements[data.elementIndex]
+        if (element.type === 'IMG' && element.value?.id) {
+          pageEditorStore.markFileForDeletion(element.value.id)
+        }
+
         data.frame.elements[data.elementIndex] = null
         pageEditorStore.clearSelection()
         console.log('✓ 元件已刪除（索引保留）')
@@ -221,36 +230,48 @@ const handleDeleteFrame = (data) => {
     return
   }
   
-  // 找到框架在 basemap.frames 中的索引
   const frameIndex = basemap.frames.findIndex(f => f === frame)
   
   if (frameIndex === -1) {
     console.error('❌ 找不到要刪除的框架')
     return
   }
-  
+
+  // ✅ 標記框架內所有圖片 ID 待刪除
+  if (frame.elements && Array.isArray(frame.elements)) {
+    frame.elements.forEach(element => {
+      if (!element) return
+      // IMG 元件圖片
+      if (element.type === 'IMG' && element.value?.id) {
+        pageEditorStore.markFileForDeletion(element.value.id)
+      }
+    })
+  }
+  // ✅ 標記首圖背景 ID 待刪除
+  if (frame.type === 'FIRST_PICTURE' && frame.data?.hero_bg_img_id) {
+    pageEditorStore.markFileForDeletion(frame.data.hero_bg_img_id)
+  }
+
   console.log(`✓ 找到框架索引: ${frameIndex}`)
-  
-  // 從 frames 陣列中移除框架
   basemap.frames.splice(frameIndex, 1)
-  
-  // 清除選中狀態
   pageEditorStore.clearSelection()
-  
   console.log('✓ 框架已刪除')
 }
 
 // ==================== 上傳處理 ====================
+
+// ✅ 修改：加入 imageId 支援（BasemapWrapper 上傳後回傳的 API ID）
 const handleUpdateBackground = (data) => {
   console.log('PageEditor 收到背景更新:', data)
   
-  const { basemap, type, imageData } = data
+  const { basemap, type, imageData, imageId } = data  // ✅ 解構加入 imageId
   
   if (!basemap) {
     console.error('找不到底圖')
     return
   }
   
+  // BasemapWrapper 已直接更新 basemap 物件，這裡做 fallback 確保 Store 同步
   const basemaps = pageEditorStore.currentPageBasemaps
   const targetBasemap = basemaps.find(b => 
     b.bg_type === basemap.bg_type && b.bg_sequence === basemap.bg_sequence
@@ -264,65 +285,25 @@ const handleUpdateBackground = (data) => {
   switch (type) {
     case 'desktop':
       targetBasemap.bg_pc_img_src = imageData
-      targetBasemap.bg_pc_img_id = null
+      targetBasemap.bg_pc_img_id = imageId || null   // ✅ 保存 API 回傳的 ID
       break
     case 'tablet':
       targetBasemap.bg_tablet_img_src = imageData
-      targetBasemap.bg_tablet_img_id = null
+      targetBasemap.bg_tablet_img_id = imageId || null
       break
     case 'mobile':
       targetBasemap.bg_phone_img_src = imageData
-      targetBasemap.bg_phone_img_id = null
+      targetBasemap.bg_phone_img_id = imageId || null
       break
   }
   
-  console.log('✓ 背景已更新到 Store')
+  console.log('✓ 背景已更新到 Store:', { type, src: imageData, id: imageId })
 }
 
+// ✅ 修改：移除舊的 FileReader 邏輯，實際上傳已在 BasemapWrapper 內處理
 const handleUploadBackground = () => {
-  const selectedBasemap = pageEditorStore.selected.basemap
-  
-  if (!selectedBasemap) {
-    alert('請先選擇一個底圖')
-    return
-  }
-  
-  if (!selectedBasemap.bg_can_change_img) {
-    alert('此底圖不允許更換背景圖片')
-    return
-  }
-  
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  
-  input.onchange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('圖片大小不能超過 5MB')
-        return
-      }
-      
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        selectedBasemap.bg_pc_img_src = event.target.result
-        selectedBasemap.bg_pc_img_id = null
-        selectedBasemap.bg_tablet_img_src = event.target.result
-        selectedBasemap.bg_phone_img_src = event.target.result
-        
-        console.log('✓ 底圖背景已更新')
-      }
-      
-      reader.onerror = () => {
-        alert('讀取圖片失敗，請重試')
-      }
-      
-      reader.readAsDataURL(file)
-    }
-  }
-  
-  input.click()
+  // BasemapWrapper 的 🖼️ 按鈕直接處理上傳，此函數不再使用
+  console.log('ℹ️ 背景上傳由 BasemapWrapper 直接處理')
 }
 
 const handleUploadImage = () => {
@@ -379,10 +360,7 @@ const handleUploadCarousel = () => {
 
 const handleUpdateLogo = (logoData) => {
   console.log('✓ PageEditor: 更新 Logo', logoData)
-  
-  // 更新 Store 中的 Header Logo
   pageEditorStore.updateHeaderLogo(logoData.src, logoData.id)
-  
   console.log('✓ Logo 已更新到 Store')
 }
 

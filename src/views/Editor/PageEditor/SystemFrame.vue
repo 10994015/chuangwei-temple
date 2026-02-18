@@ -32,8 +32,14 @@
       <!-- 頁尾 (FOOTER) -->
       <FooterBasemap v-else-if="frameType === 'FOOTER'" v-bind="frameData" />
       
-      <!-- 輪播牆 (CAROUSEL_WALL) -->
-      <HeroBasemap v-else-if="frameType === 'CAROUSEL_WALL'" v-bind="frameData" />
+      <!-- ✅ 輪播牆 (CAROUSEL_WALL) - 加上點擊選取事件 -->
+      <div
+        v-else-if="frameType === 'CAROUSEL_WALL'"
+        class="carousel-wall-clickable"
+        @click.stop="handleSelectFrame(frame)"
+      >
+        <HeroBasemap v-bind="frameData" />
+      </div>
       
       <!-- ✅ 首圖 (FIRST_PICTURE) - 使用新的 HeroBannerElement -->
       <HeroBannerElement 
@@ -48,7 +54,7 @@
       <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
       
       <!-- 消息列表 (NEWS_LIST) -->
-      <NewsBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
+      <NewsListBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
       
       <!-- 首頁-商品標幅 (INDEX_PRODUCT) -->
       <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" />
@@ -63,17 +69,17 @@
         :is-edit-mode="true"
         :frame="frame"
         :selected-element="selectedElement"
-      @select-element="handleSelectElement"
-    />
+        @select-element="handleSelectElement"
+      />
     
     <!-- 商品列表 (PRODUCT_LIST) -->
-    <ProductsBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" />
+    <ProductListBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" />
     
     <!-- 相簿列表 (ALBUM_LIST) -->
     <AlbumListBasemap v-else-if="frameType === 'ALBUM_LIST'" v-bind="frameData" />
     
     <!-- 活動列表 (EVENT_LIST) -->
-    <EventsBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" />
+    <EventListBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" />
     
     <!-- 捐款商品 (DONATION_PRODUCT) -->
     <DonationBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" />
@@ -95,12 +101,15 @@ import NavbarBasemap from './basemap/NavbarBasemap.vue'
 import FooterBasemap from './basemap/FooterBasemap.vue'
 import HeroBasemap from './basemap/HeroBasemap.vue'
 import NewsBasemap from './basemap/NewsBasemap.vue'
+import NewsListBasemap from './basemap/NewsListBasemap.vue'  // ✅ 新增消息列表
 import EventsBasemap from './basemap/EventsBasemap.vue'
+import EventListBasemap from './basemap/EventListBasemap.vue'
 import ProductsBasemap from './basemap/ProductsBasemap.vue'
+import ProductListBasemap from './basemap/ProductListBasemap.vue'
 import DonationBasemap from './basemap/DonationBasemap.vue'
 import AboutBasemap from './basemap/AboutBasemap.vue'
 import AlbumListBasemap from './basemap/AlbumListBasemap.vue'
-import HeroBannerElement from './elements/HeroBannerElement.vue'  // ✅ 新增引入
+import HeroBannerElement from './elements/HeroBannerElement.vue'
 
 const props = defineProps({
   frameType: {
@@ -119,7 +128,7 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  selectedFrame: {  // ✅ 新增：選中的框架
+  selectedFrame: {
     type: Object,
     default: null
   },
@@ -135,7 +144,7 @@ const emit = defineEmits([
   'delete-element', 
   'change-page', 
   'select-frame',
-  'delete-frame'  // ✅ 新增：刪除框架事件
+  'delete-frame'
 ])
 
 // 檢查 Logo 是否被選中
@@ -143,7 +152,7 @@ const isLogoSelected = computed(() => {
   return props.selectedElement?.type === 'logo'
 })
 
-// ✅ 檢查框架是否被選中（直接比較框架對象）
+// ✅ 檢查框架是否被選中
 const isFrameSelected = computed(() => {
   return props.selectedFrame === props.frame
 })
@@ -170,7 +179,6 @@ const handleChangePage = (slug) => {
   console.log('SystemFrame: 切換頁面', slug)
   emit('change-page', slug)
 }
-
 
 // 選擇 Logo
 const handleSelectLogo = (data) => {
@@ -217,7 +225,6 @@ const handleDeleteLogo = () => {
     outline: 3px solid rgba(232, 87, 42, 0.5);
     outline-offset: -3px;
     
-    /* 框架被選中時，顯示刪除按鈕 */
     .delete-system-frame-btn {
       opacity: 1;
     }
@@ -252,6 +259,26 @@ const handleDeleteLogo = () => {
 
 .system-frame-container {
   position: relative;
+}
+
+/* ✅ 輪播牆點擊區域 */
+.carousel-wall-clickable {
+  cursor: pointer;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 3px solid transparent;
+    transition: border-color 0.2s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  &:hover::after {
+    border-color: rgba(232, 87, 42, 0.5);
+  }
 }
 
 .unknown-frame {

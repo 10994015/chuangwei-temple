@@ -304,39 +304,12 @@ const getBasemapKey = (basemap, index) => {
           @move-basemap="handleMoveBasemap"
           @update-background="handleUpdateBackground"
         >
-          <!-- 空白底圖（沒有框架） -->
+          <!-- ✅ 統一底圖容器（空白/有框架都套背景圖片） -->
           <div 
-            v-if="!basemap.frames || basemap.frames.length === 0" 
-            class="blank-basemap"
-            :class="{ 
-              'drag-over': dragOverBasemap === `${basemap.bg_type}-${basemap.bg_sequence}`,
-              'is-selected': isBasemapSelected(basemap)
-            }"
-            @click="handleBasemapClick(basemap)"
-            @dragover="handleDragOver($event, basemap)"
-            @dragleave="handleDragLeave"
-            @drop="handleDrop($event, basemap, index)"
-          >
-            <div class="blank-content">
-              <div class="blank-icon">📄</div>
-              <p class="blank-text">空白底圖</p>
-              <p class="blank-hint">從左側拖曳框架至此處</p>
-              <p class="blank-note" v-if="!basemap.bg_allow_multiple_frames">
-                此底圖只允許一個框架
-              </p>
-              <p class="blank-note" v-else>
-                此底圖可以有多個框架
-              </p>
-            </div>
-          </div>
-          
-          <!-- 有框架的底圖 -->
-          <div 
-            v-else 
             class="basemap-with-frames"
             :class="{ 
               'drag-over': dragOverBasemap === `${basemap.bg_type}-${basemap.bg_sequence}`,
-              'has-frame': basemap.frames.length > 0,
+              'has-frame': basemap.frames && basemap.frames.length > 0,
               'is-selected': isBasemapSelected(basemap)
             }"
             :style="{
@@ -353,6 +326,30 @@ const getBasemapKey = (basemap, index) => {
               @click.stop="handleBasemapClick(basemap)"
               title="點擊選擇底圖以編輯背景"
             ></div>
+
+            <!-- ✅ 空白底圖提示（沒有框架時顯示） -->
+            <div 
+              v-if="!basemap.frames || basemap.frames.length === 0" 
+              class="blank-basemap"
+              :class="{ 
+                'drag-over': dragOverBasemap === `${basemap.bg_type}-${basemap.bg_sequence}`,
+                'is-selected': isBasemapSelected(basemap),
+                'has-bg': !!basemap.bg_pc_img_src
+              }"
+              @click="handleBasemapClick(basemap)"
+            >
+              <div class="blank-content">
+                <div class="blank-icon">📄</div>
+                <p class="blank-text">空白底圖</p>
+                <p class="blank-hint">從左側拖曳框架至此處</p>
+                <p class="blank-note" v-if="!basemap.bg_allow_multiple_frames">
+                  此底圖只允許一個框架
+                </p>
+                <p class="blank-note" v-else>
+                  此底圖可以有多個框架
+                </p>
+              </div>
+            </div>
             
             <!-- 渲染所有框架 -->
             <template v-for="(frame, frameIndex) in basemap.frames" :key="`frame-${frameIndex}`">
@@ -428,6 +425,52 @@ const getBasemapKey = (basemap, index) => {
   margin: 0;
   transition: all 0.3s ease;
   cursor: pointer;
+
+  // ✅ 有背景圖片時，所有狀態都保持半透明
+  &.has-bg {
+    .blank-content {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      padding: 1.5rem 2.5rem;
+      backdrop-filter: blur(2px);
+      transition: background 0.3s ease;
+    }
+    .blank-icon { opacity: 0.7; color: #fff; }
+    .blank-text, .blank-hint, .blank-note { opacity: 0.85; color: #fff; }
+
+    // hover：加深半透明底，不用純色覆蓋
+    &:hover {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.5);
+      .blank-content { background: rgba(0, 0, 0, 0.5); }
+      .blank-icon { opacity: 0.9; }
+      .blank-text, .blank-hint { opacity: 1; }
+    }
+
+    // selected：橘色邊框，底保持半透明
+    &.is-selected {
+      background: transparent;
+      border-color: #E8572A;
+      border-style: solid;
+      box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.3);
+      .blank-content { background: rgba(0, 0, 0, 0.5); }
+      .blank-icon { opacity: 0.9; }
+      .blank-text, .blank-hint { opacity: 1; }
+    }
+
+    // drag-over：橘色邊框，底保持半透明
+    &.drag-over {
+      background: transparent;
+      border-color: #E8572A;
+      border-width: 3px;
+      border-style: solid;
+      box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.3);
+      transform: scale(1.01);
+      .blank-content { background: rgba(232, 87, 42, 0.35); }
+      .blank-icon { opacity: 0.9; transform: scale(1.1); }
+      .blank-text, .blank-hint { color: #fff; opacity: 1; }
+    }
+  }
   
   &:hover {
     background: #fafafa;

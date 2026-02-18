@@ -17,7 +17,7 @@
             alt="Logo"
             class="logo-image"
           />
-          <span v-else class="logo-placeholder">{{ templeName || 'LOGO' }}</span>
+          <span class="logo-name">{{ templeName }}</span>
         </div>
         
         <!-- 編輯模式下顯示刪除按鈕 -->
@@ -185,7 +185,7 @@ const handleTabClick = (tab) => {
   .logo {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;           // 圖片與文字的間距
     min-width: 100px;
     min-height: 50px;
   }
@@ -196,8 +196,15 @@ const handleTabClick = (tab) => {
     width: auto;
     height: auto;
     object-fit: contain;
+    flex-shrink: 0;      // 防止圖片被壓縮
   }
 
+  .logo-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap; // 防止文字換行
+  }
   .logo-placeholder {
     background: #f5f5f5;
     padding: 0.5rem 1.5rem;

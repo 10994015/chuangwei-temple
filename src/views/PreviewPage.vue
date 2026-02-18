@@ -457,6 +457,13 @@ onMounted(() => {
   position: relative;
   width: 100%;
   min-height: 100px;
+  background-size: cover;        
+  background-position: center;   
+  background-repeat: no-repeat;  
+}
+.basemap-section :deep(.system-frame-preview),
+.basemap-section :deep(.custom-frame-preview) {
+  background: transparent !important;
 }
 
 /* 滾動條樣式 */

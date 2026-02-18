@@ -327,7 +327,7 @@ const getButtonStyle = (element) => {
 <style scoped>
 .custom-frame-preview {
   padding: 20px;  /* ✅ 改為 20px */
-  background: #fff;
+  background: transparent;
   min-height: auto;  /* ✅ 改為 auto，適應內容高度 */
   position: relative;
 }
@@ -455,7 +455,7 @@ const getButtonStyle = (element) => {
 .element-content {
   position: relative;
   padding: 0;
-  background: #fff;
+  background: transparent;
   border-radius: 8px;
 }
 
@@ -587,4 +587,8 @@ const getButtonStyle = (element) => {
 .empty-cell {
   min-height: 150px;
 }
+.basemap-section :deep(.element-content) {
+  background: transparent !important;
+}
+
 </style>

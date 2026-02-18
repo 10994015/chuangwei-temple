@@ -2,67 +2,61 @@
   <section class="hero">
     <div class="hero-swiper">
       <div class="swiper-wrapper">
-        <div 
-          v-for="(slide, index) in slides" 
-          :key="index"
-          class="swiper-slide"
-          :class="{ active: currentSlide === index }"
-        >
-          <img :src="slide.image" :alt="slide.title" class="slide-image" />
-          <div class="slide-overlay">
-            <div class="slide-content">
-              <h2 class="slide-title">{{ slide.title }}</h2>
-              <p class="slide-description">{{ slide.description }}</p>
-              <a v-if="slide.link" :href="slide.link" class="slide-btn">了解更多</a>
-            </div>
+        <!-- ✅ 有圖片時顯示輪播 -->
+        <template v-if="normalizedSlides.length > 0">
+          <div 
+            v-for="(slide, index) in normalizedSlides" 
+            :key="index"
+            class="swiper-slide"
+            :class="{ active: currentSlide === index }"
+          >
+            <img :src="slide.image" :alt="slide.title || '輪播圖片'" class="slide-image" />
+          </div>
+        </template>
+
+        <!-- ✅ 沒有圖片時的空狀態 -->
+        <div v-else class="swiper-slide active">
+          <div class="empty-carousel">
+            <div class="empty-icon">🖼️</div>
+            <p class="empty-text">輪播牆尚未上傳圖片</p>
+            <p class="empty-hint">請在右側屬性面板上傳圖片</p>
           </div>
         </div>
       </div>
       
-      <!-- 導航按鈕 -->
-      <button class="hero-btn prev" @click="prevSlide">‹</button>
-      <button class="hero-btn next" @click="nextSlide">›</button>
-      
-      <!-- 分頁指示器 -->
-      <div class="hero-pagination">
-        <button
-          v-for="(slide, index) in slides"
-          :key="index"
-          class="pagination-dot"
-          :class="{ active: currentSlide === index }"
-          @click="goToSlide(index)"
-        ></button>
-      </div>
+      <!-- 導航按鈕（有圖片才顯示） -->
+      <template v-if="normalizedSlides.length > 1">
+        <button class="hero-btn prev" @click="prevSlide">‹</button>
+        <button class="hero-btn next" @click="nextSlide">›</button>
+        
+        <!-- 分頁指示器 -->
+        <div class="hero-pagination">
+          <button
+            v-for="(slide, index) in normalizedSlides"
+            :key="index"
+            class="pagination-dot"
+            :class="{ active: currentSlide === index }"
+            @click="goToSlide(index)"
+          ></button>
+        </div>
+      </template>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps({
+  // ✅ 舊格式（向下相容）
   slides: {
     type: Array,
-    default: () => [
-      {
-        image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1920&h=600&fit=crop',
-        title: '桃園某某宮',
-        description: '守護信眾 庇佑平安',
-        link: '#'
-      },
-      {
-        image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=1920&h=600&fit=crop',
-        title: '祈福法會',
-        description: '每月初一十五誦經祈福',
-        link: '#'
-      },
-      {
-        image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=1920&h=600&fit=crop',
-        title: '慶典活動',
-        description: '傳承文化 弘揚信仰',
-        link: '#'
-      }
-    ]
+    default: null
+  },
+  // ✅ 新格式：API 回傳的 caroisel_wall_imgs
+  caroisel_wall_imgs: {
+    type: Array,
+    default: null
   },
   autoPlayInterval: {
     type: Number,
@@ -70,16 +64,41 @@ const props = defineProps({
   }
 })
 
+// ✅ 統一資料格式
+// caroisel_wall_imgs 結構: [{ id, src }]
+// slides 舊結構: [{ image, title, description, link }]
+const normalizedSlides = computed(() => {
+  // 優先使用新格式 caroisel_wall_imgs
+  if (props.caroisel_wall_imgs && props.caroisel_wall_imgs.length > 0) {
+    return props.caroisel_wall_imgs.map(item => ({
+      image: item.src,  // ✅ 改用 src
+      title: item.title || '',
+      description: item.description || '',
+      link: item.link || null,
+      id: item.id
+    }))
+  }
+  
+  // 向下相容舊格式 slides
+  if (props.slides && props.slides.length > 0) {
+    return props.slides
+  }
+  
+  return []
+})
+
 const currentSlide = ref(0)
 let autoPlayTimer = null
 
 const nextSlide = () => {
-  currentSlide.value = (currentSlide.value + 1) % props.slides.length
+  if (normalizedSlides.value.length === 0) return
+  currentSlide.value = (currentSlide.value + 1) % normalizedSlides.value.length
 }
 
 const prevSlide = () => {
+  if (normalizedSlides.value.length === 0) return
   currentSlide.value = currentSlide.value === 0 
-    ? props.slides.length - 1 
+    ? normalizedSlides.value.length - 1 
     : currentSlide.value - 1
 }
 
@@ -88,16 +107,28 @@ const goToSlide = (index) => {
 }
 
 const startAutoPlay = () => {
-  autoPlayTimer = setInterval(() => {
-    nextSlide()
-  }, props.autoPlayInterval)
+  stopAutoPlay()
+  if (normalizedSlides.value.length > 1) {
+    autoPlayTimer = setInterval(() => {
+      nextSlide()
+    }, props.autoPlayInterval)
+  }
 }
 
 const stopAutoPlay = () => {
   if (autoPlayTimer) {
     clearInterval(autoPlayTimer)
+    autoPlayTimer = null
   }
 }
+
+// ✅ 圖片數量改變時重置輪播
+watch(normalizedSlides, (newSlides) => {
+  if (currentSlide.value >= newSlides.length) {
+    currentSlide.value = Math.max(0, newSlides.length - 1)
+  }
+  startAutoPlay()
+})
 
 onMounted(() => {
   startAutoPlay()
@@ -149,63 +180,33 @@ onUnmounted(() => {
   object-fit: cover;
 }
 
-.slide-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
+// ✅ 空狀態樣式
+.empty-carousel {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-.slide-content {
-  text-align: center;
-  color: #fff;
-  max-width: 800px;
-  padding: 0 2rem;
-}
-
-.slide-title {
-  font-size: 48px;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  animation: slideInUp 0.8s ease-out;
-}
-
-.slide-description {
-  font-size: 20px;
-  margin-bottom: 2rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  animation: slideInUp 0.8s ease-out 0.2s both;
-}
-
-.slide-btn {
-  display: inline-block;
-  padding: 1rem 2.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid #fff;
-  border-radius: 50px;
-  color: #fff;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 600;
-  transition: all 0.3s;
-  backdrop-filter: blur(10px);
-  animation: slideInUp 0.8s ease-out 0.4s both;
-
-  &:hover {
-    background: #fff;
-    color: #8b7355;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 1rem;
+    opacity: 0.4;
+  }
+  
+  .empty-text {
+    font-size: 18px;
+    color: #666;
+    margin: 0 0 0.5rem;
+    font-weight: 500;
+  }
+  
+  .empty-hint {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
   }
 }
 
@@ -303,13 +304,8 @@ onUnmounted(() => {
     height: 40px;
     font-size: 20px;
 
-    &.prev {
-      left: 1rem;
-    }
-
-    &.next {
-      right: 1rem;
-    }
+    &.prev { left: 1rem; }
+    &.next { right: 1rem; }
   }
 }
 </style>

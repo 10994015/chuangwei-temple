@@ -1,5 +1,20 @@
 <template>
   <div class="editor-layout">
+    <!-- ✅ 動態載入 Google Fonts -->
+    <component :is="'style'" v-if="googleFontUrl">
+      @import url('{{ googleFontUrl }}');
+    </component>
+
+    <!-- ✅ 字型樣式 - 只套用到畫布區域 -->
+    <component :is="'style'" v-if="globalFontFamily">
+      .canvas-area,
+      .canvas-area *,
+      .temple-website,
+      .temple-website * {
+        font-family: {{ globalFontFamily }} !important;
+      }
+    </component>
+
     <!-- 工具列 -->
     <EditorToolbar
       :current-locale="pageEditorStore.currentLocale"
@@ -47,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, provide } from 'vue'
+import { ref, computed, onMounted, watch, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePageEditorStore } from '@/stores/pageEditor'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
@@ -63,6 +78,123 @@ const publishDialogRef = ref(null)
 
 // 追蹤未保存變更
 const hasUnsavedChanges = ref(false)
+
+// ✅ 網站設定（包含字型）
+const websiteSettings = ref(null)
+
+// ✅ 可用字型清單（與 WebsiteSettings.vue 一致）
+const availableFonts = [
+  {
+    value: 'noto-sans-tc',
+    label: 'Noto Sans TC（思源黑體）',
+    googleFont: 'Noto+Sans+TC:wght@300;400;500;700',
+    cssFamily: "'Noto Sans TC', sans-serif"
+  },
+  {
+    value: 'noto-serif-tc',
+    label: 'Noto Serif TC（思源宋體）',
+    googleFont: 'Noto+Serif+TC:wght@300;400;500;700',
+    cssFamily: "'Noto Serif TC', serif"
+  },
+  {
+    value: 'source-han-sans',
+    label: 'Source Han Sans（源泉黑體）',
+    googleFont: 'Noto+Sans+TC:wght@300;400;500;700',
+    cssFamily: "'Noto Sans TC', 'Source Han Sans', sans-serif"
+  },
+  {
+    value: 'roboto-noto',
+    label: 'Roboto + Noto Sans TC',
+    googleFont: 'Roboto:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700',
+    cssFamily: "'Roboto', 'Noto Sans TC', sans-serif"
+  },
+  {
+    value: 'zhi-mang-xing',
+    label: '志芒星（手寫風格）',
+    googleFont: 'Zhi+Mang+Xing',
+    cssFamily: "'Zhi Mang Xing', cursive"
+  },
+  {
+    value: 'ma-shan-zheng',
+    label: '馬善政楷書',
+    googleFont: 'Ma+Shan+Zheng',
+    cssFamily: "'Ma Shan Zheng', cursive"
+  }
+]
+
+// ✅ 計算 Google Fonts URL（改用 frontFamily）
+const googleFontUrl = computed(() => {
+  if (!websiteSettings.value?.frontFamily) {
+    return null
+  }
+
+  const font = availableFonts.find(f => f.value === websiteSettings.value.frontFamily)
+  if (!font) return null
+
+  return `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`
+})
+
+// ✅ 計算全域字型（改用 frontFamily）
+const globalFontFamily = computed(() => {
+  if (!websiteSettings.value?.frontFamily) {
+    return "'Noto Sans TC', sans-serif"  // 預設字型
+  }
+
+  const font = availableFonts.find(f => f.value === websiteSettings.value.frontFamily)
+  return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
+})
+
+// ✅ 載入網站設定（包含字型）
+const loadWebsiteSettings = async () => {
+  const templeId = getTempleId()
+  if (!templeId) return
+
+  try {
+    console.log('📥 載入網站設定（字型）...')
+    const settings = await pageEditorStore.fetchWebsiteSettings(templeId)
+    
+    if (settings) {
+      websiteSettings.value = settings
+      
+      // ✅ GET API 回傳 snake_case (front_family)，需要兼容處理
+      const fontFamily = settings.front_family || settings.frontFamily || 'noto-sans-tc'
+      
+      console.log('✓ 網站字型:', fontFamily, '(原始欄位:', settings.front_family || settings.frontFamily, ')')
+      
+      // ✅ 動態載入 Google Fonts
+      if (fontFamily) {
+        loadGoogleFont(fontFamily)
+      }
+      
+      // ✅ 轉換為統一的 frontFamily 供 computed 使用
+      websiteSettings.value.frontFamily = fontFamily
+    }
+  } catch (error) {
+    console.error('❌ 載入網站設定失敗:', error)
+  }
+}
+
+// ✅ 動態載入 Google Fonts
+const loadGoogleFont = (fontValue) => {
+  const font = availableFonts.find(f => f.value === fontValue)
+  if (!font) return
+
+  // 檢查是否已經載入
+  const existingLink = document.querySelector(`link[data-font="${fontValue}"]`)
+  if (existingLink) {
+    console.log('✓ Google Font 已載入:', fontValue)
+    return
+  }
+
+  // 創建 <link> 標籤
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`
+  link.setAttribute('data-font', fontValue)
+  
+  document.head.appendChild(link)
+  console.log('✓ 載入 Google Font:', fontValue)
+}
 
 // 提供給子組件使用
 provide('setUnsavedChanges', (value) => {
@@ -99,6 +231,9 @@ onMounted(async () => {
   pageEditorStore.setTenantId(templeId)
   
   try {
+    // ✅ 載入網站設定（字型）
+    await loadWebsiteSettings()
+    
     // 載入語言清單
     await pageEditorStore.fetchLocales(templeId)
     console.log('✓ 語言清單已載入')
@@ -120,7 +255,7 @@ onMounted(async () => {
       pageEditorStore.syncHeaderMenuFromTabs()
       console.log('✓ Header 選單已同步')
       
-      // ✅ 重要：載入系統框架
+      // 載入系統框架
       await pageEditorStore.fetchSystemFrames(templeId, firstTab.slug)
       console.log('✓ 系統框架已載入:', pageEditorStore.currentPageSystemFrames)
       
@@ -139,7 +274,7 @@ onMounted(async () => {
 
 // ==================== 工具列事件處理 ====================
 
-// ✅ 語言切換
+// 語言切換
 const handleLocaleChange = async (newLocale) => {
   console.log('🌐 EditorLayout: 切換語言:', newLocale, '| 當前頁面:', pageEditorStore.currentPageSlug)
   
@@ -212,7 +347,7 @@ const handlePreview = () => {
       params: { templeId },
       query: { 
         slug,
-        locale  // ✅ 傳遞語言參數
+        locale
       }
     })
     window.open(route.href, '_blank')
@@ -239,10 +374,7 @@ const handleSave = async () => {
 
 // 刪除草稿
 const handleDelete = async () => {
-  // 確認提示
-  const confirmed = confirm(
-    '確定要刪除草稿嗎？'
-  )
+  const confirmed = confirm('確定要刪除草稿嗎？')
   
   if (!confirmed) {
     return
@@ -257,12 +389,9 @@ const handleDelete = async () => {
   }
   
   try {
-    
-    // ✅ 調用 Store 的 deleteDraft 方法
     const success = await pageEditorStore.deleteDraft(currentSlug, templeId)
     
     if (success) {
-      // alert('刪除成功')
       hasUnsavedChanges.value = false
     } else {
       alert('刪除失敗：' + (pageEditorStore.error || '未知錯誤'))
