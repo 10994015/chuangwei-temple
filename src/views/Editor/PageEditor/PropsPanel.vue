@@ -19,7 +19,7 @@
         <div class="prop-group">
           <label>底圖類型</label>
           <input 
-            :value="selectedBasemap.bg_type" 
+            :value="selectedBasemap.bgType" 
             type="text" 
             class="prop-input"
             disabled
@@ -54,17 +54,16 @@
                   v-model="frameWidth" 
                   type="text" 
                   class="prop-input"
-                  placeholder="1200px"
+                  placeholder="1200（）"
                   @input="updateFrameWidth"
                 />
-                <span class="unit-hint">例如: 1200px, 100%, 80vw</span>
               </div>
             </div>
 
             <div class="width-presets">
-              <button @click="setFrameWidth('900px')" class="preset-btn">窄</button>
-              <button @click="setFrameWidth('1200px')" class="preset-btn">中</button>
-              <button @click="setFrameWidth('1400px')" class="preset-btn">寬</button>
+              <button @click="setFrameWidth('900')" class="preset-btn">窄</button>
+              <button @click="setFrameWidth('1200')" class="preset-btn">中</button>
+              <button @click="setFrameWidth('1400')" class="preset-btn">寬</button>
               <button @click="setFrameWidth('100%')" class="preset-btn">全寬</button>
             </div>
           </div>
@@ -86,8 +85,8 @@
               
               <!-- ✅ 預覽圖片 -->
               <img 
-                v-else-if="selectedFrame.data?.hero_bg_img_src"
-                :src="selectedFrame.data.hero_bg_img_src" 
+                v-else-if="selectedFrame.data?.heroBgImgSrc"
+                :src="selectedFrame.data.heroBgImgSrc" 
                 alt="背景預覽"
                 class="preview-image"
               />
@@ -104,7 +103,7 @@
               >
                 <template v-if="isUploadingHeroBackground">上傳中...</template>
                 <template v-else>
-                  {{ selectedFrame.data?.hero_bg_img_src ? '更換背景' : '上傳背景' }}
+                  {{ selectedFrame.data?.heroBgImgSrc ? '更換背景' : '上傳背景' }}
                 </template>
               </button>
             </div>
@@ -146,15 +145,14 @@
                   v-model="heroHeight" 
                   type="text" 
                   class="prop-input"
-                  placeholder="600px"
+                  placeholder="600（）"
                   @input="updateHeroData"
                 />
-                <span class="unit-hint">例如: 600px, 80vh</span>
               </div>
               <div class="height-presets">
-                <button @click="setHeroHeight('500px')" class="preset-btn">小</button>
-                <button @click="setHeroHeight('600px')" class="preset-btn">中</button>
-                <button @click="setHeroHeight('700px')" class="preset-btn">大</button>
+                <button @click="setHeroHeight('500')" class="preset-btn">小</button>
+                <button @click="setHeroHeight('600')" class="preset-btn">中</button>
+                <button @click="setHeroHeight('700')" class="preset-btn">大</button>
                 <button @click="setHeroHeight('100vh')" class="preset-btn">全螢幕</button>
               </div>
             </div>
@@ -204,10 +202,9 @@
                   v-model="textBoxBorderRadius" 
                   type="text" 
                   class="prop-input"
-                  placeholder="12px"
+                  placeholder="12（）"
                   @input="updateHeroData"
                 />
-                <span class="unit-hint">例如: 0px, 12px, 20px</span>
               </div>
             </div>
             
@@ -239,10 +236,9 @@
                   v-model="titleFontSize" 
                   type="text" 
                   class="prop-input"
-                  placeholder="48px"
+                  placeholder="48（）"
                   @input="updateHeroData"
                 />
-                <span class="unit-hint">例如: 36px, 48px, 3rem</span>
               </div>
             </div>
             
@@ -274,10 +270,9 @@
                   v-model="subtitleFontSize" 
                   type="text" 
                   class="prop-input"
-                  placeholder="20px"
+                  placeholder="20（）"
                   @input="updateHeroData"
                 />
-                <span class="unit-hint">例如: 16px, 20px, 1.25rem</span>
               </div>
             </div>
           </div>
@@ -286,6 +281,51 @@
         <!-- ✅ 輪播牆 (CAROUSEL_WALL) -->
         <template v-else-if="selectedFrame.type === 'CAROUSEL_WALL'">
           <h4 class="section-title">輪播牆設定</h4>
+
+          <!-- ✅ 新增：輪播高度 -->
+          <div class="prop-group">
+            <label>輪播高度</label>
+            <div class="height-selector">
+              <input
+                v-model.number="carouselWallHeight"
+                type="number"
+                class="prop-input"
+                min="200"
+                max="1000"
+                step="50"
+                @input="updateCarouselWallSettings"
+              />
+              <span class="unit">px</span>
+            </div>
+            <div class="height-presets">
+              <button @click="setCarouselWallHeight(400)" class="preset-btn" :class="{ active: carouselWallHeight === 400 }">小</button>
+              <button @click="setCarouselWallHeight(600)" class="preset-btn" :class="{ active: carouselWallHeight === 600 }">中</button>
+              <button @click="setCarouselWallHeight(800)" class="preset-btn" :class="{ active: carouselWallHeight === 800 }">大</button>
+              <button @click="setCarouselWallHeight(1000)" class="preset-btn" :class="{ active: carouselWallHeight === 1000 }">特大</button>
+            </div>
+          </div>
+
+          <!-- ✅ 新增：自動播放 -->
+          <div class="prop-group">
+            <label class="checkbox-label">
+              <input v-model="carouselWallAutoPlay" type="checkbox" @change="updateCarouselWallSettings" />
+              <span>自動播放</span>
+            </label>
+          </div>
+
+          <!-- ✅ 新增：播放間隔 -->
+          <div class="prop-group" v-if="carouselWallAutoPlay">
+            <label>播放間隔 (毫秒)</label>
+            <input
+              v-model.number="carouselWallInterval"
+              type="number"
+              class="prop-input"
+              min="1000"
+              step="500"
+              @input="updateCarouselWallSettings"
+            />
+            <span class="unit-hint">建議 3000–8000 毫秒</span>
+          </div>
 
           <div class="prop-group">
             <label>輪播圖片 ({{ carouselWallImages.length }} 張)</label>
@@ -392,7 +432,7 @@
             <div v-if="false" class="debug-info">
               <small>
                 Local Logo: {{ localLogoSrc ? '有' : '無' }}<br>
-                Frame Logo: {{ selectedElement.frame?.data?.logo_img_src ? '有' : '無' }}<br>
+                Frame Logo: {{ selectedElement.frame?.data?.logoImgUrl ? '有' : '無' }}<br>
                 Data Logo: {{ selectedElement.data?.src ? '有' : '無' }}
               </small>
             </div>
@@ -441,15 +481,20 @@
             <!-- 字體大小 -->
             <div class="prop-group">
               <label>字體大小</label>
-              <div class="input-with-unit">
+              <div class="font-size-row">
                 <input 
                   v-model="elementMetadata.font_size" 
                   type="text" 
-                  class="prop-input"
-                  placeholder="16px"
+                  class="prop-input font-size-input"
+                  placeholder="16"
                   @input="updateMetadata"
                 />
-                <span class="unit-hint">例如: 16px, 1.5rem</span>
+                <div class="font-size-presets">
+                  <button @click="elementMetadata.font_size = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '12' }">小</button>
+                  <button @click="elementMetadata.font_size = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '16' }">中</button>
+                  <button @click="elementMetadata.font_size = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '24' }">大</button>
+                  <button @click="elementMetadata.font_size = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '36' }">超大</button>
+                </div>
               </div>
             </div>
 
@@ -479,7 +524,7 @@
                   :class="{ active: elementMetadata.text_align === 'left' }"
                   title="靠左"
                 >
-                  ≡
+                  靠左
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'center'; updateMetadata()" 
@@ -487,7 +532,7 @@
                   :class="{ active: elementMetadata.text_align === 'center' }"
                   title="置中"
                 >
-                  ≡
+                  置中
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'right'; updateMetadata()" 
@@ -495,7 +540,7 @@
                   :class="{ active: elementMetadata.text_align === 'right' }"
                   title="靠右"
                 >
-                  ≡
+                  靠右
                 </button>
                 <button 
                   @click="elementMetadata.text_align = null; updateMetadata()" 
@@ -698,7 +743,7 @@
                   :class="{ active: elementMetadata.text_align === 'left' }"
                   title="靠左"
                 >
-                  ⬅
+                  靠左
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'center'; updateMetadata()" 
@@ -706,7 +751,7 @@
                   :class="{ active: elementMetadata.text_align === 'center' }"
                   title="置中"
                 >
-                  ↔
+                  置中
                 </button>
                 <button 
                   @click="elementMetadata.text_align = 'right'; updateMetadata()" 
@@ -714,7 +759,7 @@
                   :class="{ active: elementMetadata.text_align === 'right' }"
                   title="靠右"
                 >
-                  ➡
+                  靠右
                 </button>
                 <button 
                   @click="elementMetadata.text_align = null; updateMetadata()" 
@@ -933,15 +978,20 @@
             <!-- 字體大小 -->
             <div class="prop-group">
               <label>字體大小</label>
-              <div class="input-with-unit">
+              <div class="font-size-row">
                 <input 
                   v-model="elementMetadata.font_size" 
                   type="text" 
-                  class="prop-input"
-                  placeholder="16px"
+                  class="prop-input font-size-input"
+                  placeholder="16"
                   @input="updateMetadata"
                 />
-                <span class="unit-hint">例如: 16px, 1rem</span>
+                <div class="font-size-presets">
+                  <button @click="elementMetadata.font_size = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '12' }">小</button>
+                  <button @click="elementMetadata.font_size = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '16' }">中</button>
+                  <button @click="elementMetadata.font_size = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '24' }">大</button>
+                  <button @click="elementMetadata.font_size = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '36' }">超大</button>
+                </div>
               </div>
             </div>
 
@@ -1084,7 +1134,7 @@
               v-model="selectedElement.element.value.thickness" 
               type="text" 
               class="prop-input"
-              placeholder="例如: 2px"
+              placeholder=""
             />
           </div>
 
@@ -1210,7 +1260,7 @@
               v-model="selectedElement.element.value.thickness" 
               type="text" 
               class="prop-input"
-              placeholder="例如: 2px"
+              placeholder="2（）"
             />
           </div>
 
@@ -1516,70 +1566,63 @@
         <!-- MAP 元件 -->
         <template v-else-if="selectedElement.element?.type === 'MAP'">
           <h4 class="section-title">地圖設定</h4>
-          
-          <!-- 地址 -->
           <div class="prop-group">
             <label>地址</label>
-            <textarea 
-              v-model="mapAddress" 
-              class="prop-textarea"
-              rows="2"
-              placeholder="輸入地址（例如：台北市中山區南京東路一段1號）"
+            <input
+              v-model="mapAddress"
+              type="text"
+              class="prop-input"
+              placeholder="輸入地址，例如：台北市信義區信義路五段7號"
               @input="updateMapData"
-            ></textarea>
+            />
+          </div>
+          <!-- 經緯度 -->
+          <div class="prop-group">
+            <label>緯度 (Latitude)</label>
+            <input 
+              v-model.number="mapLat" 
+              type="number" 
+              class="prop-input"
+              placeholder="25.033"
+              step="0.001"
+              @input="updateMapData"
+            />
+            <span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span>
           </div>
 
-          <!-- 經緯度 -->
-          <div class="metadata-section">
-            <h5 class="subsection-title">經緯度設定</h5>
-            
-            <div class="prop-group">
-              <label>緯度 (Latitude)</label>
-              <input 
-                v-model.number="mapLat" 
-                type="number" 
-                class="prop-input"
-                placeholder="25.033"
-                step="0.001"
-                @input="updateMapData"
-              />
-              <span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span>
-            </div>
+          <div class="prop-group">
+            <label>經度 (Longitude)</label>
+            <input 
+              v-model.number="mapLng" 
+              type="number" 
+              class="prop-input"
+              placeholder="121.565"
+              step="0.001"
+              @input="updateMapData"
+            />
+            <span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span>
+          </div>
 
-            <div class="prop-group">
-              <label>經度 (Longitude)</label>
-              <input 
-                v-model.number="mapLng" 
-                type="number" 
-                class="prop-input"
-                placeholder="121.565"
-                step="0.001"
-                @input="updateMapData"
-              />
-              <span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span>
+          <div class="prop-group">
+            <label>縮放級別 ({{ mapZoom }})</label>
+            <input 
+              v-model.number="mapZoom" 
+              type="range" 
+              min="10"
+              max="18"
+              class="prop-slider"
+              @input="updateMapData"
+            />
+            <div class="slider-labels">
+              <span>遠</span>
+              <span>近</span>
             </div>
+          </div>
 
-            <div class="prop-group">
-              <label>縮放級別 ({{ mapZoom }})</label>
-              <input 
-                v-model.number="mapZoom" 
-                type="range" 
-                min="10"
-                max="18"
-                class="prop-slider"
-                @input="updateMapData"
-              />
-              <div class="slider-labels">
-                <span>遠</span>
-                <span>近</span>
-              </div>
-            </div>
-
-            <div class="zoom-presets">
-              <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">城市</button>
-              <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">街區</button>
-              <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">建築</button>
-            </div>
+          <div class="zoom-presets">
+            <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">城市</button>
+            <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">街區</button>
+            <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">建築</button>
           </div>
 
           <!-- 元件間距設定 -->
@@ -1741,6 +1784,27 @@ const props = defineProps({
 
 const emit = defineEmits(['update-logo', 'update-cell-padding'])
 
+// ==================== ✅ 單位補全工具函數 ====================
+
+const ensureUnit = (value, defaultValue = '') => {
+  if (value === null || value === undefined || value === '') return defaultValue
+  if (typeof value === 'number') return value + 'px'
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return defaultValue
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) return trimmed + 'px'
+    return trimmed
+  }
+  return defaultValue
+}
+
+const stripPx = (value) => {
+  if (!value) return ''
+  const str = String(value).trim()
+  if (/^-?\d+(\.\d+)?px$/.test(str)) return str.slice(0, -2)
+  return str
+}
+
 // Logo 相關的響應式數據
 const logoAlt = ref('')
 const logoWidth = ref('')
@@ -1756,6 +1820,10 @@ const isUploadingCarousel = ref(false)
 // ✅ CAROUSEL_WALL 輪播牆
 const carouselWallImages = ref([])
 const isUploadingCarouselWall = ref(false)
+// ✅ 輪播牆播放設定
+const carouselWallHeight   = ref(600)
+const carouselWallAutoPlay = ref(true)
+const carouselWallInterval = ref(5000)
 
 // CAROUSEL 元件相關
 const carouselImages = ref([])
@@ -1766,14 +1834,14 @@ const carouselHeight = ref(400)
 // ✅ 首圖 (FIRST_PICTURE) 相關
 const heroTitle = ref('')
 const heroSubtitle = ref('')
-const heroHeight = ref('600px')
+const heroHeight = ref('600')
 const overlayOpacity = ref(40)
 const overlayColor = ref('#000000')
-const textBoxBorderRadius = ref('12px')
+const textBoxBorderRadius = ref('12')
 const titleColor = ref('#333333')
-const titleFontSize = ref('48px')
+const titleFontSize = ref('48')
 const subtitleColor = ref('#666666')
-const subtitleFontSize = ref('20px')
+const subtitleFontSize = ref('20')
 
 // ✅ 元件 padding
 const elementPadding = ref({ top: 20, right: 20, bottom: 20, left: 20 })
@@ -1796,7 +1864,7 @@ const elementMetadata = ref({
 const imageAlt = ref('')
 
 // ✅ 框架寬度設定
-const frameWidth = ref('1200px')
+const frameWidth = ref('1200')
 
 // ✅ MAP 元件
 const mapAddress = ref('')
@@ -1823,7 +1891,8 @@ watch(() => props.selectedElement, (newVal) => {
   
   if (newVal?.element?.type === 'CAROUSEL') {
     const value = newVal.element.value || {}
-    carouselImages.value = value.images || []
+    // ✅ 改為 imgs（後端欄位名稱）
+    carouselImages.value = value.imgs || []
     carouselAutoPlay.value = value.autoPlay !== false
     carouselInterval.value = value.interval || 3000
     carouselHeight.value = value.height || 400
@@ -1845,14 +1914,15 @@ watch(() => props.selectedElement, (newVal) => {
   }
 
   if (newVal?.element?.metadata) {
+    const m = newVal.element.metadata
     elementMetadata.value = {
-      color: newVal.element.metadata.color || null,
-      font_size: newVal.element.metadata.font_size || null,
-      font_weight: newVal.element.metadata.font_weight || null,
-      text_align: newVal.element.metadata.text_align || null,
-      width: newVal.element.metadata.width || null,
-      height: newVal.element.metadata.height || null,
-      background_color: newVal.element.metadata.background_color || null
+      color: m.color || null,
+      font_size: stripPx(m.font_size) || null,
+      font_weight: m.font_weight || null,
+      text_align: m.text_align || null,
+      width: m.width || null,
+      height: m.height || null,
+      background_color: m.background_color || null
     }
   } else {
     elementMetadata.value = {
@@ -1876,7 +1946,7 @@ watch(() => props.selectedElement?.data, (newData) => {
 }, { deep: true })
 
 watch(
-  () => props.selectedElement?.frame?.data?.logo_img_src,
+  () => props.selectedElement?.frame?.data?.logoImgUrl,
   (newSrc) => {
     if (props.selectedElement?.type === 'logo') {
       localLogoSrc.value = newSrc || null
@@ -1889,15 +1959,16 @@ watch(
   () => props.selectedElement?.type,
   (newType) => {
     if (newType === 'logo') {
-      localLogoSrc.value = props.selectedElement?.frame?.data?.logo_img_src || null
+      localLogoSrc.value = props.selectedElement?.frame?.data?.logoImgUrl || null
     }
   },
   { immediate: true }
 )
 
-watch(() => props.selectedElement?.element?.value?.images, (newImages) => {
-  if (props.selectedElement?.element?.type === 'CAROUSEL' && newImages) {
-    carouselImages.value = [...newImages]
+// ✅ 改為監聽 imgs（後端欄位名稱）
+watch(() => props.selectedElement?.element?.value?.imgs, (newImgs) => {
+  if (props.selectedElement?.element?.type === 'CAROUSEL' && newImgs) {
+    carouselImages.value = [...newImgs]
   }
 }, { deep: true })
 
@@ -1906,29 +1977,31 @@ watch(() => props.selectedElement?.element?.value?.images, (newImages) => {
 watch(() => props.selectedFrame, (newVal) => {
   // 自訂框架寬度
   if (newVal?.type?.startsWith('FRAME')) {
-    frameWidth.value = newVal.metadata?.frame_width || '1200px'
+    frameWidth.value = stripPx(newVal.metadata?.frameWidth || '1200px')
   }
 
   // 首圖資料
   if (newVal?.type === 'FIRST_PICTURE' && newVal.data) {
-    heroTitle.value = newVal.data.hero_title || ''
-    heroSubtitle.value = newVal.data.hero_subtitle || ''
-    heroHeight.value = newVal.data.hero_height || '600px'
-    overlayOpacity.value = newVal.data.overlay_opacity !== undefined ? newVal.data.overlay_opacity : 40
-    overlayColor.value = newVal.data.overlay_color || '#000000'
-    textBoxBorderRadius.value = newVal.data.text_box_border_radius || '12px'
-    titleColor.value = newVal.data.title_color || '#333333'
-    titleFontSize.value = newVal.data.title_font_size || '48px'
-    subtitleColor.value = newVal.data.subtitle_color || '#666666'
-    subtitleFontSize.value = newVal.data.subtitle_font_size || '20px'
+    heroTitle.value = newVal.data.heroTitle || ''
+    heroSubtitle.value = newVal.data.heroSubtitle || ''
+    heroHeight.value = stripPx(newVal.data.heroHeight || '600px')
+    overlayOpacity.value = newVal.data.overlayOpacity !== undefined ? newVal.data.overlayOpacity : 40
+    overlayColor.value = newVal.data.overlayColor || '#000000'
+    textBoxBorderRadius.value = stripPx(newVal.data.textBoxBorderRadius || '12px')
+    titleColor.value = newVal.data.titleColor || '#333333'
+    titleFontSize.value = stripPx(newVal.data.titleFontSize || '48px')
+    subtitleColor.value = newVal.data.subtitleColor || '#666666'
+    subtitleFontSize.value = stripPx(newVal.data.subtitleFontSize || '20px')
   }
 
   // ✅ 輪播牆資料
   if (newVal?.type === 'CAROUSEL_WALL') {
-    carouselWallImages.value = Array.isArray(newVal.data?.caroisel_wall_imgs)
-      ? [...newVal.data.caroisel_wall_imgs]
+    carouselWallImages.value = Array.isArray(newVal.data?.caroiselWallImgs)
+      ? [...newVal.data.caroiselWallImgs]
       : []
-    console.log('✓ 輪播牆圖片已載入:', carouselWallImages.value.length, '張')
+    carouselWallHeight.value   = newVal.data?.carouselWallHeight   ?? 600
+    carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
+    carouselWallInterval.value = newVal.data?.carouselWallInterval  ?? 5000
   }
 
 }, { immediate: true, deep: true })
@@ -1938,7 +2011,7 @@ watch(() => props.selectedFrame, (newVal) => {
 const updateFrameWidth = () => {
   if (props.selectedFrame) {
     if (!props.selectedFrame.metadata) props.selectedFrame.metadata = {}
-    props.selectedFrame.metadata.frame_width = frameWidth.value
+    props.selectedFrame.metadata.frameWidth = ensureUnit(frameWidth.value, '1200px')
   }
 }
 
@@ -1952,7 +2025,12 @@ const setFrameWidth = (width) => {
 const updateMetadata = () => {
   if (props.selectedElement?.element) {
     if (!props.selectedElement.element.metadata) props.selectedElement.element.metadata = {}
-    props.selectedElement.element.metadata = { ...elementMetadata.value }
+    props.selectedElement.element.metadata = {
+      ...elementMetadata.value,
+      font_size: ensureUnit(elementMetadata.value.font_size, null),
+      width: ensureUnit(elementMetadata.value.width, null),
+      height: ensureUnit(elementMetadata.value.height, null),
+    }
   }
 }
 
@@ -2050,11 +2128,11 @@ const handleUploadLogo = async () => {
     if (!file) return
     try {
       isUploadingLogo.value = true
-      pageEditorStore.markFileForDeletion(props.selectedElement?.frame?.data?.logo_img_id)
+      pageEditorStore.markFileForDeletion(props.selectedElement?.frame?.data?.logoImgId)
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('Logo 上傳失敗，請稍後再試'); return }
-      localLogoSrc.value = uploadedFile.fileDir
-      emit('update-logo', { id: uploadedFile.id, src: uploadedFile.fileDir })
+      localLogoSrc.value = uploadedFile.fileUrl
+      emit('update-logo', { id: uploadedFile.id, src: uploadedFile.fileUrl })
       await new Promise(resolve => setTimeout(resolve, 100))
     } catch (error) {
       console.error('❌ Logo 上傳失敗:', error)
@@ -2087,7 +2165,7 @@ const handleUploadImage = async () => {
       if (!uploadedFile) { alert('圖片上傳失敗，請稍後再試'); return }
       if (props.selectedElement?.element?.value) {
         props.selectedElement.element.value.id = uploadedFile.id
-        props.selectedElement.element.value.src = uploadedFile.fileDir
+        props.selectedElement.element.value.src = uploadedFile.fileUrl
       }
     } catch (error) {
       console.error('❌ 圖片上傳失敗:', error)
@@ -2115,27 +2193,25 @@ const addCarouselImage = async () => {
       isUploadingCarousel.value = true
       console.log(`📤 開始上傳 ${files.length} 張輪播圖片...`)
       
-      // ✅ 確保 value 和 images 陣列存在
       if (!props.selectedElement.element.value) props.selectedElement.element.value = {}
-      if (!props.selectedElement.element.value.images) props.selectedElement.element.value.images = []
+      // ✅ 改為 imgs（後端欄位名稱）
+      if (!props.selectedElement.element.value.imgs) props.selectedElement.element.value.imgs = []
       
-      // ✅ 依序上傳每張圖片
       for (const file of files) {
         const uploadedFile = await pageEditorStore.uploadImage(file)
         if (!uploadedFile) {
           console.warn(`⚠️ 圖片 ${file.name} 上傳失敗，跳過`)
           continue
         }
-        
-        // ✅ 儲存完整資料（id + src）
-        props.selectedElement.element.value.images.push({
+        // ✅ 改為 imgs
+        props.selectedElement.element.value.imgs.push({
           id: uploadedFile.id,
-          src: uploadedFile.fileDir
+          src: uploadedFile.fileUrl
         })
       }
       
-      // ✅ 同步本地響應式陣列
-      carouselImages.value = [...props.selectedElement.element.value.images]
+      // ✅ 同步本地響應式陣列，改為 imgs
+      carouselImages.value = [...props.selectedElement.element.value.imgs]
       
       console.log('✓ 輪播圖片已新增，共', carouselImages.value.length, '張')
     } catch (error) {
@@ -2151,17 +2227,18 @@ const addCarouselImage = async () => {
 const removeCarouselImage = (index) => {
   if (!confirm('確定要刪除這張圖片嗎？')) return
   
-  const images = props.selectedElement?.element?.value?.images
-  if (!images) return
+  // ✅ 改為 imgs（後端欄位名稱）
+  const imgs = props.selectedElement?.element?.value?.imgs
+  if (!imgs) return
   
-  // ✅ 標記舊檔案 ID 待刪除
-  const removedImg = images[index]
+  const removedImg = imgs[index]
   if (removedImg?.id) {
     pageEditorStore.markFileForDeletion(removedImg.id)
   }
   
-  images.splice(index, 1)
-  carouselImages.value = [...images]
+  imgs.splice(index, 1)
+  // ✅ 同步本地響應式陣列
+  carouselImages.value = [...imgs]
   
   console.log('✓ 輪播圖片已刪除，剩餘', carouselImages.value.length, '張')
 }
@@ -2183,16 +2260,16 @@ const setCarouselHeight = (height) => {
 
 const updateHeroData = () => {
   if (props.selectedFrame?.data) {
-    props.selectedFrame.data.hero_title = heroTitle.value
-    props.selectedFrame.data.hero_subtitle = heroSubtitle.value
-    props.selectedFrame.data.hero_height = heroHeight.value
-    props.selectedFrame.data.overlay_opacity = overlayOpacity.value
-    props.selectedFrame.data.overlay_color = overlayColor.value
-    props.selectedFrame.data.text_box_border_radius = textBoxBorderRadius.value
-    props.selectedFrame.data.title_color = titleColor.value
-    props.selectedFrame.data.title_font_size = titleFontSize.value
-    props.selectedFrame.data.subtitle_color = subtitleColor.value
-    props.selectedFrame.data.subtitle_font_size = subtitleFontSize.value
+    props.selectedFrame.data.heroTitle = heroTitle.value
+    props.selectedFrame.data.heroSubtitle = heroSubtitle.value
+    props.selectedFrame.data.heroHeight = ensureUnit(heroHeight.value, '600px')
+    props.selectedFrame.data.overlayOpacity = overlayOpacity.value
+    props.selectedFrame.data.overlayColor = overlayColor.value
+    props.selectedFrame.data.textBoxBorderRadius = ensureUnit(textBoxBorderRadius.value, '12px')
+    props.selectedFrame.data.titleColor = titleColor.value
+    props.selectedFrame.data.titleFontSize = ensureUnit(titleFontSize.value, '48px')
+    props.selectedFrame.data.subtitleColor = subtitleColor.value
+    props.selectedFrame.data.subtitleFontSize = ensureUnit(subtitleFontSize.value, '20px')
   }
 }
 
@@ -2210,12 +2287,12 @@ const handleUploadHeroBackground = async () => {
     if (!file) return
     try {
       isUploadingHeroBackground.value = true
-      pageEditorStore.markFileForDeletion(props.selectedFrame?.data?.hero_bg_img_id)
+      pageEditorStore.markFileForDeletion(props.selectedFrame?.data?.heroBgImgId)
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('首圖背景上傳失敗，請稍後再試'); return }
       if (props.selectedFrame?.data) {
-        props.selectedFrame.data.hero_bg_img_id = uploadedFile.id
-        props.selectedFrame.data.hero_bg_img_src = uploadedFile.fileDir
+        props.selectedFrame.data.heroBgImgId = uploadedFile.id
+        props.selectedFrame.data.heroBgImgSrc = uploadedFile.fileUrl
       }
     } catch (error) {
       console.error('❌ 首圖背景上傳失敗:', error)
@@ -2228,6 +2305,19 @@ const handleUploadHeroBackground = async () => {
 }
 
 // ==================== ✅ 輪播牆操作 ====================
+
+const updateCarouselWallSettings = () => {
+  if (props.selectedFrame?.data) {
+    props.selectedFrame.data.carouselWallHeight    = carouselWallHeight.value
+    props.selectedFrame.data.carouselWallAutoPlay = carouselWallAutoPlay.value
+    props.selectedFrame.data.carouselWallInterval  = carouselWallInterval.value
+  }
+}
+
+const setCarouselWallHeight = (height) => {
+  carouselWallHeight.value = height
+  updateCarouselWallSettings()
+}
 
 const handleUploadCarouselWall = async () => {
   const input = document.createElement('input')
@@ -2243,30 +2333,24 @@ const handleUploadCarouselWall = async () => {
       isUploadingCarouselWall.value = true
       console.log(`📤 開始上傳 ${files.length} 張輪播牆圖片...`)
 
-      // ✅ 確保 frame.data 與 caroisel_wall_imgs 陣列存在
       if (!props.selectedFrame.data) props.selectedFrame.data = {}
-      if (!Array.isArray(props.selectedFrame.data.caroisel_wall_imgs)) {
-        props.selectedFrame.data.caroisel_wall_imgs = []
+      if (!Array.isArray(props.selectedFrame.data.caroiselWallImgs)) {
+        props.selectedFrame.data.caroiselWallImgs = []
       }
 
-      // ✅ 依序上傳每張圖片
       for (const file of files) {
         const uploadedFile = await pageEditorStore.uploadImage(file)
         if (!uploadedFile) {
           console.warn(`⚠️ 圖片 ${file.name} 上傳失敗，跳過`)
           continue
         }
-
-        // 新增圖片項目（後端格式：id + src）
-        const newImage = {
+        props.selectedFrame.data.caroiselWallImgs.push({
           id: uploadedFile.id,
-          src: uploadedFile.fileDir
-        }
-        props.selectedFrame.data.caroisel_wall_imgs.push(newImage)
+          src: uploadedFile.fileUrl
+        })
       }
 
-      // ✅ 同步本地響應式陣列
-      carouselWallImages.value = [...props.selectedFrame.data.caroisel_wall_imgs]
+      carouselWallImages.value = [...props.selectedFrame.data.caroiselWallImgs]
 
       console.log('✓ 輪播牆圖片已新增，共', carouselWallImages.value.length, '張')
     } catch (error) {
@@ -2281,10 +2365,9 @@ const handleUploadCarouselWall = async () => {
 
 const removeCarouselWallImage = (index) => {
   if (!confirm('確定要刪除這張圖片嗎？')) return
-  const imgs = props.selectedFrame?.data?.caroisel_wall_imgs
+  const imgs = props.selectedFrame?.data?.caroiselWallImgs
   if (!imgs) return
 
-  // ✅ 標記待刪除
   const removedImg = imgs[index]
   if (removedImg?.id) {
     pageEditorStore.markFileForDeletion(removedImg.id)
@@ -2297,7 +2380,6 @@ const removeCarouselWallImage = (index) => {
 }
 
 // ==================== MAP 元件操作 ====================
-
 const updateMapData = () => {
   if (props.selectedElement?.element?.value) {
     props.selectedElement.element.value.address = mapAddress.value
@@ -2535,7 +2617,7 @@ const setMapZoom = (zoom) => {
     background: #f5f5f5;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
 
@@ -2858,5 +2940,29 @@ const setMapZoom = (zoom) => {
   justify-content: space-between;
   margin-top: 4px;
   span { font-size: 11px; color: #999; }
+}
+
+.font-size-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+
+  .font-size-input {
+    width: 70px;
+    flex-shrink: 0;
+  }
+
+  .font-size-presets {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+
+    .preset-btn {
+      flex: 1;
+      padding: 8px 2px;
+      font-size: 12px;
+    }
+  }
 }
 </style>

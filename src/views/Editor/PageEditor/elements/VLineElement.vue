@@ -4,8 +4,8 @@
       class="element-line"
       :style="{
         borderColor: content.color || '#E0E0E0',
-        borderWidth: content.thickness || '2px',
-        height: content.height || '100px'
+        borderWidth: ensureUnit(content.thickness, '2px'),
+        height: ensureUnit(content.height, '100px')
       }"
     />
   </div>
@@ -22,6 +22,14 @@ const props = defineProps({
     required: true
   }
 })
+
+// ✅ 確保數值自動加上 px 單位
+const ensureUnit = (value, defaultValue) => {
+  if (!value) return defaultValue
+  if (typeof value === 'number') return value + 'px'
+  if (typeof value === 'string' && /^\d+$/.test(value)) return value + 'px'
+  return value
+}
 </script>
 
 <style lang="scss" scoped>

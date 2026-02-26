@@ -1,12 +1,12 @@
 <template>
   <div 
     class="system-frame-wrapper" 
-    :class="{ 'is-selected': isFrameSelected && frame?.is_deletable }"
+    :class="{ 'is-selected': isFrameSelected && frame?.isDeletable }"
     :data-frame-type="frameType"
   >
     <!-- ✅ 刪除系統框架按鈕（只在框架可刪除且被選中時顯示） -->
     <button
-      v-if="isFrameSelected && frame?.is_deletable"
+      v-if="isFrameSelected && frame?.isDeletable"
       class="delete-system-frame-btn"
       @click.stop="handleDeleteFrame"
       title="刪除框架"
@@ -82,7 +82,7 @@
     <EventListBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" />
     
     <!-- 捐款商品 (DONATION_PRODUCT) -->
-    <DonationBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" />
+    <DonationProductBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" />
     
     <!-- 光明燈 (BRIGHT_LAMP) -->
     <AboutBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" />
@@ -110,6 +110,7 @@ import DonationBasemap from './basemap/DonationBasemap.vue'
 import AboutBasemap from './basemap/AboutBasemap.vue'
 import AlbumListBasemap from './basemap/AlbumListBasemap.vue'
 import HeroBannerElement from './elements/HeroBannerElement.vue'
+import DonationProductBasemap from './basemap/DonationProductBasemap.vue'
 
 const props = defineProps({
   frameType: {

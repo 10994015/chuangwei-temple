@@ -74,17 +74,19 @@ let autoplayTimer = null
 
 // 輪播高度
 const carouselHeight = computed(() => {
-  return props.content?.height || 400
+  const height = props.content?.height || 400
+  // ✅ 確保高度有 px 單位
+  if (typeof height === 'number') return height
+  if (typeof height === 'string' && /^\d+$/.test(height)) return parseInt(height)
+  return parseInt(height) || 400
 })
 
 // ✅ 顯示的圖片列表（支援 {id, src} 和純字串兩種格式）
 const displayImages = computed(() => {
   console.log('🖼️ CarouselElement - props.content:', props.content)
-  console.log('🖼️ CarouselElement - content.images:', props.content?.images)
-  
-  // 優先使用 content.images
-  if (props.content?.images && props.content.images.length > 0) {
-    const images = props.content.images
+  console.log('🖼️ CarouselElement - content.imgs:', props.content?.imgs)
+  if (props.content?.imgs && props.content.imgs.length > 0) {
+    const images = props.content.imgs
     
     // ✅ 判斷是新格式 {id, src} 還是舊格式純字串
     const firstImage = images[0]

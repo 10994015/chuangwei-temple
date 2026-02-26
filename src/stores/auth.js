@@ -19,7 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
   const hasSystemPermission = (permissionName, mode = 'Readonly') => {
     if (!systemPermissions.value || systemPermissions.value.length === 0) return false
     
-    const permission = systemPermissions.value.find(p => p.permission_name === permissionName)
+    const permission = systemPermissions.value.find(p => p.permissionName  === permissionName)
     if (!permission) return false
     
     if (mode === 'Readonly' || mode === 'readonly') {
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
     const temple = templeRoles.value.find(t => t.templeId === templeId)
     if (!temple) return false
     
-    const permission = temple.permissions.find(p => p.permission_name === permissionName)
+    const permission = temple.permissions.find(p => p.permissionName  === permissionName)
     if (!permission) return false
     
     if (mode === 'Readonly' || mode === 'readonly') {

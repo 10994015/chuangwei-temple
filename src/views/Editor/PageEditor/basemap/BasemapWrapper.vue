@@ -225,9 +225,9 @@ watch(
   (newBasemap) => {
     if (newBasemap) {
       backgrounds.value = {
-        desktop: newBasemap.bg_pc_img_src,
-        tablet: newBasemap.bg_tablet_img_src,
-        mobile: newBasemap.bg_phone_img_src
+        desktop: newBasemap.bgPcImgSrc,
+        tablet: newBasemap.bgTabletImgSrc,
+        mobile: newBasemap.bgPhoneImgSrc
       }
     }
   },
@@ -283,13 +283,13 @@ const uploadImage = (type) => {
     if (props.basemap) {
       switch (type) {
         case 'desktop':
-          pageEditorStore.markFileForDeletion(props.basemap.bg_pc_img_id)
+          pageEditorStore.markFileForDeletion(props.basemap.bgPcImgId)
           break
         case 'tablet':
-          pageEditorStore.markFileForDeletion(props.basemap.bg_tablet_img_id)
+          pageEditorStore.markFileForDeletion(props.basemap.bgTabletImgId)
           break
         case 'mobile':
-          pageEditorStore.markFileForDeletion(props.basemap.bg_phone_img_id)
+          pageEditorStore.markFileForDeletion(props.basemap.bgPhoneImgId)
           break
       }
     }
@@ -309,22 +309,22 @@ const uploadImage = (type) => {
       console.log(`✓ 底圖背景上傳成功 (${type}):`, uploadedFile)
 
       // 更新本地預覽
-      backgrounds.value[type] = uploadedFile.fileDir
+      backgrounds.value[type] = uploadedFile.fileUrl
 
       // 直接更新 basemap 物件
       if (props.basemap) {
         switch (type) {
           case 'desktop':
-            props.basemap.bg_pc_img_src = uploadedFile.fileDir
-            props.basemap.bg_pc_img_id = uploadedFile.id
+            props.basemap.bgPcImgSrc = uploadedFile.fileUrl
+            props.basemap.bgPcImgId = uploadedFile.id
             break
           case 'tablet':
-            props.basemap.bg_tablet_img_src = uploadedFile.fileDir
-            props.basemap.bg_tablet_img_id = uploadedFile.id
+            props.basemap.bgTabletImgSrc = uploadedFile.fileUrl
+            props.basemap.bgTabletImgId = uploadedFile.id
             break
           case 'mobile':
-            props.basemap.bg_phone_img_src = uploadedFile.fileDir
-            props.basemap.bg_phone_img_id = uploadedFile.id
+            props.basemap.bgPhoneImgSrc = uploadedFile.fileUrl
+            props.basemap.bgPhoneImgId = uploadedFile.id
             break
         }
       }
@@ -333,7 +333,7 @@ const uploadImage = (type) => {
         basemapId: props.basemapId,
         basemap: props.basemap,
         type: type,
-        imageData: uploadedFile.fileDir,
+        imageData: uploadedFile.fileUrl,
         imageId: uploadedFile.id
       })
 
@@ -354,19 +354,19 @@ const clearBackground = (type) => {
   if (props.basemap) {
     switch (type) {
       case 'desktop':
-        pageEditorStore.markFileForDeletion(props.basemap.bg_pc_img_id)
-        props.basemap.bg_pc_img_src = null
-        props.basemap.bg_pc_img_id = null
+        pageEditorStore.markFileForDeletion(props.basemap.bgPcImgId)
+        props.basemap.bgPcImgSrc = null
+        props.basemap.bgPcImgId = null
         break
       case 'tablet':
-        pageEditorStore.markFileForDeletion(props.basemap.bg_tablet_img_id)
-        props.basemap.bg_tablet_img_src = null
-        props.basemap.bg_tablet_img_id = null
+        pageEditorStore.markFileForDeletion(props.basemap.bgTabletImgId)
+        props.basemap.bgTabletImgSrc = null
+        props.basemap.bgTabletImgId = null
         break
       case 'mobile':
-        pageEditorStore.markFileForDeletion(props.basemap.bg_phone_img_id)
-        props.basemap.bg_phone_img_src = null
-        props.basemap.bg_phone_img_id = null
+        pageEditorStore.markFileForDeletion(props.basemap.bgPhoneImgId)
+        props.basemap.bgPhoneImgSrc = null
+        props.basemap.bgPhoneImgId = null
         break
     }
   }
@@ -674,7 +674,6 @@ const clearBackground = (type) => {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  flex-shrink: 0;
 
   &:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; }
 }

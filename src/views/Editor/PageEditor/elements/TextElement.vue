@@ -2,7 +2,7 @@
   <div 
     class="text-element"
     :style="{
-      fontSize: content.fontSize || '16px',
+      fontSize: ensureUnit(content.fontSize, '16px'),
       color: content.color || '#333',
       textAlign: content.align || 'left'
     }"
@@ -22,6 +22,14 @@ const props = defineProps({
     required: true
   }
 })
+
+// ✅ 確保數值自動加上 px 單位
+const ensureUnit = (value, defaultValue) => {
+  if (!value) return defaultValue
+  if (typeof value === 'number') return value + 'px'
+  if (typeof value === 'string' && /^\d+$/.test(value)) return value + 'px'
+  return value
+}
 </script>
 
 <style lang="scss" scoped>

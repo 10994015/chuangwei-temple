@@ -9,7 +9,9 @@
       target="_blank"
       :style="{
         color: content.textColor || '#fff',
-        backgroundColor: content.bgColor || '#E8572A'
+        backgroundColor: content.bgColor || '#E8572A',
+        fontSize: ensureUnit(content.fontSize, '16px'),
+        padding: ensureUnit(content.padding, '12px 32px')
       }"
     >
       {{ content.text || '按鈕文字' }}
@@ -28,6 +30,14 @@ const props = defineProps({
     required: true
   }
 })
+
+// ✅ 確保數值自動加上 px 單位
+const ensureUnit = (value, defaultValue) => {
+  if (!value) return defaultValue
+  if (typeof value === 'number') return value + 'px'
+  if (typeof value === 'string' && /^\d+$/.test(value)) return value + 'px'
+  return value
+}
 </script>
 
 <style lang="scss" scoped>
@@ -38,10 +48,8 @@ const props = defineProps({
 
 .element-button {
   display: inline-block;
-  padding: 12px 32px;
   border-radius: 6px;
   text-decoration: none;
-  font-size: 16px;
   font-weight: 500;
   transition: all 0.3s ease;
   cursor: pointer;

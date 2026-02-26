@@ -287,7 +287,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       contentJson.forEach((basemap, index) => {
         const basemapString = JSON.stringify(basemap)
         const basemapSizeKB = (basemapString.length / 1024).toFixed(2)
-        console.log(`  Basemap ${index} (${basemap.bg_type}):`, basemapSizeKB, 'KB')
+        console.log(`  Basemap ${index} (${basemap.bgType}):`, basemapSizeKB, 'KB')
         
         // 檢查每個 frame
         basemap.frames?.forEach((frame, fIndex) => {
@@ -422,9 +422,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
         // 修正 CAROUSEL_WALL 的數據結構
         if (frame.type === 'CAROUSEL_WALL') {
-          if (!Array.isArray(frame.data.caroisel_wall_imgs)) {
-            frame.data.caroisel_wall_imgs = []
-            console.log('✓ 修正 CAROUSEL_WALL.caroisel_wall_imgs 為空陣列')
+          if (!Array.isArray(frame.data.caroiselWallImgs)) {
+            frame.data.caroiselWallImgs = []
+            console.log('✓ 修正 CAROUSEL_WALL.caroiselWallImgs 為空陣列')
           }
         }
 
@@ -456,7 +456,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         if (frame.type === 'HEADER') {
           if (!Array.isArray(frame.data.tabs)) {
             frame.data.tabs = []
-            console.log('✓ 修正 HEADER.tabs 為空陣列')
+            console.log('✓ 修正 HEADER.tab 為空陣列')
           }
         }
 
@@ -476,9 +476,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
           // 修正 CAROUSEL 元件的數據
           if (element.type === 'CAROUSEL') {
-            if (!Array.isArray(element.value.images)) {
-              element.value.images = []
-              console.log('✓ 修正 CAROUSEL.images 為空陣列')
+            if (!Array.isArray(element.value.imgs)) {
+              element.value.imgs = []
+              console.log('✓ 修正 CAROUSEL.imgs 為空陣列')
             }
             if (typeof element.value.autoPlay !== 'boolean') {
               element.value.autoPlay = true
@@ -593,20 +593,20 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   const updateHeaderLogo = (logoSrc, logoId) => {
     const basemaps = currentPageBasemaps.value
-    const headerBasemap = basemaps.find(b => b.bg_type === 'HEADER')
+    const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
     
     if (headerBasemap?.frames?.[0]) {
       if (!headerBasemap.frames[0].data) {
         headerBasemap.frames[0].data = {}
       }
       
-      // ✅ 更新 logo_img_src 和 logo_img_id
-      headerBasemap.frames[0].data.logo_img_src = logoSrc
-      headerBasemap.frames[0].data.logo_img_id = logoId
+      // ✅ 更新 logoImgUrl 和 logoImgId
+      headerBasemap.frames[0].data.logoImgUrl = logoSrc
+      headerBasemap.frames[0].data.logoImgId = logoId
       
       console.log('✓ Store: Logo 已更新:', {
-        logo_img_src: logoSrc,
-        logo_img_id: logoId
+        logoImgUrl: logoSrc,
+        logoImgId: logoId
       })
     }
   }
@@ -614,7 +614,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   const syncHeaderMenuFromTabs = () => {
     const basemaps = currentPageBasemaps.value
-    const headerBasemap = basemaps.find(b => b.bg_type === 'HEADER')
+    const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
     
     if (headerBasemap?.frames?.[0]) {
       if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
@@ -646,17 +646,17 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     
     // 創建新底圖（使用 API 格式）
     const newBasemap = {
-      bg_sequence: newSequence,
-      bg_pc_img_src: null,
-      bg_pc_img_id: null,
-      bg_tablet_img_src: null,
-      bg_tablet_img_id: null,
-      bg_phone_img_src: null,
-      bg_phone_img_id: null,
-      bg_is_deletable: true,
-      bg_allow_multiple_frames: true,
-      bg_can_change_img: true,
-      bg_type: 'CONTENT',
+      bgSequence: newSequence,
+      bgPcImgSrc: null,
+      bgPcImgId: null,
+      bgTabletImgSrc: null,
+      bgTabletImgId: null,
+      bgPhoneImgSrc: null,
+      bgPhoneImgId: null,
+      bgIsDeletable: true,
+      bgAllowMultipleFrames: true,
+      bgCanChangeImg: true,
+      bgType: 'CONTENT',
       frames: []
     }
     
@@ -679,15 +679,15 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     
     const basemap = basemaps[index]
     
-    if (!basemap.bg_is_deletable) {
+    if (!basemap.bgIsDeletable) {
       console.error('此底圖不可刪除')
       return false
     }
 
     // ✅ 刪除底圖時，標記所有背景圖片 ID 待刪除
-    markFileForDeletion(basemap.bg_pc_img_id)
-    markFileForDeletion(basemap.bg_tablet_img_id)
-    markFileForDeletion(basemap.bg_phone_img_id)
+    markFileForDeletion(basemap.bgPcImgId)
+    markFileForDeletion(basemap.bgTabletImgId)
+    markFileForDeletion(basemap.bgPhoneImgId)
     
     basemaps.splice(index, 1)
     clearSelection()
@@ -709,13 +709,13 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     const basemap = basemaps[index]
     
     // 不允許移動 HEADER 和 FOOTER
-    if (basemap.bg_type === 'HEADER' || basemap.bg_type === 'FOOTER') {
+    if (basemap.bgType === 'HEADER' || basemap.bgType === 'FOOTER') {
       console.error('無法移動系統底圖')
       return false
     }
     
     // 不允許移到 HEADER 上方
-    if (basemaps[index - 1].bg_type === 'HEADER') {
+    if (basemaps[index - 1].bgType === 'HEADER') {
       console.error('無法移動到頁首上方')
       return false
     }
@@ -743,13 +743,13 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     const basemap = basemaps[index]
     
     // 不允許移動 HEADER 和 FOOTER
-    if (basemap.bg_type === 'HEADER' || basemap.bg_type === 'FOOTER') {
+    if (basemap.bgType === 'HEADER' || basemap.bgType === 'FOOTER') {
       console.error('無法移動系統底圖')
       return false
     }
     
     // 不允許移到 FOOTER 下方
-    if (basemaps[index + 1].bg_type === 'FOOTER') {
+    if (basemaps[index + 1].bgType === 'FOOTER') {
       console.error('無法移動到頁尾下方')
       return false
     }
@@ -771,6 +771,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     currentPageSlug.value = null
     pageData.value = {}
     systemFrames.value = {}  // ✅ 重置系統框架
+    locales.value = []
     selected.value = { basemap: null, frame: null, element: null, cell: null }
     pendingDeleteFileIds.value = []  // ✅ 重置待刪除清單
   }
@@ -983,7 +984,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
    * POST /api/tenant/{tid}/web-site/draft-page/file
    * @param {File} file - 要上傳的圖片檔案
    * @param {string} tid - 租戶 ID (可選，不提供時使用 store 中的 tenantId)
-   * @returns {Object|null} 上傳成功返回 { id, fileDir, filename, size }，失敗返回 null
+   * @returns {Object|null} 上傳成功返回 { id, fileUrl, fileName, size }，失敗返回 null
    */
   const uploadImage = async (file, tid = null) => {
     const targetTid = tid || tenantId.value
@@ -1047,15 +1048,15 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         
         console.log('✓ 圖片上傳成功:', {
           id: uploadedFile.id,
-          fileDir: uploadedFile.fileDir,
-          filename: uploadedFile.filename,
+          fileUrl: uploadedFile.fileUrl,
+          fileName: uploadedFile.fileName,
           size: `${(uploadedFile.size / 1024).toFixed(2)} KB`
         })
         
         return {
           id: uploadedFile.id,
-          fileDir: uploadedFile.fileDir,
-          filename: uploadedFile.filename,
+          fileUrl: uploadedFile.fileUrl,
+          fileName: uploadedFile.fileName,
           originalName: uploadedFile.originalName,
           size: uploadedFile.size
         }

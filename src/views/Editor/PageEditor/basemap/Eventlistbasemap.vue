@@ -1,5 +1,5 @@
 <template>
-  <section class="event-list-section">
+  <section class="event-list-section" :class="`device-${device}`">
     <div class="container">
       <!-- 分類標籤 -->
       <div class="category-tabs">
@@ -162,26 +162,28 @@ const props = defineProps({
         image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=800&h=600&fit=crop'
       }
     ]
+  },
+  // ✅ 接收裝置類型
+  device: {
+    type: String,
+    default: 'desktop'
   }
 })
 
 const emit = defineEmits(['view-detail'])
 
 const categories = [
-  { id: 'all', name: '全部' },
-  { id: 'ceremony', name: '慶典法會' },
-  { id: 'prayer', name: '祈福活動' },
-  { id: 'culture', name: '文化活動' },
+  { id: 'all',       name: '全部' },
+  { id: 'ceremony',  name: '慶典法會' },
+  { id: 'prayer',    name: '祈福活動' },
+  { id: 'culture',   name: '文化活動' },
   { id: 'volunteer', name: '志工服務' }
 ]
 
 const selectedCategory = ref('all')
 
 const getTagClass = (tag) => {
-  const tagMap = {
-    '熱門': 'hot',
-    '推薦': 'recommended'
-  }
+  const tagMap = { '熱門': 'hot', '推薦': 'recommended' }
   return tagMap[tag] || 'default'
 }
 
@@ -211,6 +213,7 @@ const viewEventDetail = (event) => {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid #e5e5e5;
+  flex-wrap: wrap;
 }
 
 .category-tab {
@@ -223,19 +226,12 @@ const viewEventDetail = (event) => {
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
-  
-  &:hover {
-    background: #f5f5f5;
-    color: #333;
-  }
-  
-  &.active {
-    background: #8b7355;
-    color: #fff;
-  }
+
+  &:hover  { background: #f5f5f5; color: #333; }
+  &.active { background: #8b7355; color: #fff; }
 }
 
-// 活動 Grid
+// 活動 Grid — 桌機預設 3 欄
 .events-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -253,10 +249,7 @@ const viewEventDetail = (event) => {
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-
-    .image {
-      transform: scale(1.05);
-    }
+    .image { transform: scale(1.05); }
   }
 }
 
@@ -291,13 +284,8 @@ const viewEventDetail = (event) => {
   color: #ffffff;
   backdrop-filter: blur(10px);
 
-  &.hot {
-    background: #dc3545;
-  }
-
-  &.recommended {
-    background: #007bff;
-  }
+  &.hot         { background: #dc3545; }
+  &.recommended { background: #007bff; }
 }
 
 .event-info {
@@ -327,9 +315,7 @@ const viewEventDetail = (event) => {
   color: #7f8c8d;
   line-height: 1.5;
 
-  span {
-    flex: 1;
-  }
+  span { flex: 1; }
 }
 
 .detail-icon {
@@ -340,32 +326,91 @@ const viewEventDetail = (event) => {
   margin-top: 2px;
 }
 
-// 響應式設計
-@media (max-width: 1200px) {
-  .events-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+// ==================== ✅ device prop 響應式（取代 media query）====================
 
-@media (max-width: 900px) {
+// 平板：2 欄
+.event-list-section.device-tablet {
+  .container {
+    padding: 0 1.25rem;
+  }
+
   .events-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 1rem;
   }
-}
 
-@media (max-width: 600px) {
-  .events-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .category-tabs {
-    flex-wrap: wrap;
-  }
-  
   .category-tab {
     font-size: 14px;
     padding: 0.6rem 1.2rem;
+  }
+
+  .event-title {
+    font-size: 15px;
+    min-height: auto;
+  }
+
+  .event-info {
+    padding: 1.25rem;
+  }
+}
+
+// 手機：單欄
+.event-list-section.device-mobile {
+  padding: 1rem 0 2rem;
+
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .category-tabs {
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .category-tab {
+    font-size: 13px;
+    padding: 0.5rem 1rem;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .event-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  .event-info {
+    padding: 1rem;
+  }
+
+  .event-title {
+    font-size: 14px;
+    font-weight: 600;
+    min-height: auto;
+    margin-bottom: 0.75rem;
+  }
+
+  .event-detail {
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  .detail-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .event-tag {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .event-tags {
+    top: 8px;
+    right: 8px;
   }
 }
 </style>

@@ -411,7 +411,10 @@ const elements = ref([
   { id: 'v-line', name: '直線', icon: '│', color: '#6b7280', type: 'v-line', dragType: 'element' },
   { id: 'carousel', name: '輪播圖片', icon: '🎠', color: '#ec4899', type: 'carousel', dragType: 'element' },
   { id: 'map', name: 'Google地圖', icon: '🗺️', color: '#06b6d4', type: 'map', dragType: 'element' },
-  { id: 'album', name: '相簿預覽', icon: '📷', color: '#8b5cf6', type: 'album', dragType: 'element' }
+  { id: 'album', name: '相簿卡片', icon: '📷', color: '#8b5cf6', type: 'album', dragType: 'element' },
+  { id: 'product-card', name: '商品卡片', icon: '🛍️', color: '#f97316', type: 'product-card', dragType: 'element' },
+  { id: 'service-card', name: '服務卡片', icon: '🙏', color: '#14b8a6', type: 'service-card', dragType: 'element' },
+  { id: 'event-card', name: '活動卡片', icon: '🎉', color: '#a855f7', type: 'event-card', dragType: 'element' }
 ])
 
 // ==================== 方法 ====================

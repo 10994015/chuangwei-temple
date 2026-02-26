@@ -157,7 +157,7 @@ const loadWebsiteSettings = async () => {
       websiteSettings.value = settings
       
       // ✅ GET API 回傳 snake_case (front_family)，需要兼容處理
-      const fontFamily = settings.front_family || settings.frontFamily || 'noto-sans-tc'
+      const fontFamily = settings.frontFamily || 'noto-sans-tc'
       
       console.log('✓ 網站字型:', fontFamily, '(原始欄位:', settings.front_family || settings.frontFamily, ')')
       
@@ -227,7 +227,8 @@ onMounted(async () => {
     pageEditorStore.error = '無法載入頁面：缺少宮廟 ID'
     return
   }
-  
+  pageEditorStore.resetStore()
+
   pageEditorStore.setTenantId(templeId)
   
   try {

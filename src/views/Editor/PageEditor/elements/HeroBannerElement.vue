@@ -1,8 +1,8 @@
 <template>
   <div 
     class="hero-banner"
-    :class="{ 'is-selected': isSelected }"
-    @click.stop="handleClick"
+    :class="{ 'is-selected': isSelected, 'preview-mode': !isEditMode }"
+    @click.stop="isEditMode ? handleClick() : null"
   >
     <div class="hero-container" :style="heroStyle">
       <!-- 半透明遮罩層 -->
@@ -26,16 +26,15 @@
             {{ heroSubtitle }}
           </p>
           
-          <!-- 如果沒有標題和副標題，顯示提示文字 -->
-          <div v-if="!heroTitle && !heroSubtitle" class="placeholder-text">
+          <div v-if="!heroTitle && !heroSubtitle && isEditMode" class="placeholder-text">
             <p>點擊首圖以編輯內容</p>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- ✅ 編輯提示層 -->
-    <div class="edit-hint" v-if="!heroTitle && !heroSubtitle">
+    <!-- 編輯提示層：僅編輯模式且無內容時顯示 -->
+    <div class="edit-hint" v-if="isEditMode && !heroTitle && !heroSubtitle">
       <span>點擊此處編輯首圖</span>
     </div>
   </div>
@@ -43,6 +42,9 @@
 
 <script setup>
 import { computed } from 'vue'
+
+// ✅ 無圖時的假圖（廟宇風格）
+const PLACEHOLDER_BG = 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=600&fit=crop'
 
 const props = defineProps({
   frameData: {
@@ -56,149 +58,122 @@ const props = defineProps({
   isSelected: {
     type: Boolean,
     default: false
+  },
+  // ✅ 是否為編輯模式（預覽時傳 false）
+  isEditMode: {
+    type: Boolean,
+    default: true
   }
 })
 
 const emit = defineEmits(['select-frame'])
 
-// ✅ 處理點擊事件
 const handleClick = () => {
-  console.log('🖼️ 點擊首圖框架')
   emit('select-frame', props.frame)
 }
 
-// 背景圖片
+// ✅ 工具函數：優先 camelCase（PropsPanel 寫入），fallback 到 snake_case（API 回傳）
+// 使用 ?? 而非 || 避免空字串、0 等 falsy 值被錯誤覆蓋
+const fd = (camel, snake, fallback) => {
+  const val = props.frameData[camel] ?? props.frameData[snake]
+  return val !== undefined && val !== null ? val : fallback
+}
+
 const backgroundImage = computed(() => {
-  return props.frameData.hero_bg_img_src || null
+  const src = props.frameData.heroBgImgSrc ?? props.frameData.hero_bg_img_src
+  return src || PLACEHOLDER_BG
 })
 
-// 標題
 const heroTitle = computed(() => {
-  return props.frameData.hero_title || ''
+  const v = props.frameData.heroTitle ?? props.frameData.hero_title
+  return v ?? ''
 })
-
-// 副標題
 const heroSubtitle = computed(() => {
-  return props.frameData.hero_subtitle || ''
+  const v = props.frameData.heroSubtitle ?? props.frameData.hero_subtitle
+  return v ?? ''
 })
 
-// 遮罩透明度 (0-100)
 const overlayOpacity = computed(() => {
-  return props.frameData.overlay_opacity !== undefined 
-    ? props.frameData.overlay_opacity / 100 
-    : 0.4
+  const val = props.frameData.overlayOpacity ?? props.frameData.overlay_opacity
+  return val !== undefined && val !== null ? val / 100 : 0.4
 })
 
-// 遮罩顏色
-const overlayColor = computed(() => {
-  return props.frameData.overlay_color || '#000000'
-})
+const overlayColor = computed(() =>
+  fd('overlayColor', 'overlay_color', '#000000')
+)
+const textBoxBorderRadius = computed(() =>
+  fd('textBoxBorderRadius', 'text_box_border_radius', '12px')
+)
+const titleColor = computed(() =>
+  fd('titleColor', 'title_color', '#ffffff')
+)
+const titleFontSize = computed(() =>
+  fd('titleFontSize', 'title_font_size', '48px')
+)
+const subtitleColor = computed(() =>
+  fd('subtitleColor', 'subtitle_color', '#eeeeee')
+)
+const subtitleFontSize = computed(() =>
+  fd('subtitleFontSize', 'subtitle_font_size', '20px')
+)
 
-// ✅ 文字框背景顏色 - 固定透明
-const textBoxBgColor = computed(() => {
-  return 'transparent'
-})
+const heroStyle = computed(() => ({
+  minHeight: fd('heroHeight', 'hero_height', '600px'),
+  backgroundImage: `url(${backgroundImage.value})`
+}))
 
-// 文字框圓角
-const textBoxBorderRadius = computed(() => {
-  return props.frameData.text_box_border_radius || '12px'
-})
+const overlayStyle = computed(() => ({
+  backgroundColor: overlayColor.value,
+  opacity: overlayOpacity.value
+}))
 
-// 標題顏色
-const titleColor = computed(() => {
-  return props.frameData.title_color || '#333333'
-})
+const textBoxStyle = computed(() => ({
+  backgroundColor: 'transparent',
+  borderRadius: textBoxBorderRadius.value
+}))
 
-// 標題字體大小
-const titleFontSize = computed(() => {
-  return props.frameData.title_font_size || '48px'
-})
+const titleStyle = computed(() => ({
+  color: titleColor.value,
+  fontSize: titleFontSize.value
+}))
 
-// 副標題顏色
-const subtitleColor = computed(() => {
-  return props.frameData.subtitle_color || '#666666'
-})
-
-// 副標題字體大小
-const subtitleFontSize = computed(() => {
-  return props.frameData.subtitle_font_size || '20px'
-})
-
-// Hero 容器樣式
-const heroStyle = computed(() => {
-  const style = {
-    minHeight: props.frameData.hero_height || '600px'
-  }
-  
-  if (backgroundImage.value) {
-    style.backgroundImage = `url(${backgroundImage.value})`
-  }
-  
-  return style
-})
-
-// 遮罩樣式
-const overlayStyle = computed(() => {
-  return {
-    backgroundColor: overlayColor.value,
-    opacity: overlayOpacity.value
-  }
-})
-
-// 文字框樣式
-const textBoxStyle = computed(() => {
-  return {
-    backgroundColor: textBoxBgColor.value,
-    borderRadius: textBoxBorderRadius.value
-  }
-})
-
-// 標題樣式
-const titleStyle = computed(() => {
-  return {
-    color: titleColor.value,
-    fontSize: titleFontSize.value
-  }
-})
-
-// 副標題樣式
-const subtitleStyle = computed(() => {
-  return {
-    color: subtitleColor.value,
-    fontSize: subtitleFontSize.value
-  }
-})
+const subtitleStyle = computed(() => ({
+  color: subtitleColor.value,
+  fontSize: subtitleFontSize.value
+}))
 </script>
 
 <style lang="scss" scoped>
 .hero-banner {
   width: 100%;
   position: relative;
-  cursor: pointer;
   transition: all 0.2s;
-  
-  &:hover {
-    box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.2);
-    
-    .edit-hint {
-      opacity: 1;
+
+  // 編輯模式才有 hover 效果
+  &:not(.preview-mode) {
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.2);
+      .edit-hint { opacity: 1; }
+    }
+
+    &.is-selected {
+      box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.5);
+      .edit-hint { opacity: 1; }
     }
   }
-  
-  &.is-selected {
-    box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.5);
-    
-    .edit-hint {
-      opacity: 1;
-    }
+
+  // 預覽模式：無 hover、無邊框、無游標變化
+  &.preview-mode {
+    cursor: default;
+    pointer-events: none;
   }
 }
 
-// ✅ 編輯提示層
 .edit-hint {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 20px; right: 20px;
   background: rgba(232, 87, 42, 0.9);
   color: #fff;
   padding: 8px 16px;
@@ -209,7 +184,7 @@ const subtitleStyle = computed(() => {
   transition: opacity 0.2s;
   pointer-events: none;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .hero-container {
@@ -222,24 +197,16 @@ const subtitleStyle = computed(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #f5f5f5;  // 沒有背景圖時的預設顏色
   overflow: hidden;
 }
 
-// 半透明遮罩層
 .hero-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #000;
-  opacity: 0.4;
+  inset: 0;
   pointer-events: none;
   z-index: 1;
 }
 
-// 文字內容區
 .hero-content {
   position: relative;
   z-index: 2;
@@ -251,100 +218,57 @@ const subtitleStyle = computed(() => {
   justify-content: center;
 }
 
-// 文字框
 .text-box {
-  background: transparent;  // ✅ 改為透明
+  background: transparent;
   padding: 60px 80px;
   border-radius: 12px;
   text-align: center;
   max-width: 800px;
   width: 100%;
-  // ✅ 移除 box-shadow 和 backdrop-filter
 }
 
-// 標題
 .hero-title {
   font-size: 48px;
   font-weight: 700;
-  color: #333;
+  color: #fff;
   margin: 0 0 20px;
   line-height: 1.2;
 }
 
-// 副標題
 .hero-subtitle {
   font-size: 20px;
-  color: #666;
+  color: #eee;
   margin: 0;
   line-height: 1.6;
 }
 
-// 提示文字
 .placeholder-text {
-  color: #999;
+  color: #ccc;
   font-size: 16px;
   font-style: italic;
-  
-  p {
-    margin: 0;
-  }
+  p { margin: 0; }
 }
 
-// 響應式設計
+/* ==================== 響應式（media query 保留，因為這個是 element 不是 basemap）==================== */
+
 @media (max-width: 1024px) {
-  .text-box {
-    padding: 50px 60px;
-    max-width: 700px;
-  }
-  
-  .hero-title {
-    font-size: 40px;
-  }
-  
-  .hero-subtitle {
-    font-size: 18px;
-  }
+  .text-box { padding: 50px 60px; max-width: 700px; }
+  .hero-title { font-size: 40px; }
+  .hero-subtitle { font-size: 18px; }
 }
 
 @media (max-width: 768px) {
-  .hero-container {
-    min-height: 500px;
-  }
-  
-  .hero-content {
-    padding: 0 20px;
-  }
-  
-  .text-box {
-    padding: 40px 30px;
-  }
-  
-  .hero-title {
-    font-size: 32px;
-    margin-bottom: 16px;
-  }
-  
-  .hero-subtitle {
-    font-size: 16px;
-  }
+  .hero-container { min-height: 500px; }
+  .hero-content { padding: 0 20px; }
+  .text-box { padding: 40px 30px; }
+  .hero-title { font-size: 32px; margin-bottom: 16px; }
+  .hero-subtitle { font-size: 16px; }
 }
 
 @media (max-width: 480px) {
-  .hero-container {
-    min-height: 400px;
-  }
-  
-  .text-box {
-    padding: 30px 20px;
-  }
-  
-  .hero-title {
-    font-size: 24px;
-    margin-bottom: 12px;
-  }
-  
-  .hero-subtitle {
-    font-size: 14px;
-  }
+  .hero-container { min-height: 400px; }
+  .text-box { padding: 30px 20px; }
+  .hero-title { font-size: 24px; margin-bottom: 12px; }
+  .hero-subtitle { font-size: 14px; }
 }
 </style>

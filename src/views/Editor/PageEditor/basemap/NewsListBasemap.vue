@@ -1,5 +1,5 @@
 <template>
-  <section class="news-list-section">
+  <section class="news-list-section" :class="`device-${device}`">
     <div class="container">
       <!-- 分類標籤 -->
       <div class="category-tabs">
@@ -145,37 +145,30 @@ const props = defineProps({
   pageSize: {
     type: Number,
     default: 5
+  },
+  // ✅ 接收裝置類型
+  device: {
+    type: String,
+    default: 'desktop'
   }
 })
 
 const emit = defineEmits(['view-detail'])
 
 const categories = [
-  { id: 'all', name: '全部' },
-  { id: 'festival', name: '節日慶典' },
-  { id: 'notice', name: '法會通知' },
+  { id: 'all',          name: '全部' },
+  { id: 'festival',     name: '節日慶典' },
+  { id: 'notice',       name: '法會通知' },
   { id: 'announcement', name: '活動公告' }
 ]
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)
-const totalPages = ref(2) // 模擬分頁
+const totalPages = ref(2)
 
-const goToPage = (page) => {
-  currentPage.value = page
-}
-
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
+const goToPage = (page) => { currentPage.value = page }
+const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
 
 const viewNewsDetail = (news) => {
   console.log('查看消息詳情:', news)
@@ -203,6 +196,7 @@ const viewNewsDetail = (news) => {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid #e5e5e5;
+  flex-wrap: wrap;
 }
 
 .category-tab {
@@ -215,16 +209,9 @@ const viewNewsDetail = (news) => {
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
-  
-  &:hover {
-    background: #f5f5f5;
-    color: #333;
-  }
-  
-  &.active {
-    background: #8b7355;
-    color: #fff;
-  }
+
+  &:hover  { background: #f5f5f5; color: #333; }
+  &.active { background: #8b7355; color: #fff; }
 }
 
 // 消息列表
@@ -262,17 +249,9 @@ const viewNewsDetail = (news) => {
   font-weight: 500;
   flex-shrink: 0;
 
-  &.festival {
-    background: #8b6f47;
-  }
-
-  &.notice {
-    background: #a0826d;
-  }
-
-  &.announcement {
-    background: #b8956a;
-  }
+  &.festival     { background: #8b6f47; }
+  &.notice       { background: #a0826d; }
+  &.announcement { background: #b8956a; }
 }
 
 .news-content {
@@ -286,10 +265,8 @@ const viewNewsDetail = (news) => {
   margin-bottom: 0.5rem;
   color: #333;
   transition: color 0.2s;
-  
-  .news-item:hover & {
-    color: #8b7355;
-  }
+
+  .news-item:hover & { color: #8b7355; }
 }
 
 .news-description {
@@ -317,6 +294,7 @@ const viewNewsDetail = (news) => {
   gap: 0.5rem;
   padding-top: 2rem;
   border-top: 1px solid #e5e5e5;
+  flex-wrap: wrap;
 }
 
 .page-btn {
@@ -329,61 +307,111 @@ const viewNewsDetail = (news) => {
   color: #666;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover:not(:disabled):not(.active) {
     background: #f5f5f5;
     border-color: #bbb;
   }
-  
+
   &.active {
     background: #8b7355;
     color: #fff;
     border-color: #8b7355;
     font-weight: 500;
   }
-  
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  
-  &.prev,
-  &.next {
-    min-width: auto;
-  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &.prev, &.next { min-width: auto; }
 }
 
-// 響應式設計
-@media (max-width: 768px) {
-  .news-item {
-    flex-direction: column;
-    gap: 1rem;
+// ==================== ✅ device prop 響應式（取代 media query）====================
+
+// 平板
+.news-list-section.device-tablet {
+  .container {
+    padding: 0 1.25rem;
   }
-  
-  .news-tag {
-    align-self: flex-start;
-  }
-  
-  .news-date {
-    align-self: flex-start;
-  }
-  
-  .category-tabs {
-    flex-wrap: wrap;
-  }
-  
+
   .category-tab {
     font-size: 14px;
     padding: 0.6rem 1.2rem;
   }
-  
-  .pagination {
-    flex-wrap: wrap;
+
+  .news-item {
+    gap: 1.25rem;
+    padding: 1.25rem;
   }
-  
+
+  .news-title {
+    font-size: 16px;
+  }
+
   .page-btn {
     min-width: 60px;
     padding: 0.6rem 0.8rem;
+    font-size: 13px;
+  }
+}
+
+// 手機
+.news-list-section.device-mobile {
+  padding: 1rem 0 2rem;
+
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .category-tabs {
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .category-tab {
+    font-size: 13px;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .news-list {
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  // 手機版改為垂直堆疊
+  .news-item {
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1rem;
+
+    &:hover {
+      transform: none; // 手機不做 translateX
+    }
+  }
+
+  .news-tag {
+    align-self: flex-start;
+    font-size: 12px;
+    padding: 0.3rem 0.8rem;
+  }
+
+  .news-title {
+    font-size: 15px;
+    margin-bottom: 0.4rem;
+  }
+
+  .news-description {
+    font-size: 13px;
+  }
+
+  .news-date {
+    font-size: 12px;
+    color: #bbb;
+  }
+
+  .page-btn {
+    min-width: 50px;
+    padding: 0.5rem 0.7rem;
     font-size: 13px;
   }
 }

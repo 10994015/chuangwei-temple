@@ -1,5 +1,5 @@
 <template>
-  <section class="news-section">
+  <section class="news-section" :class="`device-${device}`">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">最新消息</h2>
@@ -25,8 +25,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
 const props = defineProps({
   newsList: {
     type: Array,
@@ -72,6 +70,11 @@ const props = defineProps({
         date: '2024-11-28'
       }
     ]
+  },
+  // ✅ 接收裝置類型
+  device: {
+    type: String,
+    default: 'desktop'
   }
 })
 </script>
@@ -106,10 +109,7 @@ const props = defineProps({
   text-decoration: none;
   font-size: 14px;
   transition: color 0.3s;
-
-  &:hover {
-    color: #8b6f47;
-  }
+  &:hover { color: #8b6f47; }
 }
 
 .news-list {
@@ -127,10 +127,7 @@ const props = defineProps({
   gap: 1.5rem;
   transition: box-shadow 0.3s;
   cursor: pointer;
-
-  &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
+  &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 }
 
 .news-tag {
@@ -140,23 +137,14 @@ const props = defineProps({
   white-space: nowrap;
   color: #fff;
   font-weight: 500;
+  flex-shrink: 0;
 
-  &.festival {
-    background: #8b6f47;
-  }
-
-  &.notice {
-    background: #a0826d;
-  }
-
-  &.announcement {
-    background: #b8956a;
-  }
+  &.festival     { background: #8b6f47; }
+  &.notice       { background: #a0826d; }
+  &.announcement { background: #b8956a; }
 }
 
-.news-content {
-  flex: 1;
-}
+.news-content { flex: 1; min-width: 0; }
 
 .news-title {
   font-size: 18px;
@@ -175,5 +163,51 @@ const props = defineProps({
   color: #999;
   font-size: 14px;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ==================== ✅ device prop 響應式 ==================== */
+
+/* 平板 */
+.news-section.device-tablet {
+  padding: 2.5rem 0;
+
+  .container { padding: 0 1.25rem; }
+
+  .section-title { font-size: 24px; }
+
+  .news-item { padding: 1.25rem; gap: 1rem; }
+
+  .news-title { font-size: 16px; }
+
+  .news-description { font-size: 13px; }
+}
+
+/* 手機：垂直堆疊 */
+.news-section.device-mobile {
+  padding: 2rem 0;
+
+  .container { padding: 0 0.75rem; }
+
+  .section-title { font-size: 20px; }
+
+  .news-list { gap: 0.75rem; }
+
+  .news-item {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    &:hover { transform: none; }
+  }
+
+  .news-tag {
+    align-self: flex-start;
+    font-size: 12px;
+    padding: 0.3rem 0.8rem;
+  }
+
+  .news-title       { font-size: 15px; margin-bottom: 0.4rem; }
+  .news-description { font-size: 13px; }
+  .news-date        { font-size: 12px; color: #bbb; }
 }
 </style>

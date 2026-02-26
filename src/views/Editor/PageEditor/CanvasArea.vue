@@ -92,7 +92,7 @@ const isBasemapSelected = (basemap) => {
 }
 
 const handleBasemapClick = (basemap) => {
-  console.log('點擊底圖:', basemap.bg_type)
+  console.log('點擊底圖:', basemap.bgType)
   emit('select-basemap', basemap)
 }
 
@@ -154,7 +154,7 @@ const handleDragOver = (event, basemap) => {
   event.preventDefault()
   event.stopPropagation()
   
-  const basemapId = `${basemap.bg_type}-${basemap.bg_sequence}`
+  const basemapId = `${basemap.bgType}-${basemap.bgSequence}`
   
   // 預設允許放置
   event.dataTransfer.dropEffect = 'copy'
@@ -282,7 +282,7 @@ const isSystemFrame = (frame) => {
 
 // 獲取底圖 ID（用於 key）
 const getBasemapKey = (basemap, index) => {
-  return `${basemap.bg_type}-${basemap.bg_sequence}-${index}`
+  return `${basemap.bgType}-${basemap.bgSequence}-${index}`
 }
 </script>
 
@@ -295,9 +295,9 @@ const getBasemapKey = (basemap, index) => {
           :index="index"
           :basemap-id="`basemap-${index}`"
           :basemap="basemap"
-          :is-footer="basemap.bg_type === 'FOOTER'"
-          :is-header="basemap.bg_type === 'HEADER'"
-          :is-deletable="basemap.bg_is_deletable"
+          :is-footer="basemap.bgType === 'FOOTER'"
+          :is-header="basemap.bgType === 'HEADER'"
+          :is-deletable="basemap.bgIsDeletable"
           :total-basemaps="basemaps.length"
           @add-basemap="handleAddBasemap"
           @delete-basemap="() => handleDeleteBasemap(index)"
@@ -308,12 +308,12 @@ const getBasemapKey = (basemap, index) => {
           <div 
             class="basemap-with-frames"
             :class="{ 
-              'drag-over': dragOverBasemap === `${basemap.bg_type}-${basemap.bg_sequence}`,
+              'drag-over': dragOverBasemap === `${basemap.bgType}-${basemap.bgSequence}`,
               'has-frame': basemap.frames && basemap.frames.length > 0,
               'is-selected': isBasemapSelected(basemap)
             }"
             :style="{
-              backgroundImage: basemap.bg_pc_img_src ? `url(${basemap.bg_pc_img_src})` : 'none'
+              backgroundImage: basemap.bgPcImgSrc ? `url(${basemap.bgPcImgSrc})` : 'none'
             }"
             @dragover="handleDragOver($event, basemap)"
             @dragleave="handleDragLeave"
@@ -332,9 +332,9 @@ const getBasemapKey = (basemap, index) => {
               v-if="!basemap.frames || basemap.frames.length === 0" 
               class="blank-basemap"
               :class="{ 
-                'drag-over': dragOverBasemap === `${basemap.bg_type}-${basemap.bg_sequence}`,
+                'drag-over': dragOverBasemap === `${basemap.bgType}-${basemap.bgSequence}`,
                 'is-selected': isBasemapSelected(basemap),
-                'has-bg': !!basemap.bg_pc_img_src
+                'has-bg': !!basemap.bgPcImgSrc
               }"
               @click="handleBasemapClick(basemap)"
             >
@@ -342,7 +342,7 @@ const getBasemapKey = (basemap, index) => {
                 <div class="blank-icon">📄</div>
                 <p class="blank-text">空白底圖</p>
                 <p class="blank-hint">從左側拖曳框架至此處</p>
-                <p class="blank-note" v-if="!basemap.bg_allow_multiple_frames">
+                <p class="blank-note" v-if="!basemap.bgAllowMultipleFrames">
                   此底圖只允許一個框架
                 </p>
                 <p class="blank-note" v-else>
@@ -357,7 +357,7 @@ const getBasemapKey = (basemap, index) => {
               <SystemFrame 
                 v-if="isSystemFrame(frame)"
                 :frame-type="frame.type"
-                :frame-data="frame.data || {}"
+                :frame-data="frame.data"
                 :frame="frame"
                 :selected-element="selectedElement"
                 :selected-frame="selectedFrame"

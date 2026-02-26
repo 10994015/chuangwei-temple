@@ -12,7 +12,7 @@
   >
     <!-- ✅ 刪除框架按鈕（只在框架被選中且沒有元件時顯示） -->
     <button
-      v-if="isFrameSelected && !hasAnyElement && frame.is_deletable"
+      v-if="isFrameSelected && !hasAnyElement && frame.isDeletable"
       class="delete-frame-btn"
       @click.stop="handleDeleteFrame"
       title="刪除框架"
@@ -22,20 +22,21 @@
 
     <!-- ✅ 新增 container 來限制內容最大寬度，支持動態寬度 -->
     <div class="frame-container" :style="frameContainerStyle">
-      <!-- 根據框架佈局渲染格子和元件 -->
-      <div class="frame-grid" :style="gridStyle">
-        <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
-          <!-- 渲染格子 -->
-          <div 
+
+      <!-- ✅ 雙層框架：兩排各自獨立，高度互不影響 -->
+      <template v-if="isDoubleRowLayout">
+        <!-- 第一排 -->
+        <div class="double-row" :style="doubleRowStyle">
+          <div
+            v-for="(element, index) in doubleRowSplit.row1"
+            :key="`row1-cell-${index}`"
             class="grid-cell"
             :class="{ 
               'has-element': element && element.type,
               'is-selected': isElementSelected(index) || isCellSelected(index),
               'empty-cell': !element || !element.type
             }"
-            :style="{
-              padding: getCellPadding(element)
-            }"
+            :style="{ padding: getCellPadding(element) }"
             @click.stop="handleCellClick(index, element)"
             @dragover="handleDragOver($event, index)"
             @dragleave="handleDragLeave"
@@ -53,8 +54,15 @@
                   :style="getElementStyle(element)"
                 />
                 <div v-else class="placeholder-image">
-                  <span>🖼️ 圖片</span>
-                  <p>請在右側上傳圖片</p>
+                  <img
+                    src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop"
+                    alt="placeholder"
+                    class="placeholder-img"
+                  />
+                  <div class="placeholder-overlay">
+                    <span>🖼️</span>
+                    <p>請在右側上傳圖片</p>
+                  </div>
                 </div>
               </div>
 
@@ -97,15 +105,360 @@
               <!-- CAROUSEL 元件 -->
               <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
                 <CarouselElement 
+                  :content="element.value"
+                  :element="element"
+                  :key="`carousel-r1-${index}-${element.value?.imgs?.length || 0}`"
+                />
+              </div>
+
+              <!-- MAP 元件 -->
+              <div v-else-if="element.type === 'MAP'" class="element-map">
+                <MapElement 
                   :content="{
-                    images: element.value?.images || [],
-                    autoPlay: element.value?.autoPlay !== false,
-                    interval: element.value?.interval || 3000,
-                    height: element.value?.height || 400
+                    address: element.value?.address || '',
+                    lat: element.value?.lat || 25.033,
+                    lng: element.value?.lng || 121.565,
+                    zoom: element.value?.zoom || 15
                   }"
                   :element="element"
-                  :key="`carousel-${index}-${element.value?.images?.length || 0}-${element.value?.images?.[element.value.images.length - 1]?.id || 'empty'}`"
-                  @vue:mounted="console.log('🎪 CAROUSEL mounted, element.value:', element.value)"
+                  :key="`map-r1-${index}-${element.value?.lat}-${element.value?.lng}`"
+                />
+              </div>
+
+              <!-- ALBUM 元件 -->
+              <div v-else-if="element.type === 'ALBUM'" class="element-card-wrapper">
+                <AlbumCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '相簿封面',
+                    title: element.value?.title || '相簿標題',
+                    description: element.value?.description || ''
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- PRODUCT_CARD 商品卡片 -->
+              <div v-else-if="element.type === 'PRODUCT_CARD'" class="element-card-wrapper">
+                <ProductCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '法會活動',
+                    title: element.value?.title || '商品標題',
+                    date: element.value?.date || '2024-08-22'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- SERVICE_CARD 服務卡片 -->
+              <div v-else-if="element.type === 'SERVICE_CARD'" class="element-card-wrapper">
+                <ServiceCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '祈福服務',
+                    title: element.value?.title || '服務標題',
+                    date: element.value?.date || '2024-08-22'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- EVENT_CARD 活動卡片 -->
+              <div v-else-if="element.type === 'EVENT_CARD'" class="element-card-wrapper">
+                <EventCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '法會活動',
+                    title: element.value?.title || '中元普渡法會',
+                    description: element.value?.description || '2024年中元普渡法會活動紀錄'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- 未知類型 -->
+              <div v-else class="element-unknown">
+                <span>未知元件：{{ element.type }}</span>
+              </div>
+
+              <!-- 刪除按鈕 -->
+              <button 
+                class="delete-element-btn"
+                @click.stop="handleDeleteElement(index)"
+                title="刪除元件"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- 沒有元件：顯示空格子 -->
+            <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === index }">
+              <span class="drop-hint">📦 拖曳元件至此</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第二排 -->
+        <div class="double-row" :style="doubleRowStyle">
+          <div
+            v-for="(element, rIndex) in doubleRowSplit.row2"
+            :key="`row2-cell-${rIndex}`"
+            class="grid-cell"
+            :class="{ 
+              'has-element': element && element.type,
+              'is-selected': isElementSelected(doubleLayoutCols + rIndex) || isCellSelected(doubleLayoutCols + rIndex),
+              'empty-cell': !element || !element.type
+            }"
+            :style="{ padding: getCellPadding(element) }"
+            @click.stop="handleCellClick(doubleLayoutCols + rIndex, element)"
+            @dragover="handleDragOver($event, doubleLayoutCols + rIndex)"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop($event, doubleLayoutCols + rIndex)"
+          >
+            <!-- 有元件：顯示元件內容 -->
+            <div v-if="element && element.type" class="element-content">
+              <!-- IMG 元件 -->
+              <div v-if="element.type === 'IMG'" class="element-image" :style="getImageContainerStyle(element)">
+                <img 
+                  v-if="element.value?.src" 
+                  :src="element.value.src" 
+                  :alt="element.value?.alt || '圖片'"
+                  class="element-img"
+                  :style="getElementStyle(element)"
+                />
+                <div v-else class="placeholder-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop"
+                    alt="placeholder"
+                    class="placeholder-img"
+                  />
+                  <div class="placeholder-overlay">
+                    <span>🖼️</span>
+                    <p>請在右側上傳圖片</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TEXT 元件 -->
+              <div 
+                v-else-if="element.type === 'TEXT'" 
+                class="element-text"
+                :style="getElementStyle(element)"
+                v-html="element.value?.text || '文字內容'"
+              ></div>
+
+              <!-- BUTTON 元件 -->
+              <div v-else-if="element.type === 'BUTTON'" class="element-button">
+                <a 
+                  :href="element.value?.url || '#'" 
+                  class="button-link"
+                  :style="getButtonStyle(element)"
+                  @click.prevent
+                >
+                  {{ element.value?.text || '按鈕' }}
+                </a>
+              </div>
+
+              <!-- H_LINE 元件 -->
+              <div v-else-if="element.type === 'H_LINE'" class="element-hline">
+                <hr :style="{ 
+                  borderColor: element.value?.color || '#ddd',
+                  borderWidth: element.value?.thickness || '2px'
+                }" />
+              </div>
+
+              <!-- V_LINE 元件 -->
+              <div v-else-if="element.type === 'V_LINE'" class="element-vline">
+                <div class="vertical-line" :style="{ 
+                  backgroundColor: element.value?.color || '#ddd',
+                  width: element.value?.thickness || '2px'
+                }"></div>
+              </div>
+
+              <!-- CAROUSEL 元件 -->
+              <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
+                <CarouselElement 
+                  :content="element.value"
+                  :element="element"
+                  :key="`carousel-r2-${rIndex}-${element.value?.imgs?.length || 0}`"
+                />
+              </div>
+
+              <!-- MAP 元件 -->
+              <div v-else-if="element.type === 'MAP'" class="element-map">
+                <MapElement 
+                  :content="{
+                    address: element.value?.address || '',
+                    lat: element.value?.lat || 25.033,
+                    lng: element.value?.lng || 121.565,
+                    zoom: element.value?.zoom || 15
+                  }"
+                  :element="element"
+                  :key="`map-r2-${rIndex}-${element.value?.lat}-${element.value?.lng}`"
+                />
+              </div>
+
+              <!-- ALBUM 元件 -->
+              <div v-else-if="element.type === 'ALBUM'" class="element-card-wrapper">
+                <AlbumCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '相簿封面',
+                    title: element.value?.title || '相簿標題',
+                    description: element.value?.description || ''
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- PRODUCT_CARD 商品卡片 -->
+              <div v-else-if="element.type === 'PRODUCT_CARD'" class="element-card-wrapper">
+                <ProductCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '法會活動',
+                    title: element.value?.title || '商品標題',
+                    date: element.value?.date || '2024-08-22'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- SERVICE_CARD 服務卡片 -->
+              <div v-else-if="element.type === 'SERVICE_CARD'" class="element-card-wrapper">
+                <ServiceCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '祈福服務',
+                    title: element.value?.title || '服務標題',
+                    date: element.value?.date || '2024-08-22'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- EVENT_CARD 活動卡片 -->
+              <div v-else-if="element.type === 'EVENT_CARD'" class="element-card-wrapper">
+                <EventCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '法會活動',
+                    title: element.value?.title || '中元普渡法會',
+                    description: element.value?.description || '2024年中元普渡法會活動紀錄'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- 未知類型 -->
+              <div v-else class="element-unknown">
+                <span>未知元件：{{ element.type }}</span>
+              </div>
+
+              <!-- 刪除按鈕 -->
+              <button 
+                class="delete-element-btn"
+                @click.stop="handleDeleteElement(doubleLayoutCols + rIndex)"
+                title="刪除元件"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- 沒有元件：顯示空格子 -->
+            <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === (doubleLayoutCols + rIndex) }">
+              <span class="drop-hint">📦 拖曳元件至此</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 其他框架（單層、複合 A/B/C/D）維持原本的 frame-grid -->
+      <div v-else class="frame-grid" :style="gridStyle">
+        <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
+          <!-- 渲染格子 -->
+          <div 
+            class="grid-cell"
+            :class="{ 
+              'has-element': element && element.type,
+              'is-selected': isElementSelected(index) || isCellSelected(index),
+              'empty-cell': !element || !element.type
+            }"
+            :style="{
+              padding: getCellPadding(element)
+            }"
+            @click.stop="handleCellClick(index, element)"
+            @dragover="handleDragOver($event, index)"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop($event, index)"
+          >
+            <!-- 有元件：顯示元件內容 -->
+            <div v-if="element && element.type" class="element-content">
+              <!-- IMG 元件 -->
+              <div v-if="element.type === 'IMG'" class="element-image" :style="getImageContainerStyle(element)">
+                <img 
+                  v-if="element.value?.src" 
+                  :src="element.value.src" 
+                  :alt="element.value?.alt || '圖片'"
+                  class="element-img"
+                  :style="getElementStyle(element)"
+                />
+                <div v-else class="placeholder-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop"
+                    alt="placeholder"
+                    class="placeholder-img"
+                  />
+                  <div class="placeholder-overlay">
+                    <span>🖼️</span>
+                    <p>請在右側上傳圖片</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TEXT 元件 -->
+              <div 
+                v-else-if="element.type === 'TEXT'" 
+                class="element-text"
+                :style="getElementStyle(element)"
+                v-html="element.value?.text || '文字內容'"
+              ></div>
+
+              <!-- BUTTON 元件 -->
+              <div v-else-if="element.type === 'BUTTON'" class="element-button">
+                <a 
+                  :href="element.value?.url || '#'" 
+                  class="button-link"
+                  :style="getButtonStyle(element)"
+                  @click.prevent
+                >
+                  {{ element.value?.text || '按鈕' }}
+                </a>
+              </div>
+
+              <!-- H_LINE 元件 -->
+              <div v-else-if="element.type === 'H_LINE'" class="element-hline">
+                <hr :style="{ 
+                  borderColor: element.value?.color || '#ddd',
+                  borderWidth: element.value?.thickness || '2px'
+                }" />
+              </div>
+
+              <!-- V_LINE 元件 -->
+              <div v-else-if="element.type === 'V_LINE'" class="element-vline">
+                <div class="vertical-line" :style="{ 
+                  backgroundColor: element.value?.color || '#ddd',
+                  width: element.value?.thickness || '2px'
+                }"></div>
+              </div>
+
+              <!-- CAROUSEL 元件 -->
+              <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
+                <CarouselElement 
+                  :content="element.value"
+                  :element="element"
+                  :key="`carousel-${index}-${element.value?.imgs?.length || 0}-${element.value?.imgs?.[element.value.imgs.length - 1]?.id || 'empty'}`"
                 />
               </div>
 
@@ -124,11 +477,55 @@
               </div>
 
               <!-- ALBUM 元件 -->
-              <div v-else-if="element.type === 'ALBUM'" class="element-album">
-                <div class="album-placeholder">
-                  <span>相簿</span>
-                  <p>{{ element.value?.title || '相簿標題' }}</p>
-                </div>
+              <div v-else-if="element.type === 'ALBUM'" class="element-card-wrapper">
+                <AlbumCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '相簿封面',
+                    title: element.value?.title || '相簿標題',
+                    description: element.value?.description || ''
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- PRODUCT_CARD 商品卡片 -->
+              <div v-else-if="element.type === 'PRODUCT_CARD'" class="element-card-wrapper">
+                <ProductCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '法會活動',
+                    title: element.value?.title || '商品標題',
+                    date: element.value?.date || '2024-08-22'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- SERVICE_CARD 服務卡片 -->
+              <div v-else-if="element.type === 'SERVICE_CARD'" class="element-card-wrapper">
+                <ServiceCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '祈福服務',
+                    title: element.value?.title || '服務標題',
+                    date: element.value?.date || '2024-08-22'
+                  }"
+                  :element="element"
+                />
+              </div>
+
+              <!-- EVENT_CARD 活動卡片 -->
+              <div v-else-if="element.type === 'EVENT_CARD'" class="element-card-wrapper">
+                <EventCard 
+                  :content="{
+                    image: element.value?.image || null,
+                    tag: element.value?.tag || '法會活動',
+                    title: element.value?.title || '中元普渡法會',
+                    description: element.value?.description || '2024年中元普渡法會活動紀錄'
+                  }"
+                  :element="element"
+                />
               </div>
 
               <!-- 未知類型 -->
@@ -153,6 +550,7 @@
           </div>
         </template>
       </div>
+
     </div>
   </div>
 </template>
@@ -161,6 +559,10 @@
 import { ref, computed } from 'vue'
 import CarouselElement from './elements/CarouselElement.vue'
 import MapElement from './elements/MapElement.vue'
+import AlbumCard from './elements/AlbumCard.vue'
+import ProductCard from './elements/ProductCard.vue'
+import ServiceCard from './elements/ServiceCard.vue'
+import EventCard from './elements/EventCard.vue'
 
 const props = defineProps({
   frame: {
@@ -291,6 +693,36 @@ const hasAnyElement = computed(() => {
   return elements.some(el => el && el.type)
 })
 
+// ✅ 雙層框架：欄數
+const doubleLayoutCols = computed(() => {
+  switch (frameLayout.value) {
+    case '2_2': return 2
+    case '2_3': return 3
+    case '2_4': return 4
+    default: return 0
+  }
+})
+
+// ✅ 雙層框架：是否為雙層
+const isDoubleRowLayout = computed(() => doubleLayoutCols.value > 0)
+
+// ✅ 雙層框架：拆成兩排
+const doubleRowSplit = computed(() => {
+  if (!isDoubleRowLayout.value) return null
+  const cols = doubleLayoutCols.value
+  const els = displayElements.value
+  return {
+    row1: els.slice(0, cols),
+    row2: els.slice(cols, cols * 2)
+  }
+})
+
+// ✅ 雙層框架：每排的 flex 樣式
+const doubleRowStyle = computed(() => ({
+  display: 'flex',
+  width: '100%'
+}))
+
 // ✅ 框架容器樣式（支持自訂寬度）
 const frameContainerStyle = computed(() => {
   const style = {
@@ -362,28 +794,6 @@ const gridStyle = computed(() => {
         gap: '0'
       }
     
-    case '2_2':
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '0'
-      }
-    case '2_3':
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '0'
-      }
-    case '2_4':
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '0'
-      }
-    
     default:
       console.warn('⚠️ 未知框架佈局 gridStyle:', layout)
       return {
@@ -403,13 +813,13 @@ const isFrameSelected = computed(() => {
 // 是否選中元件
 const isElementSelected = (index) => {
   return props.selectedElement?.elementIndex === index && 
-         props.selectedElement?.frame?.type === props.frame.type
+         props.selectedElement?.frame === props.frame  // ✅ 修正：改用物件參考比較，避免同類型框架互相干擾
 }
 
 // ✅ 是否選中格子
 const isCellSelected = (index) => {
   return props.selectedCell?.cellIndex === index && 
-         props.selectedCell?.frame?.type === props.frame.type
+         props.selectedCell?.frame === props.frame  // ✅ 修正：改用物件參考比較，避免同類型框架互相干擾
 }
 
 // ==================== ✅ 樣式相關方法 ====================
@@ -595,7 +1005,10 @@ const createElementFromDrag = (dragData, index) => {
     'button': 'BUTTON',
     'h-line': 'H_LINE',
     'v-line': 'V_LINE',
-    'carousel': 'CAROUSEL'
+    'carousel': 'CAROUSEL',
+    'product-card': 'PRODUCT_CARD',
+    'service-card': 'SERVICE_CARD',
+    'event-card': 'EVENT_CARD'
   }
   
   const apiType = typeMap[dragData.type] || dragData.type.toUpperCase()
@@ -619,7 +1032,7 @@ const createElementFromDrag = (dragData, index) => {
       value = { color: '#ddd', thickness: '2px' }
       break
     case 'carousel':
-      value = { images: [], autoPlay: true, interval: 3000, height: 400 }
+      value = { imgs: [], autoPlay: true, interval: 3000, height: 400 }
       break
     case 'map':
       // ✅ MAP 元件預設台北 101 地址
@@ -628,6 +1041,38 @@ const createElementFromDrag = (dragData, index) => {
         lat: 25.0339639,
         lng: 121.5644722,
         zoom: 17
+      }
+      break
+    case 'album':
+      value = {
+        image: null,
+        tag: '相簿封面',
+        title: '相簿標題',
+        description: ''
+      }
+      break
+    case 'product-card':
+      value = {
+        image: null,
+        tag: '法會活動',
+        title: '商品標題',
+        date: '2024-08-22'
+      }
+      break
+    case 'service-card':
+      value = {
+        image: null,
+        tag: '祈福服務',
+        title: '服務標題',
+        date: '2024-08-22'
+      }
+      break
+    case 'event-card':
+      value = {
+        image: null,
+        tag: '法會活動',
+        title: '中元普渡法會',
+        description: '2024年中元普渡法會活動紀錄'
       }
       break
     default:
@@ -769,6 +1214,17 @@ const getInitialCellWidth = (layout, totalCells) => {
 .frame-grid {
   width: 100%;
   // ✅ 移除固定 min-height，讓內容自動撐開
+}
+
+// ✅ 雙層框架：每排獨立 flex，格子等寬，高度互不影響
+.double-row {
+  display: flex;
+  width: 100%;
+
+  .grid-cell {
+    flex: 1;
+    min-width: 0; // 防止內容撐破
+  }
 }
 
 // ==================== 複合框架特殊佈局 ====================
@@ -965,24 +1421,39 @@ const getInitialCellWidth = (layout, totalCells) => {
   
   .placeholder-image {
     width: 100%;
-    height: 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #f5f5f5;
-    border: 2px dashed #ddd;
+    position: relative;
     border-radius: 4px;
-    color: #999;
-    
-    span {
-      font-size: 48px;
-      margin-bottom: 8px;
+    overflow: hidden;
+
+    .placeholder-img {
+      width: 100%;
+      height: 100%;
+      min-height: 200px;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.7);
     }
-    
-    p {
-      font-size: 14px;
-      margin: 0;
+
+    .placeholder-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.25);
+      color: #fff;
+
+      span {
+        font-size: 36px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        font-size: 13px;
+        margin: 0;
+        opacity: 0.9;
+      }
     }
   }
 }
@@ -1006,7 +1477,6 @@ const getInitialCellWidth = (layout, totalCells) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 0;
   
   .button-link {
     display: inline-block;
@@ -1053,58 +1523,14 @@ const getInitialCellWidth = (layout, totalCells) => {
 
 .element-map {
   width: 100%;
-  height: 100%;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #e8f5e9;
-  border: 2px dashed #4caf50;
-  border-radius: 8px;
+  // ✅ MapElement 會自己決定高度和樣式
 }
 
-.map-placeholder {
-  text-align: center;
-  
-  span {
-    font-size: 48px;
-    display: block;
-    margin-bottom: 8px;
-  }
-  
-  p {
-    margin: 0;
-    color: #2e7d32;
-    font-size: 14px;
-  }
-}
+// ==================== 卡片元件 Wrapper ====================
 
-.element-album {
+.element-card-wrapper {
   width: 100%;
-  height: 100%;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3e5f5;
-  border: 2px dashed #9c27b0;
-  border-radius: 8px;
-}
-
-.album-placeholder {
-  text-align: center;
-  
-  span {
-    font-size: 48px;
-    display: block;
-    margin-bottom: 8px;
-  }
-  
-  p {
-    margin: 0;
-    color: #7b1fa2;
-    font-size: 14px;
-  }
+  height: auto;
 }
 
 .element-unknown {

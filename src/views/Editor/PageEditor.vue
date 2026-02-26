@@ -45,7 +45,7 @@ const handleHeaderPageChange = async (slug) => {
 
 // ==================== 選擇處理 ====================
 const handleSelectBasemap = (basemap) => {
-  console.log('✓ 選擇底圖:', basemap.bg_type)
+  console.log('✓ 選擇底圖:', basemap.bgType)
   pageEditorStore.selectBasemap(basemap)
 }
 
@@ -70,8 +70,8 @@ const handleUpdateElement = (data) => {
   
   if (data.type === 'logo') {
     if (data.frame && data.frame.data) {
-      data.frame.data.logo_img_src = data.data.src
-      data.frame.data.logo_img_id = data.data.id || null
+      data.frame.data.logoImgUrl = data.data.src
+      data.frame.data.logoImgId = data.data.id || null
       console.log('✓ Logo 已更新')
     }
   }
@@ -132,8 +132,8 @@ const handleDropToBasemap = ({ basemap, basemapIndex, frame }) => {
   
   const newFrame = {
     type: frameType,
-    is_deletable: true,
-    is_draggable: true,
+    isDeletable: true,
+    isDraggable: true,
     data: {},
     elements: []
   }
@@ -191,11 +191,11 @@ const handleDeleteElement = (data) => {
   if (data.type === 'logo') {
     if (confirm('確定要刪除 Logo 嗎？')) {
       // ✅ 標記舊 Logo ID 待刪除
-      pageEditorStore.markFileForDeletion(data.frame?.data?.logo_img_id)
+      pageEditorStore.markFileForDeletion(data.frame?.data?.logoImgId)
 
       if (data.frame && data.frame.data) {
-        data.frame.data.logo_img_src = null
-        data.frame.data.logo_img_id = null
+        data.frame.data.logoImgUrl = null
+        data.frame.data.logoImgId = null
       }
       pageEditorStore.clearSelection()
     }
@@ -248,8 +248,8 @@ const handleDeleteFrame = (data) => {
     })
   }
   // ✅ 標記首圖背景 ID 待刪除
-  if (frame.type === 'FIRST_PICTURE' && frame.data?.hero_bg_img_id) {
-    pageEditorStore.markFileForDeletion(frame.data.hero_bg_img_id)
+  if (frame.type === 'FIRST_PICTURE' && frame.data?.heroBgImgId) {
+    pageEditorStore.markFileForDeletion(frame.data.heroBgImgId)
   }
 
   console.log(`✓ 找到框架索引: ${frameIndex}`)
@@ -274,7 +274,7 @@ const handleUpdateBackground = (data) => {
   // BasemapWrapper 已直接更新 basemap 物件，這裡做 fallback 確保 Store 同步
   const basemaps = pageEditorStore.currentPageBasemaps
   const targetBasemap = basemaps.find(b => 
-    b.bg_type === basemap.bg_type && b.bg_sequence === basemap.bg_sequence
+    b.bgType === basemap.bgType && b.bgSequence === basemap.bgSequence
   )
   
   if (!targetBasemap) {
@@ -284,16 +284,16 @@ const handleUpdateBackground = (data) => {
   
   switch (type) {
     case 'desktop':
-      targetBasemap.bg_pc_img_src = imageData
-      targetBasemap.bg_pc_img_id = imageId || null   // ✅ 保存 API 回傳的 ID
+      targetBasemap.bgPcImgSrc = imageData
+      targetBasemap.bgPcImgId = imageId || null
       break
     case 'tablet':
-      targetBasemap.bg_tablet_img_src = imageData
-      targetBasemap.bg_tablet_img_id = imageId || null
+      targetBasemap.bgTabletImgSrc = imageData
+      targetBasemap.bgTabletImgId = imageId || null
       break
     case 'mobile':
-      targetBasemap.bg_phone_img_src = imageData
-      targetBasemap.bg_phone_img_id = imageId || null
+      targetBasemap.bgPhoneImgSrc = imageData
+      targetBasemap.bgPhoneImgId = imageId || null
       break
   }
   

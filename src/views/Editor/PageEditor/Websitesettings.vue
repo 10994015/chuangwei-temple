@@ -281,11 +281,11 @@ const loadSettings = async () => {
     
     if (settings) {
       // ✅ GET API 回傳 snake_case，需要轉換為 camelCase
-      formData.frontFamily = settings.front_family || settings.frontFamily || 'noto-sans-tc'
-      formData.seoTitle = settings.seo_title || settings.seoTitle || ''
-      formData.seoDescription = settings.seo_description || settings.seoDescription || ''
-      formData.seoKeywords = settings.seo_keywords || settings.seoKeywords || ''
-      formData.metaPixel = settings.meta_pixel || settings.metaPixel || ''
+      formData.frontFamily = settings.frontFamily || 'noto-sans-tc'
+      formData.seoTitle = settings.seoTitle || ''
+      formData.seoDescription = settings.seoDescription || ''
+      formData.seoKeywords = settings.seoKeywords || ''
+      formData.metaPixel = settings.metaPixel || ''
 
       // 儲存原始資料
       Object.assign(originalData, formData)

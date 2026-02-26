@@ -1,5 +1,5 @@
 <template>
-  <section class="product-list-section">
+  <section class="product-list-section" :class="`device-${device}`">
     <div class="container">
       <!-- 篩選欄 -->
       <div class="filter-bar">
@@ -83,8 +83,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
 const props = defineProps({
   productsList: {
     type: Array,
@@ -167,6 +165,11 @@ const props = defineProps({
         image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&h=600&fit=crop'
       }
     ]
+  },
+  // ✅ 接收裝置類型
+  device: {
+    type: String,
+    default: 'desktop'
   }
 })
 
@@ -208,13 +211,13 @@ const addToCart = (product) => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  
+
   label {
     font-size: 14px;
     color: #666;
     font-weight: 500;
   }
-  
+
   &.search-group {
     flex: 1;
     min-width: 300px;
@@ -230,7 +233,7 @@ const addToCart = (product) => {
   background: #fff;
   cursor: pointer;
   min-width: 120px;
-  
+
   &:focus {
     outline: none;
     border-color: #c9a55a;
@@ -248,7 +251,7 @@ const addToCart = (product) => {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
-  
+
   &:focus {
     outline: none;
     border-color: #c9a55a;
@@ -264,7 +267,7 @@ const addToCart = (product) => {
   font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
-  
+
   &:hover {
     background: #6a5a47;
   }
@@ -286,7 +289,7 @@ const addToCart = (product) => {
   color: #666;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover {
     border-color: #c9a55a;
     color: #c9a55a;
@@ -301,7 +304,7 @@ const addToCart = (product) => {
   margin-bottom: 2rem;
 }
 
-// 商品 Grid
+// 商品 Grid — 桌機預設 4 欄
 .products-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -365,13 +368,8 @@ const addToCart = (product) => {
   color: #ffffff;
   z-index: 10;
 
-  &.hot {
-    background: #dc3545;
-  }
-
-  &.recommended {
-    background: #007bff;
-  }
+  &.hot         { background: #dc3545; }
+  &.recommended { background: #007bff; }
 }
 
 .product-info {
@@ -413,10 +411,8 @@ const addToCart = (product) => {
   &:hover {
     border-color: #c9a55a;
     background: #c9a55a;
-    
-    .cart-icon {
-      color: #ffffff;
-    }
+
+    .cart-icon { color: #ffffff; }
   }
 }
 
@@ -427,38 +423,116 @@ const addToCart = (product) => {
   transition: color 0.2s;
 }
 
-// 響應式設計
-@media (max-width: 1400px) {
-  .products-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
+// ==================== ✅ device prop 響應式（取代 media query）====================
 
-@media (max-width: 1200px) {
-  .products-grid {
-    grid-template-columns: repeat(3, 1fr);
+// 平板：2 欄
+.product-list-section.device-tablet {
+  .container {
+    padding: 0 1.25rem;
   }
-}
 
-@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .filter-group.search-group {
+    min-width: auto;
+  }
+
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
-  
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
+
+  .product-title {
+    font-size: 14px;
   }
-  
-  .filter-group.search-group {
-    min-width: auto;
+
+  .product-price {
+    font-size: 16px;
+  }
+
+  .section-title {
+    font-size: 20px;
   }
 }
 
-@media (max-width: 480px) {
+// 手機：2 欄（較窄，簡化顯示）
+.product-list-section.device-mobile {
+  padding: 1rem 0 2rem;
+
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .filter-group.search-group {
+    min-width: auto;
+  }
+
+  .search-box {
+    flex-direction: column;
+  }
+
+  .search-btn {
+    padding: 0.5rem 1rem;
+  }
+
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .product-info {
+    padding: 0.75rem;
+  }
+
+  .product-title {
+    font-size: 13px;
+    margin-bottom: 0.5rem;
+  }
+
+  .product-price {
+    font-size: 14px;
+  }
+
+  .add-to-cart-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cart-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .rank-badge {
+    font-size: 11px;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .product-badge {
+    font-size: 10px;
+    padding: 4px 8px;
+    bottom: 6px;
+    right: 6px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    margin-bottom: 1rem;
+  }
+
+  .batch-actions {
+    margin-bottom: 1rem;
   }
 }
 </style>

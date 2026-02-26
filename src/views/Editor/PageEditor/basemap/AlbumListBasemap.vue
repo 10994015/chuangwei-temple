@@ -1,100 +1,131 @@
 <template>
-  <section class="album-list-section">
+  <section class="album-list-section" :class="`device-${device}`">
     <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">相簿列表</h2>
-        <a href="#" class="view-all">查看所有相簿 ›</a>
+      <!-- 分類 Tab 篩選列 -->
+      <div class="filter-bar">
+        <button
+          v-for="cat in categories"
+          :key="cat.value"
+          class="filter-btn"
+          :class="{ active: activeCategory === cat.value }"
+          @click="activeCategory = cat.value"
+        >
+          {{ cat.label }}
+        </button>
       </div>
-      
+
+      <!-- 分隔線 -->
+      <hr class="divider" />
+
+      <!-- 相簿 Grid -->
       <div class="album-grid">
-        <div 
-          v-for="album in albumList" 
+        <div
+          v-for="album in filteredAlbums"
           :key="album.id"
           class="album-card"
         >
+          <!-- 上半部：封面圖 -->
           <div class="album-cover">
-            <img :src="album.coverImage" :alt="album.title" class="cover-image" />
-            <div class="album-overlay">
-              <div class="photo-count">
-                <span class="icon">📷</span>
-                <span class="count">{{ album.photoCount }} 張照片</span>
+            <img
+              v-if="album.coverImage"
+              :src="album.coverImage"
+              :alt="album.title"
+              class="cover-image"
+            />
+            <div v-else class="cover-placeholder">
+              <div class="placeholder-icon">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="48" height="48" rx="4" fill="#e8e8e8"/>
+                  <path d="M12 34l8-10 6 7 4-5 6 8H12z" fill="#bbb"/>
+                  <circle cx="18" cy="20" r="3" fill="#bbb"/>
+                </svg>
               </div>
+              <span class="placeholder-text">相簿封面</span>
             </div>
           </div>
+
+          <!-- 下半部：資訊 -->
           <div class="album-info">
+            <div class="meta-row">
+              <span v-if="album.tag" class="tag">{{ album.tag }}</span>
+              <span v-if="album.date" class="date">{{ album.date }}</span>
+            </div>
             <h3 class="album-title">{{ album.title }}</h3>
-            <p class="album-date">{{ album.date }}</p>
-            <p class="album-description">{{ album.description }}</p>
+            <p v-if="album.description" class="album-description">{{ album.description }}</p>
           </div>
         </div>
+      </div>
+
+      <!-- 無資料 -->
+      <div v-if="filteredAlbums.length === 0" class="empty-state">
+        <p>此分類目前沒有相簿</p>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   albumList: {
+    type: [Array, Object],  // ✅ 接受陣列或物件，防止型別錯誤
+    default: () => []
+  },
+  categoryList: {
     type: Array,
-    default: () => [
-      {
-        id: 1,
-        title: '2024 新春祈福大典',
-        date: '2024-02-10',
-        photoCount: 48,
-        coverImage: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&h=600&fit=crop',
-        description: '甲辰年新春祈福大典盛況，信眾齊聚祈求新年平安順遂'
-      },
-      {
-        id: 2,
-        title: '中秋祭祀活動',
-        date: '2024-09-17',
-        photoCount: 36,
-        coverImage: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&h=600&fit=crop',
-        description: '農曆八月十五中秋祭祀，月圓人團圓，祈願闔家平安'
-      },
-      {
-        id: 3,
-        title: '端午節慶典',
-        date: '2024-06-10',
-        photoCount: 52,
-        coverImage: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=800&h=600&fit=crop',
-        description: '端午佳節祭祀活動，傳承文化，弘揚信仰'
-      },
-      {
-        id: 4,
-        title: '冬至祭祖法會',
-        date: '2023-12-22',
-        photoCount: 28,
-        coverImage: 'https://images.unsplash.com/photo-1590736969955-71cc94901144?w=800&h=600&fit=crop',
-        description: '冬至時節祭祖法會，慎終追遠，感念先人恩德'
-      },
-      {
-        id: 5,
-        title: '平安燈點燈儀式',
-        date: '2024-01-15',
-        photoCount: 64,
-        coverImage: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?w=800&h=600&fit=crop',
-        description: '年度平安燈點燈儀式，光明照耀，祈福平安'
-      },
-      {
-        id: 6,
-        title: '元宵燈會',
-        date: '2024-02-24',
-        photoCount: 72,
-        coverImage: 'https://images.unsplash.com/photo-1551361415-69c87624334f?w=800&h=600&fit=crop',
-        description: '正月十五元宵燈會，花燈璀璨，熱鬧非凡'
-      }
-    ]
+    default: () => []
+  },
+  // ✅ 接收裝置類型
+  device: {
+    type: String,
+    default: 'desktop'
   }
+})
+
+// ==================== ✅ 安全取得陣列 ====================
+// API 回傳有時是物件、有時是陣列，統一轉為陣列處理
+const safeAlbumList = computed(() => {
+  const list = props.albumList
+  if (Array.isArray(list)) return list
+  if (list && typeof list === 'object') return Object.values(list)
+  return []
+})
+
+// ==================== 分類 Tab ====================
+
+const categories = computed(() => {
+  const base = [{ label: '全部', value: 'all' }]
+
+  if (props.categoryList && props.categoryList.length > 0) {
+    return [...base, ...props.categoryList.map(c => ({
+      label: c.label || c,
+      value: c.value || c
+    }))]
+  }
+
+  const tags = [...new Set(
+    safeAlbumList.value
+      .map(a => a.tag)
+      .filter(Boolean)
+  )]
+
+  return [...base, ...tags.map(t => ({ label: t, value: t }))]
+})
+
+const activeCategory = ref('all')
+
+// ==================== 篩選 ====================
+
+const filteredAlbums = computed(() => {
+  if (activeCategory.value === 'all') return safeAlbumList.value
+  return safeAlbumList.value.filter(a => a.tag === activeCategory.value)
 })
 </script>
 
 <style lang="scss" scoped>
 .album-list-section {
-  padding: 4rem 0;
+  padding: 3rem 0 4rem;
   background: #fff;
 }
 
@@ -104,148 +135,190 @@ const props = defineProps({
   padding: 0 2rem;
 }
 
-.section-header {
+/* ==================== 分類 Tab ==================== */
+
+.filter-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
 }
 
-.section-title {
-  font-size: 28px;
-  font-weight: 500;
-  color: #333;
-}
-
-.view-all {
+.filter-btn {
+  padding: 10px 28px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
   color: #666;
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.3s;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  white-space: nowrap;
 
-  &:hover {
-    color: #8b6f47;
-  }
+  &:hover  { color: #333; background: #f5f5f5; }
+  &.active { background: #8b6f47; color: #fff; font-weight: 500; }
 }
+
+.divider {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 20px 0 36px;
+}
+
+/* ==================== 相簿 Grid ==================== */
 
 .album-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 24px;
 }
 
+/* ==================== 相簿卡片 ==================== */
+
 .album-card {
-  background: #fff;
-  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s;
+  background: #fff;
   cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
 
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-
-    .album-overlay {
-      opacity: 1;
-    }
-
-    .cover-image {
-      transform: scale(1.05);
-    }
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
   }
 }
 
 .album-cover {
-  position: relative;
   width: 100%;
-  height: 240px;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #f5f5f5;
+  background: #f0f0f0;
+  position: relative;
 }
 
 .cover-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  display: block;
+  transition: transform 0.4s ease;
+
+  .album-card:hover & { transform: scale(1.04); }
 }
 
-.album-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
-  align-items: flex-end;
-  padding: 1.5rem;
-  opacity: 0;
-  transition: opacity 0.3s;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  gap: 8px;
 }
 
-.photo-count {
+.placeholder-icon {
+  width: 64px;
+  height: 64px;
+  opacity: 0.6;
+  svg { width: 100%; height: 100%; }
+}
+
+.placeholder-text { font-size: 13px; color: #aaa; }
+
+.album-info { padding: 16px 20px 20px; background: #fff; }
+
+.meta-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #8b6f47;
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
-
-  .icon {
-    font-size: 18px;
-  }
+  border-radius: 2px;
+  white-space: nowrap;
 }
 
-.album-info {
-  padding: 1.5rem;
-}
+.date { font-size: 13px; color: #999; }
 
 .album-title {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
-  margin: 0 0 0.5rem;
+  color: #222;
+  margin: 0 0 8px;
   line-height: 1.4;
 }
 
-.album-date {
-  font-size: 13px;
-  color: #999;
-  margin: 0 0 0.75rem;
-}
-
 .album-description {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.6;
+  font-size: 13px;
+  color: #888;
   margin: 0;
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-// 響應式設計
-@media (max-width: 1024px) {
-  .album-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-  }
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #aaa;
+  font-size: 14px;
 }
 
-@media (max-width: 640px) {
+/* ==================== ✅ device prop 響應式（取代 media query）==================== */
+
+/* 平板：2 欄 */
+.album-list-section.device-tablet {
+  .container { padding: 0 1.25rem; }
+
   .album-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 
-  .album-cover {
-    height: 200px;
+  .filter-btn {
+    padding: 8px 20px;
+    font-size: 14px;
   }
+
+  .album-title { font-size: 16px; }
+}
+
+/* 手機：單欄 */
+.album-list-section.device-mobile {
+  padding: 1.5rem 0 2rem;
+
+  .container { padding: 0 0.75rem; }
+
+  .album-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .filter-btn {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+
+  .divider { margin: 14px 0 20px; }
+
+  .album-info { padding: 12px 14px 16px; }
+
+  .album-title { font-size: 15px; }
+
+  .album-description { font-size: 12px; }
+
+  .placeholder-icon { width: 48px; height: 48px; }
 }
 </style>
