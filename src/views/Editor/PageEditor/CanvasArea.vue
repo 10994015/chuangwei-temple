@@ -572,7 +572,6 @@ const getBasemapKey = (basemap, index) => {
 
 .basemap-with-frames {
   position: relative;
-  min-height: 100px;
   transition: all 0.3s ease;
   background-size: cover;
   background-position: center;

@@ -13,6 +13,9 @@ import DashboardView from '@/views/Temple/DashboardView.vue'
 import Websitesettings from '@/views/Editor/PageEditor/Websitesettings.vue'
 import PreviewPage from '@/views/PreviewPage.vue'
 import EditorLayout from '@/layouts/EditorLayout.vue'
+import CustomerLayout from '@/layouts/CustomerLayout.vue'
+import MemberProfileView from '@/views/Customer/MemberProfileView.vue'
+import TempleLayout from '@/layouts/TempleLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,110 +23,128 @@ const router = createRouter({
     {
       path: '/',
       name: 'app',
-      component: AppLayout, 
+      component: AppLayout,
       children: [
         {
           path: '',
           name: 'app.cms.editor-home',
           component: HomeView,
-          meta: { 
+          meta: {
             title: 'CMS編輯器版面設計',
-            breadcrumbs: [
-              { text: 'CMS編輯器版面設計', to: null },
-            ],
+            breadcrumbs: [{ text: 'CMS編輯器版面設計', to: null }],
             requiresAuth: false
           }
         },
-        // 香客帳號管理（固定路徑）
+
+        // ── 香客帳號管理（CustomerLayout 側邊欄）──
         {
           path: 'customer-account',
-          name: 'app.cms.customer-account',
-          component: HomeView,
-          meta: { 
-            title: '香客帳號管理',
-            breadcrumbs: [
-              { text: '香客帳號管理', to: null },
-            ],
-            requiresAuth: true,
-            isCustomerAccount: true
-          }
+          component: CustomerLayout,
+          meta: { requiresAuth: true, isCustomerAccount: true },
+          children: [
+            {
+              path: '',
+              name: 'app.cms.customer-account',
+              component: MemberProfileView,
+              meta: {
+                title: '會員資料',
+                breadcrumbs: [
+                  { text: '香客帳號管理', to: '/customer-account' },
+                  { text: '會員資料', to: null },
+                ],
+                requiresAuth: true,
+                isCustomerAccount: true
+              }
+            },
+            // 未來擴充：
+            // { path: 'photos',     name: 'app.cms.customer-photos',     component: () => import('@/views/Customer/PhotosView.vue'),     meta: { title: '相片管理',    requiresAuth: true } },
+            { path: 'orders',     name: 'app.cms.customer-orders',     component: () => import('@/views/Customer/OrdersView.vue'),     meta: { title: '訂單紀錄',    requiresAuth: true } },
+            // { path: 'divination', name: 'app.cms.customer-divination', component: () => import('@/views/Customer/DivinationView.vue'), meta: { title: '求籤紀錄',    requiresAuth: true } },
+            // { path: 'checkin',    name: 'app.cms.customer-checkin',    component: () => import('@/views/Customer/CheckinView.vue'),    meta: { title: '打卡',        requiresAuth: true } },
+            // { path: 'favorites',  name: 'app.cms.customer-favorites',  component: () => import('@/views/Customer/FavoritesView.vue'),  meta: { title: '我的最愛宮廟', requiresAuth: true } },
+            // { path: 'cart',       name: 'app.cms.customer-cart',       component: () => import('@/views/Customer/CartView.vue'),       meta: { title: '購物車',      requiresAuth: true } },
+          ]
         },
-        // 宮廟路由（動態 templeId）
+
+        // ── 宮廟後台：含 TempleLayout 側邊欄 ──
         {
           path: ':templeId',
-          name: 'app.temple',
-          meta: { 
-            requiresAuth: true,
-            isTempleRoute: true
-          },
+          component: TempleLayout,
+          meta: { requiresAuth: true, isTempleRoute: true },
           children: [
             {
               path: 'dashboard',
               name: 'app.temple.dashboard',
               component: DashboardView,
-              meta: { 
+              meta: {
                 title: '宮廟總覽',
-                breadcrumbs: [
-                  { text: '宮廟總覽', to: null },
-                ],
+                breadcrumbs: [{ text: '宮廟總覽', to: null }],
                 requiresAuth: true
               }
             },
-            {
-              path: 'website-setup',
-              name: 'app.temple.website-setup',
-              component: WebsiteSetupGuide,
-              meta: { 
-                title: '建立您的宮廟網站',
-                breadcrumbs: [
-                  { text: '建立您的宮廟網站', to: null },
-                ],
-                requiresAuth: true,
-                checkWebsite: true
-              }
-            },
-            {
-              path: 'subdomain-setup/:templateId',
-              name: 'app.temple.subdomain-setup',
-              component: SubdomainSetup,
-              meta: { 
-                title: '子網域設定',
-                breadcrumbs: [
-                  { text: '子網域設定', to: null },
-                ],
-                requiresAuth: true,
-                checkWebsite: true
-              }
-            },
-            {
-              path: 'template-selection',
-              name: 'app.temple.template-selection',
-              component: TemplateSelection,
-              meta: { 
-                title: '模板選擇',
-                breadcrumbs: [
-                  { text: '模板選擇', to: null },
-                ],
-                requiresAuth: true,
-                checkWebsite: true
-              }
-            },
-            {
-              path: 'pricing-plans',
-              name: 'app.temple.pricing-plans',
-              component: PricingPlans,
-              meta: { 
-                title: '升級方案',
-                breadcrumbs: [
-                  { text: '升級方案', to: null },
-                ],
-                requiresAuth: true
-              }
-            }
+            // 未來有側邊欄的後台頁面繼續加在這裡：
+            { path: 'temple-info', name: 'app.temple.temple-info', component: () => import('@/views/Temple/TempleInfoView.vue'), meta: { title: '宮廟資料管理',   requiresAuth: true } },
+            { path: 'news',        name: 'app.temple.news',        component: () => import('@/views/Temple/NewsManagementView.vue'),       meta: { title: '最新消息管理',   requiresAuth: true } },
+            { path: 'news/create',        name: 'app.temple.news-create', component: () => import('@/views/Temple/NewsCreateView.vue') },
+            { path: 'news/:newsId/detail', name: 'app.temple.news-detail', component: () => import('@/views/Temple/NewsDetailView.vue') },
+            { path: 'news/:newsId/edit',   name: 'app.temple.news-edit',   component: () => import('@/views/Temple/NewsEditView.vue') },
+            // { path: 'events',      name: 'app.temple.events',      component: () => import('@/views/Temple/EventsView.vue'),     meta: { title: '活動與上架管理', requiresAuth: true } },
+            // { path: 'orders',      name: 'app.temple.orders',      component: () => import('@/views/Temple/OrdersView.vue'),     meta: { title: '訂單管理',       requiresAuth: true } },
           ]
-        }
+        },
+
+        // ── 宮廟後台：不含側邊欄（直接掛在 AppLayout 下）──
+        {
+          path: ':templeId/website-setup',
+          name: 'app.temple.website-setup',
+          component: WebsiteSetupGuide,
+          meta: {
+            title: '建立您的宮廟網站',
+            breadcrumbs: [{ text: '建立您的宮廟網站', to: null }],
+            requiresAuth: true,
+            checkWebsite: true,
+            isTempleRoute: true
+          }
+        },
+        {
+          path: ':templeId/subdomain-setup/:templateId',
+          name: 'app.temple.subdomain-setup',
+          component: SubdomainSetup,
+          meta: {
+            title: '子網域設定',
+            breadcrumbs: [{ text: '子網域設定', to: null }],
+            requiresAuth: true,
+            checkWebsite: true,
+            isTempleRoute: true
+          }
+        },
+        {
+          path: ':templeId/template-selection',
+          name: 'app.temple.template-selection',
+          component: TemplateSelection,
+          meta: {
+            title: '模板選擇',
+            breadcrumbs: [{ text: '模板選擇', to: null }],
+            requiresAuth: true,
+            checkWebsite: true,
+            isTempleRoute: true
+          }
+        },
+        {
+          path: ':templeId/pricing-plans',
+          name: 'app.temple.pricing-plans',
+          component: PricingPlans,
+          meta: {
+            title: '升級方案',
+            breadcrumbs: [{ text: '升級方案', to: null }],
+            requiresAuth: true,
+            isTempleRoute: true
+          }
+        },
       ]
     },
+
+    // ── Editor（全頁編輯器，獨立 Layout）──
     {
       path: '/editor',
       component: EditorLayout,
@@ -132,11 +153,9 @@ const router = createRouter({
           path: ':templeId/page-editor',
           name: 'app.temple.page-editor',
           component: PageEditor,
-          meta: { 
+          meta: {
             title: '頁面編輯器',
-            breadcrumbs: [
-              { text: '頁面編輯器', to: null },
-            ],
+            breadcrumbs: [{ text: '頁面編輯器', to: null }],
             requiresAuth: true
           }
         },
@@ -144,11 +163,9 @@ const router = createRouter({
           path: ':templeId/website-settings',
           name: 'app.temple.website-settings',
           component: Websitesettings,
-          meta: { 
+          meta: {
             title: '網站設定',
-            breadcrumbs: [
-              { text: '網站設定', to: null },
-            ],
+            breadcrumbs: [{ text: '網站設定', to: null }],
             requiresAuth: true
           }
         },
@@ -163,7 +180,8 @@ const router = createRouter({
         }
       ]
     },
-    // 初始密碼設定（首次登入或密碼過期）
+
+    // ── 初始密碼設定 ──
     {
       path: '/init-password/:token',
       name: 'init-password',
@@ -175,94 +193,61 @@ const router = createRouter({
     },
   ],
 })
+
 // 全域路由守衛
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   const templateStore = useTemplateStore()
-  
+
   console.log('路由守衛：從', from.path, '到', to.path)
   console.log('需要認證:', to.meta.requiresAuth)
-  
-  // 檢查路由是否需要登入
+
   if (to.meta.requiresAuth) {
     try {
-      console.log('開始檢查認證狀態...')
-      // 檢查登入狀態
       const isAuthenticated = await authStore.checkAuth()
-      console.log('認證結果:', isAuthenticated)
-      
+
       if (!isAuthenticated) {
         console.log('未登入，重定向到首頁')
-        // 未登入，重定向到首頁
         next('/')
         return
       }
-      
-      // 如果是宮廟路由，檢查是否有該宮廟的權限
+
+      // 宮廟路由權限檢查
       if (to.params.templeId) {
         const templeId = to.params.templeId
-        console.log('檢查宮廟權限:', templeId)
-        console.log('用戶的宮廟角色:', authStore.templeRoles)
-        
-        const hasPermission = authStore.templeRoles.some(
-          temple => temple.tenantId === templeId
-        )
-        
-        console.log('是否有權限:', hasPermission)
-        
+        const hasPermission = authStore.templeRoles.some(t => t.tenantId === templeId)
+
         if (!hasPermission) {
-          console.log('沒有該宮廟權限，重定向到首頁')
           alert('您沒有訪問該宮廟的權限')
           next('/')
           return
         }
 
-        // 檢查是否需要檢查網站存在
+        // checkWebsite 檢查
         if (to.meta.checkWebsite) {
-          console.log('檢查網站是否已建立...')
           const websiteExists = await templateStore.checkWebsiteExists(templeId)
-          console.log('網站是否已存在:', websiteExists)
-          
           if (websiteExists) {
-            console.log('網站已存在，重定向到頁面編輯器')
-            // 如果網站已存在，重定向到頁面編輯器
-            next({
-              name: 'app.temple.page-editor',
-              params: { templeId }
-            })
+            next({ name: 'app.temple.page-editor', params: { templeId } })
             return
-          } else {
-            console.log('網站尚未建立，允許訪問')
           }
         }
       }
-      
-      // 已登入，允許訪問
-      console.log('認證通過，允許訪問')
+
       next()
     } catch (error) {
       console.error('認證檢查失敗:', error)
-      // 認證失敗，重定向到首頁
       next('/')
     }
   } else {
-    // 不需要登入的頁面，直接放行
-    console.log('不需要認證，直接放行')
     next()
   }
 })
 
-// 在路由切換後更新網頁標題
-router.afterEach((to, from) => {
+// 路由切換後更新標題
+router.afterEach((to) => {
   window.scrollTo(0, 0)
-  
   const systemName = '宮掌櫃 CMS'
-  
-  if (to.meta && to.meta.title) {
-    document.title = `${to.meta.title} - ${systemName}`
-  } else {
-    document.title = systemName
-  }
+  document.title = to.meta?.title ? `${to.meta.title} - ${systemName}` : systemName
 })
 
 export default router

@@ -82,7 +82,7 @@ const props = defineProps({
 <style lang="scss" scoped>
 .news-section {
   padding: 4rem 0;
-  background: #fafafa;
+  background: transparent;
 }
 
 .container {

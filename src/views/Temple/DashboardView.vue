@@ -6,330 +6,289 @@ import { useAuthStore } from '@/stores/auth'
 const route = useRoute()
 const authStore = useAuthStore()
 
-// 當前宮廟 ID
 const templeId = computed(() => route.params.templeId)
-
-// 當前宮廟資訊
 const currentTemple = computed(() => {
-  return authStore.templeRoles.find(temple => temple.tenantId === templeId.value)
+  return authStore.templeRoles.find(t => t.tenantId === templeId.value)
 })
 
 // 統計數據
 const stats = ref({
   totalViews: 3456,
-  viewsGrowth: '+12%',
+  viewsGrowth: '+12.5%',
   totalRevenue: 68200,
-  revenueItems: '捐款 + 商品'
+  revenueGrowth: '+8.3%',
 })
 
-// 活動月曆數據
+// 月曆
 const currentMonth = ref(new Date())
-const monthActivities = ref([
-  { date: 15, name: '農曆新年祈福大典', time: '09:00', people: 156, status: '進行中' },
-  { date: 15, name: '光明燈點燈儀式', time: '14:00', people: 89, status: '進行中' }
-])
 
-// 宮廟地圖數據
-const mapStats = ref({
-  checkIns: { count: 1234, label: '打卡次數', period: '本月累計' },
-  addToFavorite: { count: 856, label: '加到最愛', period: '本月累計' },
-  mapViews: { count: 3421, label: '地圖瀏覽', period: '本月累計' }
-})
-
-// 熱門商品
-const popularProducts = ref([
-  { name: '平安符', price: 200, sold: 45 },
-  { name: '光明燈', price: 600, sold: 32 },
-  { name: '護身符', price: 150, sold: 28 }
-])
-
-// 熱門服務
-const popularServices = ref([
-  { name: '祈福點燈', type: '線上點燈服務', count: 78 },
-  { name: '收驚服務', type: '預約收驚', count: 56 },
-  { name: '求籤解籤', type: '線上求籤', count: 42 }
-])
-
-// 切換月份
+const goToday = () => { currentMonth.value = new Date() }
 const prevMonth = () => {
-  const date = new Date(currentMonth.value)
-  date.setMonth(date.getMonth() - 1)
-  currentMonth.value = date
+  const d = new Date(currentMonth.value)
+  d.setMonth(d.getMonth() - 1)
+  currentMonth.value = d
 }
-
 const nextMonth = () => {
-  const date = new Date(currentMonth.value)
-  date.setMonth(date.getMonth() + 1)
-  currentMonth.value = date
+  const d = new Date(currentMonth.value)
+  d.setMonth(d.getMonth() + 1)
+  currentMonth.value = d
 }
 
-// 格式化月份
 const formattedMonth = computed(() => {
-  return `${currentMonth.value.getFullYear()} 年 ${currentMonth.value.getMonth() + 1} 月`
+  const y = currentMonth.value.getFullYear()
+  const m = currentMonth.value.getMonth() + 1
+  return `${y} 年 ${m} 月`
 })
 
-// 生成日曆
-const calendar = computed(() => {
+// 模擬活動資料（key: YYYY-M-D）
+const activitiesMap = ref({
+  '2026-1-1':  [{ name: '屆年大典', color: '#fef9c3', dot: '#f59e0b' }],
+  '2026-1-15': [{ name: '初一祭祀', color: '#d1fae5', dot: '#10b981' }],
+  '2026-2-5':  [{ name: '元宵燈會', color: '#fef9c3', dot: '#f59e0b' }],
+})
+
+const getActivities = (year, month, day) => {
+  const key = `${year}-${month}-${day}`
+  return activitiesMap.value[key] || []
+}
+
+// 生成日曆格子（含上下月補位）
+const calendarWeeks = computed(() => {
   const year = currentMonth.value.getFullYear()
   const month = currentMonth.value.getMonth()
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
-  const daysInMonth = lastDay.getDate()
-  const startDayOfWeek = firstDay.getDay()
-  
-  const days = []
-  
-  // 填充前面的空白
-  for (let i = 0; i < startDayOfWeek; i++) {
-    days.push(null)
+
+  const cells = []
+
+  // 前補
+  const startDow = firstDay.getDay()
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = new Date(year, month, -i)
+    cells.push({ date: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear(), isCurrentMonth: false })
   }
-  
-  // 填充日期
-  for (let i = 1; i <= daysInMonth; i++) {
-    const hasActivity = monthActivities.value.some(activity => activity.date === i)
-    days.push({ date: i, hasActivity })
+
+  // 本月
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    cells.push({ date: i, month: month + 1, year, isCurrentMonth: true })
   }
-  
-  return days
+
+  // 後補
+  const remaining = 42 - cells.length
+  for (let i = 1; i <= remaining; i++) {
+    const d = new Date(year, month + 1, i)
+    cells.push({ date: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear(), isCurrentMonth: false })
+  }
+
+  // 切成週
+  const weeks = []
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7))
+  }
+  return weeks
 })
 
+const isToday = (cell) => {
+  const now = new Date()
+  return cell.isCurrentMonth &&
+    cell.date === now.getDate() &&
+    cell.month === now.getMonth() + 1 &&
+    cell.year === now.getFullYear()
+}
+
+// 宮廟地圖數據
+const mapStats = ref([
+  { label: '地圖瀏覽次數', value: 1234 },
+  { label: '收藏次數',     value: 567 },
+  { label: '打卡次數',     value: 890 },
+])
+
+// 熱門活動
+const hotActivities = ref([
+  { name: '新春祈福大典', people: 156, revenue: 45200 },
+  { name: '中秋法會',     people: 128, revenue: 38900 },
+  { name: '文昌開筆禮',   people: 98,  revenue: 32500 },
+])
+
+// 熱門商品
+const hotProducts = ref([
+  { name: '平安符', sold: 156 },
+  { name: '祈福燈', sold: 134 },
+  { name: '香油錢', sold: 98 },
+])
+
+// 熱門服務
+const hotServices = ref([
+  { name: '光明燈',   count: 234 },
+  { name: '祈福法會', count: 189 },
+  { name: '問事服務', count: 145 },
+])
+
 onMounted(() => {
-  console.log('當前宮廟:', currentTemple.value)
+  console.log('DashboardView mounted, temple:', currentTemple.value)
 })
 </script>
 
 <template>
   <div class="dashboard-view">
-    <!-- 頁面標題 -->
-    <div class="page-header">
-      <h1 class="page-title">宮廟總覽</h1>
-      <p class="page-subtitle">{{ currentTemple?.tenantName || '桃園創蔚宮' }}數據總覽與管理</p>
+    <!-- 麵包屑 -->
+    <div class="breadcrumb">
+      <span class="breadcrumb-link">後台管理</span>
+      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-current">宮廟總覽</span>
     </div>
 
-    <!-- 統計卡片區 -->
+    <!-- 統計卡片 -->
     <div class="stats-grid">
-      <!-- 網站瀏覽 -->
       <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">網站瀏覽</span>
-          <svg class="stat-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-          </svg>
-        </div>
+        <div class="stat-label">網站瀏覽</div>
         <div class="stat-value">{{ stats.totalViews.toLocaleString() }}</div>
-        <div class="stat-growth positive">
-          <svg viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-          </svg>
-          相比上月 {{ stats.viewsGrowth }}
-        </div>
+        <div class="stat-growth">{{ stats.viewsGrowth }} 較上月</div>
       </div>
-
-      <!-- 本月總收 -->
       <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">本月總收</span>
-          <svg class="stat-icon dollar" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
+        <div class="stat-label">本月營收</div>
+        <div class="stat-value">NT$ {{ stats.totalRevenue.toLocaleString() }}</div>
+        <div class="stat-growth">{{ stats.revenueGrowth }} 較上月</div>
+      </div>
+    </div>
+
+    <!-- 月曆卡片 -->
+    <div class="calendar-card">
+      <!-- 月曆 Header -->
+      <div class="calendar-toolbar">
+        <div class="calendar-title">
+          <svg class="cal-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
           </svg>
+          <span>{{ formattedMonth }}</span>
         </div>
-        <div class="stat-value revenue">NT$ {{ stats.totalRevenue.toLocaleString() }}</div>
-        <div class="stat-detail">{{ stats.revenueItems }}</div>
-      </div>
-    </div>
-
-    <!-- 主要內容區 -->
-    <div class="content-grid">
-      <!-- 活動月曆 -->
-      <div class="content-card calendar-card">
-        <div class="card-header">
-          <h2 class="card-title">活動月曆</h2>
-        </div>
-        <div class="card-body">
-          <!-- 月份切換 -->
-          <div class="month-selector">
-            <button class="month-btn" @click="prevMonth">
-              <svg viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            <span class="month-text">{{ formattedMonth }}</span>
-            <button class="month-btn" @click="nextMonth">
-              <svg viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- 日曆表格 -->
-          <div class="calendar">
-            <div class="calendar-header">
-              <div class="weekday">日</div>
-              <div class="weekday">一</div>
-              <div class="weekday">二</div>
-              <div class="weekday">三</div>
-              <div class="weekday">四</div>
-              <div class="weekday">五</div>
-              <div class="weekday">六</div>
-            </div>
-            <div class="calendar-body">
-              <div 
-                v-for="(day, index) in calendar" 
-                :key="index"
-                class="calendar-day"
-                :class="{ 'has-activity': day?.hasActivity }"
-              >
-                <span v-if="day" class="day-number">{{ day.date }}</span>
-                <span v-if="day?.hasActivity" class="activity-dot"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 活動列表 -->
-      <div class="content-card activities-card">
-        <div class="card-header">
-          <h3 class="card-subtitle">3 月 15 日活動</h3>
-        </div>
-        <div class="card-body">
-          <div class="activity-list">
-            <div 
-              v-for="(activity, index) in monthActivities" 
-              :key="index"
-              class="activity-item"
-            >
-              <div class="activity-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="activity-content">
-                <div class="activity-name">{{ activity.name }}</div>
-                <div class="activity-meta">{{ activity.time }} • {{ activity.people }} 人</div>
-              </div>
-              <span class="activity-badge">{{ activity.status }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 底部區域 -->
-    <div class="bottom-grid">
-      <!-- 宮廟地圖數據 -->
-      <div class="content-card">
-        <div class="card-header">
-          <h2 class="card-title">宮廟地圖數據</h2>
-          <button class="view-more-btn">
-            查看詳情 →
+        <div class="calendar-nav">
+          <button class="today-btn" @click="goToday">今天</button>
+          <button class="nav-btn" @click="prevMonth">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <button class="nav-btn" @click="nextMonth">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
           </button>
         </div>
-        <div class="card-body">
-          <div class="map-stats-grid">
-            <div class="map-stat-item">
-              <div class="map-stat-icon blue">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="map-stat-content">
-                <div class="map-stat-label">{{ mapStats.checkIns.label }}</div>
-                <div class="map-stat-value">{{ mapStats.checkIns.count.toLocaleString() }}</div>
-                <div class="map-stat-period">{{ mapStats.checkIns.period }}</div>
-              </div>
-            </div>
+      </div>
 
-            <div class="map-stat-item">
-              <div class="map-stat-icon red">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="map-stat-content">
-                <div class="map-stat-label">{{ mapStats.addToFavorite.label }}</div>
-                <div class="map-stat-value">{{ mapStats.addToFavorite.count.toLocaleString() }}</div>
-                <div class="map-stat-period">{{ mapStats.addToFavorite.period }}</div>
-              </div>
-            </div>
+      <!-- 星期列 -->
+      <div class="cal-header">
+        <div v-for="d in ['日','一','二','三','四','五','六']" :key="d" class="cal-weekday">{{ d }}</div>
+      </div>
 
-            <div class="map-stat-item">
-              <div class="map-stat-icon green">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="map-stat-content">
-                <div class="map-stat-label">{{ mapStats.mapViews.label }}</div>
-                <div class="map-stat-value">{{ mapStats.mapViews.count.toLocaleString() }}</div>
-                <div class="map-stat-period">{{ mapStats.mapViews.period }}</div>
-              </div>
+      <!-- 日期格 -->
+      <div class="cal-body">
+        <div
+          v-for="(week, wi) in calendarWeeks"
+          :key="wi"
+          class="cal-week"
+        >
+          <div
+            v-for="(cell, ci) in week"
+            :key="ci"
+            class="cal-cell"
+            :class="{ 'other-month': !cell.isCurrentMonth, 'today': isToday(cell) }"
+          >
+            <span class="cell-date">{{ cell.date }}</span>
+            <!-- 活動標籤 -->
+            <div
+              v-for="(act, ai) in getActivities(cell.year, cell.month, cell.date)"
+              :key="ai"
+              class="act-tag"
+              :style="{ background: act.color }"
+            >
+              <span class="act-dot" :style="{ background: act.dot }"></span>
+              {{ act.name }}
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 底部四格 -->
+    <div class="bottom-grid">
+      <!-- 宮廟地圖數據 -->
+      <div class="data-card">
+        <h3 class="data-card-title">宮廟地圖數據</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>數據項目</th>
+              <th class="text-right">數值</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in mapStats" :key="item.label">
+              <td>{{ item.label }}</td>
+              <td class="text-right orange">{{ item.value.toLocaleString() }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 熱門活動 -->
+      <div class="data-card">
+        <h3 class="data-card-title">熱門活動</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>活動名稱</th>
+              <th class="text-right">人數</th>
+              <th class="text-right">收入</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in hotActivities" :key="item.name">
+              <td>{{ item.name }}</td>
+              <td class="text-right gray">{{ item.people }}</td>
+              <td class="text-right orange">NT$ {{ item.revenue.toLocaleString() }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- 熱門商品 -->
-      <div class="content-card">
-        <div class="card-header">
-          <h2 class="card-title">熱門商品</h2>
-          <button class="view-more-btn">
-            管理 →
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="product-list">
-            <div 
-              v-for="(product, index) in popularProducts" 
-              :key="index"
-              class="product-item"
-            >
-              <div class="product-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="product-content">
-                <div class="product-name">{{ product.name }}</div>
-                <div class="product-price">NT$ {{ product.price }}</div>
-              </div>
-              <div class="product-sold">已售 {{ product.sold }}</div>
-            </div>
-          </div>
-        </div>
+      <div class="data-card">
+        <h3 class="data-card-title">熱門商品</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>商品名稱</th>
+              <th class="text-right">銷量</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in hotProducts" :key="item.name">
+              <td>{{ item.name }}</td>
+              <td class="text-right orange">{{ item.sold }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- 熱門服務 -->
-      <div class="content-card">
-        <div class="card-header">
-          <h2 class="card-title">熱門服務</h2>
-          <button class="view-more-btn">
-            管理 →
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="service-list">
-            <div 
-              v-for="(service, index) in popularServices" 
-              :key="index"
-              class="service-item"
-            >
-              <div class="service-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              </div>
-              <div class="service-content">
-                <div class="service-name">{{ service.name }}</div>
-                <div class="service-type">{{ service.type }}</div>
-              </div>
-              <div class="service-count">{{ service.count }} 次</div>
-            </div>
-          </div>
-        </div>
+      <div class="data-card">
+        <h3 class="data-card-title">熱門服務</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>服務名稱</th>
+              <th class="text-right">預約數</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in hotServices" :key="item.name">
+              <td>{{ item.name }}</td>
+              <td class="text-right orange">{{ item.count }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -337,502 +296,290 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .dashboard-view {
-  padding: 32px;
-  background: #fafafa;
-  min-height: 100vh;
+  padding: 20px 28px 40px;
+  background: #f3f4f6;
+  min-height: 100%;
   font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
-}
-
-// ========== 頁面標題 ==========
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 8px 0;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
-}
-
-// ========== 統計卡片 ==========
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.stat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.stat-icon {
-  width: 24px;
-  height: 24px;
-  color: #d97444;
-  
-  &.dollar {
-    color: #f59e0b;
-  }
-}
-
-.stat-value {
-  font-size: 36px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 8px;
-  
-  &.revenue {
-    color: #f59e0b;
-  }
-}
-
-.stat-growth {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #10b981;
-  
-  &.positive {
-    color: #10b981;
-  }
-  
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.stat-detail {
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-// ========== 主要內容區 ==========
-.content-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.content-card {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.card-subtitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-  margin: 0;
-}
-
-.card-body {
-  padding: 24px;
-}
-
-.view-more-btn {
-  background: none;
-  border: none;
-  color: #d97444;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s;
-  
-  &:hover {
-    color: #c45e30;
-  }
-}
-
-// ========== 月曆 ==========
-.month-selector {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.month-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: #6b7280;
-  transition: color 0.2s;
-  
-  &:hover {
-    color: #1f2937;
-  }
-  
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.month-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  min-width: 150px;
-  text-align: center;
-}
-
-.calendar {
-  
-}
-
-.calendar-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.weekday {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
-  padding: 8px 0;
-}
-
-.calendar-body {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-}
-
-.calendar-day {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border-radius: 8px;
-  transition: background 0.2s;
-  
-  &:hover {
-    background: #f9fafb;
-  }
-  
-  &.has-activity {
-    background: #fff7f3;
-  }
-}
-
-.day-number {
-  font-size: 14px;
-  color: #374151;
-}
-
-.activity-dot {
-  position: absolute;
-  bottom: 6px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #d97444;
-}
-
-// ========== 活動列表 ==========
-.activities-card {
-  
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.activity-icon {
-  width: 40px;
-  height: 40px;
-  background: #fff7f3;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    color: #d97444;
-  }
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 4px;
-}
-
-.activity-meta {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.activity-badge {
-  padding: 4px 12px;
-  background: #d97444;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 12px;
-  flex-shrink: 0;
-}
-
-// ========== 底部區域 ==========
-.bottom-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-// ========== 地圖數據 ==========
-.map-stats-grid {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.map-stat-item {
+// ========== 麵包屑 ==========
+.breadcrumb {
   display: flex;
   align-items: center;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.breadcrumb-link {
+  color: #6b7280;
+  cursor: pointer;
+  &:hover { color: #E8572A; }
+}
+
+.breadcrumb-sep { color: #9ca3af; font-size: 16px; }
+
+.breadcrumb-current {
+  color: #E8572A;
+  font-weight: 500;
+}
+
+// ========== 統計卡片 ==========
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.map-stat-icon {
-  width: 48px;
-  height: 48px;
+.stat-card {
+  background: #ffffff;
   border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #E8572A;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.stat-growth {
+  font-size: 13px;
+  color: #10b981;
+}
+
+// ========== 月曆卡片 ==========
+.calendar-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.calendar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+}
+
+.calendar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.cal-icon {
+  width: 18px;
+  height: 18px;
+  color: #E8572A;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.today-btn {
+  padding: 5px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  margin-right: 4px;
+
+  &:hover { background: #f9fafb; }
+}
+
+.nav-btn {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  
-  svg {
-    width: 24px;
-    height: 24px;
-    color: #ffffff;
-  }
-  
-  &.blue {
-    background: #3b82f6;
-  }
-  
-  &.red {
-    background: #ef4444;
-  }
-  
-  &.green {
-    background: #10b981;
-  }
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.15s;
+
+  &:hover { background: #f9fafb; color: #374151; }
+
+  svg { width: 16px; height: 16px; }
 }
 
-.map-stat-content {
-  flex: 1;
+// 星期列
+.cal-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-top: 1px solid #f3f4f6;
 }
 
-.map-stat-label {
+.cal-weekday {
+  text-align: center;
+  padding: 10px 0;
   font-size: 13px;
   color: #6b7280;
+  font-weight: 500;
+  border-right: 1px solid #f3f4f6;
+
+  &:last-child { border-right: none; }
+}
+
+// 日期格
+.cal-body {
+  border-top: 1px solid #f3f4f6;
+}
+
+.cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child { border-bottom: none; }
+}
+
+.cal-cell {
+  min-height: 90px;
+  padding: 8px 10px;
+  border-right: 1px solid #f3f4f6;
+  vertical-align: top;
+  position: relative;
+
+  &:last-child { border-right: none; }
+
+  &.other-month .cell-date {
+    color: #d1d5db;
+  }
+
+  &.today .cell-date {
+    background: #E8572A;
+    color: #ffffff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.cell-date {
+  font-size: 13px;
+  color: #374151;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
   margin-bottom: 4px;
 }
 
-.map-stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 2px;
-}
-
-.map-stat-period {
+.act-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: 12px;
-  color: #9ca3af;
+  color: #374151;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-// ========== 商品列表 ==========
-.product-list {
-  display: flex;
-  flex-direction: column;
+.act-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// ========== 底部四格 ==========
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.product-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.data-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
-.product-icon {
-  width: 40px;
-  height: 40px;
-  background: #fff7f3;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    color: #d97444;
+.data-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    color: #9ca3af;
+    font-weight: 400;
+    font-size: 13px;
+    padding: 0 0 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  td {
+    padding: 14px 0;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 }
 
-.product-content {
-  flex: 1;
+.text-right {
+  text-align: right;
 }
 
-.product-name {
-  font-size: 14px;
+.orange {
+  color: #E8572A !important;
   font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 2px;
 }
 
-.product-price {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.product-sold {
-  font-size: 13px;
+.gray {
   color: #9ca3af;
 }
 
-// ========== 服務列表 ==========
-.service-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.service-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.service-icon {
-  width: 40px;
-  height: 40px;
-  background: #fff7f3;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    color: #d97444;
-  }
-}
-
-.service-content {
-  flex: 1;
-}
-
-.service-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 2px;
-}
-
-.service-type {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.service-count {
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-// 響應式設計
-@media (max-width: 1200px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .bottom-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .bottom-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-  .dashboard-view {
-    padding: 16px;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .calendar-day {
-    font-size: 12px;
-  }
+  .dashboard-view { padding: 16px; }
+  .cal-cell { min-height: 60px; }
 }
 </style>
