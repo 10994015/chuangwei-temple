@@ -2,17 +2,20 @@
   <section class="news-list-section" :class="`device-${device}`">
     <div class="container">
       <!-- 分類標籤 -->
-      <div class="category-tabs">
+      <div class="filter-bar">
         <button 
           v-for="category in categories" 
           :key="category.id"
-          class="category-tab"
+          class="filter-btn"
           :class="{ active: selectedCategory === category.id }"
           @click="selectedCategory = category.id"
         >
           {{ category.name }}
         </button>
       </div>
+
+      <!-- 分隔線 -->
+      <hr class="divider" />
 
       <!-- 消息列表 -->
       <div class="news-list">
@@ -32,29 +35,37 @@
       </div>
 
       <!-- 分頁 -->
-      <div class="pagination">
-        <button class="page-btn prev" :disabled="currentPage === 1" @click="prevPage">
-          上一頁
-        </button>
-        <button 
-          v-for="page in totalPages" 
-          :key="page"
-          class="page-btn"
-          :class="{ active: currentPage === page }"
-          @click="goToPage(page)"
-        >
-          {{ page }}
-        </button>
-        <button class="page-btn next" :disabled="currentPage === totalPages" @click="nextPage">
-          下一頁
-        </button>
+      <div v-if="totalPages > 1" class="pagination">
+        <button
+          class="page-btn page-nav"
+          :class="{ disabled: currentPage === 1 }"
+          :disabled="currentPage === 1"
+          @click="prevPage"
+        >上一頁</button>
+
+        <template v-for="page in pageNumbers" :key="page">
+          <span v-if="page === '...'" class="page-ellipsis">...</span>
+          <button
+            v-else
+            class="page-btn"
+            :class="{ active: currentPage === page }"
+            @click="goToPage(page)"
+          >{{ page }}</button>
+        </template>
+
+        <button
+          class="page-btn page-nav"
+          :class="{ disabled: currentPage === totalPages }"
+          :disabled="currentPage === totalPages"
+          @click="nextPage"
+        >下一頁</button>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   newsList: {
@@ -166,9 +177,29 @@ const selectedCategory = ref('all')
 const currentPage = ref(1)
 const totalPages = ref(2)
 
-const goToPage = (page) => { currentPage.value = page }
+const goToPage = (page) => {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+}
 const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
+
+// 頁碼按鈕（含省略號邏輯）
+const pageNumbers = computed(() => {
+  const total = totalPages.value
+  const cur   = currentPage.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+
+  const pages = []
+  if (cur <= 4) {
+    pages.push(...[1, 2, 3, 4, 5], '...', total)
+  } else if (cur >= total - 3) {
+    pages.push(1, '...', ...[total-4, total-3, total-2, total-1, total])
+  } else {
+    pages.push(1, '...', cur-1, cur, cur+1, '...', total)
+  }
+  return pages
+})
 
 const viewNewsDetail = (news) => {
   console.log('查看消息詳情:', news)
@@ -189,29 +220,34 @@ const viewNewsDetail = (news) => {
   padding: 0 2rem;
 }
 
-// 分類標籤
-.category-tabs {
+/* ==================== 分類 Tab（對齊相簿樣式）==================== */
+.filter-bar {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e5e5;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
-.category-tab {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
+.filter-btn {
+  padding: 8px 24px;
   border: none;
-  border-radius: 8px;
+  background: transparent;
   font-size: 15px;
   color: #666;
   cursor: pointer;
+  border-radius: 4px;
   transition: all 0.2s;
-  font-weight: 500;
+  white-space: nowrap;
 
-  &:hover  { background: #f5f5f5; color: #333; }
-  &.active { background: #8b7355; color: #fff; }
+  &:hover  { color: #333; }
+  &.active { background: #8b6f47; color: #fff; font-weight: 500; }
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 16px 0 32px;
 }
 
 // 消息列表
@@ -286,46 +322,66 @@ const viewNewsDetail = (news) => {
   flex-shrink: 0;
 }
 
-// 分頁
+/* ==================== 頁碼（對齊相簿樣式）==================== */
 .pagination {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 0.5rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e5e5e5;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 48px;
 }
 
 .page-btn {
-  min-width: 80px;
-  padding: 0.75rem 1rem;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
   font-size: 14px;
-  color: #666;
+  color: #555;
   cursor: pointer;
+  border-radius: 4px;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  &:hover:not(:disabled):not(.active) {
+  &:hover:not(.disabled):not(.active) {
     background: #f5f5f5;
-    border-color: #bbb;
+    color: #333;
   }
 
   &.active {
-    background: #8b7355;
+    background: #8b6f47;
     color: #fff;
-    border-color: #8b7355;
     font-weight: 500;
   }
 
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &.page-nav {
+    color: #999;
+    font-size: 13px;
+    min-width: auto;
+    padding: 0 14px;
 
-  &.prev, &.next { min-width: auto; }
+    &.disabled {
+      color: #ccc;
+      cursor: default;
+    }
+  }
 }
 
-// ==================== ✅ device prop 響應式（取代 media query）====================
+.page-ellipsis {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #bbb;
+  letter-spacing: 2px;
+}
+
+/* ==================== ✅ device prop 響應式（取代 media query）==================== */
 
 // 平板
 .news-list-section.device-tablet {
@@ -333,9 +389,9 @@ const viewNewsDetail = (news) => {
     padding: 0 1.25rem;
   }
 
-  .category-tab {
+  .filter-btn {
     font-size: 14px;
-    padding: 0.6rem 1.2rem;
+    padding: 8px 18px;
   }
 
   .news-item {
@@ -348,8 +404,8 @@ const viewNewsDetail = (news) => {
   }
 
   .page-btn {
-    min-width: 60px;
-    padding: 0.6rem 0.8rem;
+    min-width: 32px;
+    height: 32px;
     font-size: 13px;
   }
 }
@@ -362,15 +418,17 @@ const viewNewsDetail = (news) => {
     padding: 0 0.75rem;
   }
 
-  .category-tabs {
-    gap: 0.4rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
+  .filter-bar {
+    gap: 2px;
   }
 
-  .category-tab {
+  .filter-btn {
     font-size: 13px;
-    padding: 0.5rem 0.9rem;
+    padding: 7px 14px;
+  }
+
+  .divider {
+    margin: 12px 0 20px;
   }
 
   .news-list {
@@ -409,10 +467,18 @@ const viewNewsDetail = (news) => {
     color: #bbb;
   }
 
+  .pagination {
+    margin-top: 32px;
+  }
+
   .page-btn {
-    min-width: 50px;
-    padding: 0.5rem 0.7rem;
+    min-width: 32px;
+    height: 32px;
     font-size: 13px;
+  }
+
+  .page-btn.page-nav {
+    padding: 0 8px;
   }
 }
 </style>

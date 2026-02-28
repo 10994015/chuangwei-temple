@@ -306,7 +306,7 @@ const toggleConfirmPassword = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #E8572A;
   padding: 2rem;
   font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
 }

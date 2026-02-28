@@ -36,54 +36,85 @@
 
     <!-- 設定表單 -->
     <div v-if="!isLoading && !error" class="settings-content">
-      <!-- ✅ 字型設定區塊 -->
+      <!-- 字型設定區塊 -->
       <section class="settings-section">
         <div class="section-header">
           <h2 class="section-title">字型設定</h2>
           <p class="section-description">選擇網站使用的字型樣式</p>
         </div>
 
+        <!-- 繁體中文字型 -->
         <div class="form-group">
-          <label class="form-label" for="font-family">
-            網站字型
+          <label class="form-label" for="font-family-zh-tw">
+            繁體中文字型（ZH-TW）
             <span class="required">*</span>
           </label>
           <select
-            id="font-family"
-            v-model="formData.frontFamily"
+            id="font-family-zh-tw"
+            v-model="formData.frontFamilyZhTw"
             class="form-select"
             @change="markAsChanged"
           >
             <option value="">請選擇字型</option>
-            <option 
-              v-for="font in availableFonts" 
-              :key="font.value" 
-              :value="font.value"
-            >
+            <option v-for="font in zhTwFonts" :key="font.value" :value="font.value">
               {{ font.label }}
             </option>
           </select>
-          <p class="input-hint">
-            <span class="hint-text">字型會套用到整個網站的文字內容</span>
-          </p>
+        </div>
+        <div v-if="formData.frontFamilyZhTw" class="font-preview">
+          <div class="preview-label">繁中字型預覽</div>
+          <div class="preview-content" :style="{ fontFamily: getFontFamily(formData.frontFamilyZhTw) }">
+            <p class="preview-chinese">歡迎來到宮廟網站，這是繁體中文預覽文字。</p>
+          </div>
         </div>
 
-        <!-- 字型預覽 -->
-        <div v-if="formData.frontFamily" class="font-preview">
-          <div class="preview-label">字型預覽</div>
-          <div 
-            class="preview-content" 
-            :style="{ fontFamily: getFontFamily(formData.frontFamily) }"
+        <!-- 簡體中文字型 -->
+        <div class="form-group">
+          <label class="form-label" for="font-family-zh-cn">
+            簡體中文字型（ZH-CN）
+            <span class="required">*</span>
+          </label>
+          <select
+            id="font-family-zh-cn"
+            v-model="formData.frontFamilyZhCn"
+            class="form-select"
+            @change="markAsChanged"
           >
-            <p class="preview-chinese">
-              歡迎來到宮廟網站，這是中文預覽文字。
-            </p>
-            <p class="preview-english">
-              Welcome to Temple Website, this is English preview text.
-            </p>
-            <p class="preview-numbers">
-              1234567890 ！@#$%
-            </p>
+            <option value="">請選擇字型</option>
+            <option v-for="font in zhCnFonts" :key="font.value" :value="font.value">
+              {{ font.label }}
+            </option>
+          </select>
+        </div>
+        <div v-if="formData.frontFamilyZhCn" class="font-preview">
+          <div class="preview-label">简中字型预览</div>
+          <div class="preview-content" :style="{ fontFamily: getFontFamily(formData.frontFamilyZhCn) }">
+            <p class="preview-chinese">欢迎来到宫庙网站，这是简体中文预览文字。</p>
+          </div>
+        </div>
+
+        <!-- 英文字型 -->
+        <div class="form-group">
+          <label class="form-label" for="font-family-en-us">
+            英文字型（EN-US）
+            <span class="required">*</span>
+          </label>
+          <select
+            id="font-family-en-us"
+            v-model="formData.frontFamilyEnUs"
+            class="form-select"
+            @change="markAsChanged"
+          >
+            <option value="">請選擇字型</option>
+            <option v-for="font in enFonts" :key="font.value" :value="font.value">
+              {{ font.label }}
+            </option>
+          </select>
+        </div>
+        <div v-if="formData.frontFamilyEnUs" class="font-preview">
+          <div class="preview-label">EN Font Preview</div>
+          <div class="preview-content" :style="{ fontFamily: getFontFamily(formData.frontFamilyEnUs) }">
+            <p class="preview-english">Welcome to Temple Website, this is English preview text.</p>
           </div>
         </div>
       </section>
@@ -196,76 +227,62 @@ const router = useRouter()
 const route = useRoute()
 const pageEditorStore = usePageEditorStore()
 
-// ✅ 可用字型清單（支援中英文）
-const availableFonts = [
-  {
-    value: 'noto-sans-tc',
-    label: 'Noto Sans TC（思源黑體）- 現代簡潔',
-    googleFont: 'Noto+Sans+TC:wght@300;400;500;700',
-    cssFamily: "'Noto Sans TC', sans-serif"
-  },
-  {
-    value: 'noto-serif-tc',
-    label: 'Noto Serif TC（思源宋體）- 典雅端莊',
-    googleFont: 'Noto+Serif+TC:wght@300;400;500;700',
-    cssFamily: "'Noto Serif TC', serif"
-  },
-  {
-    value: 'source-han-sans',
-    label: 'Source Han Sans（源泉黑體）- 專業大方',
-    googleFont: 'Noto+Sans+TC:wght@300;400;500;700', // 使用 Noto Sans TC 作為替代
-    cssFamily: "'Noto Sans TC', 'Source Han Sans', sans-serif"
-  },
-  {
-    value: 'roboto-noto',
-    label: 'Roboto + Noto Sans TC（混合字型）- 國際化',
-    googleFont: 'Roboto:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700',
-    cssFamily: "'Roboto', 'Noto Sans TC', sans-serif"
-  },
-  {
-    value: 'zhi-mang-xing',
-    label: '志芒星（手寫風格）- 親切溫暖',
-    googleFont: 'Zhi+Mang+Xing',
-    cssFamily: "'Zhi Mang Xing', cursive"
-  },
-  {
-    value: 'ma-shan-zheng',
-    label: '馬善政楷書（書法風格）- 傳統莊重',
-    googleFont: 'Ma+Shan+Zheng',
-    cssFamily: "'Ma Shan Zheng', cursive"
-  }
+// ==================== 字型清單（按語言分類）====================
+
+const zhTwFonts = [
+  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    googleFont: 'IBM+Plex+Sans+TC:wght@400;600',                  cssFamily: "'IBM Plex Sans TC', sans-serif" },
+  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', googleFont: 'LXGW+WenKai+Mono+TC',                            cssFamily: "'LXGW WenKai Mono TC', monospace" },
+  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         googleFont: 'Noto+Sans+TC:wght@400;600',                      cssFamily: "'Noto Sans TC', sans-serif" },
+  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        googleFont: 'Noto+Serif+TC:wght@400;600',                     cssFamily: "'Noto Serif TC', serif" },
 ]
 
-// Props - 從路由參數獲取 templeId
-const templeId = computed(() => route.params.templeId)
+const zhCnFonts = [
+  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         googleFont: 'Noto+Sans+SC:wght@400;600',                      cssFamily: "'Noto Sans SC', sans-serif" },
+  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        googleFont: 'Noto+Serif+SC:wght@400;600',                     cssFamily: "'Noto Serif SC', serif" },
+  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     googleFont: 'IBM+Plex+Sans+SC:wght@400;600',                  cssFamily: "'IBM Plex Sans SC', sans-serif" },
+]
 
-// 狀態
+const enFonts = [
+  { value: 'bona-nova',           label: 'Bona Nova',            googleFont: 'Bona+Nova:ital,wght@0,400;0,700;1,400',          cssFamily: "'Bona Nova', serif" },
+  { value: 'inter',               label: 'Inter',                googleFont: 'Inter:wght@400;600',                             cssFamily: "'Inter', sans-serif" },
+  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   googleFont: 'Cormorant+Garamond:ital,wght@0,400;0,600;1,400', cssFamily: "'Cormorant Garamond', serif" },
+  { value: 'montserrat',          label: 'Montserrat',           googleFont: 'Montserrat:wght@400;600',                        cssFamily: "'Montserrat', sans-serif" },
+  { value: 'playfair-display',    label: 'Playfair Display',     googleFont: 'Playfair+Display:ital,wght@0,400;0,600;1,400',   cssFamily: "'Playfair Display', serif" },
+]
+
+// 合併用於 getFontFamily 查找
+const allFonts = [...zhTwFonts, ...zhCnFonts, ...enFonts]
+
+// ==================== 狀態 ====================
+
+const templeId = computed(() => route.params.templeId)
 const isLoading = ref(true)
 const isSaving = ref(false)
 const error = ref(null)
 const hasChanges = ref(false)
 
-// 表單資料
 const formData = reactive({
-  frontFamily: '',       // ✅ 改為 frontFamily
-  seoTitle: '',          // ✅ 改為 seoTitle
-  seoDescription: '',    // ✅ 改為 seoDescription
-  seoKeywords: '',       // ✅ 改為 seoKeywords
-  metaPixel: ''          // ✅ 改為 metaPixel
+  frontFamilyZhTw: '',
+  frontFamilyZhCn: '',
+  frontFamilyEnUs: '',
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
+  metaPixel: ''
 })
 
-// 原始資料（用於比對變更）
 const originalData = reactive({
-  frontFamily: '',       // ✅ 改為 frontFamily
-  seoTitle: '',          // ✅ 改為 seoTitle
-  seoDescription: '',    // ✅ 改為 seoDescription
-  seoKeywords: '',       // ✅ 改為 seoKeywords
-  metaPixel: ''          // ✅ 改為 metaPixel
+  frontFamilyZhTw: '',
+  frontFamilyZhCn: '',
+  frontFamilyEnUs: '',
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
+  metaPixel: ''
 })
 
-// ✅ 獲取字型 CSS family
 const getFontFamily = (fontValue) => {
-  const font = availableFonts.find(f => f.value === fontValue)
+  const font = allFonts.find(f => f.value === fontValue)
   return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
 }
 
@@ -276,22 +293,20 @@ const loadSettings = async () => {
   error.value = null
 
   try {
-    // 使用 Store 的 API 方法
     const settings = await pageEditorStore.fetchWebsiteSettings(templeId.value)
     
     if (settings) {
-      // ✅ GET API 回傳 snake_case，需要轉換為 camelCase
-      formData.frontFamily = settings.frontFamily || 'noto-sans-tc'
-      formData.seoTitle = settings.seoTitle || ''
-      formData.seoDescription = settings.seoDescription || ''
-      formData.seoKeywords = settings.seoKeywords || ''
-      formData.metaPixel = settings.metaPixel || ''
+      formData.frontFamilyZhTw = settings.frontFamilyZhTw || 'noto-sans-tc'
+      formData.frontFamilyZhCn = settings.frontFamilyZhCn || 'noto-sans-sc'
+      formData.frontFamilyEnUs = settings.frontFamilyEnUs || 'inter'
+      formData.seoTitle        = settings.seoTitle        || ''
+      formData.seoDescription  = settings.seoDescription  || ''
+      formData.seoKeywords     = settings.seoKeywords     || ''
+      formData.metaPixel       = settings.metaPixel       || ''
 
-      // 儲存原始資料
       Object.assign(originalData, formData)
-      
       hasChanges.value = false
-      
+
       console.log('✓ 設定已載入 (從 API):', {
         front_family: settings.front_family,
         seo_title: settings.seo_title,
@@ -309,48 +324,32 @@ const loadSettings = async () => {
 // ==================== 儲存設定 ====================
 
 const handleSave = async () => {
-  // 驗證必填欄位
-  if (!formData.frontFamily) {
-    alert('請選擇網站字型')
+  if (!formData.frontFamilyZhTw || !formData.frontFamilyZhCn || !formData.frontFamilyEnUs) {
+    alert('請選擇所有語言的網站字型')
     return
   }
-
-  if (!formData.seoTitle.trim()) {
-    alert('請填寫網站標題')
-    return
-  }
-
-  if (!formData.seoDescription.trim()) {
-    alert('請填寫網站描述')
-    return
-  }
+  if (!formData.seoTitle.trim()) { alert('請填寫網站標題'); return }
+  if (!formData.seoDescription.trim()) { alert('請填寫網站描述'); return }
 
   isSaving.value = true
 
   try {
-    // 準備請求資料（使用新的欄位名稱）
     const settingsData = {
-      frontFamily: formData.frontFamily,           // ✅ 改為 frontFamily
-      seoTitle: formData.seoTitle.trim(),          // ✅ 改為 seoTitle
-      seoDescription: formData.seoDescription.trim(), // ✅ 改為 seoDescription
-      seoKeywords: formData.seoKeywords.trim(),    // ✅ 改為 seoKeywords
-      metaPixel: formData.metaPixel.trim()         // ✅ 改為 metaPixel
+      frontFamilyZhTw: formData.frontFamilyZhTw,
+      frontFamilyZhCn: formData.frontFamilyZhCn,
+      frontFamilyEnUs: formData.frontFamilyEnUs,
+      seoTitle:        formData.seoTitle.trim(),
+      seoDescription:  formData.seoDescription.trim(),
+      seoKeywords:     formData.seoKeywords.trim(),
+      metaPixel:       formData.metaPixel.trim()
     }
 
-    // 使用 Store 的 API 方法
-    const success = await pageEditorStore.updateWebsiteSettings(
-      templeId.value,
-      settingsData
-    )
+    const success = await pageEditorStore.updateWebsiteSettings(templeId.value, settingsData)
 
     if (success) {
-      // 更新原始資料
-      Object.assign(originalData, formData)
-      hasChanges.value = false
       alert('設定已儲存！')
-      
-      // ✅ 重新載入頁面以套用新字型
-      window.location.reload()
+      // ✅ 重新讀取設定（顯示載入中，不整頁重新整理）
+      await loadSettings()
     } else {
       error.value = pageEditorStore.error || '儲存失敗，請稍後再試'
       alert('儲存失敗：' + error.value)
@@ -360,7 +359,7 @@ const handleSave = async () => {
   }
 }
 
-// ==================== 取消變更 ====================
+// ==================== 其他事件 ====================
 
 const handleCancel = () => {
   if (confirm('確定要放棄所有未儲存的變更嗎？')) {
@@ -369,47 +368,37 @@ const handleCancel = () => {
   }
 }
 
-// ==================== 返回編輯器 ====================
-
 const handleBack = () => {
   if (hasChanges.value) {
-    if (confirm('您有未儲存的變更，確定要離開嗎？')) {
-      router.back()
-    }
+    if (confirm('您有未儲存的變更，確定要離開嗎？')) router.back()
   } else {
     router.back()
   }
 }
 
-// ==================== 標記有變更 ====================
-
 const markAsChanged = () => {
-  hasChanges.value = 
-    formData.frontFamily !== originalData.frontFamily ||
-    formData.seoTitle !== originalData.seoTitle ||
-    formData.seoDescription !== originalData.seoDescription ||
-    formData.seoKeywords !== originalData.seoKeywords ||
-    formData.metaPixel !== originalData.metaPixel
+  hasChanges.value =
+    formData.frontFamilyZhTw !== originalData.frontFamilyZhTw ||
+    formData.frontFamilyZhCn !== originalData.frontFamilyZhCn ||
+    formData.frontFamilyEnUs !== originalData.frontFamilyEnUs ||
+    formData.seoTitle        !== originalData.seoTitle        ||
+    formData.seoDescription  !== originalData.seoDescription  ||
+    formData.seoKeywords     !== originalData.seoKeywords     ||
+    formData.metaPixel       !== originalData.metaPixel
 }
 
-// ==================== 掛載 ====================
-
-onMounted(() => {
-  loadSettings()
-})
+onMounted(() => { loadSettings() })
 </script>
 
 <style scoped>
 .website-settings {
   min-height: 100vh;
-  height: 100vh;  /* ✅ 添加固定高度 */
+  height: 100vh;
   background: #f5f5f5;
-  display: flex;  /* ✅ 使用 flex 布局 */
-  flex-direction: column;  /* ✅ 垂直排列 */
-  overflow: hidden;  /* ✅ 防止整體滾動 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-
-/* ==================== 頂部導航 ==================== */
 
 .settings-header {
   background: #fff;
@@ -443,9 +432,7 @@ onMounted(() => {
   color: #E8572A;
 }
 
-.back-button .icon {
-  font-size: 1.2rem;
-}
+.back-button .icon { font-size: 1.2rem; }
 
 .settings-title {
   font-size: 1.5rem;
@@ -454,10 +441,7 @@ onMounted(() => {
   margin: 0;
 }
 
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-}
+.header-actions { display: flex; gap: 0.5rem; }
 
 .save-button {
   padding: 0.75rem 1.5rem;
@@ -476,15 +460,10 @@ onMounted(() => {
   box-shadow: 0 4px 8px rgba(232, 87, 42, 0.3);
 }
 
-.save-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* ==================== 載入與錯誤 ==================== */
+.save-button:disabled { background: #ccc; cursor: not-allowed; }
 
 .loading-container {
-  flex: 1;  /* ✅ 佔據剩餘空間 */
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -507,7 +486,7 @@ onMounted(() => {
 }
 
 .error-container {
-  flex: 1;  /* ✅ 佔據剩餘空間 */
+  flex: 1;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -527,9 +506,7 @@ onMounted(() => {
   gap: 0.75rem;
 }
 
-.error-icon {
-  font-size: 1.5rem;
-}
+.error-icon { font-size: 1.5rem; }
 
 .retry-button {
   margin-left: auto;
@@ -542,20 +519,16 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.retry-button:hover {
-  background: #a22;
-}
-
-/* ==================== 設定內容 ==================== */
+.retry-button:hover { background: #a22; }
 
 .settings-content {
-  flex: 1;  /* ✅ 佔據剩餘空間 */
-  overflow-y: auto;  /* ✅ 添加垂直滾動 */
+  flex: 1;
+  overflow-y: auto;
   max-width: 900px;
-  width: 100%;  /* ✅ 確保寬度 */
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
-  box-sizing: border-box;  /* ✅ 確保 padding 計算正確 */
+  box-sizing: border-box;
 }
 
 .settings-section {
@@ -579,17 +552,9 @@ onMounted(() => {
   margin: 0 0 0.5rem 0;
 }
 
-.section-description {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 0;
-}
+.section-description { color: #666; font-size: 0.9rem; margin: 0; }
 
-/* ==================== 表單元件 ==================== */
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
+.form-group { margin-bottom: 1.5rem; }
 
 .form-label {
   display: block;
@@ -598,10 +563,7 @@ onMounted(() => {
   margin-bottom: 0.5rem;
 }
 
-.required {
-  color: #E8572A;
-  margin-left: 0.25rem;
-}
+.required { color: #E8572A; margin-left: 0.25rem; }
 
 .form-input,
 .form-textarea,
@@ -623,16 +585,8 @@ onMounted(() => {
   box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.1);
 }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-family: inherit;
-}
-
-.form-select {
-  cursor: pointer;
-  background: #fff;
-}
+.form-textarea { resize: vertical; min-height: 100px; font-family: inherit; }
+.form-select { cursor: pointer; background: #fff; }
 
 .input-hint {
   display: flex;
@@ -642,16 +596,8 @@ onMounted(() => {
   color: #999;
 }
 
-.hint-text {
-  color: #999;
-}
-
-.text-warning {
-  color: #ff9800;
-  font-weight: 500;
-}
-
-/* ==================== ✅ 字型預覽 ==================== */
+.hint-text { color: #999; }
+.text-warning { color: #ff9800; font-weight: 500; }
 
 .font-preview {
   margin-top: 1.5rem;
@@ -675,27 +621,9 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 
-.preview-chinese {
-  font-size: 1.25rem;
-  line-height: 1.8;
-  color: #333;
-  margin: 0 0 1rem 0;
-}
-
-.preview-english {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: #555;
-  margin: 0 0 1rem 0;
-}
-
-.preview-numbers {
-  font-size: 1rem;
-  color: #777;
-  margin: 0;
-}
-
-/* ==================== 變更提示 ==================== */
+.preview-chinese { font-size: 1.25rem; line-height: 1.8; color: #333; margin: 0 0 1rem 0; }
+.preview-english { font-size: 1.1rem; line-height: 1.6; color: #555; margin: 0 0 1rem 0; }
+.preview-numbers { font-size: 1rem; color: #777; margin: 0; }
 
 .changes-banner {
   position: fixed;
@@ -713,15 +641,8 @@ onMounted(() => {
   z-index: 1000;
 }
 
-.changes-icon {
-  font-size: 1.5rem;
-}
-
-.changes-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
-}
+.changes-icon { font-size: 1.5rem; }
+.changes-actions { display: flex; gap: 0.5rem; margin-left: auto; }
 
 .cancel-button {
   padding: 0.5rem 1rem;
@@ -733,10 +654,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.cancel-button:hover {
-  background: #f5f5f5;
-  border-color: #999;
-}
+.cancel-button:hover { background: #f5f5f5; border-color: #999; }
 
 .save-button-small {
   padding: 0.5rem 1rem;
@@ -748,52 +666,18 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.save-button-small:hover {
-  background: #d14a1f;
-}
+.save-button-small:hover { background: #d14a1f; }
 
-/* ==================== 響應式 ==================== */
-
-/* ✅ 滾動條美化 */
-.settings-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.settings-content::-webkit-scrollbar-track {
-  background: #f5f5f5;
-}
-
-.settings-content::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
-}
-
-.settings-content::-webkit-scrollbar-thumb:hover {
-  background: #999;
-}
+.settings-content::-webkit-scrollbar { width: 8px; }
+.settings-content::-webkit-scrollbar-track { background: #f5f5f5; }
+.settings-content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.settings-content::-webkit-scrollbar-thumb:hover { background: #999; }
 
 @media (max-width: 768px) {
-  .settings-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .settings-title {
-    order: -1;
-    text-align: center;
-  }
-
-  .header-actions {
-    justify-content: center;
-  }
-
-  .settings-content {
-    padding: 1rem;
-  }
-
-  .settings-section {
-    padding: 1.5rem;
-  }
+  .settings-header { flex-direction: column; gap: 1rem; align-items: stretch; }
+  .settings-title { order: -1; text-align: center; }
+  .header-actions { justify-content: center; }
+  .settings-content { padding: 1rem; }
+  .settings-section { padding: 1.5rem; }
 }
 </style>

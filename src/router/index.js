@@ -205,7 +205,7 @@ router.beforeEach(async (to, from, next) => {
         console.log('用戶的宮廟角色:', authStore.templeRoles)
         
         const hasPermission = authStore.templeRoles.some(
-          temple => temple.templeId === templeId
+          temple => temple.tenantId === templeId
         )
         
         console.log('是否有權限:', hasPermission)

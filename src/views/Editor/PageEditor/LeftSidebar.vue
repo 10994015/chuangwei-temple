@@ -592,7 +592,7 @@ const handleDragStart = (event, item) => {
 
 .system-frame-preview {
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #E8572A;
   border-radius: 6px;
   display: flex;
   align-items: center;

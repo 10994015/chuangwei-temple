@@ -224,14 +224,14 @@ watch(() => route.path, () => {
               <div v-if="templeRolesList.length > 0" class="dropdown-divider"></div>
               
               <!-- 宮廟角色列表（動態生成） -->
-              <button 
-                v-for="temple in templeRolesList" 
-                :key="temple.templeId"
+              <button
+                v-for="temple in templeRolesList"
+                :key="temple.tenantId"
                 class="admin-option"
-                :class="{ 'active': currentTempleId === temple.templeId }"
-                @click="handleAdminOption(temple.templeId)"
+                :class="{ 'active': currentTempleId === temple.tenantId }"
+                @click="handleAdminOption(temple.tenantId)"
               >
-                {{ temple.templeName }}
+                {{ temple.tenantName }}
               </button>
             </div>
           </Transition>

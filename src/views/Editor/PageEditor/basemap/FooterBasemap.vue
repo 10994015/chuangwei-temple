@@ -43,11 +43,12 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  templeName:    { type: String, default: null },
-  templePhone:   { type: String, default: null },
-  templeAddress: { type: String, default: null },
-  templeEmail:   { type: String, default: null },
-  templeId:      { type: String, default: null },
+  // ✅ 新欄位（API 回傳）
+  tenantName:    { type: String, default: null },
+  tenantPhone:   { type: String, default: null },
+  tenantAddress: { type: String, default: null },
+  tenantEmail:   { type: String, default: null },
+  tenantId:      { type: String, default: null },
   brandName:     { type: String, default: null },
   contacts:      { type: Array,  default: null },
   copyright:     { type: String, default: null },
@@ -61,10 +62,10 @@ const props = defineProps({
   device: { type: String, default: 'desktop' }
 })
 
-const displayName    = computed(() => props.templeName    || props.brandName    || '宮廟名稱')
-const displayPhone   = computed(() => props.templePhone   || null)
-const displayAddress = computed(() => props.templeAddress || null)
-const displayEmail   = computed(() => props.templeEmail   || null)
+const displayName    = computed(() => props.tenantName    || props.brandName || '宮廟名稱')
+const displayPhone   = computed(() => props.tenantPhone   || null)
+const displayAddress = computed(() => props.tenantAddress || null)
+const displayEmail   = computed(() => props.tenantEmail   || null)
 const displayCopyright = computed(() =>
   props.copyright || `Copyright © ${new Date().getFullYear()} ${displayName.value} | 宮廟`
 )

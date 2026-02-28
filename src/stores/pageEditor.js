@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosClient from '../axios'
 
 /**
  * PageEditor Store
@@ -81,14 +82,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      const response = await fetch(`/api/tenant/${tid}/web-site/draft-page/tab`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-      const result = await response.json()
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/tab`)
+      const result = response.data
 
       if (result.statusCode === 200 && result.data) {
         headerTabs.value = result.data
@@ -119,14 +114,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     try {
       console.log('📥 載入語言清單...')
       
-      const response = await fetch(`/api/tenant/${tid}/web-site/locale`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-      const result = await response.json()
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/locale`)
+      const result = response.data
 
       if (result.statusCode === 200 && result.data) {
         locales.value = result.data
@@ -167,19 +156,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     try {
       console.log(`📥 載入系統框架列表: ${slug}`)
       
-      const response = await fetch(
-        `/api/tenant/${tid}/web-site/draft-page/${slug}/system-frame`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const result = await response.json()
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}/system-frame`)
+      const result = response.data
 
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         // 存儲到 systemFrames
@@ -217,14 +195,10 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     try {
       console.log(`📥 載入 ${slug} (${targetLocale})`)
       
-      const response = await fetch(`/api/tenant/${tid}/web-site/draft-page/${slug}?locale=${targetLocale}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}`, {
+        params: { locale: targetLocale }
       })
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-      const result = await response.json()
+      const result = response.data
 
       if (result.statusCode === 200 && result.data) {
         // 直接存儲 API 數據
@@ -318,24 +292,10 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       }
       
       console.log('📤 發送 PATCH 請求...')
-      
-      const response = await fetch(`/api/tenant/${tid}/web-site/draft-page`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
 
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/draft-page`, requestBody)
       console.log('📥 回應狀態:', response.status)
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ 保存失敗，回應:', errorText)
-        throw new Error(`HTTP ${response.status}: ${errorText}`)
-      }
-
-      const result = await response.json()
+      const result = response.data
       console.log('📥 回應內容:', result)
 
       if (result.statusCode === 200) {
@@ -793,30 +753,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     try {
       console.log(`📥 載入網站設定... (tid: ${tid})`)
 
-      const response = await fetch(`/api/tenant/${tid}/web-site/`, {
-        method: 'GET',
-        headers: { 
-          'Content-Type': 'application/json'
-        }
-      })
-
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/`)
       console.log(`📥 回應狀態: ${response.status}`)
-
-      if (response.status === 401) {
-        const errorMsg = '未授權，請重新登入'
-        console.error(`❌ ${errorMsg}`)
-        error.value = errorMsg
-        return null
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`❌ HTTP ${response.status}: ${errorText}`)
-        error.value = `HTTP ${response.status}: 載入失敗`
-        return null
-      }
-
-      const result = await response.json()
+      const result = response.data
       
       console.log('📥 完整回應:', result)
 
@@ -863,31 +802,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       console.log(`💾 保存網站設定... (tid: ${tid})`)
       console.log('📤 請求資料:', settingsData)
 
-      const response = await fetch(`/api/tenant/${tid}/web-site/`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(settingsData)
-      })
-
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/`, settingsData)
       console.log(`📥 回應狀態: ${response.status}`)
-
-      if (response.status === 401) {
-        const errorMsg = '未授權，請重新登入'
-        console.error(`❌ ${errorMsg}`)
-        error.value = errorMsg
-        return false
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`❌ HTTP ${response.status}: ${errorText}`)
-        error.value = `HTTP ${response.status}: 保存失敗`
-        return false
-      }
-
-      const result = await response.json()
+      const result = response.data
       
       console.log('📥 完整回應:', result)
 
@@ -931,33 +848,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     try {
       console.log(`🚀 發布網站 (tid: ${tid}, locale: ${locale})`)
       
-      const response = await fetch(`/api/tenant/${tid}/web-site/publish`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          locale: locale
-        })
-      })
-
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/publish`, { locale })
       console.log(`📥 回應狀態: ${response.status}`)
-
-      if (response.status === 401) {
-        const errorMsg = '未授權，請重新登入'
-        console.error(`❌ ${errorMsg}`)
-        error.value = errorMsg
-        return false
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`❌ HTTP ${response.status}: ${errorText}`)
-        error.value = `HTTP ${response.status}: 發布失敗`
-        return false
-      }
-
-      const result = await response.json()
+      const result = response.data
       
       console.log('📥 完整回應:', result)
 
@@ -984,7 +877,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
    * POST /api/tenant/{tid}/web-site/draft-page/file
    * @param {File} file - 要上傳的圖片檔案
    * @param {string} tid - 租戶 ID (可選，不提供時使用 store 中的 tenantId)
-   * @returns {Object|null} 上傳成功返回 { id, fileUrl, fileName, size }，失敗返回 null
+   * @returns {Object|null} 上傳成功返回 { id, fileUrl(=publicFileUrl), fileName, size }，失敗返回 null
    */
   const uploadImage = async (file, tid = null) => {
     const targetTid = tid || tenantId.value
@@ -1016,29 +909,14 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const formData = new FormData()
       formData.append('file', file)
       
-      // 呼叫 API
-      const response = await fetch(`/api/tenant/${targetTid}/web-site/draft-page/file`, {
-        method: 'POST',
-        body: formData
-      })
-
+      // 呼叫 API（FormData 需覆蓋 Content-Type，讓瀏覽器自動附帶 boundary）
+      const response = await axiosClient.post(
+        `/tenant/${targetTid}/web-site/draft-page/file`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
       console.log(`📥 回應狀態: ${response.status}`)
-
-      if (response.status === 401) {
-        const errorMsg = '未授權，請重新登入'
-        console.error(`❌ ${errorMsg}`)
-        error.value = errorMsg
-        return null
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`❌ HTTP ${response.status}: ${errorText}`)
-        error.value = `上傳失敗: HTTP ${response.status}`
-        return null
-      }
-
-      const result = await response.json()
+      const result = response.data
       
       console.log('📥 上傳回應:', result)
 
@@ -1048,14 +926,14 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         
         console.log('✓ 圖片上傳成功:', {
           id: uploadedFile.id,
-          fileUrl: uploadedFile.fileUrl,
+          fileUrl: uploadedFile.publicFileUrl,
           fileName: uploadedFile.fileName,
           size: `${(uploadedFile.size / 1024).toFixed(2)} KB`
         })
-        
+
         return {
           id: uploadedFile.id,
-          fileUrl: uploadedFile.fileUrl,
+          fileUrl: uploadedFile.publicFileUrl,
           fileName: uploadedFile.fileName,
           originalName: uploadedFile.originalName,
           size: uploadedFile.size
@@ -1102,35 +980,11 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       error.value = null
       
       // ✅ 呼叫刪除 API
-      const response = await fetch(`/api/tenant/${targetTid}/web-site/draft-page/${slug}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          locale: currentLocale.value || 'any'
-        })
+      const response = await axiosClient.delete(`/tenant/${targetTid}/web-site/draft-page/${slug}`, {
+        data: { locale: currentLocale.value || 'any' }
       })
-
       console.log(`📥 刪除回應狀態: ${response.status}`)
-
-      if (response.status === 401) {
-        const errorMsg = '未授權，請重新登入'
-        console.error(`❌ ${errorMsg}`)
-        error.value = errorMsg
-        isLoading.value = false
-        return false
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`❌ HTTP ${response.status}: ${errorText}`)
-        error.value = `刪除失敗: HTTP ${response.status}`
-        isLoading.value = false
-        return false
-      }
-
-      const result = await response.json()
+      const result = response.data
       console.log('📥 刪除回應:', result)
 
       if (result.statusCode === 200) {

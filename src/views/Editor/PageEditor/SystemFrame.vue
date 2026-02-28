@@ -1,4 +1,5 @@
 <template>
+
   <div 
     class="system-frame-wrapper" 
     :class="{ 'is-selected': isFrameSelected && frame?.isDeletable }"
@@ -215,6 +216,7 @@ const handleDeleteLogo = () => {
     frameType: props.frameType
   })
 }
+console.log('ALBUM_LIST frameData:', props.frameData)
 </script>
 
 <style scoped>

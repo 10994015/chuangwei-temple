@@ -9,7 +9,7 @@
       >
         <div class="logo">
           <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="logo-image" />
-          <span class="logo-name">{{ templeName }}</span>
+          <span class="logo-name">{{ tenantName }}</span>
         </div>
         <button
           v-if="isEditMode && logoSrc"
@@ -112,9 +112,9 @@ const logoSrc = computed(() =>
   props.frameData.logoImgUrl || props.frameData.logoImgSrc || null
 )
 
-// ✅ 兼容 temple_name（編輯器存的）和 templeName（API 回傳的）
-const templeName = computed(() =>
-  props.frameData.temple_name || props.frameData.templeName || 'LOGO'
+// ✅ 兼容 temple_name（編輯器存的舊格式）和 tenantName（API 回傳）
+const tenantName = computed(() =>
+  props.frameData.tenantName || props.frameData.temple_name || 'LOGO'
 )
 
 // ✅ 兼容 tab（編輯器存的）和 tabs（API 回傳的）

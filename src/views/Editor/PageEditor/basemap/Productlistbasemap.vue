@@ -1,38 +1,39 @@
 <template>
   <section class="product-list-section" :class="`device-${device}`">
     <div class="container">
+
       <!-- 篩選欄 -->
       <div class="filter-bar">
         <div class="filter-group">
-          <label>慶典活動</label>
-          <select class="filter-select">
+          <label class="filter-label">慶典活動</label>
+          <select class="filter-select wide">
             <option>全部</option>
           </select>
         </div>
-        
+
         <div class="filter-group">
-          <label>類型</label>
-          <select class="filter-select">
+          <label class="filter-label">類型</label>
+          <select class="filter-select narrow">
             <option>全部</option>
           </select>
         </div>
-        
+
         <div class="filter-group">
-          <label>需求分類</label>
-          <select class="filter-select">
+          <label class="filter-label">需求分類</label>
+          <select class="filter-select mid">
             <option>全部</option>
           </select>
         </div>
-        
+
         <div class="filter-group">
-          <label>排序方式</label>
-          <select class="filter-select">
+          <label class="filter-label">排序方式</label>
+          <select class="filter-select mid">
             <option>價格低到高</option>
           </select>
         </div>
-        
+
         <div class="filter-group search-group">
-          <label>關鍵字搜尋</label>
+          <label class="filter-label">關鍵字搜尋</label>
           <div class="search-box">
             <input type="text" placeholder="搜尋商品或服務名稱" class="search-input" />
             <button class="search-btn">搜尋</button>
@@ -40,143 +41,89 @@
         </div>
       </div>
 
-      <!-- 批次選擇按鈕 -->
+      <!-- 批次選擇 -->
       <div class="batch-actions">
         <button class="batch-select-btn">批次選擇</button>
       </div>
 
-      <!-- 精選推薦標題 -->
+      <!-- 精選推薦 -->
       <h2 class="section-title">精選推薦</h2>
 
       <!-- 商品 Grid -->
       <div class="products-grid">
-        <div 
-          v-for="product in productsList" 
+        <div
+          v-for="product in productsList"
           :key="product.id"
           class="product-card"
         >
+          <!-- 圖片區 -->
           <div class="product-image">
-            <div class="rank-badge" v-if="product.rank">NO.{{ product.rank }}</div>
-            <img :src="product.image" :alt="product.title" class="image" />
+            <div v-if="product.rank" class="rank-badge">NO.{{ product.rank }}</div>
+            <img
+              v-if="product.image && !product.imageFailed"
+              :src="product.image"
+              :alt="product.title"
+              class="image"
+              @error="product.imageFailed = true"
+            />
+            <div v-else class="image-placeholder">
+              <span>商品圖片</span>
+            </div>
+          </div>
+
+          <!-- 資訊區 -->
+          <div class="product-info">
+            <!-- badge 在標題上方 -->
             <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
               {{ product.badge }}
             </span>
-          </div>
-          
-          <div class="product-info">
+            <!-- 無 badge 時補空白高度，保持對齊 -->
+            <div v-else class="badge-placeholder"></div>
+
             <h3 class="product-title">{{ product.title }}</h3>
+
             <div class="product-footer">
               <span class="product-price">{{ product.price }}</span>
-              <button class="add-to-cart-btn" @click="addToCart(product)">
+              <button class="add-to-cart-btn" @click.stop="addToCart(product)">
                 <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 2L7 6M17 2L19 6M5 6H19L18 16H6L5 6Z"/>
-                  <circle cx="9" cy="20" r="1"/>
-                  <circle cx="15" cy="20" r="1"/>
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 01-8 0"/>
                 </svg>
               </button>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 </template>
 
 <script setup>
+import { reactive } from 'vue'
+
 const props = defineProps({
   productsList: {
     type: Array,
-    default: () => [
-      {
-        id: 1,
-        rank: 1,
-        title: '個人光明燈',
-        price: 'NT$600',
-        image: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?w=600&h=600&fit=crop'
-      },
-      {
-        id: 2,
-        rank: 2,
-        title: '平安符',
-        price: 'NT$200',
-        badge: '熱門',
-        badgeClass: 'hot',
-        image: 'https://images.unsplash.com/photo-1582719366310-0dd91e0d36f9?w=600&h=600&fit=crop'
-      },
-      {
-        id: 3,
-        rank: 3,
-        title: '全家光明燈',
-        price: 'NT$1,200',
-        badge: '推薦',
-        badgeClass: 'recommended',
-        image: 'https://images.unsplash.com/photo-1551361415-69c87624334f?w=600&h=600&fit=crop'
-      },
-      {
-        id: 4,
-        title: '平安香',
-        price: 'NT$150',
-        image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&h=600&fit=crop'
-      },
-      {
-        id: 5,
-        title: '祈福金紙組',
-        price: 'NT$300',
-        image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=600&h=600&fit=crop'
-      },
-      {
-        id: 6,
-        title: '問事服務',
-        price: 'NT$500',
-        image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&h=600&fit=crop'
-      },
-      {
-        id: 7,
-        title: '文昌燈',
-        price: 'NT$600',
-        image: 'https://images.unsplash.com/photo-1551361415-69c87624334f?w=600&h=600&fit=crop'
-      },
-      {
-        id: 8,
-        title: '太歲燈',
-        price: 'NT$800',
-        badge: '熱門',
-        badgeClass: 'hot',
-        image: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?w=600&h=600&fit=crop'
-      },
-      {
-        id: 9,
-        title: '財神燈',
-        price: 'NT$800',
-        image: 'https://images.unsplash.com/photo-1582719366310-0dd91e0d36f9?w=600&h=600&fit=crop'
-      },
-      {
-        id: 10,
-        title: '祈福法會',
-        price: 'NT$1,000',
-        badge: '推薦',
-        badgeClass: 'recommended',
-        image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=600&h=600&fit=crop'
-      },
-      {
-        id: 11,
-        title: '婚喪喜慶',
-        price: 'NT$2,000',
-        image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&h=600&fit=crop'
-      }
-    ]
+    default: () => reactive([
+      { id: 1, rank: 1, title: '個人光明燈', price: 'NT$600',   image: null },
+      { id: 2, rank: 2, title: '平安符',     price: 'NT$200',   image: null, badge: '熱門', badgeClass: 'hot' },
+      { id: 3, rank: 3, title: '全家光明燈', price: 'NT$1,200', image: null, badge: '推薦', badgeClass: 'recommended' },
+      { id: 4,          title: '平安香',     price: 'NT$150',   image: null },
+      { id: 5,          title: '祈福金紙組', price: 'NT$300',   image: null },
+      { id: 6,          title: '問事服務',   price: 'NT$500',   image: null },
+      { id: 7,          title: '文昌燈',     price: 'NT$600',   image: null },
+      { id: 8,          title: '太歲燈',     price: 'NT$800',   image: null, badge: '熱門', badgeClass: 'hot' },
+      { id: 9,          title: '財神燈',     price: 'NT$800',   image: null },
+    ])
   },
-  // ✅ 接收裝置類型
-  device: {
-    type: String,
-    default: 'desktop'
-  }
+  device: { type: String, default: 'desktop' }
 })
 
 const emit = defineEmits(['add-to-cart'])
 
 const addToCart = (product) => {
-  console.log('加入購物車:', product)
   emit('add-to-cart', product)
 }
 </script>
@@ -184,7 +131,7 @@ const addToCart = (product) => {
 <style lang="scss" scoped>
 .product-list-section {
   padding: 2rem 0 4rem;
-  background: #fafafa;
+  background: #f5f5f5;
   min-height: 100vh;
 }
 
@@ -194,86 +141,89 @@ const addToCart = (product) => {
   padding: 0 2rem;
 }
 
-// 篩選欄
+/* ==================== 篩選欄 ==================== */
 .filter-bar {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  flex-wrap: wrap;
+  gap: 12px;
   align-items: flex-end;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding: 1.5rem 2rem;
+  background: transparent;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
+}
 
-  label {
-    font-size: 14px;
-    color: #666;
-    font-weight: 500;
-  }
-
-  &.search-group {
-    flex: 1;
-    min-width: 300px;
-  }
+.filter-label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 .filter-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 0;
   font-size: 14px;
   color: #333;
   background: #fff;
   cursor: pointer;
-  min-width: 120px;
+  appearance: auto;
+  height: 36px;
 
-  &:focus {
-    outline: none;
-    border-color: #c9a55a;
-  }
+  &:focus { outline: none; border-color: #8b7355; }
+
+  &.wide   { min-width: 160px; }
+  &.mid    { min-width: 120px; }
+  &.narrow { min-width: 80px; }
+}
+
+.search-group {
+  flex: 1;
+  min-width: 280px;
+  max-width: 380px;
 }
 
 .search-box {
   display: flex;
-  gap: 0.5rem;
+  gap: 0;
+  height: 36px;
 }
 
 .search-input {
   flex: 1;
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0 12px;
+  border: 1px solid #ccc;
+  border-right: none;
+  border-radius: 0;
   font-size: 14px;
+  height: 36px;
+  box-sizing: border-box;
 
-  &:focus {
-    outline: none;
-    border-color: #c9a55a;
-  }
+  &:focus { outline: none; border-color: #8b7355; }
 }
 
 .search-btn {
-  padding: 0.5rem 2rem;
+  padding: 0 20px;
   background: #8b7355;
   color: #fff;
   border: none;
-  border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
+  height: 36px;
   transition: background 0.2s;
 
-  &:hover {
-    background: #6a5a47;
-  }
+  &:hover { background: #6a5a47; }
 }
 
-// 批次選擇
+/* ==================== 批次選擇 ==================== */
 .batch-actions {
   display: flex;
   justify-content: flex-end;
@@ -281,106 +231,116 @@ const addToCart = (product) => {
 }
 
 .batch-select-btn {
-  padding: 0.5rem 1.5rem;
+  padding: 6px 20px;
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
   font-size: 14px;
-  color: #666;
+  color: #555;
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    border-color: #c9a55a;
-    color: #c9a55a;
-  }
+  &:hover { border-color: #8b7355; color: #8b7355; }
 }
 
-// 標題
+/* ==================== 標題 ==================== */
 .section-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 2rem;
+  color: #222;
+  margin: 0 0 1.5rem 0;
 }
 
-// 商品 Grid — 桌機預設 4 欄
+/* ==================== 商品 Grid — 3 欄 ==================== */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;           // 細邊框效果用 gap + 背景色
+  border: 1px solid #ddd;
 }
 
+/* ==================== 商品卡片 ==================== */
 .product-card {
-  background: #ffffff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  background: #fff;
   cursor: pointer;
+  transition: box-shadow 0.2s;
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-
-    .image {
-      transform: scale(1.05);
-    }
-  }
+  &:hover { box-shadow: inset 0 0 0 2px #c9a55a; }
 }
 
+/* 圖片區 */
 .product-image {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
+  background: #efefef;
   overflow: hidden;
-  background: #f5f5f5;
 }
 
 .rank-badge {
   position: absolute;
   top: 0;
   left: 0;
-  padding: 0.5rem 1rem;
+  padding: 6px 14px;
   background: #8b7355;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  z-index: 10;
-  border-bottom-right-radius: 8px;
+  z-index: 2;
+  letter-spacing: 0.5px;
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  display: block;
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #efefef;
+
+  span {
+    font-size: 13px;
+    color: #bbb;
+    letter-spacing: 1px;
+  }
+}
+
+/* 資訊區 */
+.product-info {
+  padding: 16px 20px 20px;
 }
 
 .product-badge {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  padding: 6px 14px;
-  border-radius: 20px;
+  display: inline-block;
+  padding: 4px 12px;
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
-  z-index: 10;
+  color: #fff;
+  border-radius: 2px;
+  margin-bottom: 12px;
+  line-height: 1.4;
 
   &.hot         { background: #dc3545; }
-  &.recommended { background: #007bff; }
+  &.recommended { background: #1a73e8; }
 }
 
-.product-info {
-  padding: 1.25rem;
+.badge-placeholder {
+  height: 26px;   // 與 badge 高度相同，保持卡片標題對齊
+  margin-bottom: 12px;
 }
 
 .product-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
-  color: #2c3e50;
-  margin: 0 0 1rem 0;
+  color: #222;
+  margin: 0 0 20px 0;
   line-height: 1.4;
 }
 
@@ -392,147 +352,71 @@ const addToCart = (product) => {
 
 .product-price {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: #8b7355;
 }
 
 .add-to-cart-btn {
-  background: transparent;
-  border: 2px solid #d4d4d4;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 
   &:hover {
-    border-color: #c9a55a;
-    background: #c9a55a;
-
-    .cart-icon { color: #ffffff; }
+    border-color: #8b7355;
+    background: #8b7355;
+    .cart-icon { color: #fff; }
   }
 }
 
 .cart-icon {
   width: 18px;
   height: 18px;
-  color: #999;
+  color: #888;
   transition: color 0.2s;
 }
 
-// ==================== ✅ device prop 響應式（取代 media query）====================
-
-// 平板：2 欄
+/* ==================== RWD ==================== */
 .product-list-section.device-tablet {
-  .container {
-    padding: 0 1.25rem;
-  }
-
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 1rem;
-  }
-
-  .filter-group.search-group {
-    min-width: auto;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  .product-title {
-    font-size: 14px;
-  }
-
-  .product-price {
-    font-size: 16px;
-  }
-
-  .section-title {
-    font-size: 20px;
-  }
+  .container { padding: 0 1.25rem; }
+  .filter-bar { justify-content: flex-start; padding: 1rem; }
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
+  .product-title { font-size: 15px; }
+  .product-price { font-size: 17px; }
 }
 
-// 手機：2 欄（較窄，簡化顯示）
 .product-list-section.device-mobile {
   padding: 1rem 0 2rem;
 
-  .container {
-    padding: 0 0.75rem;
-  }
+  .container { padding: 0 0.75rem; }
 
   .filter-bar {
     flex-direction: column;
     align-items: stretch;
     padding: 0.75rem;
     gap: 0.75rem;
+    justify-content: flex-start;
   }
 
-  .filter-group.search-group {
-    min-width: auto;
-  }
+  .filter-select { width: 100%; }
+  .search-group  { min-width: auto; max-width: 100%; }
 
-  .search-box {
-    flex-direction: column;
-  }
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
 
-  .search-btn {
-    padding: 0.5rem 1rem;
-  }
+  .product-info  { padding: 10px 12px 14px; }
+  .product-title { font-size: 13px; margin-bottom: 12px; }
+  .product-price { font-size: 15px; }
 
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-
-  .product-info {
-    padding: 0.75rem;
-  }
-
-  .product-title {
-    font-size: 13px;
-    margin-bottom: 0.5rem;
-  }
-
-  .product-price {
-    font-size: 14px;
-  }
-
-  .add-to-cart-btn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .cart-icon {
-    width: 14px;
-    height: 14px;
-  }
-
-  .rank-badge {
-    font-size: 11px;
-    padding: 0.3rem 0.6rem;
-  }
-
-  .product-badge {
-    font-size: 10px;
-    padding: 4px 8px;
-    bottom: 6px;
-    right: 6px;
-  }
-
-  .section-title {
-    font-size: 18px;
-    margin-bottom: 1rem;
-  }
-
-  .batch-actions {
-    margin-bottom: 1rem;
-  }
+  .add-to-cart-btn { width: 32px; height: 32px; }
+  .cart-icon       { width: 14px; height: 14px; }
+  .rank-badge      { font-size: 11px; padding: 4px 10px; }
+  .section-title   { font-size: 18px; margin-bottom: 1rem; }
+  .batch-actions   { margin-bottom: 1rem; }
 }
 </style>

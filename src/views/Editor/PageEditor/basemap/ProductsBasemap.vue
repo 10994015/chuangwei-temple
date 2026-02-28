@@ -1,459 +1,298 @@
 <template>
   <section class="products-section" :class="`device-${device}`">
     <div class="container">
+
+      <!-- 標題列 -->
       <div class="section-header">
         <h2 class="section-title">祈福商品</h2>
-        <a href="#" class="view-all">查看所有商品 ›</a>
       </div>
 
-      <div class="products-carousel">
-        <button 
-          class="carousel-btn prev" 
-          @click="prevSlide"
-          :disabled="currentIndex === 0"
-        >‹</button>
-        
-        <div class="products-wrapper">
-          <div 
-            class="products-container"
-            :style="{ transform: `translateX(-${currentIndex * (100 / effectiveVisible)}%)` }"
-          >
-            <div 
-              v-for="product in productsList" 
-              :key="product.id"
-              class="product-card"
-              :style="{ minWidth: `calc(${100 / effectiveVisible}% - ${(effectiveVisible - 1) * 1.5 / effectiveVisible}rem)` }"
-            >
-              <div class="product-image">
-                <img :src="product.image" :alt="product.title" class="image" />
-                <div class="image-overlay">
-                  <button class="quick-view-btn">快速查看</button>
-                </div>
-                <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
-                  {{ product.badge }}
-                </span>
-              </div>
-              <div class="product-info">
-                <h3 class="product-title">{{ product.title }}</h3>
-                <p class="product-description">{{ product.description }}</p>
-                <div class="product-footer">
-                  <div class="price-group">
-                    <span class="product-price">{{ product.price }}</span>
-                    <span v-if="product.originalPrice" class="original-price">{{ product.originalPrice }}</span>
-                  </div>
-                  <button class="add-to-cart-btn" @click="addToCart(product)">
-                    <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M9 2L7 6M17 2L19 6M5 6H19L18 16H6L5 6Z"/>
-                      <circle cx="9" cy="20" r="1"/>
-                      <circle cx="15" cy="20" r="1"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+      <!-- 商品 Grid — 固定 3 筆 -->
+      <div class="products-grid">
+        <div
+          v-for="product in displayProducts"
+          :key="product.id"
+          class="product-card"
+        >
+          <!-- 圖片區 -->
+          <div class="product-image">
+            <div v-if="product.rank" class="rank-badge">NO.{{ product.rank }}</div>
+            <img
+              v-if="product.image && !product.imageFailed"
+              :src="product.image"
+              :alt="product.title"
+              class="image"
+              @error="product.imageFailed = true"
+            />
+            <div v-else class="image-placeholder">
+              <span>商品圖片</span>
+            </div>
+          </div>
+
+          <!-- 資訊區 -->
+          <div class="product-info">
+            <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
+              {{ product.badge }}
+            </span>
+            <div v-else class="badge-placeholder"></div>
+
+            <h3 class="product-title">{{ product.title }}</h3>
+
+            <div class="product-footer">
+              <span class="product-price">{{ product.price }}</span>
+              <button class="add-to-cart-btn" @click.stop="addToCart(product)">
+                <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
-
-        <button 
-          class="carousel-btn next" 
-          @click="nextSlide"
-          :disabled="currentIndex >= productsList.length - effectiveVisible"
-        >›</button>
       </div>
 
-      <!-- 輪播指示器 -->
-      <div class="carousel-indicators">
-        <button
-          v-for="(_, index) in Math.ceil(productsList.length / effectiveVisible)"
-          :key="index"
-          class="indicator-dot"
-          :class="{ active: Math.floor(currentIndex / effectiveVisible) === index }"
-          @click="goToSlide(index)"
-        ></button>
+      <!-- 查看更多 -->
+      <div class="view-more-wrap">
+        <a href="#" class="view-more-btn" @click.prevent="$emit('view-all')">
+          查看更多商品
+        </a>
       </div>
+
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   productsList: {
     type: Array,
     default: () => [
-      {
-        id: 1,
-        title: '平安符',
-        price: 'NT$ 200',
-        originalPrice: 'NT$ 300',
-        badge: '熱門',
-        badgeClass: 'hot',
-        image: 'https://images.unsplash.com/photo-1582719366310-0dd91e0d36f9?w=600&h=600&fit=crop',
-        description: '祈求平安順遂'
-      },
-      {
-        id: 2,
-        title: '個人光明燈',
-        price: 'NT$ 600',
-        badge: '推薦',
-        badgeClass: 'recommended',
-        image: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?w=600&h=600&fit=crop',
-        description: '點亮前程光明'
-      },
-      {
-        id: 3,
-        title: '全家光明燈',
-        price: 'NT$ 1,200',
-        originalPrice: 'NT$ 1,500',
-        badge: '熱門',
-        badgeClass: 'hot',
-        image: 'https://images.unsplash.com/photo-1551361415-69c87624334f?w=600&h=600&fit=crop',
-        description: '闔家平安健康'
-      },
-      {
-        id: 4,
-        title: '平安米',
-        price: 'NT$ 150',
-        badge: '新品',
-        badgeClass: 'new',
-        image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&h=600&fit=crop',
-        description: '福米平安'
-      },
-      {
-        id: 5,
-        title: '香油錢',
-        price: 'NT$ 500',
-        badge: '推薦',
-        badgeClass: 'recommended',
-        image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=600&h=600&fit=crop',
-        description: '功德無量'
-      },
-      {
-        id: 6,
-        title: '祈福手環',
-        price: 'NT$ 350',
-        badge: '熱門',
-        badgeClass: 'hot',
-        image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&h=600&fit=crop',
-        description: '隨身護佑'
-      }
+      { id: 1, rank: 1, title: '平安符',     price: 'NT$200',   image: null, badge: '熱門', badgeClass: 'hot' },
+      { id: 2, rank: 2, title: '個人光明燈', price: 'NT$600',   image: null, badge: '推薦', badgeClass: 'recommended' },
+      { id: 3, rank: 3, title: '全家光明燈', price: 'NT$1,200', image: null },
+      { id: 4,          title: '平安米',     price: 'NT$150',   image: null, badge: '新品', badgeClass: 'new' },
+      { id: 5,          title: '香油錢',     price: 'NT$500',   image: null },
+      { id: 6,          title: '祈福手環',   price: 'NT$350',   image: null, badge: '熱門', badgeClass: 'hot' },
     ]
   },
-  visibleCount: {
-    type: Number,
-    default: 3
-  },
-  // ✅ 接收裝置類型
-  device: {
-    type: String,
-    default: 'desktop'
-  }
+  device: { type: String, default: 'desktop' }
 })
 
-const emit = defineEmits(['add-to-cart'])
+const emit = defineEmits(['add-to-cart', 'view-all'])
 
-// ✅ 依裝置決定顯示幾個
-const effectiveVisible = computed(() => {
-  if (props.device === 'mobile') return 1
-  if (props.device === 'tablet') return 2
-  return props.visibleCount
-})
-
-const currentIndex = ref(0)
-
-// 切換裝置時 reset index，避免超出範圍
-watch(effectiveVisible, () => { currentIndex.value = 0 })
-
-const nextSlide = () => {
-  if (currentIndex.value < props.productsList.length - effectiveVisible.value) {
-    currentIndex.value++
-  }
-}
-
-const prevSlide = () => {
-  if (currentIndex.value > 0) currentIndex.value--
-}
-
-const goToSlide = (index) => {
-  currentIndex.value = index * effectiveVisible.value
-}
+// 固定只取前 3 筆
+const displayProducts = computed(() => props.productsList.slice(0, 3))
 
 const addToCart = (product) => {
-  console.log('加入購物車:', product)
   emit('add-to-cart', product)
 }
 </script>
 
 <style lang="scss" scoped>
 .products-section {
-  padding: 4rem 0;
-  background: linear-gradient(to bottom, #fafaf8 0%, #f5f3f0 100%);
+  padding: 3rem 0 4rem;
+  background: #f5f5f5;
 }
 
 .container {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
+/* ==================== 標題列 ==================== */
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .section-title {
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 600;
-  color: #2c3e50;
-  position: relative;
-  padding-bottom: 12px;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0;
-    width: 60px; height: 3px;
-    background: linear-gradient(to right, #c9a55a, #d4af37);
-    border-radius: 2px;
-  }
+  color: #222;
+  margin: 0;
 }
 
-.view-all {
-  color: #8b7355;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  &:hover { color: #6a5a47; transform: translateX(4px); }
+/* ==================== 商品 Grid — 3 欄 ==================== */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  border: 1px solid #ddd;
 }
 
-.products-carousel {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.carousel-btn {
-  background: #ffffff;
-  border: 2px solid #e8e6e3;
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 24px;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-
-  &:hover:not(:disabled) {
-    background: #c9a55a; color: #fff;
-    border-color: #c9a55a;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(201,165,90,0.3);
-  }
-  &:active:not(:disabled) { transform: scale(0.95); }
-  &:disabled { opacity: 0.3; cursor: not-allowed; }
-}
-
-.products-wrapper {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-.products-container {
-  display: flex;
-  gap: 1.5rem;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+/* ==================== 商品卡片 ==================== */
 .product-card {
-  background: #ffffff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: all 0.3s ease;
+  background: #fff;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
+  transition: box-shadow 0.2s;
 
-  &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
-    .image-overlay { opacity: 1; }
-    .image { transform: scale(1.05); }
-  }
+  &:hover { box-shadow: inset 0 0 0 2px #c9a55a; }
 }
 
+/* 圖片區 */
 .product-image {
   position: relative;
   width: 100%;
-  height: 280px;
+  aspect-ratio: 4 / 3;
+  background: #efefef;
   overflow: hidden;
-  background: #f5f5f5;
+}
+
+.rank-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 6px 14px;
+  background: #8b7355;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 2;
+  letter-spacing: 0.5px;
 }
 
 .image {
-  width: 100%; height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  display: block;
 }
 
-.image-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+.image-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  background: #efefef;
+
+  span {
+    font-size: 13px;
+    color: #bbb;
+    letter-spacing: 1px;
+  }
 }
 
-.quick-view-btn {
-  padding: 10px 24px;
-  background: rgba(255,255,255,0.95);
-  border: none; border-radius: 6px;
-  color: #2c3e50; font-size: 14px; font-weight: 500;
-  cursor: pointer; transition: all 0.2s;
-  &:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+/* 資訊區 */
+.product-info {
+  padding: 16px 20px 20px;
 }
 
 .product-badge {
-  position: absolute;
-  top: 12px; right: 12px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px; font-weight: 600;
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
   color: #fff;
-  backdrop-filter: blur(10px);
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  line-height: 1.4;
 
-  &.hot         { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
-  &.recommended { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
-  &.new         { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+  &.hot         { background: #dc3545; }
+  &.recommended { background: #1a73e8; }
+  &.new         { background: #2ecc71; }
 }
 
-.product-info {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+.badge-placeholder {
+  height: 26px;
+  margin-bottom: 12px;
 }
 
 .product-title {
-  font-size: 18px; font-weight: 600;
-  color: #2c3e50; margin: 0 0 8px 0; line-height: 1.4;
-}
-
-.product-description {
-  font-size: 13px; color: #7f8c8d;
-  margin: 0 0 1rem 0; line-height: 1.5;
+  font-size: 17px;
+  font-weight: 500;
+  color: #222;
+  margin: 0 0 20px 0;
+  line-height: 1.4;
 }
 
 .product-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
 }
 
-.price-group { display: flex; flex-direction: column; gap: 4px; }
-
-.product-price { font-size: 22px; font-weight: 700; color: #c9a55a; line-height: 1; }
-.original-price { font-size: 14px; color: #95a5a6; text-decoration: line-through; line-height: 1; }
+.product-price {
+  font-size: 20px;
+  font-weight: 600;
+  color: #8b7355;
+}
 
 .add-to-cart-btn {
-  background: linear-gradient(135deg, #c9a55a 0%, #d4af37 100%);
-  border: none;
-  width: 44px; height: 44px;
-  border-radius: 8px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(201,165,90,0.3);
+  width: 38px;
+  height: 38px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 
-  &:hover  { transform: scale(1.1) rotate(5deg); box-shadow: 0 4px 16px rgba(201,165,90,0.4); }
-  &:active { transform: scale(0.95) rotate(0deg); }
+  &:hover {
+    border-color: #8b7355;
+    background: #8b7355;
+    .cart-icon { color: #fff; }
+  }
 }
 
-.cart-icon { width: 20px; height: 20px; color: #fff; }
+.cart-icon {
+  width: 18px;
+  height: 18px;
+  color: #888;
+  transition: color 0.2s;
+}
 
-.carousel-indicators {
+/* ==================== 查看更多 ==================== */
+.view-more-wrap {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 2rem;
+  margin-top: 36px;
 }
 
-.indicator-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #d1d5db;
-  border: none; cursor: pointer;
-  transition: all 0.3s ease; padding: 0;
+.view-more-btn {
+  display: inline-block;
+  padding: 10px 40px;
+  border: 1px solid #8b6f47;
+  border-radius: 4px;
+  color: #8b6f47;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  background: transparent;
 
-  &:hover { background: #9ca3af; transform: scale(1.2); }
-  &.active { width: 24px; border-radius: 4px; background: #c9a55a; }
+  &:hover {
+    background: #8b6f47;
+    color: #fff;
+  }
 }
 
-/* ==================== ✅ device prop 響應式（取代 media query）==================== */
-
-/* 平板：2 個 */
+/* ==================== RWD ==================== */
 .products-section.device-tablet {
-  padding: 2.5rem 0;
-
-  .container { padding: 0 1.25rem; }
-
-  .section-title { font-size: 26px; }
-
-  .products-carousel { gap: 1rem; }
-
-  .carousel-btn { width: 40px; height: 40px; font-size: 20px; }
-
-  .product-image { height: 220px; }
-
-  .product-title { font-size: 16px; }
-
-  .product-price { font-size: 18px; }
-
-  .product-info { padding: 1.25rem; }
+  .container      { padding: 0 1.25rem; }
+  .products-grid  { grid-template-columns: repeat(2, 1fr); }
+  .product-title  { font-size: 15px; }
+  .product-price  { font-size: 17px; }
 }
 
-/* 手機：1 個 */
 .products-section.device-mobile {
-  padding: 2rem 0;
+  padding: 1.5rem 0 2.5rem;
 
-  .container { padding: 0 0.75rem; }
+  .container      { padding: 0 0.75rem; }
+  .products-grid  { grid-template-columns: repeat(2, 1fr); }
+  .product-info   { padding: 10px 12px 14px; }
+  .product-title  { font-size: 13px; margin-bottom: 12px; }
+  .product-price  { font-size: 15px; }
 
-  .section-title { font-size: 22px; }
-
-  .section-header { margin-bottom: 1.5rem; }
-
-  .products-carousel { gap: 0.5rem; }
-
-  .carousel-btn { width: 36px; height: 36px; font-size: 18px; }
-
-  .product-image { height: 200px; }
-
-  .product-title  { font-size: 15px; }
-  .product-price  { font-size: 18px; }
-  .product-info   { padding: 1rem; }
-  .view-all       { font-size: 13px; }
+  .add-to-cart-btn { width: 32px; height: 32px; }
+  .cart-icon       { width: 14px; height: 14px; }
+  .rank-badge      { font-size: 11px; padding: 4px 10px; }
+  .section-title   { font-size: 18px; }
+  .view-more-wrap  { margin-top: 24px; }
 }
 </style>

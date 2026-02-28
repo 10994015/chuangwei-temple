@@ -11,7 +11,7 @@ const templeId = computed(() => route.params.templeId)
 
 // 當前宮廟資訊
 const currentTemple = computed(() => {
-  return authStore.templeRoles.find(temple => temple.templeId === templeId.value)
+  return authStore.templeRoles.find(temple => temple.tenantId === templeId.value)
 })
 
 // 統計數據
@@ -103,7 +103,7 @@ onMounted(() => {
     <!-- 頁面標題 -->
     <div class="page-header">
       <h1 class="page-title">宮廟總覽</h1>
-      <p class="page-subtitle">{{ currentTemple?.templeName || '桃園創齊宮' }}數據總覽與管理</p>
+      <p class="page-subtitle">{{ currentTemple?.tenantName || '桃園創蔚宮' }}數據總覽與管理</p>
     </div>
 
     <!-- 統計卡片區 -->

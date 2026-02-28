@@ -2,41 +2,62 @@
   <section class="event-list-section" :class="`device-${device}`">
     <div class="container">
       <!-- 分類標籤 -->
-      <div class="category-tabs">
+      <div class="filter-bar">
         <button 
           v-for="category in categories" 
           :key="category.id"
-          class="category-tab"
+          class="filter-btn"
           :class="{ active: selectedCategory === category.id }"
-          @click="selectedCategory = category.id"
+          @click="onCategoryClick(category.id)"
         >
           {{ category.name }}
         </button>
       </div>
 
+      <!-- 分隔線 -->
+      <hr class="divider" />
+
       <!-- 活動 Grid -->
       <div class="events-grid">
         <div 
-          v-for="event in eventsList" 
+          v-for="event in pagedEvents" 
           :key="event.id"
           class="event-card"
           @click="viewEventDetail(event)"
         >
+          <!-- 圖片區 -->
           <div class="event-image">
-            <img :src="event.image" :alt="event.title" class="image" />
-            <div class="event-tags">
+            <img
+              v-if="event.image && !event.imageFailed"
+              :src="event.image"
+              :alt="event.title"
+              class="image"
+              @error="event.imageFailed = true"
+            />
+            <div v-else class="image-placeholder">
+              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-icon">
+                <rect x="8" y="14" width="64" height="48" rx="4" stroke="#bbb" stroke-width="3"/>
+                <circle cx="28" cy="32" r="7" stroke="#bbb" stroke-width="3"/>
+                <path d="M8 50l18-16 14 14 10-10 18 18" stroke="#bbb" stroke-width="3" stroke-linejoin="round"/>
+              </svg>
+              <span class="placeholder-text">活動圖片</span>
+            </div>
+          </div>
+
+          <!-- 資訊區 -->
+          <div class="event-info">
+            <!-- badge 在標題上方 -->
+            <div class="event-tags" v-if="event.tags && event.tags.length > 0">
               <span 
                 v-for="tag in event.tags" 
                 :key="tag"
                 class="event-tag"
                 :class="getTagClass(tag)"
-              >
-                {{ tag }}
-              </span>
+              >{{ tag }}</span>
             </div>
-          </div>
-          
-          <div class="event-info">
+            <!-- 無 badge 時保持間距一致 -->
+            <div v-else class="tags-placeholder"></div>
+
             <h3 class="event-title">{{ event.title }}</h3>
             
             <div class="event-details">
@@ -69,12 +90,44 @@
           </div>
         </div>
       </div>
+
+      <!-- 無資料 -->
+      <div v-if="filteredEvents.length === 0" class="empty-state">
+        <p>此分類目前沒有活動</p>
+      </div>
+
+      <!-- 頁碼 -->
+      <div v-if="totalPages > 1" class="pagination">
+        <button
+          class="page-btn page-nav"
+          :class="{ disabled: currentPage === 1 }"
+          :disabled="currentPage === 1"
+          @click="goToPage(currentPage - 1)"
+        >上一頁</button>
+
+        <template v-for="page in pageNumbers" :key="page">
+          <span v-if="page === '...'" class="page-ellipsis">...</span>
+          <button
+            v-else
+            class="page-btn"
+            :class="{ active: currentPage === page }"
+            @click="goToPage(page)"
+          >{{ page }}</button>
+        </template>
+
+        <button
+          class="page-btn page-nav"
+          :class="{ disabled: currentPage === totalPages }"
+          :disabled="currentPage === totalPages"
+          @click="goToPage(currentPage + 1)"
+        >下一頁</button>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   eventsList: {
@@ -87,7 +140,7 @@ const props = defineProps({
         time: '上午8:00 - 下午5:00',
         location: '本宮大殿',
         tags: ['熱門', '推薦'],
-        image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 2,
@@ -96,7 +149,7 @@ const props = defineProps({
         time: '上午9:00 - 下午3:00',
         location: '本宮後殿',
         tags: [],
-        image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 3,
@@ -105,7 +158,7 @@ const props = defineProps({
         time: '凌晨12:00',
         location: '本宮',
         tags: ['熱門'],
-        image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 4,
@@ -114,7 +167,7 @@ const props = defineProps({
         time: '下午6:00 - 晚上10:00',
         location: '本宮廣場',
         tags: [],
-        image: 'https://images.unsplash.com/photo-1551361415-69c87624334f?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 5,
@@ -123,7 +176,7 @@ const props = defineProps({
         time: '上午8:00 - 下午4:00',
         location: '本宮大殿',
         tags: [],
-        image: 'https://images.unsplash.com/photo-1590736969955-71cc94901144?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 6,
@@ -132,7 +185,7 @@ const props = defineProps({
         time: '上午9:00 - 下午5:00',
         location: '本宮',
         tags: [],
-        image: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 7,
@@ -141,7 +194,7 @@ const props = defineProps({
         time: '上午8:00 - 下午6:00',
         location: '本宮大殿',
         tags: ['推薦'],
-        image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 8,
@@ -150,7 +203,7 @@ const props = defineProps({
         time: '下午7:00 - 晚上11:00',
         location: '本宮廣場',
         tags: ['熱門'],
-        image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&h=600&fit=crop'
+        image: null
       },
       {
         id: 9,
@@ -159,11 +212,14 @@ const props = defineProps({
         time: '上午9:00 - 下午3:00',
         location: '本宮',
         tags: [],
-        image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=800&h=600&fit=crop'
+        image: null
       }
     ]
   },
-  // ✅ 接收裝置類型
+  perPage: {
+    type: Number,
+    default: 3
+  },
   device: {
     type: String,
     default: 'desktop'
@@ -181,6 +237,45 @@ const categories = [
 ]
 
 const selectedCategory = ref('all')
+const currentPage = ref(1)
+
+const onCategoryClick = (id) => {
+  selectedCategory.value = id
+  currentPage.value = 1
+}
+
+const filteredEvents = computed(() => {
+  if (selectedCategory.value === 'all') return props.eventsList
+  return props.eventsList.filter(e => e.category === selectedCategory.value)
+})
+
+const totalPages = computed(() => Math.ceil(filteredEvents.value.length / props.perPage))
+
+const pagedEvents = computed(() => {
+  const start = (currentPage.value - 1) * props.perPage
+  return filteredEvents.value.slice(start, start + props.perPage)
+})
+
+const goToPage = (page) => {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+}
+
+const pageNumbers = computed(() => {
+  const total = totalPages.value
+  const cur   = currentPage.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+
+  const pages = []
+  if (cur <= 4) {
+    pages.push(...[1, 2, 3, 4, 5], '...', total)
+  } else if (cur >= total - 3) {
+    pages.push(1, '...', ...[total-4, total-3, total-2, total-1, total])
+  } else {
+    pages.push(1, '...', cur-1, cur, cur+1, '...', total)
+  }
+  return pages
+})
 
 const getTagClass = (tag) => {
   const tagMap = { '熱門': 'hot', '推薦': 'recommended' }
@@ -188,7 +283,6 @@ const getTagClass = (tag) => {
 }
 
 const viewEventDetail = (event) => {
-  console.log('查看活動詳情:', event)
   emit('view-detail', event)
 }
 </script>
@@ -196,109 +290,150 @@ const viewEventDetail = (event) => {
 <style lang="scss" scoped>
 .event-list-section {
   padding: 2rem 0 4rem;
-  background: #fafafa;
+  background: #fff;
   min-height: 100vh;
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
-// 分類標籤
-.category-tabs {
+/* ==================== 分類 Tab ==================== */
+.filter-bar {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e5e5;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   flex-wrap: wrap;
+  padding: 0.5rem 0;
 }
 
-.category-tab {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
+.filter-btn {
+  padding: 10px 28px;
   border: none;
-  border-radius: 8px;
+  background: transparent;
   font-size: 15px;
   color: #666;
   cursor: pointer;
+  border-radius: 6px;
   transition: all 0.2s;
-  font-weight: 500;
+  white-space: nowrap;
+  font-weight: 400;
 
-  &:hover  { background: #f5f5f5; color: #333; }
-  &.active { background: #8b7355; color: #fff; }
-}
-
-// 活動 Grid — 桌機預設 3 欄
-.events-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem 1.5rem;
-}
-
-.event-card {
-  background: #ffffff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  cursor: pointer;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    .image { transform: scale(1.05); }
+  &:hover  { color: #333; }
+  &.active {
+    background: #8b6f47;
+    color: #fff;
+    font-weight: 500;
+    border-radius: 6px;
   }
 }
 
+.divider {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 14px 0 36px;
+}
+
+/* ==================== 活動 Grid — 3 欄 ==================== */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* ==================== 活動卡片 ==================== */
+.event-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 圖片區 */
 .event-image {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #f5f5f5;
+  background: #e8e8e8;
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  display: block;
+  transition: transform 0.4s ease;
+
+  .event-card:hover & { transform: scale(1.04); }
 }
 
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8e8;
+  gap: 12px;
+}
+
+.placeholder-icon {
+  width: 80px;
+  height: 80px;
+}
+
+.placeholder-text {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* 資訊區 */
+.event-info {
+  padding: 20px 24px 24px;
+}
+
+/* badge 在標題上方 */
 .event-tags {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   display: flex;
   gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tags-placeholder {
+  height: 26px;
+  margin-bottom: 12px;
 }
 
 .event-tag {
-  padding: 6px 12px;
-  border-radius: 20px;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 3px;
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
-  backdrop-filter: blur(10px);
+  color: #fff;
+  line-height: 1.5;
 
   &.hot         { background: #dc3545; }
-  &.recommended { background: #007bff; }
-}
-
-.event-info {
-  padding: 1.5rem;
+  &.recommended { background: #1a73e8; }
 }
 
 .event-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 1rem 0;
+  color: #222;
+  margin: 0 0 16px 0;
   line-height: 1.5;
-  min-height: 3em;
 }
 
 .event-details {
@@ -309,10 +444,10 @@ const viewEventDetail = (event) => {
 
 .event-detail {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: #7f8c8d;
+  color: #666;
   line-height: 1.5;
 
   span { flex: 1; }
@@ -321,77 +456,92 @@ const viewEventDetail = (event) => {
 .detail-icon {
   width: 16px;
   height: 16px;
-  color: #95a5a6;
+  color: #999;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
-// ==================== ✅ device prop 響應式（取代 media query）====================
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #aaa;
+  font-size: 14px;
+}
 
-// 平板：2 欄
+/* ==================== 頁碼 ==================== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 48px;
+}
+
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(.disabled):not(.active) {
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  &.active {
+    background: #8b6f47;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  &.page-nav {
+    color: #999;
+    font-size: 13px;
+    min-width: auto;
+    padding: 0 14px;
+
+    &.disabled { color: #ccc; cursor: default; }
+  }
+}
+
+.page-ellipsis {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #bbb;
+  letter-spacing: 2px;
+}
+
+/* ==================== RWD ==================== */
 .event-list-section.device-tablet {
-  .container {
-    padding: 0 1.25rem;
-  }
-
-  .events-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem 1rem;
-  }
-
-  .category-tab {
-    font-size: 14px;
-    padding: 0.6rem 1.2rem;
-  }
-
-  .event-title {
-    font-size: 15px;
-    min-height: auto;
-  }
-
-  .event-info {
-    padding: 1.25rem;
-  }
+  .container   { padding: 0 1.25rem; }
+  .events-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .filter-btn  { font-size: 14px; padding: 8px 18px; }
+  .event-title { font-size: 16px; }
+  .event-info  { padding: 16px 18px 20px; }
 }
 
-// 手機：單欄
 .event-list-section.device-mobile {
   padding: 1rem 0 2rem;
 
-  .container {
-    padding: 0 0.75rem;
-  }
-
-  .category-tabs {
-    gap: 0.4rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-  }
-
-  .category-tab {
-    font-size: 13px;
-    padding: 0.5rem 1rem;
-  }
-
-  .events-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .event-image {
-    aspect-ratio: 16 / 9;
-  }
-
-  .event-info {
-    padding: 1rem;
-  }
-
-  .event-title {
-    font-size: 14px;
-    font-weight: 600;
-    min-height: auto;
-    margin-bottom: 0.75rem;
-  }
+  .container   { padding: 0 0.75rem; }
+  .filter-bar  { gap: 2px; }
+  .filter-btn  { font-size: 13px; padding: 7px 14px; }
+  .divider     { margin: 12px 0 20px; }
+  .events-grid { grid-template-columns: 1fr; gap: 14px; }
+  .event-info  { padding: 14px 16px 18px; }
+  .event-title { font-size: 15px; margin-bottom: 12px; }
 
   .event-detail {
     font-size: 13px;
@@ -403,14 +553,8 @@ const viewEventDetail = (event) => {
     height: 14px;
   }
 
-  .event-tag {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
-  .event-tags {
-    top: 8px;
-    right: 8px;
-  }
+  .pagination        { margin-top: 32px; }
+  .page-btn          { min-width: 32px; height: 32px; font-size: 13px; }
+  .page-btn.page-nav { padding: 0 8px; }
 }
 </style>

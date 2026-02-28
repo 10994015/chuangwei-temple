@@ -36,7 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
   const hasTemplePermission = (templeId, permissionName, mode = 'Readonly') => {
     if (!templeRoles.value || templeRoles.value.length === 0) return false
     
-    const temple = templeRoles.value.find(t => t.templeId === templeId)
+    const temple = templeRoles.value.find(t => t.tenantId === templeId)
     if (!temple) return false
     
     const permission = temple.permissions.find(p => p.permissionName  === permissionName)
@@ -114,7 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
           name: data.name,
         }
         systemPermissions.value = data.systemPermissions || []
-        templeRoles.value = data.templeRoles || []
+        templeRoles.value = data.tenantRoles || []
         
         return { 
           success: true, 
@@ -203,7 +203,7 @@ export const useAuthStore = defineStore('auth', () => {
           name: data.name,
         }
         systemPermissions.value = data.systemPermissions || []
-        templeRoles.value = data.templeRoles || []
+        templeRoles.value = data.tenantRoles || []
         
         return { 
           success: true, 
@@ -313,8 +313,8 @@ export const useAuthStore = defineStore('auth', () => {
           systemPermissions.value = []
         }
         
-        if (data.templeRoles) {
-          templeRoles.value = data.templeRoles
+        if (data.tenantRoles) {
+          templeRoles.value = data.tenantRoles
           console.log('宮廟角色已更新:', templeRoles.value)
         } else {
           templeRoles.value = []

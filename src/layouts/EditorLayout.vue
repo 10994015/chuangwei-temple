@@ -82,65 +82,46 @@ const hasUnsavedChanges = ref(false)
 // ✅ 網站設定（包含字型）
 const websiteSettings = ref(null)
 
-// ✅ 可用字型清單（與 WebsiteSettings.vue 一致）
+// ✅ 可用字型清單（按語言分類，與 WebsiteSettings.vue 一致）
 const availableFonts = [
-  {
-    value: 'noto-sans-tc',
-    label: 'Noto Sans TC（思源黑體）',
-    googleFont: 'Noto+Sans+TC:wght@300;400;500;700',
-    cssFamily: "'Noto Sans TC', sans-serif"
-  },
-  {
-    value: 'noto-serif-tc',
-    label: 'Noto Serif TC（思源宋體）',
-    googleFont: 'Noto+Serif+TC:wght@300;400;500;700',
-    cssFamily: "'Noto Serif TC', serif"
-  },
-  {
-    value: 'source-han-sans',
-    label: 'Source Han Sans（源泉黑體）',
-    googleFont: 'Noto+Sans+TC:wght@300;400;500;700',
-    cssFamily: "'Noto Sans TC', 'Source Han Sans', sans-serif"
-  },
-  {
-    value: 'roboto-noto',
-    label: 'Roboto + Noto Sans TC',
-    googleFont: 'Roboto:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700',
-    cssFamily: "'Roboto', 'Noto Sans TC', sans-serif"
-  },
-  {
-    value: 'zhi-mang-xing',
-    label: '志芒星（手寫風格）',
-    googleFont: 'Zhi+Mang+Xing',
-    cssFamily: "'Zhi Mang Xing', cursive"
-  },
-  {
-    value: 'ma-shan-zheng',
-    label: '馬善政楷書',
-    googleFont: 'Ma+Shan+Zheng',
-    cssFamily: "'Ma Shan Zheng', cursive"
-  }
+  // 繁體中文
+  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    googleFont: 'IBM+Plex+Sans+TC:wght@400;600',                  cssFamily: "'IBM Plex Sans TC', sans-serif" },
+  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', googleFont: 'LXGW+WenKai+Mono+TC',                            cssFamily: "'LXGW WenKai Mono TC', monospace" },
+  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         googleFont: 'Noto+Sans+TC:wght@400;600',                      cssFamily: "'Noto Sans TC', sans-serif" },
+  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        googleFont: 'Noto+Serif+TC:wght@400;600',                     cssFamily: "'Noto Serif TC', serif" },
+  // 簡體中文
+  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         googleFont: 'Noto+Sans+SC:wght@400;600',                      cssFamily: "'Noto Sans SC', sans-serif" },
+  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        googleFont: 'Noto+Serif+SC:wght@400;600',                     cssFamily: "'Noto Serif SC', serif" },
+  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     googleFont: 'IBM+Plex+Sans+SC:wght@400;600',                  cssFamily: "'IBM Plex Sans SC', sans-serif" },
+  // 英文
+  { value: 'bona-nova',           label: 'Bona Nova',            googleFont: 'Bona+Nova:ital,wght@0,400;0,700;1,400',          cssFamily: "'Bona Nova', serif" },
+  { value: 'inter',               label: 'Inter',                googleFont: 'Inter:wght@400;600',                             cssFamily: "'Inter', sans-serif" },
+  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   googleFont: 'Cormorant+Garamond:ital,wght@0,400;0,600;1,400', cssFamily: "'Cormorant Garamond', serif" },
+  { value: 'montserrat',          label: 'Montserrat',           googleFont: 'Montserrat:wght@400;600',                        cssFamily: "'Montserrat', sans-serif" },
+  { value: 'playfair-display',    label: 'Playfair Display',     googleFont: 'Playfair+Display:ital,wght@0,400;0,600;1,400',   cssFamily: "'Playfair Display', serif" },
 ]
 
-// ✅ 計算 Google Fonts URL（改用 frontFamily）
+// 依 locale 取得對應字型欄位值
+const currentFontValue = computed(() => {
+  if (!websiteSettings.value) return null
+  const locale = pageEditorStore.currentLocale
+  if (locale === 'ZH-CN') return websiteSettings.value.frontFamilyZhCn
+  if (locale === 'EN-US') return websiteSettings.value.frontFamilyEnUs
+  return websiteSettings.value.frontFamilyZhTw  // ZH-TW 及預設
+})
+
+// ✅ 計算 Google Fonts URL
 const googleFontUrl = computed(() => {
-  if (!websiteSettings.value?.frontFamily) {
-    return null
-  }
-
-  const font = availableFonts.find(f => f.value === websiteSettings.value.frontFamily)
+  if (!currentFontValue.value) return null
+  const font = availableFonts.find(f => f.value === currentFontValue.value)
   if (!font) return null
-
   return `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`
 })
 
-// ✅ 計算全域字型（改用 frontFamily）
+// ✅ 計算全域字型
 const globalFontFamily = computed(() => {
-  if (!websiteSettings.value?.frontFamily) {
-    return "'Noto Sans TC', sans-serif"  // 預設字型
-  }
-
-  const font = availableFonts.find(f => f.value === websiteSettings.value.frontFamily)
+  if (!currentFontValue.value) return "'Noto Sans TC', sans-serif"
+  const font = availableFonts.find(f => f.value === currentFontValue.value)
   return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
 })
 
@@ -156,18 +137,21 @@ const loadWebsiteSettings = async () => {
     if (settings) {
       websiteSettings.value = settings
       
-      // ✅ GET API 回傳 snake_case (front_family)，需要兼容處理
-      const fontFamily = settings.frontFamily || 'noto-sans-tc'
-      
-      console.log('✓ 網站字型:', fontFamily, '(原始欄位:', settings.front_family || settings.frontFamily, ')')
-      
-      // ✅ 動態載入 Google Fonts
-      if (fontFamily) {
-        loadGoogleFont(fontFamily)
+      websiteSettings.value.frontFamilyZhTw = settings.frontFamilyZhTw || 'noto-sans-tc'
+      websiteSettings.value.frontFamilyZhCn = settings.frontFamilyZhCn || 'noto-sans-sc'
+      websiteSettings.value.frontFamilyEnUs = settings.frontFamilyEnUs || 'inter'
+
+      console.log('✓ 網站字型:', {
+        zhTw: websiteSettings.value.frontFamilyZhTw,
+        zhCn: websiteSettings.value.frontFamilyZhCn,
+        enUs: websiteSettings.value.frontFamilyEnUs
+      })
+
+      // ✅ 動態載入當前 locale 的 Google Font
+      const currentFont = websiteSettings.value.frontFamilyZhTw
+      if (currentFont) {
+        loadGoogleFont(currentFont)
       }
-      
-      // ✅ 轉換為統一的 frontFamily 供 computed 使用
-      websiteSettings.value.frontFamily = fontFamily
     }
   } catch (error) {
     console.error('❌ 載入網站設定失敗:', error)
@@ -248,15 +232,12 @@ onMounted(async () => {
       const firstTab = pageEditorStore.headerTabs[0]
       console.log('🔄 初始化第一個頁面:', firstTab.slug)
       
-      // 初始化頁面
       await pageEditorStore.initializePage(firstTab.slug)
       console.log('✓ 頁面已初始化:', firstTab.slug)
       
-      // 同步 Header 選單
       pageEditorStore.syncHeaderMenuFromTabs()
       console.log('✓ Header 選單已同步')
       
-      // 載入系統框架
       await pageEditorStore.fetchSystemFrames(templeId, firstTab.slug)
       console.log('✓ 系統框架已載入:', pageEditorStore.currentPageSystemFrames)
       
@@ -275,7 +256,6 @@ onMounted(async () => {
 
 // ==================== 工具列事件處理 ====================
 
-// 語言切換
 const handleLocaleChange = async (newLocale) => {
   console.log('🌐 EditorLayout: 切換語言:', newLocale, '| 當前頁面:', pageEditorStore.currentPageSlug)
   
@@ -288,10 +268,8 @@ const handleLocaleChange = async (newLocale) => {
   }
   
   try {
-    // 更新語言
     pageEditorStore.currentLocale = newLocale
     
-    // 重新載入當前頁面
     console.log('📥 重新載入頁面:', currentSlug, '語言:', newLocale)
     await pageEditorStore.reloadCurrentPage(newLocale)
     
@@ -303,7 +281,6 @@ const handleLocaleChange = async (newLocale) => {
   }
 }
 
-// 設定
 const handleSettings = () => {
   const templeId = getTempleId()
   if (templeId) {
@@ -314,7 +291,6 @@ const handleSettings = () => {
   }
 }
 
-// 選擇模板
 const handleSelectTemplate = () => {
   const templeId = getTempleId()
   if (templeId) {
@@ -325,7 +301,6 @@ const handleSelectTemplate = () => {
   }
 }
 
-// 升級方案
 const handleUpgrade = () => {
   const templeId = getTempleId()
   if (templeId) {
@@ -336,7 +311,6 @@ const handleUpgrade = () => {
   }
 }
 
-// 預覽
 const handlePreview = () => {
   const templeId = getTempleId()
   const slug = pageEditorStore.currentPageSlug
@@ -346,10 +320,7 @@ const handlePreview = () => {
     const route = router.resolve({
       name: 'app.temple.preview',
       params: { templeId },
-      query: { 
-        slug,
-        locale
-      }
+      query: { slug, locale }
     })
     window.open(route.href, '_blank')
   } else {
@@ -357,7 +328,6 @@ const handlePreview = () => {
   }
 }
 
-// 儲存
 const handleSave = async () => {
   try {
     const success = await pageEditorStore.saveCurrentPage()
@@ -373,13 +343,9 @@ const handleSave = async () => {
   }
 }
 
-// 刪除草稿
 const handleDelete = async () => {
   const confirmed = confirm('確定要刪除草稿嗎？')
-  
-  if (!confirmed) {
-    return
-  }
+  if (!confirmed) return
   
   const templeId = getTempleId()
   const currentSlug = pageEditorStore.currentPageSlug
@@ -397,40 +363,33 @@ const handleDelete = async () => {
     } else {
       alert('刪除失敗：' + (pageEditorStore.error || '未知錯誤'))
     }
-    
   } catch (error) {
     console.error('❌ 刪除草稿時發生錯誤:', error)
     alert('刪除失敗：' + error.message)
   }
 }
 
-// 前往網站
 const handleGoToWebsite = () => {
   alert('前往網站功能待實作')
 }
 
-// 發布
 const handlePublish = () => {
   console.log('📋 打開發布對話框')
   showPublishDialog.value = true
 }
 
-// 確認發布
 const handleConfirmPublish = async () => {
   const templeId = getTempleId()
   
   if (!templeId) {
     alert('缺少宮廟 ID')
-    if (publishDialogRef.value) {
-      publishDialogRef.value.resetPublishing()
-    }
+    if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
     return
   }
 
   try {
     console.log('🚀 開始發布流程...')
     
-    // 步驟 1: 如果有未保存的變更，先保存草稿
     if (hasUnsavedChanges.value) {
       console.log('💾 檢測到未保存變更，先保存草稿...')
       
@@ -438,9 +397,7 @@ const handleConfirmPublish = async () => {
       
       if (!saveSuccess) {
         alert('保存草稿失敗，無法發布')
-        if (publishDialogRef.value) {
-          publishDialogRef.value.resetPublishing()
-        }
+        if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
         return
       }
       
@@ -448,7 +405,6 @@ const handleConfirmPublish = async () => {
       hasUnsavedChanges.value = false
     }
     
-    // 步驟 2: 發布網站
     console.log('🚀 發布網站...')
     
     const publishSuccess = await pageEditorStore.publishWebsite(
@@ -458,25 +414,20 @@ const handleConfirmPublish = async () => {
     
     if (publishSuccess) {
       console.log('網站發布成功！')
-      
       showPublishDialog.value = false
       alert('網站發布成功！')
       hasUnsavedChanges.value = false
     } else {
       alert('發布失敗：' + (pageEditorStore.error || '未知錯誤'))
     }
-    
   } catch (error) {
     console.error('❌ 發布過程發生錯誤:', error)
     alert('發布失敗：' + error.message)
   } finally {
-    if (publishDialogRef.value) {
-      publishDialogRef.value.resetPublishing()
-    }
+    if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
   }
 }
 
-// 取消發布
 const handleCancelPublish = () => {
   console.log('❌ 取消發布')
   showPublishDialog.value = false
