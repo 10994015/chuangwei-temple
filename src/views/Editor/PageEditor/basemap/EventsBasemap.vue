@@ -173,7 +173,7 @@ const viewEventDetail = (event) => {
 <style lang="scss" scoped>
 .events-section {
   padding: 3rem 0 4rem;
-  background: #fff;
+  background: transparent;
 }
 
 .container {

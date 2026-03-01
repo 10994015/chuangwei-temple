@@ -131,7 +131,7 @@ const addToCart = (product) => {
 <style lang="scss" scoped>
 .product-list-section {
   padding: 2rem 0 4rem;
-  background: #f5f5f5;
+  background: transparent;
   min-height: 100vh;
 }
 
@@ -261,11 +261,11 @@ const addToCart = (product) => {
 
 /* ==================== 商品卡片 ==================== */
 .product-card {
-  background: #fff;
   cursor: pointer;
   transition: box-shadow 0.2s;
+  border: 1px solid #ddd;
 
-  &:hover { box-shadow: inset 0 0 0 2px #c9a55a; }
+  &:hover { box-shadow:  0 0 0 2px #c9a55a; }
 }
 
 /* 圖片區 */

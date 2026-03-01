@@ -1,11 +1,6 @@
 <template>
   <div class="editor-layout">
-    <!-- ✅ 動態載入 Google Fonts -->
-    <component :is="'style'" v-if="googleFontUrl">
-      @import url('{{ googleFontUrl }}');
-    </component>
-
-    <!-- ✅ 字型樣式 - 只套用到畫布區域 -->
+    <!-- 字型樣式 - 只套用到畫布區域 -->
     <component :is="'style'" v-if="globalFontFamily">
       .canvas-area,
       .canvas-area *,
@@ -79,26 +74,26 @@ const publishDialogRef = ref(null)
 // 追蹤未保存變更
 const hasUnsavedChanges = ref(false)
 
-// ✅ 網站設定（包含字型）
+// 網站設定（包含字型）
 const websiteSettings = ref(null)
 
-// ✅ 可用字型清單（按語言分類，與 WebsiteSettings.vue 一致）
+// 可用字型清單（按語言分類，與 WebsiteSettings.vue 一致）
 const availableFonts = [
   // 繁體中文
-  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    googleFont: 'IBM+Plex+Sans+TC:wght@400;600',                  cssFamily: "'IBM Plex Sans TC', sans-serif" },
-  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', googleFont: 'LXGW+WenKai+Mono+TC',                            cssFamily: "'LXGW WenKai Mono TC', monospace" },
-  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         googleFont: 'Noto+Sans+TC:wght@400;600',                      cssFamily: "'Noto Sans TC', sans-serif" },
-  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        googleFont: 'Noto+Serif+TC:wght@400;600',                     cssFamily: "'Noto Serif TC', serif" },
+  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    cssFamily: "'IBM Plex Sans TC', sans-serif" },
+  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', cssFamily: "'LXGW WenKai Mono TC', monospace" },
+  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         cssFamily: "'Noto Sans TC', sans-serif" },
+  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        cssFamily: "'Noto Serif TC', serif" },
   // 簡體中文
-  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         googleFont: 'Noto+Sans+SC:wght@400;600',                      cssFamily: "'Noto Sans SC', sans-serif" },
-  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        googleFont: 'Noto+Serif+SC:wght@400;600',                     cssFamily: "'Noto Serif SC', serif" },
-  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     googleFont: 'IBM+Plex+Sans+SC:wght@400;600',                  cssFamily: "'IBM Plex Sans SC', sans-serif" },
+  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         cssFamily: "'Noto Sans SC', sans-serif" },
+  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        cssFamily: "'Noto Serif SC', serif" },
+  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     cssFamily: "'IBM Plex Sans SC', sans-serif" },
   // 英文
-  { value: 'bona-nova',           label: 'Bona Nova',            googleFont: 'Bona+Nova:ital,wght@0,400;0,700;1,400',          cssFamily: "'Bona Nova', serif" },
-  { value: 'inter',               label: 'Inter',                googleFont: 'Inter:wght@400;600',                             cssFamily: "'Inter', sans-serif" },
-  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   googleFont: 'Cormorant+Garamond:ital,wght@0,400;0,600;1,400', cssFamily: "'Cormorant Garamond', serif" },
-  { value: 'montserrat',          label: 'Montserrat',           googleFont: 'Montserrat:wght@400;600',                        cssFamily: "'Montserrat', sans-serif" },
-  { value: 'playfair-display',    label: 'Playfair Display',     googleFont: 'Playfair+Display:ital,wght@0,400;0,600;1,400',   cssFamily: "'Playfair Display', serif" },
+  { value: 'bona-nova',           label: 'Bona Nova',            cssFamily: "'Bona Nova', serif" },
+  { value: 'inter',               label: 'Inter',                cssFamily: "'Inter', sans-serif" },
+  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   cssFamily: "'Cormorant Garamond', serif" },
+  { value: 'montserrat',          label: 'Montserrat',           cssFamily: "'Montserrat', sans-serif" },
+  { value: 'playfair-display',    label: 'Playfair Display',     cssFamily: "'Playfair Display', serif" },
 ]
 
 // 依 locale 取得對應字型欄位值
@@ -110,22 +105,14 @@ const currentFontValue = computed(() => {
   return websiteSettings.value.frontFamilyZhTw  // ZH-TW 及預設
 })
 
-// ✅ 計算 Google Fonts URL
-const googleFontUrl = computed(() => {
-  if (!currentFontValue.value) return null
-  const font = availableFonts.find(f => f.value === currentFontValue.value)
-  if (!font) return null
-  return `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`
-})
-
-// ✅ 計算全域字型
+// 計算全域字型（套用到畫布）
 const globalFontFamily = computed(() => {
   if (!currentFontValue.value) return "'Noto Sans TC', sans-serif"
   const font = availableFonts.find(f => f.value === currentFontValue.value)
   return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
 })
 
-// ✅ 載入網站設定（包含字型）
+// 載入網站設定（包含字型）
 const loadWebsiteSettings = async () => {
   const templeId = getTempleId()
   if (!templeId) return
@@ -136,7 +123,6 @@ const loadWebsiteSettings = async () => {
     
     if (settings) {
       websiteSettings.value = settings
-      
       websiteSettings.value.frontFamilyZhTw = settings.frontFamilyZhTw || 'noto-sans-tc'
       websiteSettings.value.frontFamilyZhCn = settings.frontFamilyZhCn || 'noto-sans-sc'
       websiteSettings.value.frontFamilyEnUs = settings.frontFamilyEnUs || 'inter'
@@ -146,38 +132,10 @@ const loadWebsiteSettings = async () => {
         zhCn: websiteSettings.value.frontFamilyZhCn,
         enUs: websiteSettings.value.frontFamilyEnUs
       })
-
-      // ✅ 動態載入當前 locale 的 Google Font
-      const currentFont = websiteSettings.value.frontFamilyZhTw
-      if (currentFont) {
-        loadGoogleFont(currentFont)
-      }
     }
   } catch (error) {
     console.error('❌ 載入網站設定失敗:', error)
   }
-}
-
-// ✅ 動態載入 Google Fonts
-const loadGoogleFont = (fontValue) => {
-  const font = availableFonts.find(f => f.value === fontValue)
-  if (!font) return
-
-  // 檢查是否已經載入
-  const existingLink = document.querySelector(`link[data-font="${fontValue}"]`)
-  if (existingLink) {
-    console.log('✓ Google Font 已載入:', fontValue)
-    return
-  }
-
-  // 創建 <link> 標籤
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`
-  link.setAttribute('data-font', fontValue)
-  
-  document.head.appendChild(link)
-  console.log('✓ 載入 Google Font:', fontValue)
 }
 
 // 提供給子組件使用
@@ -216,7 +174,7 @@ onMounted(async () => {
   pageEditorStore.setTenantId(templeId)
   
   try {
-    // ✅ 載入網站設定（字型）
+    // 載入網站設定（字型）
     await loadWebsiteSettings()
     
     // 載入語言清單

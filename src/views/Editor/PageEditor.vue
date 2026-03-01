@@ -70,7 +70,7 @@ const handleUpdateElement = (data) => {
   
   if (data.type === 'logo') {
     if (data.frame && data.frame.data) {
-      data.frame.data.logoImgUrl = data.data.src
+      data.frame.data.logoImgSrc = data.data.src
       data.frame.data.logoImgId = data.data.id || null
       console.log('✓ Logo 已更新')
     }
@@ -194,7 +194,7 @@ const handleDeleteElement = (data) => {
       pageEditorStore.markFileForDeletion(data.frame?.data?.logoImgId)
 
       if (data.frame && data.frame.data) {
-        data.frame.data.logoImgUrl = null
+        data.frame.data.logoImgSrc = null
         data.frame.data.logoImgId = null
       }
       pageEditorStore.clearSelection()
@@ -260,44 +260,11 @@ const handleDeleteFrame = (data) => {
 
 // ==================== 上傳處理 ====================
 
-// ✅ 修改：加入 imageId 支援（BasemapWrapper 上傳後回傳的 API ID）
+// BasemapWrapper 上傳背景後直接 mutate props.basemap（store reactive 物件），
+// store 已自動同步，此 handler 只需接收事件即可，無需再次 find-and-update，
+// 否則若多個底圖的 bgType+bgSequence 相同時會污染到其他底圖。
 const handleUpdateBackground = (data) => {
-  console.log('PageEditor 收到背景更新:', data)
-  
-  const { basemap, type, imageData, imageId } = data  // ✅ 解構加入 imageId
-  
-  if (!basemap) {
-    console.error('找不到底圖')
-    return
-  }
-  
-  // BasemapWrapper 已直接更新 basemap 物件，這裡做 fallback 確保 Store 同步
-  const basemaps = pageEditorStore.currentPageBasemaps
-  const targetBasemap = basemaps.find(b => 
-    b.bgType === basemap.bgType && b.bgSequence === basemap.bgSequence
-  )
-  
-  if (!targetBasemap) {
-    console.error('在 Store 中找不到對應的底圖')
-    return
-  }
-  
-  switch (type) {
-    case 'desktop':
-      targetBasemap.bgPcImgSrc = imageData
-      targetBasemap.bgPcImgId = imageId || null
-      break
-    case 'tablet':
-      targetBasemap.bgTabletImgSrc = imageData
-      targetBasemap.bgTabletImgId = imageId || null
-      break
-    case 'mobile':
-      targetBasemap.bgPhoneImgSrc = imageData
-      targetBasemap.bgPhoneImgId = imageId || null
-      break
-  }
-  
-  console.log('✓ 背景已更新到 Store:', { type, src: imageData, id: imageId })
+  console.log('PageEditor 收到背景更新 (store 已由 BasemapWrapper 直接更新):', data)
 }
 
 // ✅ 修改：移除舊的 FileReader 邏輯，實際上傳已在 BasemapWrapper 內處理

@@ -560,12 +560,12 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         headerBasemap.frames[0].data = {}
       }
       
-      // ✅ 更新 logoImgUrl 和 logoImgId
-      headerBasemap.frames[0].data.logoImgUrl = logoSrc
+      // ✅ 更新 logoImgSrc 和 logoImgId
+      headerBasemap.frames[0].data.logoImgSrc = logoSrc
       headerBasemap.frames[0].data.logoImgId = logoId
       
       console.log('✓ Store: Logo 已更新:', {
-        logoImgUrl: logoSrc,
+        logoImgSrc: logoSrc,
         logoImgId: logoId
       })
     }
@@ -601,8 +601,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     // 在指定位置的下一個位置插入
     const actualIndex = insertIndex + 1
     
-    // 計算新的 sequence
-    const newSequence = actualIndex + 1
+    // 計算新的 sequence：取現有最大值 +1，確保全域唯一，避免 bgType+bgSequence 重複
+    const maxSequence = basemaps.reduce((max, b) => Math.max(max, b.bgSequence || 0), 0)
+    const newSequence = maxSequence + 1
     
     // 創建新底圖（使用 API 格式）
     const newBasemap = {

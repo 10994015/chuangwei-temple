@@ -109,7 +109,7 @@ const closeMobileMenu   = () => { mobileMenuOpen.value = false }
 // ==================== Computed ====================
 // ✅ 兼容 logoImgUrl（編輯器存的）和 logoImgSrc（API 回傳的）
 const logoSrc = computed(() =>
-  props.frameData.logoImgUrl || props.frameData.logoImgSrc || null
+  props.frameData.logoImgSrc || props.frameData.logoImgSrc || null
 )
 
 // ✅ 兼容 temple_name（編輯器存的舊格式）和 tenantName（API 回傳）

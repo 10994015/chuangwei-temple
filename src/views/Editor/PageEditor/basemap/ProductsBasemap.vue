@@ -94,7 +94,7 @@ const addToCart = (product) => {
 <style lang="scss" scoped>
 .products-section {
   padding: 3rem 0 4rem;
-  background: #f5f5f5;
+  background: transparent;
 }
 
 .container {

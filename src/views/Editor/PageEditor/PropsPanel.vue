@@ -77,13 +77,11 @@
           <div class="prop-group">
             <label>背景圖片</label>
             <div class="image-upload">
-              <!-- ✅ Loading 狀態 -->
               <div v-if="isUploadingHeroBackground" class="uploading-state">
                 <div class="spinner"></div>
                 <span>上傳中...</span>
               </div>
               
-              <!-- ✅ 預覽圖片 -->
               <img 
                 v-else-if="selectedFrame.data?.heroBgImgSrc"
                 :src="selectedFrame.data.heroBgImgSrc" 
@@ -91,7 +89,6 @@
                 class="preview-image"
               />
               
-              <!-- ✅ 無圖片狀態 -->
               <div v-else class="no-image">
                 <span>尚未上傳背景圖片</span>
               </div>
@@ -109,7 +106,6 @@
             </div>
           </div>
           
-          <!-- 標題 -->
           <div class="prop-group">
             <label>標題</label>
             <input 
@@ -121,7 +117,6 @@
             />
           </div>
           
-          <!-- 副標題 -->
           <div class="prop-group">
             <label>副標題</label>
             <textarea 
@@ -133,11 +128,9 @@
             ></textarea>
           </div>
           
-          <!-- 樣式設定區塊 -->
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
             
-            <!-- 首圖高度 -->
             <div class="prop-group">
               <label>首圖高度</label>
               <div class="height-selector">
@@ -157,7 +150,6 @@
               </div>
             </div>
             
-            <!-- 遮罩透明度 -->
             <div class="prop-group">
               <label>遮罩透明度 ({{ overlayOpacity }}%)</label>
               <input 
@@ -174,7 +166,6 @@
               </div>
             </div>
             
-            <!-- 遮罩顏色 -->
             <div class="prop-group">
               <label>遮罩顏色</label>
               <div class="color-input-group">
@@ -194,7 +185,6 @@
               </div>
             </div>
             
-            <!-- 文字框圓角 -->
             <div class="prop-group">
               <label>文字框圓角</label>
               <div class="input-with-unit">
@@ -208,7 +198,6 @@
               </div>
             </div>
             
-            <!-- 標題顏色 -->
             <div class="prop-group">
               <label>標題顏色</label>
               <div class="color-input-group">
@@ -228,7 +217,6 @@
               </div>
             </div>
             
-            <!-- 標題字體大小 -->
             <div class="prop-group">
               <label>標題字體大小</label>
               <div class="input-with-unit">
@@ -242,7 +230,6 @@
               </div>
             </div>
             
-            <!-- 副標題顏色 -->
             <div class="prop-group">
               <label>副標題顏色</label>
               <div class="color-input-group">
@@ -262,7 +249,6 @@
               </div>
             </div>
             
-            <!-- 副標題字體大小 -->
             <div class="prop-group">
               <label>副標題字體大小</label>
               <div class="input-with-unit">
@@ -282,7 +268,6 @@
         <template v-else-if="selectedFrame.type === 'CAROUSEL_WALL'">
           <h4 class="section-title">輪播牆設定</h4>
 
-          <!-- ✅ 新增：輪播高度 -->
           <div class="prop-group">
             <label>輪播高度</label>
             <div class="height-selector">
@@ -305,7 +290,6 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：自動播放 -->
           <div class="prop-group">
             <label class="checkbox-label">
               <input v-model="carouselWallAutoPlay" type="checkbox" @change="updateCarouselWallSettings" />
@@ -313,7 +297,6 @@
             </label>
           </div>
 
-          <!-- ✅ 新增：播放間隔 -->
           <div class="prop-group" v-if="carouselWallAutoPlay">
             <label>播放間隔 (毫秒)</label>
             <input
@@ -330,7 +313,6 @@
           <div class="prop-group">
             <label>輪播圖片 ({{ carouselWallImages.length }} 張)</label>
 
-            <!-- 圖片縮圖列表 -->
             <div v-if="carouselWallImages.length > 0" class="carousel-images-list">
               <div
                 v-for="(img, index) in carouselWallImages"
@@ -352,12 +334,10 @@
               </div>
             </div>
 
-            <!-- 無圖片時的空狀態 -->
             <div v-else class="no-image">
               <span>尚未上傳圖片</span>
             </div>
 
-            <!-- 上傳按鈕 -->
             <button
               @click="handleUploadCarouselWall"
               class="upload-btn"
@@ -396,13 +376,11 @@
           <div class="prop-group">
             <label>Logo 圖片</label>
             <div class="image-upload">
-              <!-- ✅ Loading 狀態 -->
               <div v-if="isUploadingLogo" class="uploading-state">
                 <div class="spinner"></div>
                 <span>上傳中...</span>
               </div>
               
-              <!-- ✅ 預覽圖片 - 使用本地響應式狀態 -->
               <img 
                 v-else-if="localLogoSrc" 
                 :src="localLogoSrc" 
@@ -411,7 +389,6 @@
                 @error="handleLogoImageError"
               />
               
-              <!-- ✅ 無圖片狀態 -->
               <div v-else class="no-image">
                 <span>尚未上傳 Logo</span>
               </div>
@@ -428,11 +405,10 @@
               </button>
             </div>
             
-            <!-- ✅ Debug 資訊（開發時可用） -->
             <div v-if="false" class="debug-info">
               <small>
                 Local Logo: {{ localLogoSrc ? '有' : '無' }}<br>
-                Frame Logo: {{ selectedElement.frame?.data?.logoImgUrl ? '有' : '無' }}<br>
+                Frame Logo: {{ selectedElement.frame?.data?.logoImgSrc ? '有' : '無' }}<br>
                 Data Logo: {{ selectedElement.data?.src ? '有' : '無' }}
               </small>
             </div>
@@ -453,42 +429,22 @@
             ></textarea>
           </div>
 
-          <!-- ✅ Metadata 樣式設定 -->
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
             
-            <!-- 文字顏色 -->
             <div class="prop-group">
               <label>文字顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="elementMetadata.color" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateMetadata"
-                />
-                <input 
-                  v-model="elementMetadata.color" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="#000000"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.color" type="color" class="prop-color" @input="updateMetadata" />
+                <input v-model="elementMetadata.color" type="text" class="prop-input color-text" placeholder="#000000" @input="updateMetadata" />
                 <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
 
-            <!-- 字體大小 -->
             <div class="prop-group">
               <label>字體大小</label>
               <div class="font-size-row">
-                <input 
-                  v-model="elementMetadata.font_size" 
-                  type="text" 
-                  class="prop-input font-size-input"
-                  placeholder="16"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.font_size" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
                 <div class="font-size-presets">
                   <button @click="elementMetadata.font_size = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '12' }">小</button>
                   <button @click="elementMetadata.font_size = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '16' }">中</button>
@@ -498,14 +454,9 @@
               </div>
             </div>
 
-            <!-- 字體粗細 -->
             <div class="prop-group">
               <label>字體粗細</label>
-              <select 
-                v-model="elementMetadata.font_weight" 
-                class="prop-select"
-                @change="updateMetadata"
-              >
+              <select v-model="elementMetadata.font_weight" class="prop-select" @change="updateMetadata">
                 <option :value="null">預設</option>
                 <option value="normal">正常 (400)</option>
                 <option value="500">中等 (500)</option>
@@ -514,133 +465,52 @@
               </select>
             </div>
 
-            <!-- 文字對齊 -->
             <div class="prop-group">
               <label>文字對齊</label>
               <div class="align-buttons">
-                <button 
-                  @click="elementMetadata.text_align = 'left'; updateMetadata()" 
-                  class="align-btn"
-                  :class="{ active: elementMetadata.text_align === 'left' }"
-                  title="靠左"
-                >
-                  靠左
-                </button>
-                <button 
-                  @click="elementMetadata.text_align = 'center'; updateMetadata()" 
-                  class="align-btn"
-                  :class="{ active: elementMetadata.text_align === 'center' }"
-                  title="置中"
-                >
-                  置中
-                </button>
-                <button 
-                  @click="elementMetadata.text_align = 'right'; updateMetadata()" 
-                  class="align-btn"
-                  :class="{ active: elementMetadata.text_align === 'right' }"
-                  title="靠右"
-                >
-                  靠右
-                </button>
-                <button 
-                  @click="elementMetadata.text_align = null; updateMetadata()" 
-                  class="align-btn clear"
-                  title="清除"
-                >
-                  ✕
-                </button>
+                <button @click="elementMetadata.text_align = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'left' }">靠左</button>
+                <button @click="elementMetadata.text_align = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'center' }">置中</button>
+                <button @click="elementMetadata.text_align = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'right' }">靠右</button>
+                <button @click="elementMetadata.text_align = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
 
-            <!-- 背景顏色 -->
             <div class="prop-group">
               <label>背景顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="elementMetadata.background_color" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateMetadata"
-                />
-                <input 
-                  v-model="elementMetadata.background_color" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="transparent"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.background_color" type="color" class="prop-color" @input="updateMetadata" />
+                <input v-model="elementMetadata.background_color" type="text" class="prop-input color-text" placeholder="transparent" @input="updateMetadata" />
                 <button @click="elementMetadata.background_color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
           </div>
 
-          <!-- ✅ 新增：元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -650,29 +520,28 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -684,13 +553,11 @@
           <div class="prop-group">
             <label>圖片</label>
             <div class="image-upload">
-              <!-- ✅ Loading 狀態 -->
               <div v-if="isUploadingImage" class="uploading-state">
                 <div class="spinner"></div>
                 <span>上傳中...</span>
               </div>
               
-              <!-- ✅ 預覽圖片 -->
               <img 
                 v-else-if="selectedElement.element.value?.src"
                 :src="selectedElement.element.value.src" 
@@ -698,177 +565,79 @@
                 class="preview-image"
               />
               
-              <!-- ✅ 無圖片狀態 -->
               <div v-else class="no-image">
                 <span>尚未上傳圖片</span>
               </div>
               
-              <button 
-                @click="handleUploadImage" 
-                class="upload-btn"
-                :disabled="isUploadingImage"
-              >
+              <button @click="handleUploadImage" class="upload-btn" :disabled="isUploadingImage">
                 <template v-if="isUploadingImage">上傳中...</template>
-                <template v-else>
-                  {{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}
-                </template>
+                <template v-else>{{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}</template>
               </button>
             </div>
           </div>
 
-          <!-- ✅ 新增：Alt 文字設定 -->
           <div class="prop-group">
             <label>Alt 文字（替代文字）</label>
-            <input 
-              v-model="imageAlt" 
-              type="text" 
-              class="prop-input"
-              placeholder="描述圖片內容，用於無障礙輔助"
-              @input="updateImageAlt"
-            />
+            <input v-model="imageAlt" type="text" class="prop-input" placeholder="描述圖片內容，用於無障礙輔助" @input="updateImageAlt" />
             <span class="hint-text">用於螢幕閱讀器和圖片無法顯示時</span>
           </div>
 
-          <!-- ✅ Metadata 樣式設定 -->
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
             
-            <!-- ✅ 圖片對齊 -->
             <div class="prop-group">
               <label>圖片對齊</label>
               <div class="align-buttons">
-                <button 
-                  @click="elementMetadata.text_align = 'left'; updateMetadata()" 
-                  class="align-btn"
-                  :class="{ active: elementMetadata.text_align === 'left' }"
-                  title="靠左"
-                >
-                  靠左
-                </button>
-                <button 
-                  @click="elementMetadata.text_align = 'center'; updateMetadata()" 
-                  class="align-btn"
-                  :class="{ active: elementMetadata.text_align === 'center' }"
-                  title="置中"
-                >
-                  置中
-                </button>
-                <button 
-                  @click="elementMetadata.text_align = 'right'; updateMetadata()" 
-                  class="align-btn"
-                  :class="{ active: elementMetadata.text_align === 'right' }"
-                  title="靠右"
-                >
-                  靠右
-                </button>
-                <button 
-                  @click="elementMetadata.text_align = null; updateMetadata()" 
-                  class="align-btn clear"
-                  title="清除（預設靠左）"
-                >
-                  ✕
-                </button>
+                <button @click="elementMetadata.text_align = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'left' }">靠左</button>
+                <button @click="elementMetadata.text_align = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'center' }">置中</button>
+                <button @click="elementMetadata.text_align = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'right' }">靠右</button>
+                <button @click="elementMetadata.text_align = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
             
-            <!-- 寬度 -->
             <div class="prop-group">
               <label>寬度</label>
               <div class="input-with-unit">
-                <input 
-                  v-model="elementMetadata.width" 
-                  type="text" 
-                  class="prop-input"
-                  placeholder="100%, 500px, auto"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.width" type="text" class="prop-input" placeholder="100%, 500px, auto" @input="updateMetadata" />
                 <span class="unit-hint">例如: 100%, 500px, auto</span>
               </div>
             </div>
 
-            <!-- 高度 -->
             <div class="prop-group">
               <label>高度</label>
               <div class="input-with-unit">
-                <input 
-                  v-model="elementMetadata.height" 
-                  type="text" 
-                  class="prop-input"
-                  placeholder="auto, 300px"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.height" type="text" class="prop-input" placeholder="auto, 300px" @input="updateMetadata" />
                 <span class="unit-hint">例如: auto, 300px</span>
               </div>
             </div>
           </div>
 
-          <!-- ✅ 新增：元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -878,29 +647,28 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -911,81 +679,39 @@
           
           <div class="prop-group">
             <label>按鈕文字</label>
-            <input 
-              v-model="selectedElement.element.value.text" 
-              type="text" 
-              class="prop-input"
-              placeholder="輸入按鈕文字"
-            />
+            <input v-model="selectedElement.element.value.text" type="text" class="prop-input" placeholder="輸入按鈕文字" />
           </div>
 
           <div class="prop-group">
             <label>連結網址</label>
-            <input 
-              v-model="selectedElement.element.value.url" 
-              type="text" 
-              class="prop-input"
-              placeholder="輸入連結 (例如: https://example.com)"
-            />
+            <input v-model="selectedElement.element.value.url" type="text" class="prop-input" placeholder="輸入連結 (例如: https://example.com)" />
           </div>
 
-          <!-- ✅ Metadata 樣式設定 -->
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
             
-            <!-- 文字顏色 -->
             <div class="prop-group">
               <label>文字顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="elementMetadata.color" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateMetadata"
-                />
-                <input 
-                  v-model="elementMetadata.color" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="#ffffff"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.color" type="color" class="prop-color" @input="updateMetadata" />
+                <input v-model="elementMetadata.color" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateMetadata" />
                 <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
 
-            <!-- 背景顏色 -->
             <div class="prop-group">
               <label>背景顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="elementMetadata.background_color" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateMetadata"
-                />
-                <input 
-                  v-model="elementMetadata.background_color" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="#E8572A"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.background_color" type="color" class="prop-color" @input="updateMetadata" />
+                <input v-model="elementMetadata.background_color" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updateMetadata" />
                 <button @click="elementMetadata.background_color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
 
-            <!-- 字體大小 -->
             <div class="prop-group">
               <label>字體大小</label>
               <div class="font-size-row">
-                <input 
-                  v-model="elementMetadata.font_size" 
-                  type="text" 
-                  class="prop-input font-size-input"
-                  placeholder="16"
-                  @input="updateMetadata"
-                />
+                <input v-model="elementMetadata.font_size" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
                 <div class="font-size-presets">
                   <button @click="elementMetadata.font_size = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '12' }">小</button>
                   <button @click="elementMetadata.font_size = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '16' }">中</button>
@@ -995,14 +721,9 @@
               </div>
             </div>
 
-            <!-- 字體粗細 -->
             <div class="prop-group">
               <label>字體粗細</label>
-              <select 
-                v-model="elementMetadata.font_weight" 
-                class="prop-select"
-                @change="updateMetadata"
-              >
+              <select v-model="elementMetadata.font_weight" class="prop-select" @change="updateMetadata">
                 <option :value="null">預設</option>
                 <option value="normal">正常 (400)</option>
                 <option value="500">中等 (500)</option>
@@ -1012,73 +733,32 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1088,29 +768,28 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -1121,90 +800,40 @@
           
           <div class="prop-group">
             <label>顏色</label>
-            <input 
-              v-model="selectedElement.element.value.color" 
-              type="color" 
-              class="prop-color"
-            />
+            <input v-model="selectedElement.element.value.color" type="color" class="prop-color" />
           </div>
 
           <div class="prop-group">
             <label>粗細</label>
-            <input 
-              v-model="selectedElement.element.value.thickness" 
-              type="text" 
-              class="prop-input"
-              placeholder=""
-            />
+            <input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" />
           </div>
 
-          <!-- ✅ 新增：元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1214,29 +843,28 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -1247,90 +875,40 @@
           
           <div class="prop-group">
             <label>顏色</label>
-            <input 
-              v-model="selectedElement.element.value.color" 
-              type="color" 
-              class="prop-color"
-            />
+            <input v-model="selectedElement.element.value.color" type="color" class="prop-color" />
           </div>
 
           <div class="prop-group">
             <label>粗細</label>
-            <input 
-              v-model="selectedElement.element.value.thickness" 
-              type="text" 
-              class="prop-input"
-              placeholder="2（）"
-            />
+            <input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" />
           </div>
 
-          <!-- ✅ 新增：元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1340,29 +918,28 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -1371,162 +948,73 @@
         <template v-else-if="selectedElement.element?.type === 'CAROUSEL'">
           <h4 class="section-title">輪播設定</h4>
           
-          <!-- 輪播高度 -->
           <div class="prop-group">
             <label>輪播高度</label>
             <div class="height-selector">
-              <input 
-                v-model.number="carouselHeight" 
-                type="number" 
-                class="prop-input"
-                min="200"
-                max="800"
-                step="50"
-                @input="updateCarouselSettings"
-              />
+              <input v-model.number="carouselHeight" type="number" class="prop-input" min="200" max="800" step="50" @input="updateCarouselSettings" />
               <span class="unit">px</span>
             </div>
             <div class="height-presets">
-              <button 
-                v-for="preset in heightPresets" 
-                :key="preset.value"
-                @click="setCarouselHeight(preset.value)"
-                class="preset-btn"
-                :class="{ active: carouselHeight === preset.value }"
-              >
+              <button v-for="preset in heightPresets" :key="preset.value" @click="setCarouselHeight(preset.value)" class="preset-btn" :class="{ active: carouselHeight === preset.value }">
                 {{ preset.label }}
               </button>
             </div>
           </div>
           
-          <!-- 輪播圖片列表 -->
           <div class="prop-group">
             <label>輪播圖片 ({{ carouselImages.length }})</label>
             
             <div v-if="carouselImages.length > 0" class="carousel-images-list">
-              <div 
-                v-for="(image, index) in carouselImages" 
-                :key="image.id || index"
-                class="carousel-image-item"
-              >
+              <div v-for="(image, index) in carouselImages" :key="image.id || index" class="carousel-image-item">
                 <img :src="image.src || image" :alt="`圖片 ${index + 1}`" class="carousel-thumbnail" />
-                <button 
-                  @click="removeCarouselImage(index)" 
-                  class="remove-image-btn"
-                  title="刪除圖片"
-                >
-                  ✕
-                </button>
+                <button @click="removeCarouselImage(index)" class="remove-image-btn" title="刪除圖片">✕</button>
               </div>
             </div>
 
-            <button 
-              @click="addCarouselImage" 
-              class="upload-btn"
-              :disabled="isUploadingCarousel"
-            >
-              <template v-if="isUploadingCarousel">
-                <span class="btn-spinner"></span>
-                上傳中...
-              </template>
-              <template v-else>
-                ＋ 新增圖片
-              </template>
+            <button @click="addCarouselImage" class="upload-btn" :disabled="isUploadingCarousel">
+              <template v-if="isUploadingCarousel"><span class="btn-spinner"></span>上傳中...</template>
+              <template v-else>＋ 新增圖片</template>
             </button>
           </div>
 
-          <!-- 自動播放 -->
           <div class="prop-group">
             <label class="checkbox-label">
-              <input 
-                v-model="carouselAutoPlay" 
-                type="checkbox"
-                @change="updateCarouselSettings"
-              />
+              <input v-model="carouselAutoPlay" type="checkbox" @change="updateCarouselSettings" />
               <span>自動播放</span>
             </label>
           </div>
 
-          <!-- 播放間隔 -->
           <div class="prop-group" v-if="carouselAutoPlay">
             <label>播放間隔 (毫秒)</label>
-            <input 
-              v-model.number="carouselInterval" 
-              type="number" 
-              class="prop-input"
-              min="1000"
-              step="500"
-              @input="updateCarouselSettings"
-            />
+            <input v-model.number="carouselInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselSettings" />
           </div>
 
-          <!-- ✅ 新增：元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1536,29 +1024,28 @@
             </div>
           </div>
 
-          <!-- ✅ 新增：元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -1568,130 +1055,58 @@
           <h4 class="section-title">地圖設定</h4>
           <div class="prop-group">
             <label>地址</label>
-            <input
-              v-model="mapAddress"
-              type="text"
-              class="prop-input"
-              placeholder="輸入地址，例如：台北市信義區信義路五段7號"
-              @input="updateMapData"
-            />
+            <input v-model="mapAddress" type="text" class="prop-input" placeholder="輸入地址，例如：台北市信義區信義路五段7號" @input="updateMapData" />
           </div>
-          <!-- 經緯度 -->
           <div class="prop-group">
             <label>緯度 (Latitude)</label>
-            <input 
-              v-model.number="mapLat" 
-              type="number" 
-              class="prop-input"
-              placeholder="25.033"
-              step="0.001"
-              @input="updateMapData"
-            />
+            <input v-model.number="mapLat" type="number" class="prop-input" placeholder="25.033" step="0.001" @input="updateMapData" />
             <span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span>
           </div>
-
           <div class="prop-group">
             <label>經度 (Longitude)</label>
-            <input 
-              v-model.number="mapLng" 
-              type="number" 
-              class="prop-input"
-              placeholder="121.565"
-              step="0.001"
-              @input="updateMapData"
-            />
+            <input v-model.number="mapLng" type="number" class="prop-input" placeholder="121.565" step="0.001" @input="updateMapData" />
             <span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span>
           </div>
-
           <div class="prop-group">
             <label>縮放級別 ({{ mapZoom }})</label>
-            <input 
-              v-model.number="mapZoom" 
-              type="range" 
-              min="10"
-              max="18"
-              class="prop-slider"
-              @input="updateMapData"
-            />
+            <input v-model.number="mapZoom" type="range" min="10" max="18" class="prop-slider" @input="updateMapData" />
             <div class="slider-labels">
               <span>遠</span>
               <span>近</span>
             </div>
           </div>
-
           <div class="zoom-presets">
             <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">城市</button>
             <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">街區</button>
             <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">建築</button>
           </div>
 
-          <!-- 元件間距設定 -->
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
-            
             <div class="padding-controls">
               <div class="padding-visual">
                 <div class="padding-box">
                   <div class="padding-input-group top">
                     <label>上</label>
-                    <input 
-                      v-model.number="elementPadding.top" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
-                  
                   <div class="padding-sides">
                     <div class="padding-input-group left">
                       <label>左</label>
-                      <input 
-                        v-model.number="elementPadding.left" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
-                    
-                    <div class="content-preview">
-                      內容區域
-                    </div>
-                    
+                    <div class="content-preview">內容區域</div>
                     <div class="padding-input-group right">
                       <label>右</label>
-                      <input 
-                        v-model.number="elementPadding.right" 
-                        type="number" 
-                        min="0"
-                        max="200"
-                        step="5"
-                        class="padding-input"
-                        @input="updateElementPadding"
-                      />
+                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                     </div>
                   </div>
-                  
                   <div class="padding-input-group bottom">
                     <label>下</label>
-                    <input 
-                      v-model.number="elementPadding.bottom" 
-                      type="number" 
-                      min="0"
-                      max="200"
-                      step="5"
-                      class="padding-input"
-                      @input="updateElementPadding"
-                    />
+                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
                   </div>
                 </div>
               </div>
-              
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1701,29 +1116,28 @@
             </div>
           </div>
 
-          <!-- 元件寬度設定 -->
+          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            
             <div class="prop-group">
               <label>最大寬度</label>
-              <div class="input-with-unit">
+              <div class="input-with-suffix">
                 <input 
                   v-model="elementWidth" 
-                  type="text" 
+                  type="number" 
                   class="prop-input"
-                  placeholder="100%"
-                  @input="updateElementWidth"
+                  placeholder="100"
+                  min="1"
+                  max="100"
+                  @input="updateElementWidthDebounced"
                 />
-                <span class="unit-hint">例如: 100%, 80%, 500px</span>
+                <span class="input-suffix">%</span>
               </div>
             </div>
-
             <div class="width-presets">
-              <button @click="setElementWidth('50%')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80%')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100%')" class="preset-btn">全寬</button>
-              <button @click="setElementWidth('auto')" class="preset-btn">自動</button>
+              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
+              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
+              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
             </div>
           </div>
         </template>
@@ -1733,17 +1147,12 @@
           <h4 class="section-title">元件資訊</h4>
           <div class="prop-group">
             <label>元件類型</label>
-            <input 
-              :value="selectedElement.element?.type || 'Unknown'" 
-              type="text" 
-              class="prop-input"
-              disabled
-            />
+            <input :value="selectedElement.element?.type || 'Unknown'" type="text" class="prop-input" disabled />
           </div>
         </template>
       </div>
 
-      <!-- ✅ 選擇了空格子（保留，用於顯示提示） -->
+      <!-- ✅ 選擇了空格子 -->
       <div v-else-if="selectedCell" class="props-section">
         <h4 class="section-title">空格子</h4>
         <div class="empty-cell-hint">
@@ -1759,32 +1168,19 @@
 import { ref, watch, inject } from 'vue'
 import { useRoute } from 'vue-router'
 
-// ✅ 注入 pageEditorStore
 const pageEditorStore = inject('pageEditorStore')
 const route = useRoute()
 
 const props = defineProps({
-  selectedBasemap: {
-    type: Object,
-    default: null
-  },
-  selectedFrame: {
-    type: Object,
-    default: null
-  },
-  selectedElement: {
-    type: Object,
-    default: null
-  },
-  selectedCell: {
-    type: Object,
-    default: null
-  }
+  selectedBasemap: { type: Object, default: null },
+  selectedFrame: { type: Object, default: null },
+  selectedElement: { type: Object, default: null },
+  selectedCell: { type: Object, default: null }
 })
 
 const emit = defineEmits(['update-logo', 'update-cell-padding'])
 
-// ==================== ✅ 單位補全工具函數 ====================
+// ==================== 工具函數 ====================
 
 const ensureUnit = (value, defaultValue = '') => {
   if (value === null || value === undefined || value === '') return defaultValue
@@ -1805,33 +1201,38 @@ const stripPx = (value) => {
   return str
 }
 
-// Logo 相關的響應式數據
+// ✅ 從存儲的寬度值（含%）提取純數字，供 input 顯示
+const stripPercent = (value) => {
+  if (!value) return '100'
+  const str = String(value).trim()
+  if (str.includes('%')) return str.replace('%', '')
+  if (str === 'auto') return '100'
+  return str
+}
+
+// ==================== 響應式狀態 ====================
+
 const logoAlt = ref('')
 const logoWidth = ref('')
 const logoHeight = ref('')
 const isUploadingLogo = ref(false)
 const localLogoSrc = ref(null)
 
-// ✅ 圖片上傳 loading 狀態
 const isUploadingImage = ref(false)
 const isUploadingHeroBackground = ref(false)
 const isUploadingCarousel = ref(false)
 
-// ✅ CAROUSEL_WALL 輪播牆
 const carouselWallImages = ref([])
 const isUploadingCarouselWall = ref(false)
-// ✅ 輪播牆播放設定
-const carouselWallHeight   = ref(600)
+const carouselWallHeight = ref(600)
 const carouselWallAutoPlay = ref(true)
 const carouselWallInterval = ref(5000)
 
-// CAROUSEL 元件相關
 const carouselImages = ref([])
 const carouselAutoPlay = ref(true)
 const carouselInterval = ref(3000)
 const carouselHeight = ref(400)
 
-// ✅ 首圖 (FIRST_PICTURE) 相關
 const heroTitle = ref('')
 const heroSubtitle = ref('')
 const heroHeight = ref('600')
@@ -1843,13 +1244,11 @@ const titleFontSize = ref('48')
 const subtitleColor = ref('#666666')
 const subtitleFontSize = ref('20')
 
-// ✅ 元件 padding
 const elementPadding = ref({ top: 20, right: 20, bottom: 20, left: 20 })
 
-// ✅ 元件寬度
-const elementWidth = ref('100%')
+// ✅ elementWidth 只存純數字（不含%），顯示在 input 裡
+const elementWidth = ref('100')
 
-// ✅ 元件 metadata
 const elementMetadata = ref({
   color: null,
   font_size: null,
@@ -1860,19 +1259,13 @@ const elementMetadata = ref({
   background_color: null
 })
 
-// ✅ IMG 元件 alt 文字
 const imageAlt = ref('')
-
-// ✅ 框架寬度設定
 const frameWidth = ref('1200')
-
-// ✅ MAP 元件
 const mapAddress = ref('')
 const mapLat = ref(25.033)
 const mapLng = ref(121.565)
 const mapZoom = ref(15)
 
-// 高度預設選項
 const heightPresets = [
   { label: '小', value: 300 },
   { label: '中', value: 400 },
@@ -1891,14 +1284,12 @@ watch(() => props.selectedElement, (newVal) => {
   
   if (newVal?.element?.type === 'CAROUSEL') {
     const value = newVal.element.value || {}
-    // ✅ 改為 imgs（後端欄位名稱）
     carouselImages.value = value.imgs || []
     carouselAutoPlay.value = value.autoPlay !== false
     carouselInterval.value = value.interval || 3000
     carouselHeight.value = value.height || 400
   }
 
-  // ✅ MAP 元件
   if (newVal?.element?.type === 'MAP') {
     const value = newVal.element.value || {}
     mapAddress.value = value.address || ''
@@ -1935,7 +1326,8 @@ watch(() => props.selectedElement, (newVal) => {
     ? { ...newVal.element.padding }
     : { top: 20, right: 20, bottom: 20, left: 20 }
 
-  elementWidth.value = newVal?.element?.width || '100%'
+  // ✅ 讀取時去掉 %，只顯示數字
+  elementWidth.value = stripPercent(newVal?.element?.width || '100%')
 
 }, { immediate: true, deep: true })
 
@@ -1946,7 +1338,7 @@ watch(() => props.selectedElement?.data, (newData) => {
 }, { deep: true })
 
 watch(
-  () => props.selectedElement?.frame?.data?.logoImgUrl,
+  () => props.selectedElement?.frame?.data?.logoImgSrc,
   (newSrc) => {
     if (props.selectedElement?.type === 'logo') {
       localLogoSrc.value = newSrc || null
@@ -1959,13 +1351,12 @@ watch(
   () => props.selectedElement?.type,
   (newType) => {
     if (newType === 'logo') {
-      localLogoSrc.value = props.selectedElement?.frame?.data?.logoImgUrl || null
+      localLogoSrc.value = props.selectedElement?.frame?.data?.logoImgSrc || null
     }
   },
   { immediate: true }
 )
 
-// ✅ 改為監聽 imgs（後端欄位名稱）
 watch(() => props.selectedElement?.element?.value?.imgs, (newImgs) => {
   if (props.selectedElement?.element?.type === 'CAROUSEL' && newImgs) {
     carouselImages.value = [...newImgs]
@@ -1975,12 +1366,10 @@ watch(() => props.selectedElement?.element?.value?.imgs, (newImgs) => {
 // ==================== 監聽選中框架 ====================
 
 watch(() => props.selectedFrame, (newVal) => {
-  // 自訂框架寬度
   if (newVal?.type?.startsWith('FRAME')) {
     frameWidth.value = stripPx(newVal.metadata?.frameWidth || '1200px')
   }
 
-  // 首圖資料
   if (newVal?.type === 'FIRST_PICTURE' && newVal.data) {
     heroTitle.value = newVal.data.heroTitle || ''
     heroSubtitle.value = newVal.data.heroSubtitle || ''
@@ -1994,14 +1383,13 @@ watch(() => props.selectedFrame, (newVal) => {
     subtitleFontSize.value = stripPx(newVal.data.subtitleFontSize || '20px')
   }
 
-  // ✅ 輪播牆資料
   if (newVal?.type === 'CAROUSEL_WALL') {
     carouselWallImages.value = Array.isArray(newVal.data?.caroiselWallImgs)
       ? [...newVal.data.caroiselWallImgs]
       : []
-    carouselWallHeight.value   = newVal.data?.carouselWallHeight   ?? 600
+    carouselWallHeight.value = newVal.data?.carouselWallHeight ?? 600
     carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
-    carouselWallInterval.value = newVal.data?.carouselWallInterval  ?? 5000
+    carouselWallInterval.value = newVal.data?.carouselWallInterval ?? 5000
   }
 
 }, { immediate: true, deep: true })
@@ -2062,27 +1450,82 @@ const setElementPadding = (value) => {
 
 // ==================== 元件寬度更新 ====================
 
+// ✅ debounce 工具
+const debounce = (fn, delay) => {
+  let timer = null
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), delay)
+  }
+}
+
 const updateElementWidth = () => {
   if (props.selectedElement?.element) {
-    props.selectedElement.element.width = elementWidth.value
+    // ✅ input 只有數字，寫回時自動補 %
+    const raw = String(elementWidth.value).trim()
+    const finalWidth = raw ? raw + '%' : '100%'
+    props.selectedElement.element.width = finalWidth
     adjustSiblingCellsWidth()
   }
 }
+
+// ✅ 0.2 秒 debounce，給 template @input 使用
+const updateElementWidthDebounced = debounce(updateElementWidth, 200)
 
 const adjustSiblingCellsWidth = () => {
   const frame = props.selectedElement?.frame
   const cellIndex = props.selectedElement?.cellIndex
   if (!frame || cellIndex === undefined) return
   const frameType = frame.type
-  if (!frameType || !frameType.startsWith('FRAME')) return
-  let layout = frameType.replace(/^FRAME/, '').replace(/^[-_]/, '').replace(/-/g, '_')
-  const singleRowLayouts = ['1_1', '1_2', '1_3', '1_4']
-  if (!singleRowLayouts.includes(layout)) return
+  if (!frameType) return
+
+  let layout
+  if (frameType.startsWith('FRAME')) {
+    layout = frameType.replace(/^FRAME/, '').replace(/^[-_]/, '').replace(/-/g, '_')
+  } else if (['A', 'B', 'C', 'D'].includes(frameType)) {
+    layout = frameType
+  } else {
+    return
+  }
+
+  if (!frame.elements) frame.elements = []
+
+  // ✅ elementWidth 現在是純數字，parseWidth 直接解析
+  const currentWidth = parseFloat(elementWidth.value)
+  if (isNaN(currentWidth) || currentWidth <= 0 || currentWidth >= 100) return
+
+  // ✅ 複合框架 A/B/C/D：兩欄互補到 100%
+  const compositeMap = {
+    'A': { leftCells: [0], rightCells: [1, 2] },
+    'B': { leftCells: [0, 1], rightCells: [2] },
+    'C': { leftCells: [0], rightCells: [1, 2, 3] },
+    'D': { leftCells: [0, 1, 2], rightCells: [3] },
+  }
+
+  if (compositeMap[layout]) {
+    const { leftCells, rightCells } = compositeMap[layout]
+    const isLeft = leftCells.includes(cellIndex)
+    const sameSideCells = isLeft ? leftCells : rightCells
+    const otherSideCells = isLeft ? rightCells : leftCells
+
+    const otherWidth = (100 - currentWidth).toFixed(1) + '%'
+    const newWidth = currentWidth.toFixed(1) + '%'
+
+    sameSideCells.forEach(idx => {
+      // ✅ 跳過自己，避免 toFixed(1) 把 '5' 覆蓋成 '5.0'
+      if (idx !== cellIndex && frame.elements[idx]?.type) {
+        frame.elements[idx].width = newWidth
+      }
+    })
+    otherSideCells.forEach(idx => {
+      if (frame.elements[idx]?.type) frame.elements[idx].width = otherWidth
+    })
+    return
+  }
+
+  // 單層 / 雙層框架
   const rowCells = getRowCells(layout, cellIndex)
   if (rowCells.length <= 1) return
-  if (!frame.elements) frame.elements = []
-  const currentWidth = parseWidth(elementWidth.value)
-  if (currentWidth === null || currentWidth >= 100) return
   const remainingWidth = 100 - currentWidth
   const otherCellsCount = rowCells.length - 1
   const widthPerCell = remainingWidth / otherCellsCount
@@ -2108,11 +1551,31 @@ const getRowCells = (layout, currentIndex) => {
     case '1_2': return [0, 1]
     case '1_3': return [0, 1, 2]
     case '1_4': return [0, 1, 2, 3]
+    case '2_2': {
+      const row = currentIndex < 2 ? 0 : 1
+      const start = row * 2
+      return [start, start + 1]
+    }
+    case '2_3': {
+      const row = currentIndex < 3 ? 0 : 1
+      const start = row * 3
+      return [start, start + 1, start + 2]
+    }
+    case '2_4': {
+      const row = currentIndex < 4 ? 0 : 1
+      const start = row * 4
+      return [start, start + 1, start + 2, start + 3]
+    }
+    case 'A': return currentIndex === 0 ? [0] : [1, 2]
+    case 'B': return currentIndex === 2 ? [2] : [0, 1]
+    case 'C': return currentIndex === 0 ? [0] : [1, 2, 3]
+    case 'D': return currentIndex === 3 ? [3] : [0, 1, 2]
     default: return [currentIndex]
   }
 }
 
 const setElementWidth = (width) => {
+  // ✅ preset 傳入純數字字串，直接設定
   elementWidth.value = width
   updateElementWidth()
 }
@@ -2183,7 +1646,7 @@ const addCarouselImage = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.multiple = true  // ✅ 支援多選
+  input.multiple = true
   
   input.onchange = async (e) => {
     const files = Array.from(e.target.files)
@@ -2191,29 +1654,16 @@ const addCarouselImage = async () => {
     
     try {
       isUploadingCarousel.value = true
-      console.log(`📤 開始上傳 ${files.length} 張輪播圖片...`)
-      
       if (!props.selectedElement.element.value) props.selectedElement.element.value = {}
-      // ✅ 改為 imgs（後端欄位名稱）
       if (!props.selectedElement.element.value.imgs) props.selectedElement.element.value.imgs = []
       
       for (const file of files) {
         const uploadedFile = await pageEditorStore.uploadImage(file)
-        if (!uploadedFile) {
-          console.warn(`⚠️ 圖片 ${file.name} 上傳失敗，跳過`)
-          continue
-        }
-        // ✅ 改為 imgs
-        props.selectedElement.element.value.imgs.push({
-          id: uploadedFile.id,
-          src: uploadedFile.fileUrl
-        })
+        if (!uploadedFile) continue
+        props.selectedElement.element.value.imgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl })
       }
       
-      // ✅ 同步本地響應式陣列，改為 imgs
       carouselImages.value = [...props.selectedElement.element.value.imgs]
-      
-      console.log('✓ 輪播圖片已新增，共', carouselImages.value.length, '張')
     } catch (error) {
       console.error('❌ 輪播圖片上傳失敗:', error)
       alert('輪播圖片上傳失敗: ' + error.message)
@@ -2226,21 +1676,12 @@ const addCarouselImage = async () => {
 
 const removeCarouselImage = (index) => {
   if (!confirm('確定要刪除這張圖片嗎？')) return
-  
-  // ✅ 改為 imgs（後端欄位名稱）
   const imgs = props.selectedElement?.element?.value?.imgs
   if (!imgs) return
-  
   const removedImg = imgs[index]
-  if (removedImg?.id) {
-    pageEditorStore.markFileForDeletion(removedImg.id)
-  }
-  
+  if (removedImg?.id) pageEditorStore.markFileForDeletion(removedImg.id)
   imgs.splice(index, 1)
-  // ✅ 同步本地響應式陣列
   carouselImages.value = [...imgs]
-  
-  console.log('✓ 輪播圖片已刪除，剩餘', carouselImages.value.length, '張')
 }
 
 const updateCarouselSettings = () => {
@@ -2304,13 +1745,13 @@ const handleUploadHeroBackground = async () => {
   input.click()
 }
 
-// ==================== ✅ 輪播牆操作 ====================
+// ==================== 輪播牆操作 ====================
 
 const updateCarouselWallSettings = () => {
   if (props.selectedFrame?.data) {
-    props.selectedFrame.data.carouselWallHeight    = carouselWallHeight.value
+    props.selectedFrame.data.carouselWallHeight = carouselWallHeight.value
     props.selectedFrame.data.carouselWallAutoPlay = carouselWallAutoPlay.value
-    props.selectedFrame.data.carouselWallInterval  = carouselWallInterval.value
+    props.selectedFrame.data.carouselWallInterval = carouselWallInterval.value
   }
 }
 
@@ -2323,7 +1764,7 @@ const handleUploadCarouselWall = async () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.multiple = true  // ✅ 支援多選
+  input.multiple = true
   
   input.onchange = async (e) => {
     const files = Array.from(e.target.files)
@@ -2331,8 +1772,6 @@ const handleUploadCarouselWall = async () => {
     
     try {
       isUploadingCarouselWall.value = true
-      console.log(`📤 開始上傳 ${files.length} 張輪播牆圖片...`)
-
       if (!props.selectedFrame.data) props.selectedFrame.data = {}
       if (!Array.isArray(props.selectedFrame.data.caroiselWallImgs)) {
         props.selectedFrame.data.caroiselWallImgs = []
@@ -2340,19 +1779,11 @@ const handleUploadCarouselWall = async () => {
 
       for (const file of files) {
         const uploadedFile = await pageEditorStore.uploadImage(file)
-        if (!uploadedFile) {
-          console.warn(`⚠️ 圖片 ${file.name} 上傳失敗，跳過`)
-          continue
-        }
-        props.selectedFrame.data.caroiselWallImgs.push({
-          id: uploadedFile.id,
-          src: uploadedFile.fileUrl
-        })
+        if (!uploadedFile) continue
+        props.selectedFrame.data.caroiselWallImgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl })
       }
 
       carouselWallImages.value = [...props.selectedFrame.data.caroiselWallImgs]
-
-      console.log('✓ 輪播牆圖片已新增，共', carouselWallImages.value.length, '張')
     } catch (error) {
       console.error('❌ 輪播牆圖片上傳失敗:', error)
       alert('輪播牆圖片上傳失敗: ' + error.message)
@@ -2367,19 +1798,14 @@ const removeCarouselWallImage = (index) => {
   if (!confirm('確定要刪除這張圖片嗎？')) return
   const imgs = props.selectedFrame?.data?.caroiselWallImgs
   if (!imgs) return
-
   const removedImg = imgs[index]
-  if (removedImg?.id) {
-    pageEditorStore.markFileForDeletion(removedImg.id)
-  }
-
+  if (removedImg?.id) pageEditorStore.markFileForDeletion(removedImg.id)
   imgs.splice(index, 1)
   carouselWallImages.value = [...imgs]
-
-  console.log('✓ 輪播牆圖片已刪除，剩餘', carouselWallImages.value.length, '張')
 }
 
 // ==================== MAP 元件操作 ====================
+
 const updateMapData = () => {
   if (props.selectedElement?.element?.value) {
     props.selectedElement.element.value.address = mapAddress.value
@@ -2410,13 +1836,7 @@ const setMapZoom = (zoom) => {
 .panel-header {
   padding: 20px;
   border-bottom: 1px solid #e5e5e5;
-
-  h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-  }
+  h3 { margin: 0; font-size: 16px; font-weight: 600; color: #333; }
 }
 
 .panel-body {
@@ -2433,22 +1853,9 @@ const setMapZoom = (zoom) => {
   padding: 60px 20px;
   text-align: center;
   color: #999;
-
-  .empty-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-
-  p {
-    margin: 8px 0;
-    font-size: 14px;
-  }
-
-  .hint {
-    font-size: 12px;
-    color: #bbb;
-  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  p { margin: 8px 0; font-size: 14px; }
+  .hint { font-size: 12px; color: #bbb; }
 }
 
 .hint-text {
@@ -2463,21 +1870,11 @@ const setMapZoom = (zoom) => {
   padding: 40px 20px;
   text-align: center;
   color: #999;
-
-  p {
-    margin: 8px 0;
-    font-size: 14px;
-  }
-
-  .hint {
-    font-size: 12px;
-    color: #bbb;
-  }
+  p { margin: 8px 0; font-size: 14px; }
+  .hint { font-size: 12px; color: #bbb; }
 }
 
-.props-section {
-  animation: fadeIn 0.2s;
-}
+.props-section { animation: fadeIn 0.2s; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -2502,34 +1899,13 @@ const setMapZoom = (zoom) => {
   border-bottom: 1px solid #e5e5e5;
 }
 
-.metadata-section {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 2px dashed #e5e5e5;
-}
-
-.padding-section {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 2px dashed #e5e5e5;
-}
-
-.width-section {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 2px dashed #e5e5e5;
-}
+.metadata-section { margin-top: 24px; padding-top: 20px; border-top: 2px dashed #e5e5e5; }
+.padding-section { margin-top: 24px; padding-top: 20px; border-top: 2px dashed #e5e5e5; }
+.width-section { margin-top: 24px; padding-top: 20px; border-top: 2px dashed #e5e5e5; }
 
 .prop-group {
   margin-bottom: 20px;
-
-  label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #666;
-  }
+  label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: #666; }
 }
 
 .prop-input,
@@ -2542,7 +1918,6 @@ const setMapZoom = (zoom) => {
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s;
-
   &:focus { border-color: #E8572A; }
   &:disabled { background: #f5f5f5; cursor: not-allowed; }
 }
@@ -2565,10 +1940,8 @@ const setMapZoom = (zoom) => {
   display: flex;
   gap: 8px;
   align-items: center;
-
   .prop-color { flex-shrink: 0; }
   .color-text { flex: 1; }
-
   .clear-btn {
     flex-shrink: 0;
     width: 32px;
@@ -2581,36 +1954,55 @@ const setMapZoom = (zoom) => {
     font-size: 14px;
     color: #999;
     transition: all 0.2s;
-
     &:hover { background: #e8e8e8; color: #666; }
   }
 }
 
 .input-with-unit {
-  .unit-hint {
-    display: block;
-    margin-top: 4px;
-    font-size: 11px;
-    color: #999;
-  }
+  .unit-hint { display: block; margin-top: 4px; font-size: 11px; color: #999; }
 }
 
-.width-hint {
-  margin-top: 8px;
-  margin-bottom: 0;
-  font-size: 12px;
-  color: #666;
-  background: #f0f8ff;
-  padding: 8px 12px;
+// ✅ 新增：% 後綴輸入框樣式
+.input-with-suffix {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  border-left: 3px solid #4a90e2;
-  line-height: 1.4;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:focus-within {
+    border-color: #E8572A;
+  }
+
+  .prop-input {
+    border: none;
+    border-radius: 0;
+    flex: 1;
+    min-width: 0;
+
+    &:focus {
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  .input-suffix {
+    padding: 0 12px;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 13px;
+    font-weight: 600;
+    border-left: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    user-select: none;
+  }
 }
 
 .align-buttons {
   display: flex;
   gap: 8px;
-
   .align-btn {
     flex: 1;
     padding: 8px;
@@ -2620,23 +2012,13 @@ const setMapZoom = (zoom) => {
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
-
     &:hover { background: #e8e8e8; border-color: #ccc; }
     &.active { background: #E8572A; border-color: #E8572A; color: #fff; }
-    &.clear {
-      flex: 0 0 40px;
-      font-size: 14px;
-      color: #999;
-      &:hover { background: #e8e8e8; color: #666; }
-    }
+    &.clear { flex: 0 0 40px; font-size: 14px; color: #999; &:hover { background: #e8e8e8; color: #666; } }
   }
 }
 
-.image-upload {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.image-upload { display: flex; flex-direction: column; gap: 12px; }
 
 .preview-image {
   width: 100%;
@@ -2716,7 +2098,6 @@ const setMapZoom = (zoom) => {
   font-size: 13px;
   cursor: pointer;
   transition: background 0.2s;
-
   &:hover:not(:disabled) { background: #d14a1f; }
   &:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
 }
@@ -2727,7 +2108,6 @@ const setMapZoom = (zoom) => {
   background: #f0f0f0;
   border-radius: 4px;
   font-family: monospace;
-  
   small { font-size: 11px; color: #666; line-height: 1.6; }
 }
 
@@ -2736,7 +2116,6 @@ const setMapZoom = (zoom) => {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  
   input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
   span { font-size: 13px; color: #666; }
 }
@@ -2745,7 +2124,6 @@ const setMapZoom = (zoom) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  
   .prop-input { flex: 1; }
   .unit { font-size: 13px; color: #666; font-weight: 500; }
 }
@@ -2757,6 +2135,10 @@ const setMapZoom = (zoom) => {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-top: 12px;
+}
+
+.width-presets {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .zoom-presets {
@@ -2772,7 +2154,6 @@ const setMapZoom = (zoom) => {
   color: #666;
   cursor: pointer;
   transition: all 0.2s;
-  
   &:hover { background: #e8e8e8; border-color: #ccc; }
   &.active { background: #E8572A; border-color: #E8572A; color: #fff; font-weight: 500; }
 }
@@ -2791,19 +2172,10 @@ const setMapZoom = (zoom) => {
   overflow: hidden;
   border: 2px solid #ddd;
   transition: border-color 0.2s;
-  
-  &:hover {
-    border-color: #E8572A;
-    .remove-image-btn { opacity: 1; }
-  }
+  &:hover { border-color: #E8572A; .remove-image-btn { opacity: 1; } }
 }
 
-.carousel-thumbnail {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+.carousel-thumbnail { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .remove-image-btn {
   position: absolute;
@@ -2823,15 +2195,10 @@ const setMapZoom = (zoom) => {
   justify-content: center;
   opacity: 0;
   transition: all 0.2s;
-  
   &:hover { background: #dc2626; transform: scale(1.1); }
 }
 
-.padding-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+.padding-controls { display: flex; flex-direction: column; gap: 20px; }
 
 .padding-visual {
   background: #f9f9f9;
@@ -2840,17 +2207,12 @@ const setMapZoom = (zoom) => {
   padding: 20px;
 }
 
-.padding-box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.padding-box { display: flex; flex-direction: column; gap: 12px; }
 
 .padding-input-group {
   display: flex;
   align-items: center;
   gap: 8px;
-  
   label { font-size: 12px; color: #666; min-width: 24px; margin: 0; }
   &.top, &.bottom { justify-content: center; }
   &.left { justify-content: flex-start; }
@@ -2865,15 +2227,10 @@ const setMapZoom = (zoom) => {
   font-size: 13px;
   text-align: center;
   outline: none;
-  
   &:focus { border-color: #E8572A; }
 }
 
-.padding-sides {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.padding-sides { display: flex; align-items: center; gap: 12px; }
 
 .content-preview {
   flex: 1;
@@ -2910,7 +2267,6 @@ const setMapZoom = (zoom) => {
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
-  
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -2922,7 +2278,6 @@ const setMapZoom = (zoom) => {
     transition: all 0.2s;
     &:hover { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1); }
   }
-  
   &::-moz-range-thumb {
     width: 18px;
     height: 18px;
@@ -2947,22 +2302,12 @@ const setMapZoom = (zoom) => {
   gap: 8px;
   align-items: center;
   margin-bottom: 4px;
-
-  .font-size-input {
-    width: 70px;
-    flex-shrink: 0;
-  }
-
+  .font-size-input { width: 70px; flex-shrink: 0; }
   .font-size-presets {
     display: flex;
     gap: 4px;
     flex: 1;
-
-    .preset-btn {
-      flex: 1;
-      padding: 8px 2px;
-      font-size: 12px;
-    }
+    .preset-btn { flex: 1; padding: 8px 2px; font-size: 12px; }
   }
 }
 </style>

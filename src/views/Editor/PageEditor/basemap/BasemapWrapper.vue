@@ -309,7 +309,7 @@ const uploadImage = (type) => {
       console.log(`✓ 底圖背景上傳成功 (${type}):`, uploadedFile)
 
       // 更新本地預覽
-      backgrounds.value[type] = uploadedFile.fileUrl
+      // backgrounds.value[type] = uploadedFile.fileUrl
 
       // 直接更新 basemap 物件
       if (props.basemap) {

@@ -36,7 +36,7 @@
               'is-selected': isElementSelected(index) || isCellSelected(index),
               'empty-cell': !element || !element.type
             }"
-            :style="{ padding: getCellPadding(element) }"
+            :style="{ padding: getCellPadding(element), flex: getCellFlex(element), minWidth: 0 }"
             @click.stop="handleCellClick(index, element)"
             @dragover="handleDragOver($event, index)"
             @dragleave="handleDragLeave"
@@ -210,7 +210,7 @@
               'is-selected': isElementSelected(doubleLayoutCols + rIndex) || isCellSelected(doubleLayoutCols + rIndex),
               'empty-cell': !element || !element.type
             }"
-            :style="{ padding: getCellPadding(element) }"
+            :style="{ padding: getCellPadding(element), flex: getCellFlex(element), minWidth: 0 }"
             @click.stop="handleCellClick(doubleLayoutCols + rIndex, element)"
             @dragover="handleDragOver($event, doubleLayoutCols + rIndex)"
             @dragleave="handleDragLeave"
@@ -732,8 +732,8 @@ const frameContainerStyle = computed(() => {
   }
   
   // 如果 frame.metadata 有設定寬度，使用自訂寬度
-  if (props.frame.metadata?.frame_width) {
-    style.maxWidth = props.frame.metadata.frame_width
+  if (props.frame.metadata?.frameWidth) {
+    style.maxWidth = props.frame.metadata.frameWidth
   }
   
   return style
@@ -760,39 +760,35 @@ const gridStyle = computed(() => {
     }
   }
   
-  // ✅ 複雜佈局：使用固定列寬
+  // ✅ 複合佈局 A/B/C/D：從 element.width 讀左右欄寬，無則用預設
+  // A: cell 0 = 左欄, cell 1,2 = 右欄
+  // B: cell 0,1 = 左欄, cell 2 = 右欄
+  // C: cell 0 = 左欄, cell 1,2,3 = 右欄
+  // D: cell 0,1,2 = 左欄, cell 3 = 右欄
+  const getCompositeColumns = (leftCellIdx, rightCellIdx, defaultLeft, defaultRight, rows) => {
+    const els = displayElements.value
+    const leftWidth = els[leftCellIdx]?.width || defaultLeft
+    const rightWidth = els[rightCellIdx]?.width || defaultRight
+    return {
+      display: 'grid',
+      gridTemplateColumns: `${leftWidth} ${rightWidth}`,
+      gridTemplateRows: `repeat(${rows}, 1fr)`,
+      gap: '0'
+    }
+  }
+
   switch (layout) {
     case 'A':
-      return {
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '0'
-      }
+      return getCompositeColumns(0, 1, '66.7%', '33.3%', 2)
     
     case 'B':
-      return {
-        display: 'grid',
-        gridTemplateColumns: '1fr 2fr',
-        gridTemplateRows: 'repeat(2, 1fr)',
-        gap: '0'
-      }
+      return getCompositeColumns(0, 2, '33.3%', '66.7%', 2)
     
     case 'C':
-      return {
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '0'
-      }
+      return getCompositeColumns(0, 1, '66.7%', '33.3%', 3)
     
     case 'D':
-      return {
-        display: 'grid',
-        gridTemplateColumns: '1fr 2fr',
-        gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '0'
-      }
+      return getCompositeColumns(0, 3, '33.3%', '66.7%', 3)
     
     default:
       console.warn('⚠️ 未知框架佈局 gridStyle:', layout)
@@ -915,6 +911,14 @@ const getCellPadding = (element) => {
   
   const { top = 20, right = 20, bottom = 20, left = 20 } = element.padding
   return `${top}px ${right}px ${bottom}px ${left}px`
+}
+
+// ✅ 獲取雙層框架格子的 flex 寬度
+const getCellFlex = (element) => {
+  if (!element || !element.width) return '1'
+  const w = element.width
+  if (w === 'auto') return '1'
+  return `0 0 ${w}`
 }
 
 // ✅ 獲取格子的寬度（從 element.width 读取）
@@ -1079,8 +1083,8 @@ const createElementFromDrag = (dragData, index) => {
       value = {}
   }
   
-  // ✅ 根据布局计算初始宽度
-  const initialWidth = getInitialCellWidth(frameLayout.value, cellCount.value)
+  // ✅ 根据布局计算初始宽度，傳入 index（cellIndex）而非 cellCount
+  const initialWidth = getInitialCellWidth(frameLayout.value, index)
   
   console.log(`✓ 創建元件，佈局: ${frameLayout.value}, 初始寬度: ${initialWidth}`)
   
@@ -1101,8 +1105,8 @@ const createElementFromDrag = (dragData, index) => {
   }
 }
 
-// ✅ 根据布局计算格子的初始宽度
-const getInitialCellWidth = (layout, totalCells) => {
+// ✅ 根据布局计算格子的初始宽度（cellIndex 用於雙層框架判斷排別）
+const getInitialCellWidth = (layout, cellIndex) => {
   // 单行布局：需要考虑已有元件的宽度
   const singleRowLayouts = {
     '1_1': 1,
@@ -1148,7 +1152,58 @@ const getInitialCellWidth = (layout, totalCells) => {
     console.log(`✓ 單行佈局 ${layout}: 每格 ${widthPerCell}%`)
     return widthPerCell + '%'
   }
+
+  // ✅ 雙層框架：按排計算初始寬度
+  const doubleRowCols = { '2_2': 2, '2_3': 3, '2_4': 4 }
+  if (doubleRowCols[layout]) {
+    const cols = doubleRowCols[layout]
+    // 判斷當前格子在第幾排
+    const row = cellIndex < cols ? 0 : 1
+    const rowStart = row * cols
+    const rowElements = displayElements.value.slice(rowStart, rowStart + cols)
+    const existing = rowElements.filter(el => el && el.type)
+    if (existing.length > 0) {
+      let usedWidth = 0, elementsWithWidth = 0
+      existing.forEach(el => {
+        if (el.width && el.width.includes('%')) {
+          const w = parseFloat(el.width)
+          if (!isNaN(w)) { usedWidth += w; elementsWithWidth++ }
+        }
+      })
+      const remainingWidth = 100 - usedWidth
+      const remainingCells = cols - elementsWithWidth
+      if (remainingCells > 0 && remainingWidth > 0) {
+        const widthPerCell = (remainingWidth / remainingCells).toFixed(1)
+        console.log(`✓ 雙層佈局 ${layout} 第${row + 1}排: 已用 ${usedWidth}%, 剩餘 ${remainingWidth}%, 新元件 ${widthPerCell}%`)
+        return widthPerCell + '%'
+      }
+    }
+    const widthPerCell = (100 / cols).toFixed(1)
+    console.log(`✓ 雙層佈局 ${layout} 第${row + 1}排: 每格 ${widthPerCell}%`)
+    return widthPerCell + '%'
+  }
   
+  // ✅ 複合框架 A/B/C/D：左右兩欄，依格子所屬欄位給預設寬
+  const compositeLayoutInfo = {
+    'A': { leftCells: [0],       rightCells: [1, 2],    defaultLeft: '66.7%', defaultRight: '33.3%' },
+    'B': { leftCells: [0, 1],    rightCells: [2],       defaultLeft: '33.3%', defaultRight: '66.7%' },
+    'C': { leftCells: [0],       rightCells: [1, 2, 3], defaultLeft: '66.7%', defaultRight: '33.3%' },
+    'D': { leftCells: [0, 1, 2], rightCells: [3],       defaultLeft: '33.3%', defaultRight: '66.7%' },
+  }
+  if (compositeLayoutInfo[layout]) {
+    const info = compositeLayoutInfo[layout]
+    const isLeft = info.leftCells.includes(cellIndex)
+    // 如果同欄已有元件設定寬度，直接沿用
+    const allCells = isLeft ? info.leftCells : info.rightCells
+    const els = displayElements.value
+    for (const idx of allCells) {
+      if (els[idx]?.width && els[idx].width.includes('%')) {
+        return els[idx].width
+      }
+    }
+    return isLeft ? info.defaultLeft : info.defaultRight
+  }
+
   // 非单行布局：默认 100%
   console.log(`✓ 非單行佈局 ${layout}: 默認 100%`)
   return '100%'
@@ -1216,15 +1271,11 @@ const getInitialCellWidth = (layout, totalCells) => {
   // ✅ 移除固定 min-height，讓內容自動撐開
 }
 
-// ✅ 雙層框架：每排獨立 flex，格子等寬，高度互不影響
+// ✅ 雙層框架：每排獨立 flex，高度互不影響
+// flex 寬度由 getCellFlex() 動態控制，不在 CSS 固定
 .double-row {
   display: flex;
   width: 100%;
-
-  .grid-cell {
-    flex: 1;
-    min-width: 0; // 防止內容撐破
-  }
 }
 
 // ==================== 複合框架特殊佈局 ====================
