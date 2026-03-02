@@ -33,7 +33,7 @@ const props = defineProps({
   },
   apiKey: {
     type: String,
-    default: 'AIzaSyBkr7vfTOrVKnXZHidLQcxX0sVUET74zIM'
+    default: () => import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   }
 })
 
