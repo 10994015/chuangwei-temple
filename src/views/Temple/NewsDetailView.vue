@@ -30,7 +30,7 @@ const news = ref({
 
 const badgeClass = (status) => {
   if (status === '已發佈')  return 'badge-published'
-  if (status === '預約發佈') return 'badge-scheduled'
+  if (status === '排程中') return 'badge-scheduled'
   return 'badge-draft'
 }
 

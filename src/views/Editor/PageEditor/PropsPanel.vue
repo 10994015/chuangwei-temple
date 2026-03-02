@@ -576,11 +576,11 @@
             </div>
           </div>
 
-          <div class="prop-group">
+          <!-- <div class="prop-group">
             <label>Alt 文字（替代文字）</label>
             <input v-model="imageAlt" type="text" class="prop-input" placeholder="描述圖片內容，用於無障礙輔助" @input="updateImageAlt" />
             <span class="hint-text">用於螢幕閱讀器和圖片無法顯示時</span>
-          </div>
+          </div> -->
 
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>

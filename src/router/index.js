@@ -90,6 +90,11 @@ const router = createRouter({
             { path: 'news/:newsId/edit',   name: 'app.temple.news-edit',   component: () => import('@/views/Temple/NewsEditView.vue') },
             // { path: 'events',      name: 'app.temple.events',      component: () => import('@/views/Temple/EventsView.vue'),     meta: { title: '活動與上架管理', requiresAuth: true } },
             // { path: 'orders',      name: 'app.temple.orders',      component: () => import('@/views/Temple/OrdersView.vue'),     meta: { title: '訂單管理',       requiresAuth: true } },
+            { path: 'account-management', name: 'app.temple.account-management', component: () => import('@/views/Temple/AccountManagementView.vue'), meta: { title: '帳號管理', requiresAuth: true } },
+            { path: 'account-management/create', name: 'app.temple.account-create', component: () => import('@/views/Temple/AccountCreateView.vue'), meta: { title: '新增帳號', requiresAuth: true } },
+            { path: 'account-management/role/new',     name: 'app.temple.role-create',  component: () => import('@/views/Temple/RoleEditView.vue'),         meta: { title: '新增權限角色', requiresAuth: true } },
+            { path: 'account-management/role/:roleId', name: 'app.temple.role-edit',    component: () => import('@/views/Temple/RoleEditView.vue'),         meta: { title: '編輯權限角色', requiresAuth: true } },
+            { path: 'activity-management', name: 'app.temple.activity-management', component: () => import('@/views/Temple/ActivityManagementView.vue'), meta: { title: '活動與上架管理', requiresAuth: true } }
           ]
         },
 

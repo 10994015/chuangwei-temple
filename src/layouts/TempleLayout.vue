@@ -16,7 +16,7 @@ const navItems = computed(() => [
   { label: '宮廟總覽',     path: `/${templeId.value}/dashboard` },
   { label: '宮廟資料管理', path: `/${templeId.value}/temple-info` },
   { label: '最新消息管理', path: `/${templeId.value}/news` },
-  { label: '活動與上架管理', path: `/${templeId.value}/events` },
+  { label: '活動與上架管理', path: `/${templeId.value}/activity-management` },
   { label: '集影繪管理',   path: `/${templeId.value}/gallery` },
   { label: '靈籤司管理',   path: `/${templeId.value}/divination` },
   { label: '印刷管理',     path: `/${templeId.value}/print` },
@@ -25,7 +25,7 @@ const navItems = computed(() => [
   { label: '數位光明燈管理', path: `/${templeId.value}/lanterns` },
   { label: '方案與帳單',   path: `/${templeId.value}/billing` },
   { label: '廣告管理',     path: `/${templeId.value}/ads` },
-  { label: '帳號管理',     path: `/${templeId.value}/accounts` },
+  { label: '帳號管理',     path: `/${templeId.value}/account-management` },
 ])
 
 const isActive = (path) => route.path === path

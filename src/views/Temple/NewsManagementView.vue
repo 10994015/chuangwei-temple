@@ -10,7 +10,7 @@ const statusFilter = ref('全部')
 const typeFilter = ref('全部')
 const keywordFilter = ref('')
 
-const statusOptions = ['全部', '已發佈', '草稿', '預約發佈']
+const statusOptions = ['全部', '已發佈', '草稿', '排程中']
 const typeOptions = ['全部', '活動公告', '重要通知', '一般公告']
 
 const showStatusDropdown = ref(false)
@@ -21,12 +21,12 @@ const allNews = ref([
   { id: 1, title: '春節祈福活動公告', type: '活動公告', date: '2024-01-15', views: 1250, status: '已發佈' },
   { id: 2, title: '宮廟整修通知',     type: '重要通知', date: '2024-01-12', views: 856,  status: '已發佈' },
   { id: 3, title: '新年參拜時間調整', type: '一般公告', date: '2024-01-10', views: 432,  status: '草稿' },
-  { id: 4, title: '廟會遶境路線公布', type: '活動公告', date: '2024-01-08', views: 2103, status: '預約發佈' },
+  { id: 4, title: '廟會遶境路線公布', type: '活動公告', date: '2024-01-08', views: 2103, status: '排程中' },
   { id: 5, title: '元宵節活動通知',   type: '活動公告', date: '2024-01-05', views: 678,  status: '已發佈' },
   { id: 6, title: '宮廟志工招募',     type: '一般公告', date: '2024-01-03', views: 320,  status: '草稿' },
   { id: 7, title: '春季法會公告',     type: '重要通知', date: '2023-12-28', views: 940,  status: '已發佈' },
   { id: 8, title: '年終感恩祈福',     type: '活動公告', date: '2023-12-20', views: 1580, status: '已發佈' },
-  { id: 9, title: '冬至湯圓活動',     type: '一般公告', date: '2023-12-15', views: 510,  status: '預約發佈' },
+  { id: 9, title: '冬至湯圓活動',     type: '一般公告', date: '2023-12-15', views: 510,  status: '排程中' },
 ])
 
 // ── 篩選 ──
@@ -92,7 +92,7 @@ const editNews = (id) => {
 // status badge class
 const badgeClass = (status) => {
   if (status === '已發佈')  return 'badge-published'
-  if (status === '預約發佈') return 'badge-scheduled'
+  if (status === '排程中') return 'badge-scheduled'
   return 'badge-draft'
 }
 </script>

@@ -1,8 +1,14 @@
 <template>
   <div class="map-element">
     <div class="map-container">
-      <!-- ✅ Leaflet 地圖容器 -->
-      <div ref="mapContainer" class="map-display"></div>
+      <!-- ✅ Google Maps 容器 -->
+      <div ref="mapContainer" class="map-display" v-show="hasLocation"></div>
+
+      <!-- 無資料時的佔位 -->
+      <div v-if="!hasLocation" class="map-placeholder">
+        <div class="placeholder-icon">🗺️</div>
+        <p>請在右側設定地址或經緯度</p>
+      </div>
 
       <!-- 地址信息 -->
       <div class="map-info" v-if="content.address">
@@ -14,7 +20,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 
 const props = defineProps({
   content: {
@@ -24,102 +30,190 @@ const props = defineProps({
   element: {
     type: Object,
     required: true
+  },
+  apiKey: {
+    type: String,
+    default: 'AIzaSyBkr7vfTOrVKnXZHidLQcxX0sVUET74zIM'
   }
 })
 
 const mapContainer = ref(null)
 let map = null
 let marker = null
+let geocoder = null
+let InfoWindow = null
+let AdvancedMarkerElement = null
+let isInitializing = false  // ✅ 防止重複初始化
+let isDestroyed = false     // ✅ 防止 unmount 後還繼續執行
 
-// ✅ 初始化地圖
-const initMap = () => {
-  if (!mapContainer.value) return
-  
-  const lat = props.content.lat || 25.033
-  const lng = props.content.lng || 121.565
-  const zoom = props.content.zoom || 15
-  
-  // 如果地圖已存在，先清除
-  if (map) {
-    map.remove()
-  }
-  
-  // 建立 Leaflet 地圖
-  map = window.L.map(mapContainer.value).setView([lat, lng], zoom)
-  
-  // 加入 OpenStreetMap 圖層
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map)
-  
-  // 加入標記點
-  marker = window.L.marker([lat, lng]).addTo(map)
-  
-  // 如果有地址，顯示在標記上
-  if (props.content.address) {
-    marker.bindPopup(props.content.address)
-  }
-}
+const hasLocation = computed(() => {
+  return !!(props.content.address || (props.content.lat && props.content.lng))
+})
 
-// ✅ 更新地圖中心點和縮放
-const updateMap = () => {
-  if (!map) return
-  
-  const lat = props.content.lat || 25.033
-  const lng = props.content.lng || 121.565
-  const zoom = props.content.zoom || 15
-  
-  map.setView([lat, lng], zoom)
-  
-  if (marker) {
-    marker.setLatLng([lat, lng])
-    if (props.content.address) {
-      marker.bindPopup(props.content.address)
-    }
-  }
-}
-
-// ✅ 載入 Leaflet CSS 和 JS
-const loadLeaflet = () => {
-  return new Promise((resolve) => {
-    // 檢查是否已載入
-    if (window.L) {
+// ✅ 載入 Google Maps bootstrap（loading=async 官方推薦）
+const loadGoogleMaps = () => {
+  return new Promise((resolve, reject) => {
+    if (window.google?.maps?.importLibrary) {
       resolve()
       return
     }
-    
-    // 載入 CSS
-    const cssLink = document.createElement('link')
-    cssLink.rel = 'stylesheet'
-    cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(cssLink)
-    
-    // 載入 JS
+
+    if (document.getElementById('google-maps-script')) {
+      const wait = setInterval(() => {
+        if (window.google?.maps?.importLibrary) {
+          clearInterval(wait)
+          resolve()
+        }
+      }, 50)
+      return
+    }
+
     const script = document.createElement('script')
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-    script.onload = () => resolve()
+    script.id = 'google-maps-script'
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${props.apiKey}&loading=async`
+    script.async = true
+    script.defer = true
+    script.onload = () => {
+      const wait = setInterval(() => {
+        if (window.google?.maps?.importLibrary) {
+          clearInterval(wait)
+          resolve()
+        }
+      }, 50)
+    }
+    script.onerror = () => reject(new Error('Google Maps 載入失敗'))
     document.head.appendChild(script)
   })
 }
 
-// ✅ 生命週期
-onMounted(async () => {
-  await loadLeaflet()
-  initMap()
-})
+// ✅ Geocoding 查座標
+const geocodeAddress = (address) => {
+  if (!geocoder || !address || isDestroyed) return
+  geocoder.geocode({ address }, (results, status) => {
+    if (isDestroyed) return
+    if (status === 'OK' && results[0]) {
+      const location = results[0].geometry.location
+      map?.setCenter(location)
+      if (marker) marker.position = location
+    } else {
+      console.warn('Geocoding 失敗:', status)
+    }
+  })
+}
+
+// ✅ 初始化地圖
+const initMap = async () => {
+  if (!mapContainer.value || isInitializing || map || isDestroyed) return
+  isInitializing = true
+
+  try {
+    const lat = Number(props.content.lat) || 25.033
+    const lng = Number(props.content.lng) || 121.565
+    const zoom = props.content.zoom || 15
+
+    const mapsLib    = await window.google.maps.importLibrary('maps')
+    const markerLib  = await window.google.maps.importLibrary('marker')
+    const geocodeLib = await window.google.maps.importLibrary('geocoding')
+
+    // ✅ unmount 後不繼續
+    if (isDestroyed) return
+
+    InfoWindow            = mapsLib.InfoWindow
+    AdvancedMarkerElement = markerLib.AdvancedMarkerElement
+    geocoder              = new geocodeLib.Geocoder()
+
+    map = new mapsLib.Map(mapContainer.value, {
+      center: { lat, lng },
+      zoom,
+      mapId: 'DEMO_MAP_ID',
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true,
+    })
+
+    marker = new AdvancedMarkerElement({
+      position: { lat, lng },
+      map,
+      title: props.content.address || '',
+    })
+
+    if (props.content.address) {
+      const infoWindow = new InfoWindow({
+        content: `<div style="font-size:14px;padding:4px 8px">${props.content.address}</div>`
+      })
+      marker.addListener('gmp-click', () => infoWindow.open(map, marker))
+
+      if (!props.content.lat || !props.content.lng) {
+        geocodeAddress(props.content.address)
+      }
+    }
+  } catch (e) {
+    console.error('地圖初始化失敗:', e)
+  } finally {
+    isInitializing = false
+  }
+}
+
+// ✅ 更新地圖（只有 map 和 marker 都存在才執行）
+const updateMap = () => {
+  if (!map || !marker || isDestroyed) return
+
+  const lat = Number(props.content.lat) || 25.033
+  const lng = Number(props.content.lng) || 121.565
+  const zoom = props.content.zoom || 15
+
+  map.setCenter({ lat, lng })
+  map.setZoom(zoom)
+  marker.position = { lat, lng }
+  marker.title = props.content.address || ''
+}
+
+// ✅ 入口：載入 + 初始化
+const setup = async () => {
+  if (!hasLocation.value || isDestroyed) return
+  try {
+    await loadGoogleMaps()
+    if (isDestroyed) return
+    await nextTick()  // 確保 DOM 已渲染
+    await initMap()
+  } catch (e) {
+    console.error(e.message)
+  }
+}
+
+onMounted(() => setup())
 
 onUnmounted(() => {
-  if (map) {
-    map.remove()
-    map = null
-  }
+  isDestroyed = true
+  map = null
+  marker = null
+  geocoder = null
 })
 
-// ✅ 監聽內容變化
-watch(() => [props.content.lat, props.content.lng, props.content.zoom, props.content.address], () => {
-  updateMap()
-}, { deep: true })
+// ✅ 監聽座標 / 縮放（加 guard，初始化完才執行）
+watch(
+  () => [props.content.lat, props.content.lng, props.content.zoom],
+  () => {
+    if (map && marker) updateMap()
+  }
+)
+
+// ✅ 監聽地址
+watch(
+  () => props.content.address,
+  (newAddress) => {
+    if (!map || isDestroyed) return
+    if (newAddress) geocodeAddress(newAddress)
+  }
+)
+
+// ✅ 一開始沒資料，後來才設定時觸發初始化
+watch(hasLocation, async (val) => {
+  if (val && !map && !isInitializing) {
+    await setup()
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -133,18 +227,37 @@ watch(() => [props.content.lat, props.content.lng, props.content.zoom, props.con
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background: #f5f5f5;
+  position: relative;
 }
 
 .map-display {
   width: 100%;
   height: 400px;
-  position: relative;
-  background: #e5e5e5;
-  
-  // ✅ Leaflet 地圖會填滿這個容器
+  display: block;
 }
 
-// 地址信息
+.map-placeholder {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  color: #9ca3af;
+  gap: 12px;
+
+  .placeholder-icon {
+    font-size: 48px;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
 .map-info {
   display: flex;
   align-items: center;
@@ -166,9 +279,9 @@ watch(() => [props.content.lat, props.content.lng, props.content.zoom, props.con
   line-height: 1.5;
 }
 
-// 響應式設計
 @media (max-width: 768px) {
-  .map-display {
+  .map-display,
+  .map-placeholder {
     height: 300px;
   }
 

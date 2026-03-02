@@ -36,6 +36,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   // ✅ 待刪除的檔案 ID 清單
   const pendingDeleteFileIds = ref([])
 
+  // ✅ 網站設定（字型、SEO 等），讓 EditorLayout 可 reactive 讀取
+  const websiteSettings = ref(null)
+
   // ==================== Computed ====================
   
   // 當前頁面的 basemaps（就是 API 返回的 data 陣列）
@@ -735,6 +738,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     locales.value = []
     selected.value = { basemap: null, frame: null, element: null, cell: null }
     pendingDeleteFileIds.value = []  // ✅ 重置待刪除清單
+    websiteSettings.value = null    // ✅ 重置網站設定
   }
 
   /**
@@ -762,6 +766,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       if (result.statusCode === 200 && result.data) {
         console.log('✓ 網站設定:', result.data)
+        // ✅ 存入 store，讓 EditorLayout reactive 讀取
+        websiteSettings.value = result.data
         return result.data
       }
 
@@ -812,6 +818,11 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       if (result.statusCode === 200) {
         console.log('✓ 網站設定已保存！')
         console.log('📊 更新後的資料:', result.data)
+        // ✅ 用 API 回傳的最新資料更新 store，EditorLayout 的字型立即生效
+        if (result.data) {
+          websiteSettings.value = result.data
+          console.log('✓ Store websiteSettings 已更新，字型即時生效')
+        }
         return true
       }
 
@@ -873,6 +884,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       isLoading.value = false
     }
   }
+
   /**
    * ✅ 上傳圖片檔案
    * POST /api/tenant/{tid}/web-site/draft-page/file
@@ -991,8 +1003,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       if (result.statusCode === 200) {
         console.log('✓ 草稿已刪除，即將重新載入...')
         
-        // ✅ 刪除成功後，重新載入草稿（會回溯到上一個發布版本）
-        // 使用 reloadCurrentPage 或 initializePage 重新載入
         try {
           console.log('📥 重新載入頁面:', slug)
           
@@ -1003,10 +1013,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
           // 方法 2: 使用 initializePage（如果沒有 reloadCurrentPage）
           else if (typeof initializePage === 'function') {
             await initializePage(slug, currentLocale.value, targetTid)
-          }
-          // 方法 3: 直接載入草稿（備用）
-          else {
-            await loadDraft(slug, currentLocale.value, targetTid)
           }
           
           console.log('✓ 草稿已重新載入')
@@ -1048,6 +1054,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     locales,
     currentLocale,
     pendingDeleteFileIds,       // ✅ 新增導出
+    websiteSettings,            // ✅ 新增導出
     fetchHeaderTabs,
     fetchPageContent,
     fetchSystemFrames,          // ✅ 導出

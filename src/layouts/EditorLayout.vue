@@ -74,8 +74,8 @@ const publishDialogRef = ref(null)
 // 追蹤未保存變更
 const hasUnsavedChanges = ref(false)
 
-// 網站設定（包含字型）
-const websiteSettings = ref(null)
+// ✅ 直接從 store 讀取 websiteSettings（reactive，store 更新時自動重算）
+const websiteSettings = computed(() => pageEditorStore.websiteSettings)
 
 // 可用字型清單（按語言分類，與 WebsiteSettings.vue 一致）
 const availableFonts = [
@@ -112,27 +112,19 @@ const globalFontFamily = computed(() => {
   return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
 })
 
-// 載入網站設定（包含字型）
+// ✅ 載入網站設定（只負責呼叫 API，store 內部自動更新 websiteSettings）
 const loadWebsiteSettings = async () => {
   const templeId = getTempleId()
   if (!templeId) return
 
   try {
     console.log('📥 載入網站設定（字型）...')
-    const settings = await pageEditorStore.fetchWebsiteSettings(templeId)
-    
-    if (settings) {
-      websiteSettings.value = settings
-      websiteSettings.value.frontFamilyZhTw = settings.frontFamilyZhTw || 'noto-sans-tc'
-      websiteSettings.value.frontFamilyZhCn = settings.frontFamilyZhCn || 'noto-sans-sc'
-      websiteSettings.value.frontFamilyEnUs = settings.frontFamilyEnUs || 'inter'
-
-      console.log('✓ 網站字型:', {
-        zhTw: websiteSettings.value.frontFamilyZhTw,
-        zhCn: websiteSettings.value.frontFamilyZhCn,
-        enUs: websiteSettings.value.frontFamilyEnUs
-      })
-    }
+    await pageEditorStore.fetchWebsiteSettings(templeId)
+    console.log('✓ 網站字型已載入:', {
+      zhTw: pageEditorStore.websiteSettings?.frontFamilyZhTw,
+      zhCn: pageEditorStore.websiteSettings?.frontFamilyZhCn,
+      enUs: pageEditorStore.websiteSettings?.frontFamilyEnUs
+    })
   } catch (error) {
     console.error('❌ 載入網站設定失敗:', error)
   }
