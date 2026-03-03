@@ -88,7 +88,7 @@ import { ref, computed, onMounted, inject, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import SystemFramePreview from './PreviewPage/SystemFramePreview.vue'
 import CustomFramePreview from './PreviewPage/CustomFramePreview.vue'
-
+import axiosClient from '@/axios'
 const router = useRouter()
 const route = useRoute()
 const pageEditorStore = inject('pageEditorStore', null)
@@ -136,12 +136,10 @@ const getTempleId = () => route.params.templeId
 const getSlug    = () => route.query.slug || 'home'
 
 const fetchPageContent = async (tid, slug, locale) => {
-  const response = await fetch(
-    `/api/tenant/${tid}/web-site/draft-page/${slug}?locale=${locale}`,
-    { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-  )
-  if (!response.ok) throw new Error(`HTTP ${response.status}`)
-  const result = await response.json()
+  const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}`, {
+    params: { locale }
+  })
+  const result = response.data
   if (result.statusCode === 200 && result.data) return result.data
   throw new Error(result.message || '載入失敗')
 }

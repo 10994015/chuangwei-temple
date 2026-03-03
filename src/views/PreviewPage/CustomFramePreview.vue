@@ -60,24 +60,24 @@
                 </a>
               </div>
 
-              <!-- H_LINE 元件 -->
-              <div v-else-if="element.type === 'H_LINE'" class="element-hline">
+              <!-- HORIZON_LINE 元件 -->
+              <div v-else-if="element.type === 'HORIZON_LINE'" class="element-hline">
                 <hr :style="{ 
                   borderColor: element.value?.color || '#ddd',
                   borderWidth: element.value?.thickness || '2px'
                 }" />
               </div>
 
-              <!-- V_LINE 元件 -->
-              <div v-else-if="element.type === 'V_LINE'" class="element-vline">
+              <!-- VERTICAL_LINE 元件 -->
+              <div v-else-if="element.type === 'VERTICAL_LINE'" class="element-vline">
                 <div class="vertical-line" :style="{ 
                   backgroundColor: element.value?.color || '#ddd',
                   width: element.value?.thickness || '2px'
                 }"></div>
               </div>
 
-              <!-- CAROUSEL 元件 -->
-              <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
+              <!-- CAROUSEL_IMG 元件 -->
+              <div v-else-if="element.type === 'CAROUSEL_IMG'" class="element-carousel">
                 <CarouselElement 
                   :content="{
                     imgs: element.value?.imgs || [],
@@ -89,8 +89,8 @@
                 />
               </div>
 
-              <!-- MAP 元件 -->
-              <div v-else-if="element.type === 'MAP'" class="element-map">
+              <!-- GOOGLE_MAP 元件 -->
+              <div v-else-if="element.type === 'GOOGLE_MAP'" class="element-map">
                 <MapElement
                   :content="{
                     address: element.value?.address || '',
@@ -214,24 +214,24 @@
                 </a>
               </div>
 
-              <!-- H_LINE 元件 -->
-              <div v-else-if="element.type === 'H_LINE'" class="element-hline">
+              <!-- HORIZON_LINE 元件 -->
+              <div v-else-if="element.type === 'HORIZON_LINE'" class="element-hline">
                 <hr :style="{ 
                   borderColor: element.value?.color || '#ddd',
                   borderWidth: element.value?.thickness || '2px'
                 }" />
               </div>
 
-              <!-- V_LINE 元件 -->
-              <div v-else-if="element.type === 'V_LINE'" class="element-vline">
+              <!-- VERTICAL_LINE 元件 -->
+              <div v-else-if="element.type === 'VERTICAL_LINE'" class="element-vline">
                 <div class="vertical-line" :style="{ 
                   backgroundColor: element.value?.color || '#ddd',
                   width: element.value?.thickness || '2px'
                 }"></div>
               </div>
 
-              <!-- CAROUSEL 元件 -->
-              <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
+              <!-- CAROUSEL_IMG 元件 -->
+              <div v-else-if="element.type === 'CAROUSEL_IMG'" class="element-carousel">
                 <CarouselElement 
                   :content="{
                     imgs: element.value?.imgs || [],
@@ -243,8 +243,8 @@
                 />
               </div>
 
-              <!-- MAP 元件 -->
-              <div v-else-if="element.type === 'MAP'" class="element-map">
+              <!-- GOOGLE_MAP 元件 -->
+              <div v-else-if="element.type === 'GOOGLE_MAP'" class="element-map">
                 <MapElement
                   :content="{
                     address: element.value?.address || '',
@@ -368,24 +368,24 @@
                 </a>
               </div>
 
-              <!-- H_LINE 元件 -->
-              <div v-else-if="element.type === 'H_LINE'" class="element-hline">
+              <!-- HORIZON_LINE 元件 -->
+              <div v-else-if="element.type === 'HORIZON_LINE'" class="element-hline">
                 <hr :style="{ 
                   borderColor: element.value?.color || '#ddd',
                   borderWidth: element.value?.thickness || '2px'
                 }" />
               </div>
 
-              <!-- V_LINE 元件 -->
-              <div v-else-if="element.type === 'V_LINE'" class="element-vline">
+              <!-- VERTICAL_LINE 元件 -->
+              <div v-else-if="element.type === 'VERTICAL_LINE'" class="element-vline">
                 <div class="vertical-line" :style="{ 
                   backgroundColor: element.value?.color || '#ddd',
                   width: element.value?.thickness || '2px'
                 }"></div>
               </div>
 
-              <!-- CAROUSEL 元件 -->
-              <div v-else-if="element.type === 'CAROUSEL'" class="element-carousel">
+              <!-- CAROUSEL_IMG 元件 -->
+              <div v-else-if="element.type === 'CAROUSEL_IMG'" class="element-carousel">
                 <CarouselElement 
                   :content="{
                     imgs: element.value?.imgs || [],
@@ -397,8 +397,8 @@
                 />
               </div>
 
-              <!-- MAP 元件 -->
-              <div v-else-if="element.type === 'MAP'" class="element-map">
+              <!-- GOOGLE_MAP 元件 -->
+              <div v-else-if="element.type === 'GOOGLE_MAP'" class="element-map">
                 <MapElement
                   :content="{
                     address: element.value?.address || '',
@@ -890,7 +890,7 @@ const getButtonStyle = (element) => {
 }
 .button-link:hover { background: #d14a1f; }
 
-.element-hline { padding: 40px 0; }
+.element-hline { padding: 0 0; }
 .element-hline hr { border: none; border-top: 2px solid #ddd; margin: 0; }
 
 .element-vline {

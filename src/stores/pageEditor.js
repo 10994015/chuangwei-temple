@@ -437,11 +437,11 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
             element.value = {}
           }
 
-          // 修正 CAROUSEL 元件的數據
-          if (element.type === 'CAROUSEL') {
+          // 修正 CAROUSEL_IMG 元件的數據
+          if (element.type === 'CAROUSEL_IMG') {
             if (!Array.isArray(element.value.imgs)) {
               element.value.imgs = []
-              console.log('✓ 修正 CAROUSEL.imgs 為空陣列')
+              console.log('✓ 修正 CAROUSEL_IMG.imgs 為空陣列')
             }
             if (typeof element.value.autoPlay !== 'boolean') {
               element.value.autoPlay = true

@@ -794,8 +794,8 @@
           </div>
         </template>
 
-        <!-- H_LINE 元件 -->
-        <template v-else-if="selectedElement.element?.type === 'H_LINE'">
+        <!-- HORIZON_LINE 元件 -->
+        <template v-else-if="selectedElement.element?.type === 'HORIZON_LINE'">
           <h4 class="section-title">水平線設定</h4>
           
           <div class="prop-group">
@@ -869,8 +869,8 @@
           </div>
         </template>
 
-        <!-- V_LINE 元件 -->
-        <template v-else-if="selectedElement.element?.type === 'V_LINE'">
+        <!-- VERTICAL_LINE 元件 -->
+        <template v-else-if="selectedElement.element?.type === 'VERTICAL_LINE'">
           <h4 class="section-title">垂直線設定</h4>
           
           <div class="prop-group">
@@ -945,7 +945,7 @@
         </template>
 
         <!-- CAROUSEL 元件 -->
-        <template v-else-if="selectedElement.element?.type === 'CAROUSEL'">
+        <template v-else-if="selectedElement.element?.type === 'CAROUSEL_IMG'">
           <h4 class="section-title">輪播設定</h4>
           
           <div class="prop-group">
@@ -1050,8 +1050,8 @@
           </div>
         </template>
 
-        <!-- MAP 元件 -->
-        <template v-else-if="selectedElement.element?.type === 'MAP'">
+        <!-- GOOGLE_MAP 元件 -->
+        <template v-else-if="selectedElement.element?.type === 'GOOGLE_MAP'">
           <h4 class="section-title">地圖設定</h4>
           <div class="prop-group">
             <label>地址</label>
@@ -1282,7 +1282,7 @@ watch(() => props.selectedElement, (newVal) => {
     logoHeight.value = newVal.data.height || 'auto'
   }
   
-  if (newVal?.element?.type === 'CAROUSEL') {
+  if (newVal?.element?.type === 'CAROUSEL_IMG') {
     const value = newVal.element.value || {}
     carouselImages.value = value.imgs || []
     carouselAutoPlay.value = value.autoPlay !== false
@@ -1290,7 +1290,7 @@ watch(() => props.selectedElement, (newVal) => {
     carouselHeight.value = value.height || 400
   }
 
-  if (newVal?.element?.type === 'MAP') {
+  if (newVal?.element?.type === 'GOOGLE_MAP') {
     const value = newVal.element.value || {}
     mapAddress.value = value.address || ''
     mapLat.value = value.lat !== undefined ? value.lat : 25.033
@@ -1358,7 +1358,7 @@ watch(
 )
 
 watch(() => props.selectedElement?.element?.value?.imgs, (newImgs) => {
-  if (props.selectedElement?.element?.type === 'CAROUSEL' && newImgs) {
+  if (props.selectedElement?.element?.type === 'CAROUSEL_IMG' && newImgs) {
     carouselImages.value = [...newImgs]
   }
 }, { deep: true })
@@ -1804,7 +1804,7 @@ const removeCarouselWallImage = (index) => {
   carouselWallImages.value = [...imgs]
 }
 
-// ==================== MAP 元件操作 ====================
+// ==================== GOOGLE_MAP 元件操作 ====================
 
 const updateMapData = () => {
   if (props.selectedElement?.element?.value) {
