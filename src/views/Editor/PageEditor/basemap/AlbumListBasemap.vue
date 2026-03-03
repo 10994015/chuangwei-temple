@@ -102,7 +102,6 @@ const props = defineProps({
     type: [Array, Object],
     default: undefined
   },
-  // API 傳進來的分類（albumCategories）或舊格式（categoryList）都接受
   albumCategories: {
     type: Array,
     default: () => []
@@ -121,38 +120,34 @@ const props = defineProps({
   }
 })
 
-// ==================== 假資料（API 串接前 / 無資料時顯示）====================
-// 假資料欄位以後端 API 實際回傳為準，確認後再調整
-const mockAlbums = [
-  { id: 1, coverImage: null, tag: '法會活動', date: '2024-08-22', title: '中元普渡法會', description: '2024年中元普渡法會活動紀錄' },
-  { id: 2, coverImage: null, tag: '慶典紀錄', date: '2024-03-19', title: '觀音佛誕慶典', description: '觀音佛誕慶祝活動' },
-  { id: 3, coverImage: null, tag: '法會活動', date: '2024-02-10', title: '新春祈福法會', description: '農曆新年祈福法會活動照片' },
-  { id: 4, coverImage: null, tag: '建築風光', date: '2024-01-05', title: '廟宇建築之美', description: '本廟建築細節與風光記錄' },
-  { id: 5, coverImage: null, tag: '志工服務', date: '2023-12-25', title: '歲末志工活動', description: '年底志工服務暨感恩活動' },
-  { id: 6, coverImage: null, tag: '慶典紀錄', date: '2023-11-15', title: '建廟週年慶典', description: '建廟週年慶典精彩花絮' },
-]
 
 // ==================== 安全取得陣列 ====================
-// API 回傳格式: { data: [], page, pageSize, total, totalPages }
 const safeAlbumList = computed(() => {
   const raw = props.albumList
-
-  // 分頁物件格式 { data: [...] }
   if (raw && typeof raw === 'object' && Array.isArray(raw.data)) {
-    return raw.data.length > 0 ? raw.data : mockAlbums
+    return raw.data  // 直接回傳，空陣列也沒關係
   }
-  // 純陣列格式
   if (Array.isArray(raw)) {
-    return raw.length > 0 ? raw : mockAlbums
+    return raw
   }
-  // 沒傳或其他 → 假資料
-  return mockAlbums
+  return []  // fallback 空陣列，畫面會顯示「此分類目前沒有相簿」
 })
+
+// ==================== 欄位正規化 ====================
+// 統一對應 API 回傳欄位（imgSrc → coverImage、category → tag、createdAt → date）
+const normalizedAlbums = computed(() =>
+  safeAlbumList.value.map(a => ({
+    ...a,
+    coverImage: a.imgSrc ?? a.coverImage ?? null,
+    tag:        a.category ?? a.tag ?? null,
+    date:       a.createdAt ? a.createdAt.slice(0, 10) : (a.date ?? null),
+    title:      a.title ?? '',
+  }))
+)
 
 // ==================== 分類 Tab ====================
 const categories = computed(() => {
   const base = [{ label: '全部', value: 'all' }]
-  // 優先用 API 傳入的 albumCategories，其次 categoryList，最後從資料自動產生
   const catSource = props.albumCategories?.length > 0
     ? props.albumCategories
     : props.categoryList?.length > 0
@@ -165,8 +160,7 @@ const categories = computed(() => {
       value: c.value || c.id || c
     }))]
   }
-  // 從相簿資料自動抽取 tag
-  const tags = [...new Set(safeAlbumList.value.map(a => a.tag).filter(Boolean))]
+  const tags = [...new Set(normalizedAlbums.value.map(a => a.tag).filter(Boolean))]
   return [...base, ...tags.map(t => ({ label: t, value: t }))]
 })
 
@@ -175,13 +169,13 @@ const currentPage = ref(1)
 
 const onCategoryClick = (value) => {
   activeCategory.value = value
-  currentPage.value = 1  // 切分類重置到第一頁
+  currentPage.value = 1
 }
 
 // ==================== 篩選 ====================
 const filteredAlbums = computed(() => {
-  if (activeCategory.value === 'all') return safeAlbumList.value
-  return safeAlbumList.value.filter(a => a.tag === activeCategory.value)
+  if (activeCategory.value === 'all') return normalizedAlbums.value
+  return normalizedAlbums.value.filter(a => a.tag === activeCategory.value)
 })
 
 // ==================== 分頁 ====================
@@ -197,7 +191,6 @@ const goToPage = (page) => {
   currentPage.value = page
 }
 
-// 頁碼按鈕（含省略號邏輯）
 const pageNumbers = computed(() => {
   const total = totalPages.value
   const cur   = currentPage.value
@@ -214,7 +207,6 @@ const pageNumbers = computed(() => {
   return pages
 })
 </script>
-
 <style lang="scss" scoped>
 .album-list-section {
   padding: 3rem 0 4rem;
