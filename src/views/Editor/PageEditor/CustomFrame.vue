@@ -374,7 +374,136 @@
         </div>
       </template>
 
-      <!-- 其他框架（單層、複合 A/B/C/D）維持原本的 frame-grid -->
+      <!-- ✅ 複合框架 A/B/C/D：左右欄 flex，右側各列高度彼此獨立，除非被左欄撐開 -->
+      <template v-else-if="isCompositeLayout && compositeInfo">
+        <div class="composite-frame">
+          <!-- 左欄 -->
+          <div class="composite-col composite-col--left" :style="{ width: compositeInfo.leftWidth }">
+            <div
+              v-for="idx in compositeInfo.leftCells"
+              :key="`composite-left-${idx}`"
+              class="grid-cell composite-cell"
+              :class="{
+                'has-element': displayElements[idx] && displayElements[idx].type,
+                'is-selected': isElementSelected(idx) || isCellSelected(idx),
+                'empty-cell': !displayElements[idx] || !displayElements[idx].type
+              }"
+              :style="{ padding: getCellPadding(displayElements[idx]) }"
+              @click.stop="handleCellClick(idx, displayElements[idx])"
+              @dragover="handleDragOver($event, idx)"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop($event, idx)"
+            >
+              <div v-if="displayElements[idx] && displayElements[idx].type" class="element-content">
+                <div v-if="displayElements[idx].type === 'IMG'" class="element-image" :style="getImageContainerStyle(displayElements[idx])">
+                  <img v-if="displayElements[idx].value?.src" :src="displayElements[idx].value.src" :alt="displayElements[idx].value?.alt || '圖片'" class="element-img" :style="getElementStyle(displayElements[idx])" />
+                  <div v-else class="placeholder-image">
+                    <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop" alt="placeholder" class="placeholder-img" />
+                    <div class="placeholder-overlay"><span>🖼️</span><p>請在右側上傳圖片</p></div>
+                  </div>
+                </div>
+                <div v-else-if="displayElements[idx].type === 'TEXT'" class="element-text" :style="getElementStyle(displayElements[idx])" v-html="displayElements[idx].value?.text || '文字內容'"></div>
+                <div v-else-if="displayElements[idx].type === 'BUTTON'" class="element-button">
+                  <a :href="displayElements[idx].value?.url || '#'" class="button-link" :style="getButtonStyle(displayElements[idx])" @click.prevent>{{ displayElements[idx].value?.text || '按鈕' }}</a>
+                </div>
+                <div v-else-if="displayElements[idx].type === 'HORIZON_LINE'" class="element-hline">
+                  <hr :style="{ borderColor: displayElements[idx].value?.color || '#ddd', borderWidth: displayElements[idx].value?.thickness || '2px' }" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'VERTICAL_LINE'" class="element-vline">
+                  <div class="vertical-line" :style="{ backgroundColor: displayElements[idx].value?.color || '#ddd', width: displayElements[idx].value?.thickness || '2px' }"></div>
+                </div>
+                <div v-else-if="displayElements[idx].type === 'CAROUSEL_IMG'" class="element-carousel">
+                  <CarouselElement :content="displayElements[idx].value" :element="displayElements[idx]" :key="`carousel-cl-${idx}-${displayElements[idx].value?.imgs?.length || 0}`" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'GOOGLE_MAP'" class="element-map">
+                  <MapElement :content="{ address: displayElements[idx].value?.address || '', lat: displayElements[idx].value?.lat || 25.033, lng: displayElements[idx].value?.lng || 121.565, zoom: displayElements[idx].value?.zoom || 15 }" :element="displayElements[idx]" :key="`map-cl-${idx}-${displayElements[idx].value?.lat}-${displayElements[idx].value?.lng}`" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'ALBUM'" class="element-card-wrapper">
+                  <AlbumCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '相簿封面', title: displayElements[idx].value?.title || '相簿標題', description: displayElements[idx].value?.description || '' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'PRODUCT_CARD'" class="element-card-wrapper">
+                  <ProductCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '商品標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'SERVICE_CARD'" class="element-card-wrapper">
+                  <ServiceCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '祈福服務', title: displayElements[idx].value?.title || '服務標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'EVENT_CARD'" class="element-card-wrapper">
+                  <EventCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '中元普渡法會', description: displayElements[idx].value?.description || '2024年中元普渡法會活動紀錄' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else class="element-unknown"><span>未知元件：{{ displayElements[idx].type }}</span></div>
+                <button class="delete-element-btn" @click.stop="handleDeleteElement(idx)" title="刪除元件">✕</button>
+              </div>
+              <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === idx }">
+                <span class="drop-hint">📦 拖曳元件至此</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右欄：flex column，各列高度彼此獨立 -->
+          <div class="composite-col composite-col--right">
+            <div
+              v-for="idx in compositeInfo.rightCells"
+              :key="`composite-right-${idx}`"
+              class="grid-cell composite-cell"
+              :class="{
+                'has-element': displayElements[idx] && displayElements[idx].type,
+                'is-selected': isElementSelected(idx) || isCellSelected(idx),
+                'empty-cell': !displayElements[idx] || !displayElements[idx].type
+              }"
+              :style="{ padding: getCellPadding(displayElements[idx]) }"
+              @click.stop="handleCellClick(idx, displayElements[idx])"
+              @dragover="handleDragOver($event, idx)"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop($event, idx)"
+            >
+              <div v-if="displayElements[idx] && displayElements[idx].type" class="element-content">
+                <div v-if="displayElements[idx].type === 'IMG'" class="element-image" :style="getImageContainerStyle(displayElements[idx])">
+                  <img v-if="displayElements[idx].value?.src" :src="displayElements[idx].value.src" :alt="displayElements[idx].value?.alt || '圖片'" class="element-img" :style="getElementStyle(displayElements[idx])" />
+                  <div v-else class="placeholder-image">
+                    <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop" alt="placeholder" class="placeholder-img" />
+                    <div class="placeholder-overlay"><span>🖼️</span><p>請在右側上傳圖片</p></div>
+                  </div>
+                </div>
+                <div v-else-if="displayElements[idx].type === 'TEXT'" class="element-text" :style="getElementStyle(displayElements[idx])" v-html="displayElements[idx].value?.text || '文字內容'"></div>
+                <div v-else-if="displayElements[idx].type === 'BUTTON'" class="element-button">
+                  <a :href="displayElements[idx].value?.url || '#'" class="button-link" :style="getButtonStyle(displayElements[idx])" @click.prevent>{{ displayElements[idx].value?.text || '按鈕' }}</a>
+                </div>
+                <div v-else-if="displayElements[idx].type === 'HORIZON_LINE'" class="element-hline">
+                  <hr :style="{ borderColor: displayElements[idx].value?.color || '#ddd', borderWidth: displayElements[idx].value?.thickness || '2px' }" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'VERTICAL_LINE'" class="element-vline">
+                  <div class="vertical-line" :style="{ backgroundColor: displayElements[idx].value?.color || '#ddd', width: displayElements[idx].value?.thickness || '2px' }"></div>
+                </div>
+                <div v-else-if="displayElements[idx].type === 'CAROUSEL_IMG'" class="element-carousel">
+                  <CarouselElement :content="displayElements[idx].value" :element="displayElements[idx]" :key="`carousel-cr-${idx}-${displayElements[idx].value?.imgs?.length || 0}`" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'GOOGLE_MAP'" class="element-map">
+                  <MapElement :content="{ address: displayElements[idx].value?.address || '', lat: displayElements[idx].value?.lat || 25.033, lng: displayElements[idx].value?.lng || 121.565, zoom: displayElements[idx].value?.zoom || 15 }" :element="displayElements[idx]" :key="`map-cr-${idx}-${displayElements[idx].value?.lat}-${displayElements[idx].value?.lng}`" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'ALBUM'" class="element-card-wrapper">
+                  <AlbumCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '相簿封面', title: displayElements[idx].value?.title || '相簿標題', description: displayElements[idx].value?.description || '' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'PRODUCT_CARD'" class="element-card-wrapper">
+                  <ProductCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '商品標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'SERVICE_CARD'" class="element-card-wrapper">
+                  <ServiceCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '祈福服務', title: displayElements[idx].value?.title || '服務標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else-if="displayElements[idx].type === 'EVENT_CARD'" class="element-card-wrapper">
+                  <EventCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '中元普渡法會', description: displayElements[idx].value?.description || '2024年中元普渡法會活動紀錄' }" :element="displayElements[idx]" />
+                </div>
+                <div v-else class="element-unknown"><span>未知元件：{{ displayElements[idx].type }}</span></div>
+                <button class="delete-element-btn" @click.stop="handleDeleteElement(idx)" title="刪除元件">✕</button>
+              </div>
+              <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === idx }">
+                <span class="drop-hint">📦 拖曳元件至此</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 單層框架（1_1 / 1_2 / 1_3 / 1_4） -->
       <div v-else class="frame-grid" :style="gridStyle">
         <template v-for="(element, index) in displayElements" :key="`cell-${index}`">
           <!-- 渲染格子 -->
@@ -585,7 +714,7 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  selectedFrame: {  // ✅ 新增：選中的框架
+  selectedFrame: {
     type: Object,
     default: null
   }
@@ -597,7 +726,7 @@ const emit = defineEmits([
   'select-cell',
   'drop-to-cell',
   'delete-element',
-  'delete-frame'  // ✅ 新增：刪除框架事件
+  'delete-frame'
 ])
 
 // 拖曳狀態
@@ -723,6 +852,21 @@ const doubleRowStyle = computed(() => ({
   width: '100%'
 }))
 
+// ✅ 複合框架 A/B/C/D
+const isCompositeLayout = computed(() => ['A', 'B', 'C', 'D'].includes(frameLayout.value))
+
+const compositeInfo = computed(() => {
+  const layout = frameLayout.value
+  const els = displayElements.value
+  const map = {
+    'A': { leftCells: [0],       rightCells: [1, 2],    leftWidth: els[0]?.width || '66.7%' },
+    'B': { leftCells: [0, 1],    rightCells: [2],       leftWidth: els[0]?.width || '33.3%' },
+    'C': { leftCells: [0],       rightCells: [1, 2, 3], leftWidth: els[0]?.width || '66.7%' },
+    'D': { leftCells: [0, 1, 2], rightCells: [3],       leftWidth: els[0]?.width || '33.3%' },
+  }
+  return map[layout] || null
+})
+
 // ✅ 框架容器樣式（支持自訂寬度）
 const frameContainerStyle = computed(() => {
   const style = {
@@ -731,7 +875,6 @@ const frameContainerStyle = computed(() => {
     width: '100%'
   }
   
-  // 如果 frame.metadata 有設定寬度，使用自訂寬度
   if (props.frame.metadata?.frameWidth) {
     style.maxWidth = props.frame.metadata.frameWidth
   }
@@ -739,11 +882,9 @@ const frameContainerStyle = computed(() => {
   return style
 })
 
-// ✅ Grid 樣式 - 根據元件 width 動態生成列宽
+// ✅ Grid 樣式 - 僅單層框架使用
 const gridStyle = computed(() => {
   const layout = frameLayout.value
-  
-  // ✅ 單行佈局：使用元件的 width 來決定列寬
   const singleRowLayouts = ['1_1', '1_2', '1_3', '1_4']
   
   if (singleRowLayouts.includes(layout)) {
@@ -760,48 +901,15 @@ const gridStyle = computed(() => {
     }
   }
   
-  // ✅ 複合佈局 A/B/C/D：從 element.width 讀左右欄寬，無則用預設
-  // A: cell 0 = 左欄, cell 1,2 = 右欄
-  // B: cell 0,1 = 左欄, cell 2 = 右欄
-  // C: cell 0 = 左欄, cell 1,2,3 = 右欄
-  // D: cell 0,1,2 = 左欄, cell 3 = 右欄
-  const getCompositeColumns = (leftCellIdx, rightCellIdx, defaultLeft, defaultRight, rows) => {
-    const els = displayElements.value
-    const leftWidth = els[leftCellIdx]?.width || defaultLeft
-    const rightWidth = els[rightCellIdx]?.width || defaultRight
-    return {
-      display: 'grid',
-      gridTemplateColumns: `${leftWidth} ${rightWidth}`,
-      gridTemplateRows: `repeat(${rows}, 1fr)`,
-      gap: '0'
-    }
-  }
-
-  switch (layout) {
-    case 'A':
-      return getCompositeColumns(0, 1, '66.7%', '33.3%', 2)
-    
-    case 'B':
-      return getCompositeColumns(0, 2, '33.3%', '66.7%', 2)
-    
-    case 'C':
-      return getCompositeColumns(0, 1, '66.7%', '33.3%', 3)
-    
-    case 'D':
-      return getCompositeColumns(0, 3, '33.3%', '66.7%', 3)
-    
-    default:
-      console.warn('⚠️ 未知框架佈局 gridStyle:', layout)
-      return {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '0'
-      }
+  console.warn('⚠️ 未知框架佈局 gridStyle:', layout)
+  return {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '0'
   }
 })
 
-// 是否選中框架
-// ✅ 是否選中框架（直接比較框架對象）
+// ✅ 是否選中框架
 const isFrameSelected = computed(() => {
   return props.selectedFrame === props.frame
 })
@@ -809,33 +917,25 @@ const isFrameSelected = computed(() => {
 // 是否選中元件
 const isElementSelected = (index) => {
   return props.selectedElement?.elementIndex === index && 
-         props.selectedElement?.frame === props.frame  // ✅ 修正：改用物件參考比較，避免同類型框架互相干擾
+         props.selectedElement?.frame === props.frame
 }
 
 // ✅ 是否選中格子
 const isCellSelected = (index) => {
   return props.selectedCell?.cellIndex === index && 
-         props.selectedCell?.frame === props.frame  // ✅ 修正：改用物件參考比較，避免同類型框架互相干擾
+         props.selectedCell?.frame === props.frame
 }
 
 // ==================== ✅ 樣式相關方法 ====================
 
-// ✅ 獲取圖片容器的樣式（用於對齊）
 const getImageContainerStyle = (element) => {
   if (!element || !element.metadata) return {}
-  
-  const metadata = element.metadata
   const style = {}
-  
-  // 使用 text_align 來控制圖片對齊
-  if (metadata.text_align) {
-    style.textAlign = metadata.text_align
-  }
-  
+  const _ta = element.metadata.textAlign || element.metadata.text_align
+  if (_ta) style.textAlign = _ta
   return style
 }
 
-// ✅ 獲取元件的動態樣式（基於 metadata）
 const getElementStyle = (element) => {
   if (!element || !element.metadata) return {}
   
@@ -843,48 +943,45 @@ const getElementStyle = (element) => {
   const style = {}
   
   if (metadata.color) style.color = metadata.color
-  if (metadata.font_size) style.fontSize = metadata.font_size
-  if (metadata.font_weight) style.fontWeight = metadata.font_weight
-  
-  // ✅ 圖片不使用 text_align（已在容器處理）
-  // 其他元件（TEXT, BUTTON）可以使用 text_align
-  if (metadata.text_align && element.type !== 'IMG') {
-    style.textAlign = metadata.text_align
-  }
-  
+  const _fontSize   = metadata.fontSize   || metadata.font_size
+  const _fontWeight = metadata.fontWeight || metadata.font_weight
+  const _textAlign  = metadata.textAlign  || metadata.text_align
+  if (_fontSize)                          style.fontSize   = _fontSize
+  if (_fontWeight)                        style.fontWeight = _fontWeight
+  if (_textAlign && element.type !== 'IMG') style.textAlign = _textAlign
   if (metadata.width) style.width = metadata.width
   if (metadata.height) style.height = metadata.height
-  if (metadata.background_color) style.backgroundColor = metadata.background_color
-  
+  const _bgColor = metadata.backgroundColor || metadata.background_color
+  if (_bgColor) style.backgroundColor = _bgColor
+
   return style
 }
 
-// ✅ 獲取按鈕的動態樣式
 const getButtonStyle = (element) => {
   if (!element || !element.metadata) return {}
-  
+
   const metadata = element.metadata
   const style = {}
-  
+
   if (metadata.color) style.color = metadata.color
-  if (metadata.font_size) style.fontSize = metadata.font_size
-  if (metadata.font_weight) style.fontWeight = metadata.font_weight
-  if (metadata.background_color) style.backgroundColor = metadata.background_color
+  const _fontSize   = metadata.fontSize   || metadata.font_size
+  const _fontWeight = metadata.fontWeight || metadata.font_weight
+  const _bgColor    = metadata.backgroundColor || metadata.background_color
+  if (_fontSize)   style.fontSize        = _fontSize
+  if (_fontWeight) style.fontWeight      = _fontWeight
+  if (_bgColor)    style.backgroundColor = _bgColor
   
   return style
 }
 
 // ==================== 事件處理 ====================
 
-// 點擊框架
 const handleFrameClick = () => {
   emit('select-frame', props.frame)
 }
 
-// ✅ 點擊格子 - 發送 cellIndex，阻止冒泡
 const handleCellClick = (index, element) => {
   if (element && element.type) {
-    // 有元件：選擇元件，同時傳遞格子信息
     emit('select-element', {
       element: element,
       frame: props.frame,
@@ -892,28 +989,22 @@ const handleCellClick = (index, element) => {
       cellIndex: index
     })
   } else {
-    // ✅ 空格子：選擇格子（用於調整 padding）+ 選擇框架
     emit('select-cell', {
       frame: props.frame,
       cellIndex: index
     })
-    
-    // ✅ 同時選中框架，這樣才能顯示刪除按鈕
     emit('select-frame', props.frame)
   }
 }
 
-// ✅ 獲取格子的 padding 樣式
 const getCellPadding = (element) => {
   if (!element || !element.padding) {
     return '20px'
   }
-  
   const { top = 20, right = 20, bottom = 20, left = 20 } = element.padding
   return `${top}px ${right}px ${bottom}px ${left}px`
 }
 
-// ✅ 獲取雙層框架格子的 flex 寬度
 const getCellFlex = (element) => {
   if (!element || !element.width) return '1'
   const w = element.width
@@ -921,8 +1012,6 @@ const getCellFlex = (element) => {
   return `0 0 ${w}`
 }
 
-// ✅ 獲取格子的寬度（從 element.width 读取）
-// 拖曳進入格子
 const handleDragOver = (event, index) => {
   event.preventDefault()
   
@@ -937,13 +1026,11 @@ const handleDragOver = (event, index) => {
   }
 }
 
-// 拖曳離開格子
 const handleDragLeave = (event) => {
   event.preventDefault()
   dragOverCell.value = null
 }
 
-// 放置到格子
 const handleDrop = (event, index) => {
   try {
     const data = event.dataTransfer.getData('application/json')
@@ -982,7 +1069,6 @@ const handleDrop = (event, index) => {
   }
 }
 
-// 刪除元件
 const handleDeleteElement = (index) => {
   emit('delete-element', {
     frame: props.frame,
@@ -990,7 +1076,6 @@ const handleDeleteElement = (index) => {
   })
 }
 
-// ✅ 刪除框架
 const handleDeleteFrame = () => {
   if (confirm('確定要刪除此框架嗎？')) {
     emit('delete-frame', {
@@ -1021,70 +1106,20 @@ const createElementFromDrag = (dragData, index) => {
   let value = {}
   
   switch (dragData.type) {
-    case 'text':
-      value = { text: '<p>這是文字內容，點擊右側屬性面板進行編輯</p>' }
-      break
-    case 'image':
-      value = { id: null, src: null, alt: '' }  // ✅ 加上 alt 初始化
-      break
-    case 'button':
-      value = { text: '按鈕文字', url: '#' }
-      break
-    case 'h-line':
-      value = { color: '#ddd', thickness: '2px' }
-      break
-    case 'v-line':
-      value = { color: '#ddd', thickness: '2px' }
-      break
-    case 'carousel':
-      value = { imgs: [], autoPlay: true, interval: 3000, height: 400 }
-      break
-    case 'map':
-      // ✅ GOOGLE_MAP 元件預設台北 101 地址
-      value = { 
-        address: '台北市信義區信義路五段7號（台北 101）',
-        lat: 25.0339639,
-        lng: 121.5644722,
-        zoom: 17
-      }
-      break
-    case 'album':
-      value = {
-        image: null,
-        tag: '相簿封面',
-        title: '相簿標題',
-        description: ''
-      }
-      break
-    case 'product-card':
-      value = {
-        image: null,
-        tag: '法會活動',
-        title: '商品標題',
-        date: '2024-08-22'
-      }
-      break
-    case 'service-card':
-      value = {
-        image: null,
-        tag: '祈福服務',
-        title: '服務標題',
-        date: '2024-08-22'
-      }
-      break
-    case 'event-card':
-      value = {
-        image: null,
-        tag: '法會活動',
-        title: '中元普渡法會',
-        description: '2024年中元普渡法會活動紀錄'
-      }
-      break
-    default:
-      value = {}
+    case 'text':         value = { text: '<p>這是文字內容，點擊右側屬性面板進行編輯</p>' }; break
+    case 'image':        value = { id: null, src: null, alt: '' }; break
+    case 'button':       value = { text: '按鈕文字', url: '#' }; break
+    case 'h-line':       value = { color: '#ddd', thickness: '2px' }; break
+    case 'v-line':       value = { color: '#ddd', thickness: '2px' }; break
+    case 'carousel':     value = { imgs: [], autoPlay: true, interval: 3000, height: 400 }; break
+    case 'map':          value = { address: '台北市信義區信義路五段7號（台北 101）', lat: 25.0339639, lng: 121.5644722, zoom: 17 }; break
+    case 'album':        value = { image: null, tag: '相簿封面', title: '相簿標題', description: '' }; break
+    case 'product-card': value = { image: null, tag: '法會活動', title: '商品標題', date: '2024-08-22' }; break
+    case 'service-card': value = { image: null, tag: '祈福服務', title: '服務標題', date: '2024-08-22' }; break
+    case 'event-card':   value = { image: null, tag: '法會活動', title: '中元普渡法會', description: '2024年中元普渡法會活動紀錄' }; break
+    default: value = {}
   }
   
-  // ✅ 根据布局计算初始宽度，傳入 index（cellIndex）而非 cellCount
   const initialWidth = getInitialCellWidth(frameLayout.value, index)
   
   console.log(`✓ 創建元件，佈局: ${frameLayout.value}, 初始寬度: ${initialWidth}`)
@@ -1092,73 +1127,52 @@ const createElementFromDrag = (dragData, index) => {
   return {
     type: apiType,
     value: value,
-    metadata: {  // ✅ 初始化 metadata
+    metadata: {
       color: null,
-      font_size: null,
-      font_weight: null,
-      text_align: null,
+      fontSize: null,
+      fontWeight: null,
+      textAlign: null,
       width: null,
       height: null,
-      background_color: null
+      backgroundColor: null
     },
     padding: { top: 20, right: 20, bottom: 20, left: 20 },
-    width: initialWidth  // ✅ 使用计算出的初始宽度
+    width: initialWidth
   }
 }
 
-// ✅ 根据布局计算格子的初始宽度（cellIndex 用於雙層框架判斷排別）
 const getInitialCellWidth = (layout, cellIndex) => {
-  // 单行布局：需要考虑已有元件的宽度
-  const singleRowLayouts = {
-    '1_1': 1,
-    '1_2': 2,
-    '1_3': 3,
-    '1_4': 4
-  }
+  const singleRowLayouts = { '1_1': 1, '1_2': 2, '1_3': 3, '1_4': 4 }
   
   if (singleRowLayouts[layout]) {
     const cellsInRow = singleRowLayouts[layout]
-    
-    // ✅ 检查已有元件的总宽度
     const existingElements = displayElements.value.filter(el => el && el.type)
     
     if (existingElements.length > 0) {
-      // 有已存在的元件，计算它们占用的宽度
       let usedWidth = 0
       let elementsWithWidth = 0
       
       existingElements.forEach(el => {
         if (el.width && el.width.includes('%')) {
           const width = parseFloat(el.width)
-          if (!isNaN(width)) {
-            usedWidth += width
-            elementsWithWidth++
-          }
+          if (!isNaN(width)) { usedWidth += width; elementsWithWidth++ }
         }
       })
       
-      // 计算剩余宽度和剩余格子数
       const remainingWidth = 100 - usedWidth
       const remainingCells = cellsInRow - elementsWithWidth
       
       if (remainingCells > 0 && remainingWidth > 0) {
-        const widthPerCell = (remainingWidth / remainingCells).toFixed(1)
-        console.log(`✓ 單行佈局 ${layout}: 已用 ${usedWidth}%, 剩餘 ${remainingWidth}%, 新元件 ${widthPerCell}%`)
-        return widthPerCell + '%'
+        return (remainingWidth / remainingCells).toFixed(1) + '%'
       }
     }
     
-    // 没有已存在的元件，平均分配
-    const widthPerCell = (100 / cellsInRow).toFixed(1)
-    console.log(`✓ 單行佈局 ${layout}: 每格 ${widthPerCell}%`)
-    return widthPerCell + '%'
+    return (100 / cellsInRow).toFixed(1) + '%'
   }
 
-  // ✅ 雙層框架：按排計算初始寬度
   const doubleRowCols = { '2_2': 2, '2_3': 3, '2_4': 4 }
   if (doubleRowCols[layout]) {
     const cols = doubleRowCols[layout]
-    // 判斷當前格子在第幾排
     const row = cellIndex < cols ? 0 : 1
     const rowStart = row * cols
     const rowElements = displayElements.value.slice(rowStart, rowStart + cols)
@@ -1174,17 +1188,12 @@ const getInitialCellWidth = (layout, cellIndex) => {
       const remainingWidth = 100 - usedWidth
       const remainingCells = cols - elementsWithWidth
       if (remainingCells > 0 && remainingWidth > 0) {
-        const widthPerCell = (remainingWidth / remainingCells).toFixed(1)
-        console.log(`✓ 雙層佈局 ${layout} 第${row + 1}排: 已用 ${usedWidth}%, 剩餘 ${remainingWidth}%, 新元件 ${widthPerCell}%`)
-        return widthPerCell + '%'
+        return (remainingWidth / remainingCells).toFixed(1) + '%'
       }
     }
-    const widthPerCell = (100 / cols).toFixed(1)
-    console.log(`✓ 雙層佈局 ${layout} 第${row + 1}排: 每格 ${widthPerCell}%`)
-    return widthPerCell + '%'
+    return (100 / cols).toFixed(1) + '%'
   }
   
-  // ✅ 複合框架 A/B/C/D：左右兩欄，依格子所屬欄位給預設寬
   const compositeLayoutInfo = {
     'A': { leftCells: [0],       rightCells: [1, 2],    defaultLeft: '66.7%', defaultRight: '33.3%' },
     'B': { leftCells: [0, 1],    rightCells: [2],       defaultLeft: '33.3%', defaultRight: '66.7%' },
@@ -1194,18 +1203,14 @@ const getInitialCellWidth = (layout, cellIndex) => {
   if (compositeLayoutInfo[layout]) {
     const info = compositeLayoutInfo[layout]
     const isLeft = info.leftCells.includes(cellIndex)
-    // 如果同欄已有元件設定寬度，直接沿用
     const allCells = isLeft ? info.leftCells : info.rightCells
     const els = displayElements.value
     for (const idx of allCells) {
-      if (els[idx]?.width && els[idx].width.includes('%')) {
-        return els[idx].width
-      }
+      if (els[idx]?.width && els[idx].width.includes('%')) return els[idx].width
     }
     return isLeft ? info.defaultLeft : info.defaultRight
   }
 
-  // 非单行布局：默认 100%
   console.log(`✓ 非單行佈局 ${layout}: 默認 100%`)
   return '100%'
 }
@@ -1213,9 +1218,9 @@ const getInitialCellWidth = (layout, cellIndex) => {
 
 <style lang="scss" scoped>
 .custom-frame {
-  padding: 0;  // ✅ 改為 0，讓內容完全貼邊
-  background: transparent;  // ✅ 透明，讓底圖背景圖顯示
-  min-height: auto;  // ✅ 改為 auto，適應內容高度
+  padding: 0;
+  background: transparent;
+  min-height: auto;
   position: relative;
   transition: all 0.2s;
   cursor: pointer;
@@ -1227,14 +1232,12 @@ const getInitialCellWidth = (layout, cellIndex) => {
   &.is-selected {
     box-shadow: 0 0 0 3px rgba(232, 87, 42, 0.5);
     
-    // ✅ 框架被選中時，顯示刪除按鈕
     .delete-frame-btn {
       opacity: 1;
     }
   }
 }
 
-// ✅ 刪除框架按鈕
 .delete-frame-btn {
   position: absolute;
   top: 12px;
@@ -1260,131 +1263,61 @@ const getInitialCellWidth = (layout, cellIndex) => {
   }
 }
 
-// ✅ 新增：內容容器限制最大寬度
 .frame-container {
-  max-width: 1200px;  // ✅ 限制最大寬度為 1200px
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
 
 .frame-grid {
   width: 100%;
-  // ✅ 移除固定 min-height，讓內容自動撐開
 }
 
-// ✅ 雙層框架：每排獨立 flex，高度互不影響
-// flex 寬度由 getCellFlex() 動態控制，不在 CSS 固定
 .double-row {
   display: flex;
   width: 100%;
 }
 
-// ==================== 複合框架特殊佈局 ====================
+// ==================== ✅ 複合框架 A/B/C/D：flex 左右欄結構 ====================
 
-.custom-frame.layout-A {
-  .frame-grid {
-    // ✅ 移除固定 min-height
-    
-    .grid-cell {
-      // ✅ 移除 min-height，讓內容自動撐開
-      min-height: auto;
+.composite-frame {
+  display: flex;
+  width: 100%;
+  align-items: stretch;  // 讓左右欄等高（左欄會被右側總高撐開，或反過來）
+}
+
+.composite-col {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+
+  // 左欄只有一格時，撐滿整體高度
+  &--left {
+    .composite-cell:only-child {
+      flex: 1;
     }
-    
-    .grid-cell:nth-child(1) {
-      grid-column: 1;
-      grid-row: 1 / 3;
-    }
-    .grid-cell:nth-child(2) {
-      grid-column: 2;
-      grid-row: 1;
-    }
-    .grid-cell:nth-child(3) {
-      grid-column: 2;
-      grid-row: 2;
+  }
+
+  // 右欄：填滿剩餘寬度，各格 height: auto，高度彼此獨立
+  &--right {
+    flex: 1;
+    flex-shrink: 1;
+
+    .composite-cell {
+      height: auto;  // ✅ 各格高度獨立，不會互相影響
     }
   }
 }
 
-.custom-frame.layout-B {
-  .frame-grid {
-    // ✅ 移除固定 min-height
-    
-    .grid-cell {
-      min-height: auto;
-    }
-    
-    .grid-cell:nth-child(1) {
-      grid-column: 1;
-      grid-row: 1;
-    }
-    .grid-cell:nth-child(2) {
-      grid-column: 1;
-      grid-row: 2;
-    }
-    .grid-cell:nth-child(3) {
-      grid-column: 2;
-      grid-row: 1 / 3;
-    }
-  }
+.composite-cell {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.custom-frame.layout-C {
-  .frame-grid {
-    // ✅ 移除固定 min-height
-    
-    .grid-cell {
-      min-height: auto;
-    }
-    
-    .grid-cell:nth-child(1) {
-      grid-column: 1;
-      grid-row: 1 / 4;
-    }
-    .grid-cell:nth-child(2) {
-      grid-column: 2;
-      grid-row: 1;
-    }
-    .grid-cell:nth-child(3) {
-      grid-column: 2;
-      grid-row: 2;
-    }
-    .grid-cell:nth-child(4) {
-      grid-column: 2;
-      grid-row: 3;
-    }
-  }
-}
+// ==================== Grid Cell ====================
 
-.custom-frame.layout-D {
-  .frame-grid {
-    // ✅ 移除固定 min-height
-    
-    .grid-cell {
-      min-height: auto;
-    }
-    
-    .grid-cell:nth-child(1) {
-      grid-column: 1;
-      grid-row: 1;
-    }
-    .grid-cell:nth-child(2) {
-      grid-column: 1;
-      grid-row: 2;
-    }
-    .grid-cell:nth-child(3) {
-      grid-column: 1;
-      grid-row: 3;
-    }
-    .grid-cell:nth-child(4) {
-      grid-column: 2;
-      grid-row: 1 / 4;
-    }
-  }
-}
-
-// ✅ grid-cell 樣式 - 讓內容自動撐開高度
 .grid-cell {
-  min-height: auto;  // ✅ 改為 auto，完全適應內容高度
+  min-height: auto;
   position: relative;
   border-radius: 8px;
   transition: all 0.2s;
@@ -1404,20 +1337,17 @@ const getInitialCellWidth = (layout, cellIndex) => {
     }
   }
   
-  // ✅ 空格子被選中時的樣式
   &.empty-cell.is-selected {
     border: 2px dashed #E8572A;
     background: rgba(232, 87, 42, 0.05);
   }
 }
 
-// ✅ element-content 移除固定高度，讓內容自動撐開
 .element-content {
   position: relative;
   padding: 0;
-  background: transparent;  // ✅ 透明，讓底圖背景圖顯示
+  background: transparent;
   border-radius: 8px;
-  // ✅ 移除 height: 100% 和 min-height，讓內容決定高度
   
   &:hover .delete-element-btn {
     opacity: 1;
@@ -1426,8 +1356,7 @@ const getInitialCellWidth = (layout, cellIndex) => {
 
 .element-carousel {
   width: 100%;
-  height: 100%;  // ✅ 填滿格子高度
-  // ✅ 移除 min-height，讓輪播組件自己決定高度
+  height: 100%;
 }
 
 .delete-element-btn {
@@ -1458,17 +1387,15 @@ const getInitialCellWidth = (layout, cellIndex) => {
 // ==================== 元件樣式 ====================
 
 .element-image {
-  // ✅ 圖片容器使用 text-align 來控制圖片對齊
   width: 100%;
   
   .element-img {
-    // ✅ 使用 inline-block 讓 text-align 生效
     display: inline-block;
-    max-width: 100%;  // ✅ 限制最大寬度不超過容器
+    max-width: 100%;
     height: auto;
     border-radius: 4px;
     object-fit: contain;
-    vertical-align: middle;  // ✅ 垂直置中對齊
+    vertical-align: middle;
   }
   
   .placeholder-image {
@@ -1514,7 +1441,6 @@ const getInitialCellWidth = (layout, cellIndex) => {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
-  // ✅ 移除 min-height，讓文字內容決定高度
   
   ::v-deep(p) {
     margin: 0 0 1em;
@@ -1575,10 +1501,7 @@ const getInitialCellWidth = (layout, cellIndex) => {
 
 .element-map {
   width: 100%;
-  // ✅ MapElement 會自己決定高度和樣式
 }
-
-// ==================== 卡片元件 Wrapper ====================
 
 .element-card-wrapper {
   width: 100%;
@@ -1601,8 +1524,8 @@ const getInitialCellWidth = (layout, cellIndex) => {
 // ==================== 空格子樣式 ====================
 
 .empty-cell {
-  height: auto;  // ✅ 改為 auto
-  min-height: 100px;  // ✅ 降低最小高度到 100px
+  height: auto;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1620,7 +1543,7 @@ const getInitialCellWidth = (layout, cellIndex) => {
   }
   
   &:hover {
-    background: rgba(255, 255, 255, 0.4);  // ✅ 半透明，不蓋住底圖背景
+    background: rgba(255, 255, 255, 0.4);
     border-color: rgba(255, 255, 255, 0.6);
     
     .drop-hint {
@@ -1629,7 +1552,7 @@ const getInitialCellWidth = (layout, cellIndex) => {
   }
   
   &.drag-over {
-    background: rgba(232, 87, 42, 0.15);  // ✅ 半透明橘色
+    background: rgba(232, 87, 42, 0.15);
     border-color: #E8572A;
     border-width: 3px;
     border-style: solid;
@@ -1644,7 +1567,7 @@ const getInitialCellWidth = (layout, cellIndex) => {
 }
 
 .custom-frame.is-dragging .empty-cell {
-  background: rgba(255, 255, 255, 0.3);  // ✅ 半透明
+  background: rgba(255, 255, 255, 0.3);
   border-color: rgba(200, 200, 200, 0.5);
   
   .drop-hint {

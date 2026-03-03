@@ -444,19 +444,19 @@
             <div class="prop-group">
               <label>字體大小</label>
               <div class="font-size-row">
-                <input v-model="elementMetadata.font_size" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
+                <input v-model="elementMetadata.fontSize" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
                 <div class="font-size-presets">
-                  <button @click="elementMetadata.font_size = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '12' }">小</button>
-                  <button @click="elementMetadata.font_size = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '16' }">中</button>
-                  <button @click="elementMetadata.font_size = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '24' }">大</button>
-                  <button @click="elementMetadata.font_size = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '36' }">超大</button>
+                  <button @click="elementMetadata.fontSize = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '12' }">小</button>
+                  <button @click="elementMetadata.fontSize = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '16' }">中</button>
+                  <button @click="elementMetadata.fontSize = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '24' }">大</button>
+                  <button @click="elementMetadata.fontSize = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '36' }">超大</button>
                 </div>
               </div>
             </div>
 
             <div class="prop-group">
               <label>字體粗細</label>
-              <select v-model="elementMetadata.font_weight" class="prop-select" @change="updateMetadata">
+              <select v-model="elementMetadata.fontWeight" class="prop-select" @change="updateMetadata">
                 <option :value="null">預設</option>
                 <option value="normal">正常 (400)</option>
                 <option value="500">中等 (500)</option>
@@ -468,19 +468,19 @@
             <div class="prop-group">
               <label>文字對齊</label>
               <div class="align-buttons">
-                <button @click="elementMetadata.text_align = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'left' }">靠左</button>
-                <button @click="elementMetadata.text_align = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'center' }">置中</button>
-                <button @click="elementMetadata.text_align = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'right' }">靠右</button>
-                <button @click="elementMetadata.text_align = null; updateMetadata()" class="align-btn clear">✕</button>
+                <button @click="elementMetadata.textAlign = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'left' }">靠左</button>
+                <button @click="elementMetadata.textAlign = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'center' }">置中</button>
+                <button @click="elementMetadata.textAlign = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'right' }">靠右</button>
+                <button @click="elementMetadata.textAlign = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
 
             <div class="prop-group">
               <label>背景顏色</label>
               <div class="color-input-group">
-                <input v-model="elementMetadata.background_color" type="color" class="prop-color" @input="updateMetadata" />
-                <input v-model="elementMetadata.background_color" type="text" class="prop-input color-text" placeholder="transparent" @input="updateMetadata" />
-                <button @click="elementMetadata.background_color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
+                <input v-model="elementMetadata.backgroundColor" type="color" class="prop-color" @input="updateMetadata" />
+                <input v-model="elementMetadata.backgroundColor" type="text" class="prop-input color-text" placeholder="transparent" @input="updateMetadata" />
+                <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
           </div>
@@ -588,10 +588,10 @@
             <div class="prop-group">
               <label>圖片對齊</label>
               <div class="align-buttons">
-                <button @click="elementMetadata.text_align = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'left' }">靠左</button>
-                <button @click="elementMetadata.text_align = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'center' }">置中</button>
-                <button @click="elementMetadata.text_align = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.text_align === 'right' }">靠右</button>
-                <button @click="elementMetadata.text_align = null; updateMetadata()" class="align-btn clear">✕</button>
+                <button @click="elementMetadata.textAlign = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'left' }">靠左</button>
+                <button @click="elementMetadata.textAlign = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'center' }">置中</button>
+                <button @click="elementMetadata.textAlign = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'right' }">靠右</button>
+                <button @click="elementMetadata.textAlign = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
             
@@ -702,28 +702,28 @@
             <div class="prop-group">
               <label>背景顏色</label>
               <div class="color-input-group">
-                <input v-model="elementMetadata.background_color" type="color" class="prop-color" @input="updateMetadata" />
-                <input v-model="elementMetadata.background_color" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updateMetadata" />
-                <button @click="elementMetadata.background_color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
+                <input v-model="elementMetadata.backgroundColor" type="color" class="prop-color" @input="updateMetadata" />
+                <input v-model="elementMetadata.backgroundColor" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updateMetadata" />
+                <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
 
             <div class="prop-group">
               <label>字體大小</label>
               <div class="font-size-row">
-                <input v-model="elementMetadata.font_size" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
+                <input v-model="elementMetadata.fontSize" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
                 <div class="font-size-presets">
-                  <button @click="elementMetadata.font_size = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '12' }">小</button>
-                  <button @click="elementMetadata.font_size = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '16' }">中</button>
-                  <button @click="elementMetadata.font_size = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '24' }">大</button>
-                  <button @click="elementMetadata.font_size = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.font_size === '36' }">超大</button>
+                  <button @click="elementMetadata.fontSize = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '12' }">小</button>
+                  <button @click="elementMetadata.fontSize = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '16' }">中</button>
+                  <button @click="elementMetadata.fontSize = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '24' }">大</button>
+                  <button @click="elementMetadata.fontSize = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '36' }">超大</button>
                 </div>
               </div>
             </div>
 
             <div class="prop-group">
               <label>字體粗細</label>
-              <select v-model="elementMetadata.font_weight" class="prop-select" @change="updateMetadata">
+              <select v-model="elementMetadata.fontWeight" class="prop-select" @change="updateMetadata">
                 <option :value="null">預設</option>
                 <option value="normal">正常 (400)</option>
                 <option value="500">中等 (500)</option>
@@ -1251,12 +1251,12 @@ const elementWidth = ref('100')
 
 const elementMetadata = ref({
   color: null,
-  font_size: null,
-  font_weight: null,
-  text_align: null,
+  fontSize: null,
+  fontWeight: null,
+  textAlign: null,
   width: null,
   height: null,
-  background_color: null
+  backgroundColor: null
 })
 
 const imageAlt = ref('')
@@ -1308,17 +1308,17 @@ watch(() => props.selectedElement, (newVal) => {
     const m = newVal.element.metadata
     elementMetadata.value = {
       color: m.color || null,
-      font_size: stripPx(m.font_size) || null,
-      font_weight: m.font_weight || null,
-      text_align: m.text_align || null,
+      fontSize: stripPx(m.fontSize || m.font_size) || null,
+      fontWeight: m.fontWeight || m.font_weight || null,
+      textAlign: m.textAlign || m.text_align || null,
       width: m.width || null,
       height: m.height || null,
-      background_color: m.background_color || null
+      backgroundColor: m.backgroundColor || m.background_color || null
     }
   } else {
     elementMetadata.value = {
-      color: null, font_size: null, font_weight: null,
-      text_align: null, width: null, height: null, background_color: null
+      color: null, fontSize: null, fontWeight: null,
+      textAlign: null, width: null, height: null, backgroundColor: null
     }
   }
 
@@ -1415,7 +1415,7 @@ const updateMetadata = () => {
     if (!props.selectedElement.element.metadata) props.selectedElement.element.metadata = {}
     props.selectedElement.element.metadata = {
       ...elementMetadata.value,
-      font_size: ensureUnit(elementMetadata.value.font_size, null),
+      fontSize: ensureUnit(elementMetadata.value.fontSize, null),
       width: ensureUnit(elementMetadata.value.width, null),
       height: ensureUnit(elementMetadata.value.height, null),
     }
