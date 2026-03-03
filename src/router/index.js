@@ -62,7 +62,7 @@ const router = createRouter({
             // { path: 'divination', name: 'app.cms.customer-divination', component: () => import('@/views/Customer/DivinationView.vue'), meta: { title: '求籤紀錄',    requiresAuth: true } },
             // { path: 'checkin',    name: 'app.cms.customer-checkin',    component: () => import('@/views/Customer/CheckinView.vue'),    meta: { title: '打卡',        requiresAuth: true } },
             // { path: 'favorites',  name: 'app.cms.customer-favorites',  component: () => import('@/views/Customer/FavoritesView.vue'),  meta: { title: '我的最愛宮廟', requiresAuth: true } },
-            // { path: 'cart',       name: 'app.cms.customer-cart',       component: () => import('@/views/Customer/CartView.vue'),       meta: { title: '購物車',      requiresAuth: true } },
+            { path: 'cart',       name: 'app.cms.customer-cart',       component: () => import('@/views/Customer/CartView.vue'),       meta: { title: '購物車',      requiresAuth: true } },
           ]
         },
 
@@ -94,7 +94,12 @@ const router = createRouter({
             { path: 'account-management/create', name: 'app.temple.account-create', component: () => import('@/views/Temple/AccountCreateView.vue'), meta: { title: '新增帳號', requiresAuth: true } },
             { path: 'account-management/role/new',     name: 'app.temple.role-create',  component: () => import('@/views/Temple/RoleEditView.vue'),         meta: { title: '新增權限角色', requiresAuth: true } },
             { path: 'account-management/role/:roleId', name: 'app.temple.role-edit',    component: () => import('@/views/Temple/RoleEditView.vue'),         meta: { title: '編輯權限角色', requiresAuth: true } },
-            { path: 'activity-management', name: 'app.temple.activity-management', component: () => import('@/views/Temple/ActivityManagementView.vue'), meta: { title: '活動與上架管理', requiresAuth: true } }
+
+            // ── 活動與上架管理 ──
+            { path: 'activity-management',                             name: 'app.temple.activity-management', component: () => import('@/views/Temple/ActivityManagementView.vue'), meta: { title: '活動與上架管理', requiresAuth: true } },
+            { path: 'activity-management/activity/create',             name: 'app.temple.activity-create',     component: () => import('@/views/Temple/ActivityFormView.vue'),       meta: { title: '新增活動',       requiresAuth: true } },
+            { path: 'activity-management/activity/:activityId/detail', name: 'app.temple.activity-detail',     component: () => import('@/views/Temple/ActivityDetailView.vue'),     meta: { title: '活動詳細資料',   requiresAuth: true } },
+            { path: 'activity-management/activity/:activityId/edit',   name: 'app.temple.activity-edit',       component: () => import('@/views/Temple/ActivityFormView.vue'),       meta: { title: '編輯活動',       requiresAuth: true } },
           ]
         },
 

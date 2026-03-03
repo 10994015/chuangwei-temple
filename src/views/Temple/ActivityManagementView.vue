@@ -18,7 +18,7 @@
     <!-- ===== 活動管理 ===== -->
     <div v-if="activeTab === 'events'" class="tab-content">
       <div class="toolbar">
-        <button class="btn-primary">＋ 新增活動</button>
+        <button class="btn-primary" @click="goCreateActivity">＋ 新增活動</button>
       </div>
       <div class="filter-grid filter-grid-4">
         <div class="filter-item">
@@ -61,8 +61,8 @@
               <td>{{ item.endDate }}</td>
               <td><span class="badge" :class="statusClass(item.status)">{{ item.status }}</span></td>
               <td class="col-action">
-                <button class="icon-btn">👁</button>
-                <button class="icon-btn">✏️</button>
+                <button class="icon-btn" @click="goViewActivity(item.id)">👁</button>
+                <button class="icon-btn" @click="goEditActivity(item.id)">✏️</button>
                 <button class="icon-btn del">🗑️</button>
               </td>
             </tr>
@@ -404,6 +404,11 @@
 
 <script setup>
 import { ref, computed, reactive } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+const templeId = computed(() => route.params.templeId)
 
 const tabs = [
   { key: 'events',    label: '活動管理' },
@@ -413,6 +418,17 @@ const tabs = [
   { key: 'shipping',  label: '運費管理' },
 ]
 const activeTab = ref('events')
+
+// ── 活動管理導航 ──
+const goCreateActivity = () => {
+  router.push({ name: 'app.temple.activity-create', params: { templeId: templeId.value } })
+}
+const goViewActivity = (id) => {
+  router.push({ name: 'app.temple.activity-detail', params: { templeId: templeId.value, activityId: id } })
+}
+const goEditActivity = (id) => {
+  router.push({ name: 'app.temple.activity-edit', params: { templeId: templeId.value, activityId: id } })
+}
 
 // ── 狀態 badge ──
 const statusClass = (s) => ({
@@ -831,7 +847,6 @@ const resetShipping = () => {
 }
 .above-checkbox { accent-color: #E8572A; width: 14px; height: 14px; }
 
-/* 讓 tier-field-max 的 input + checkbox 橫排 */
 .tier-field-max {
   display: flex;
   flex-direction: column;
