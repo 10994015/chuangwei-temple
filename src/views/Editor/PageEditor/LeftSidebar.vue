@@ -1,167 +1,184 @@
 <template>
-  <aside class="sidebar-left">
-    <!-- 標題 -->
-    <div class="sidebar-header">
-      <h3>元件庫</h3>
-    </div>
+  <aside class="sidebar-left" :class="{ 'is-collapsed': isCollapsed }">
 
-    <!-- 標籤切換 -->
-    <div class="tabs">
-      <button
-        :class="['tab', { active: activeTab === 'system-frames' }]"
-        @click="activeTab = 'system-frames'"
-      >
-        系統框架
-      </button>
-      <button
-        :class="['tab', { active: activeTab === 'custom-frames' }]"
-        @click="activeTab = 'custom-frames'"
-      >
-        自訂框架
-      </button>
-      <button
-        :class="['tab', { active: activeTab === 'elements' }]"
-        @click="activeTab = 'elements'"
-      >
-        元件
-      </button>
-    </div>
+    <!-- 收合按鈕 -->
+    <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? '展開' : '收合'">
+      <svg class="collapse-icon" :class="{ 'is-flipped': isCollapsed }"
+        width="16" height="16" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
 
-    <!-- 標籤內容 -->
-    <div class="tab-content">
-      <!-- 系統框架列表 -->
-      <div v-show="activeTab === 'system-frames'" class="tab-panel">
-        <!-- ✅ 載入中 -->
-        <div v-if="isLoadingSystemFrames" class="loading-state">
-          <div class="loading-spinner">載入中...</div>
-        </div>
+    <!-- 收合時的垂直標題 -->
+    <div v-if="isCollapsed" class="collapsed-label">元件庫</div>
 
-        <!-- ✅ 載入失敗 -->
-        <div v-else-if="systemFramesError" class="error-state">
-          <p class="error-text">⚠️ {{ systemFramesError }}</p>
-          <button @click="loadSystemFrames" class="retry-btn">重試</button>
-        </div>
+    <!-- 展開時的完整內容 -->
+    <template v-else>
+      <!-- 標題 -->
+      <div class="sidebar-header">
+        <h3>元件庫</h3>
+      </div>
 
-        <!-- ✅ 沒有可用框架 -->
-        <div v-else-if="!availableSystemFrames || availableSystemFrames.length === 0" class="empty-state">
-          <p>此頁面沒有可用的系統框架</p>
-        </div>
+      <!-- 標籤切換 -->
+      <div class="tabs">
+        <button
+          :class="['tab', { active: activeTab === 'system-frames' }]"
+          @click="activeTab = 'system-frames'"
+        >
+          系統框架
+        </button>
+        <button
+          :class="['tab', { active: activeTab === 'custom-frames' }]"
+          @click="activeTab = 'custom-frames'"
+        >
+          自訂框架
+        </button>
+        <button
+          :class="['tab', { active: activeTab === 'elements' }]"
+          @click="activeTab = 'elements'"
+        >
+          元件
+        </button>
+      </div>
 
-        <!-- ✅ 顯示系統框架 -->
-        <div v-else class="system-frames-container">
-          <div class="section">
-            <div class="system-frame-list">
-              <div
-                v-for="frameType in availableSystemFrames"
-                :key="`${pageEditorStore.currentPageSlug}-${frameType}`"
-                class="system-frame-card"
-                draggable="true"
-                @dragstart="handleDragStart($event, createSystemFrameData(frameType))"
-              >
-                <div class="system-frame-preview">
-                  <div class="preview-label">{{ frameType }}</div>
+      <!-- 標籤內容 -->
+      <div class="tab-content">
+        <!-- 系統框架列表 -->
+        <div v-show="activeTab === 'system-frames'" class="tab-panel">
+          <!-- ✅ 載入中 -->
+          <div v-if="isLoadingSystemFrames" class="loading-state">
+            <div class="loading-spinner">載入中...</div>
+          </div>
+
+          <!-- ✅ 載入失敗 -->
+          <div v-else-if="systemFramesError" class="error-state">
+            <p class="error-text">⚠️ {{ systemFramesError }}</p>
+            <button @click="loadSystemFrames" class="retry-btn">重試</button>
+          </div>
+
+          <!-- ✅ 沒有可用框架 -->
+          <div v-else-if="!availableSystemFrames || availableSystemFrames.length === 0" class="empty-state">
+            <p>此頁面沒有可用的系統框架</p>
+          </div>
+
+          <!-- ✅ 顯示系統框架 -->
+          <div v-else class="system-frames-container">
+            <div class="section">
+              <div class="system-frame-list">
+                <div
+                  v-for="frameType in availableSystemFrames"
+                  :key="`${pageEditorStore.currentPageSlug}-${frameType}`"
+                  class="system-frame-card"
+                  draggable="true"
+                  @dragstart="handleDragStart($event, createSystemFrameData(frameType))"
+                >
+                  <div class="system-frame-preview">
+                    <div class="preview-label">{{ frameType }}</div>
+                  </div>
+                  <span class="system-frame-name">{{ getFrameDisplayName(frameType) }}</span>
                 </div>
-                <span class="system-frame-name">{{ getFrameDisplayName(frameType) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 自訂框架列表 -->
+        <div v-show="activeTab === 'custom-frames'" class="tab-panel">
+          <!-- 單層框架 -->
+          <div class="section">
+            <h4 class="section-title">單層框架</h4>
+            <div class="frame-list">
+              <div
+                v-for="frame in singleFrames"
+                :key="frame.id"
+                class="frame-card"
+                draggable="true"
+                @dragstart="handleDragStart($event, frame)"
+              >
+                <div class="frame-preview" :class="`layout-${frame.layout}`">
+                  <div
+                    v-for="col in frame.columns"
+                    :key="col.id"
+                    class="frame-col"
+                  ></div>
+                </div>
+                <span class="frame-name">{{ frame.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 雙層框架 -->
+          <div class="section">
+            <h4 class="section-title">雙層框架</h4>
+            <div class="frame-list">
+              <div
+                v-for="frame in doubleFrames"
+                :key="frame.id"
+                class="frame-card"
+                draggable="true"
+                @dragstart="handleDragStart($event, frame)"
+              >
+                <div class="frame-preview" :class="`layout-${frame.layout}`">
+                  <div
+                    v-for="col in frame.columns"
+                    :key="col.id"
+                    class="frame-col"
+                  ></div>
+                </div>
+                <span class="frame-name">{{ frame.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 複合框架 -->
+          <div class="section">
+            <h4 class="section-title">複合框架</h4>
+            <div class="frame-list">
+              <div
+                v-for="frame in complexFrames"
+                :key="frame.id"
+                class="frame-card"
+                draggable="true"
+                @dragstart="handleDragStart($event, frame)"
+              >
+                <div class="frame-preview" :class="`layout-${frame.layout}`">
+                  <div
+                    v-for="col in frame.columns"
+                    :key="col.id"
+                    class="frame-col"
+                    :class="`span-${col.span}`"
+                  ></div>
+                </div>
+                <span class="frame-name">{{ frame.name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 元件列表 -->
+        <div v-show="activeTab === 'elements'" class="tab-panel">
+          <div class="section">
+            <h4 class="section-title">基本元件</h4>
+            <div class="element-list">
+              <div
+                v-for="element in elements"
+                :key="element.id"
+                class="element-card"
+                draggable="true"
+                @dragstart="handleDragStart($event, element)"
+              >
+                <div class="element-icon" :style="{ backgroundColor: element.color }">
+                  {{ element.icon }}
+                </div>
+                <span class="element-name">{{ element.name }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- 自訂框架列表 -->
-      <div v-show="activeTab === 'custom-frames'" class="tab-panel">
-        <!-- 單層框架 -->
-        <div class="section">
-          <h4 class="section-title">單層框架</h4>
-          <div class="frame-list">
-            <div
-              v-for="frame in singleFrames"
-              :key="frame.id"
-              class="frame-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, frame)"
-            >
-              <div class="frame-preview" :class="`layout-${frame.layout}`">
-                <div
-                  v-for="col in frame.columns"
-                  :key="col.id"
-                  class="frame-col"
-                ></div>
-              </div>
-              <span class="frame-name">{{ frame.name }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 雙層框架 -->
-        <div class="section">
-          <h4 class="section-title">雙層框架</h4>
-          <div class="frame-list">
-            <div
-              v-for="frame in doubleFrames"
-              :key="frame.id"
-              class="frame-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, frame)"
-            >
-              <div class="frame-preview" :class="`layout-${frame.layout}`">
-                <div
-                  v-for="col in frame.columns"
-                  :key="col.id"
-                  class="frame-col"
-                ></div>
-              </div>
-              <span class="frame-name">{{ frame.name }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 複合框架 -->
-        <div class="section">
-          <h4 class="section-title">複合框架</h4>
-          <div class="frame-list">
-            <div
-              v-for="frame in complexFrames"
-              :key="frame.id"
-              class="frame-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, frame)"
-            >
-              <div class="frame-preview" :class="`layout-${frame.layout}`">
-                <div
-                  v-for="col in frame.columns"
-                  :key="col.id"
-                  class="frame-col"
-                  :class="`span-${col.span}`"
-                ></div>
-              </div>
-              <span class="frame-name">{{ frame.name }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 元件列表 -->
-      <div v-show="activeTab === 'elements'" class="tab-panel">
-        <div class="section">
-          <h4 class="section-title">基本元件</h4>
-          <div class="element-list">
-            <div
-              v-for="element in elements"
-              :key="element.id"
-              class="element-card"
-              draggable="true"
-              @dragstart="handleDragStart($event, element)"
-            >
-              <div class="element-icon" :style="{ backgroundColor: element.color }">
-                {{ element.icon }}
-              </div>
-              <span class="element-name">{{ element.name }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </template>
   </aside>
 </template>
 
@@ -173,6 +190,9 @@ const emit = defineEmits(['drag-start'])
 
 // ==================== ✅ 從父組件注入 Store ====================
 const pageEditorStore = inject('pageEditorStore')
+
+// ==================== 收合狀態 ====================
+const isCollapsed = ref(false)
 
 // ==================== 狀態 ====================
 const activeTab = ref('system-frames')
@@ -237,7 +257,15 @@ const frameDisplayNames = {
 const getFrameDisplayName = (frameType) => {
   return frameDisplayNames[frameType] || frameType
 }
-
+const systemFrameDefaults = {
+  'INDEX_DONATION': {
+    donationTitle: '捐款護持',
+    donationBrief: '您的捐款將用於宮廟維護與慈善公益\n支持本宮日常運作、建設修繕及幫助弱勢族群\n每一分善款都將妥善運用 功德無量',
+    donationButtonText: '前往捐款 ›',
+    donationButtonLink: '',
+  },
+  // 之後其他系統框架有需要也可以在這裡加
+}
 // ✅ 創建系統框架拖曳數據
 const createSystemFrameData = (frameType) => {
   return {
@@ -245,7 +273,8 @@ const createSystemFrameData = (frameType) => {
     name: getFrameDisplayName(frameType),
     label: frameType,
     type: frameType,
-    dragType: 'system-frame'
+    dragType: 'system-frame',
+    data: systemFrameDefaults[frameType] ?? {},
   }
 }
 
@@ -430,7 +459,6 @@ const handleDragStart = (event, item) => {
 </script>
 
 <style scoped>
-/* 樣式保持不變 */
 .sidebar-left {
   width: 280px;
   flex-shrink: 0;
@@ -438,9 +466,68 @@ const handleDragStart = (event, item) => {
   border-right: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  position: relative; /* 新增：讓 collapse-btn absolute 定位相對於此 */
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ===== 新增：收合狀態 ===== */
+.sidebar-left.is-collapsed {
+  width: 36px;
+}
+
+/* ===== 新增：收合按鈕 ===== */
+.collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.collapse-btn:hover {
+  background: #E8572A;
+  border-color: #E8572A;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(232, 87, 42, 0.3);
+}
+
+.collapse-icon {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: block;
+}
+
+.collapse-icon.is-flipped {
+  transform: rotate(180deg);
+}
+
+/* ===== 新增：收合時垂直標題 ===== */
+.collapsed-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 13px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 2px;
+  margin: auto;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ===== 以下全部與原版相同，未做任何修改 ===== */
 .sidebar-header {
   padding: 20px;
   border-bottom: 1px solid #e5e5e5;
@@ -659,125 +746,35 @@ const handleDragStart = (event, item) => {
   border-radius: 2px;
 }
 
-.frame-preview.layout-1_1 {
-  grid-template-columns: 1fr;
-}
+.frame-preview.layout-1_1 { grid-template-columns: 1fr; }
+.frame-preview.layout-1_2 { grid-template-columns: repeat(2, 1fr); }
+.frame-preview.layout-1_3 { grid-template-columns: repeat(3, 1fr); }
+.frame-preview.layout-1_4 { grid-template-columns: repeat(4, 1fr); }
+.frame-preview.layout-2_2 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+.frame-preview.layout-2_3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
+.frame-preview.layout-2_4 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); }
 
-.frame-preview.layout-1_2 {
-  grid-template-columns: repeat(2, 1fr);
-}
+.frame-preview.layout-A { grid-template-columns: 2fr 1fr; grid-template-rows: repeat(2, 1fr); }
+.frame-preview.layout-A .frame-col:nth-child(1) { grid-row: 1 / 3; }
+.frame-preview.layout-A .frame-col:nth-child(2) { grid-column: 2; grid-row: 1; }
+.frame-preview.layout-A .frame-col:nth-child(3) { grid-column: 2; grid-row: 2; }
 
-.frame-preview.layout-1_3 {
-  grid-template-columns: repeat(3, 1fr);
-}
+.frame-preview.layout-B { grid-template-columns: 1fr 2fr; grid-template-rows: repeat(2, 1fr); }
+.frame-preview.layout-B .frame-col:nth-child(1) { grid-column: 1; grid-row: 1; }
+.frame-preview.layout-B .frame-col:nth-child(2) { grid-column: 1; grid-row: 2; }
+.frame-preview.layout-B .frame-col:nth-child(3) { grid-column: 2; grid-row: 1 / 3; }
 
-.frame-preview.layout-1_4 {
-  grid-template-columns: repeat(4, 1fr);
-}
+.frame-preview.layout-C { grid-template-columns: 2fr 1fr; grid-template-rows: repeat(3, 1fr); }
+.frame-preview.layout-C .frame-col:nth-child(1) { grid-column: 1; grid-row: 1 / 4; }
+.frame-preview.layout-C .frame-col:nth-child(2) { grid-column: 2; grid-row: 1; }
+.frame-preview.layout-C .frame-col:nth-child(3) { grid-column: 2; grid-row: 2; }
+.frame-preview.layout-C .frame-col:nth-child(4) { grid-column: 2; grid-row: 3; }
 
-.frame-preview.layout-2_2 {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.frame-preview.layout-2_3 {
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.frame-preview.layout-2_4 {
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.frame-preview.layout-A {
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.frame-preview.layout-A .frame-col:nth-child(1) {
-  grid-row: 1 / 3;
-}
-
-.frame-preview.layout-A .frame-col:nth-child(2) {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.frame-preview.layout-A .frame-col:nth-child(3) {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.frame-preview.layout-B {
-  grid-template-columns: 1fr 2fr;
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.frame-preview.layout-B .frame-col:nth-child(1) {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.frame-preview.layout-B .frame-col:nth-child(2) {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.frame-preview.layout-B .frame-col:nth-child(3) {
-  grid-column: 2;
-  grid-row: 1 / 3;
-}
-
-.frame-preview.layout-C {
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: repeat(3, 1fr);
-}
-
-.frame-preview.layout-C .frame-col:nth-child(1) {
-  grid-column: 1;
-  grid-row: 1 / 4;
-}
-
-.frame-preview.layout-C .frame-col:nth-child(2) {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.frame-preview.layout-C .frame-col:nth-child(3) {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.frame-preview.layout-C .frame-col:nth-child(4) {
-  grid-column: 2;
-  grid-row: 3;
-}
-
-.frame-preview.layout-D {
-  grid-template-columns: 1fr 2fr;
-  grid-template-rows: repeat(3, 1fr);
-}
-
-.frame-preview.layout-D .frame-col:nth-child(1) {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.frame-preview.layout-D .frame-col:nth-child(2) {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.frame-preview.layout-D .frame-col:nth-child(3) {
-  grid-column: 1;
-  grid-row: 3;
-}
-
-.frame-preview.layout-D .frame-col:nth-child(4) {
-  grid-column: 2;
-  grid-row: 1 / 4;
-}
+.frame-preview.layout-D { grid-template-columns: 1fr 2fr; grid-template-rows: repeat(3, 1fr); }
+.frame-preview.layout-D .frame-col:nth-child(1) { grid-column: 1; grid-row: 1; }
+.frame-preview.layout-D .frame-col:nth-child(2) { grid-column: 1; grid-row: 2; }
+.frame-preview.layout-D .frame-col:nth-child(3) { grid-column: 1; grid-row: 3; }
+.frame-preview.layout-D .frame-col:nth-child(4) { grid-column: 2; grid-row: 1 / 4; }
 
 .frame-name {
   display: block;
@@ -835,20 +832,8 @@ const handleDragStart = (event, item) => {
   font-weight: 500;
 }
 
-.tab-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.tab-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.tab-content::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
-}
-
-.tab-content::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
-}
+.tab-content::-webkit-scrollbar { width: 6px; }
+.tab-content::-webkit-scrollbar-track { background: #f1f1f1; }
+.tab-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+.tab-content::-webkit-scrollbar-thumb:hover { background: #ccc; }
 </style>

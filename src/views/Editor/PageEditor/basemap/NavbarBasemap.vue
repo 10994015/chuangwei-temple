@@ -5,12 +5,13 @@
       <div 
         class="logo-wrapper"
         :class="{ selected: isLogoSelected, clickable: isEditMode }"
-        @click.stop="handleSelectLogo"
+        @click.stop="isEditMode ? handleSelectLogo() : emit('change-page', 'home')"
       >
         <div class="logo">
           <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="logo-image" />
           <span class="logo-name">{{ tenantName }}</span>
         </div>
+
         <button
           v-if="isEditMode && logoSrc"
           class="delete-logo-btn"
@@ -18,7 +19,6 @@
           title="刪除 Logo"
         >✕</button>
       </div>
-
       <!-- ✅ 桌機導航：device === 'desktop' 才顯示 -->
       <nav v-if="isDesktop" class="nav-menu">
         <a 
@@ -150,7 +150,7 @@ const handleMobileTabClick = (tab) => {
 
 <style lang="scss" scoped>
 .navbar {
-  background: #fff;
+  background: transparent;
   border-bottom: 1px solid #e5e5e5;
   padding: 0 2rem;
   position: sticky;
@@ -175,7 +175,9 @@ const handleMobileTabClick = (tab) => {
     transition: all 0.2s;
     padding: 4px;
     flex-shrink: 0;
-
+     &:not(.clickable) {
+      cursor: pointer;  // 預覽模式也可點
+    }
     &.clickable {
       cursor: pointer;
       &:hover { border-color: #E8572A; background: #fff5f2; }

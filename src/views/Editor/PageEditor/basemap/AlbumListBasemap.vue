@@ -210,7 +210,7 @@ const pageNumbers = computed(() => {
 <style lang="scss" scoped>
 .album-list-section {
   padding: 3rem 0 4rem;
-  background: #fff;
+  background: transparent;
 }
 
 .container {

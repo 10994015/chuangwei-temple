@@ -210,7 +210,7 @@ const viewNewsDetail = (news) => {
 <style lang="scss" scoped>
 .news-list-section {
   padding: 2rem 0 4rem;
-  background: #fafafa;
+  background: transparent;
   min-height: 100vh;
 }
 

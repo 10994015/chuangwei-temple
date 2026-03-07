@@ -73,11 +73,9 @@
 
           <!-- 資訊區 -->
           <div class="product-info">
-            <!-- badge 在標題上方 -->
             <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
               {{ product.badge }}
             </span>
-            <!-- 無 badge 時補空白高度，保持對齊 -->
             <div v-else class="badge-placeholder"></div>
 
             <h3 class="product-title">{{ product.title }}</h3>
@@ -255,7 +253,7 @@ const addToCart = (product) => {
 .products-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;           // 細邊框效果用 gap + 背景色
+  gap: 10px;
   border: 1px solid #ddd;
 }
 
@@ -265,7 +263,7 @@ const addToCart = (product) => {
   transition: box-shadow 0.2s;
   border: 1px solid #ddd;
 
-  &:hover { box-shadow:  0 0 0 2px #c9a55a; }
+  &:hover { box-shadow: 0 0 0 2px #c9a55a; }
 }
 
 /* 圖片區 */
@@ -315,6 +313,7 @@ const addToCart = (product) => {
 /* 資訊區 */
 .product-info {
   padding: 16px 20px 20px;
+  background-color: #fff;
 }
 
 .product-badge {
@@ -332,7 +331,7 @@ const addToCart = (product) => {
 }
 
 .badge-placeholder {
-  height: 26px;   // 與 badge 高度相同，保持卡片標題對齊
+  height: 26px;
   margin-bottom: 12px;
 }
 
@@ -382,10 +381,10 @@ const addToCart = (product) => {
   transition: color 0.2s;
 }
 
-/* ==================== RWD ==================== */
+/* ==================== device prop RWD ==================== */
 .product-list-section.device-tablet {
-  .container { padding: 0 1.25rem; }
-  .filter-bar { justify-content: flex-start; padding: 1rem; }
+  .container    { padding: 0 1.25rem; }
+  .filter-bar   { justify-content: flex-start; padding: 1rem; }
   .products-grid { grid-template-columns: repeat(2, 1fr); }
   .product-title { font-size: 15px; }
   .product-price { font-size: 17px; }
@@ -394,29 +393,44 @@ const addToCart = (product) => {
 .product-list-section.device-mobile {
   padding: 1rem 0 2rem;
 
-  .container { padding: 0 0.75rem; }
-
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0.75rem;
-    gap: 0.75rem;
-    justify-content: flex-start;
-  }
-
+  .container    { padding: 0 0.75rem; }
+  .filter-bar   { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
   .filter-select { width: 100%; }
   .search-group  { min-width: auto; max-width: 100%; }
-
-  .products-grid { grid-template-columns: repeat(2, 1fr); }
-
+  .products-grid { grid-template-columns: 1fr; }
   .product-info  { padding: 10px 12px 14px; }
   .product-title { font-size: 13px; margin-bottom: 12px; }
   .product-price { font-size: 15px; }
-
   .add-to-cart-btn { width: 32px; height: 32px; }
-  .cart-icon       { width: 14px; height: 14px; }
-  .rank-badge      { font-size: 11px; padding: 4px 10px; }
-  .section-title   { font-size: 18px; margin-bottom: 1rem; }
-  .batch-actions   { margin-bottom: 1rem; }
+  .cart-icon     { width: 14px; height: 14px; }
+  .rank-badge    { font-size: 11px; padding: 4px 10px; }
+  .section-title { font-size: 18px; margin-bottom: 1rem; }
+  .batch-actions { margin-bottom: 1rem; }
+}
+
+/* ==================== media query RWD（瀏覽器實際寬度）==================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .product-list-section .container     { padding: 0 1.25rem; }
+  .product-list-section .filter-bar    { justify-content: flex-start; padding: 1rem; }
+  .product-list-section .products-grid { grid-template-columns: repeat(2, 1fr); }
+  .product-list-section .product-title { font-size: 15px; }
+  .product-list-section .product-price { font-size: 17px; }
+}
+
+@media (max-width: 768px) {
+  .product-list-section                { padding: 1rem 0 2rem; }
+  .product-list-section .container     { padding: 0 0.75rem; }
+  .product-list-section .filter-bar    { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
+  .product-list-section .filter-select { width: 100%; }
+  .product-list-section .search-group  { min-width: auto; max-width: 100%; }
+  .product-list-section .products-grid { grid-template-columns: 1fr; }
+  .product-list-section .product-info  { padding: 10px 12px 14px; }
+  .product-list-section .product-title { font-size: 13px; margin-bottom: 12px; }
+  .product-list-section .product-price { font-size: 15px; }
+  .product-list-section .add-to-cart-btn { width: 32px; height: 32px; }
+  .product-list-section .cart-icon     { width: 14px; height: 14px; }
+  .product-list-section .rank-badge    { font-size: 11px; padding: 4px 10px; }
+  .product-list-section .section-title { font-size: 18px; margin-bottom: 1rem; }
+  .product-list-section .batch-actions { margin-bottom: 1rem; }
 }
 </style>

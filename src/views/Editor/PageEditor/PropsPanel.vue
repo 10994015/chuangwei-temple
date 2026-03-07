@@ -1,5 +1,22 @@
 <template>
-  <div class="props-panel">
+  <div class="props-panel" :class="{ 'is-collapsed': isCollapsed }">
+
+    <!-- ===== 新增：收合按鈕 ===== -->
+    <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? '展開' : '收合'">
+      <svg class="collapse-icon" :class="{ 'is-flipped': isCollapsed }"
+        width="16" height="16" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+
+    <!-- ===== 新增：收合時的垂直標題 ===== -->
+    <div v-if="isCollapsed" class="collapsed-label">屬性設定</div>
+
+    <!-- ===== 新增：展開時的完整內容包裝 ===== -->
+    <template v-if="!isCollapsed">
+
     <div class="panel-header">
       <h3>屬性設定</h3>
     </div>
@@ -73,7 +90,6 @@
         <template v-else-if="selectedFrame.type === 'FIRST_PICTURE'">
           <h4 class="section-title">首圖設定</h4>
           
-          <!-- 背景圖片 -->
           <div class="prop-group">
             <label>背景圖片</label>
             <div class="image-upload">
@@ -81,18 +97,15 @@
                 <div class="spinner"></div>
                 <span>上傳中...</span>
               </div>
-              
               <img 
                 v-else-if="selectedFrame.data?.heroBgImgSrc"
                 :src="selectedFrame.data.heroBgImgSrc" 
                 alt="背景預覽"
                 class="preview-image"
               />
-              
               <div v-else class="no-image">
                 <span>尚未上傳背景圖片</span>
               </div>
-              
               <button 
                 @click="handleUploadHeroBackground" 
                 class="upload-btn"
@@ -108,24 +121,12 @@
           
           <div class="prop-group">
             <label>標題</label>
-            <input 
-              v-model="heroTitle" 
-              type="text" 
-              class="prop-input"
-              placeholder="輸入首圖標題"
-              @input="updateHeroData"
-            />
+            <input v-model="heroTitle" type="text" class="prop-input" placeholder="輸入首圖標題" @input="updateHeroData" />
           </div>
           
           <div class="prop-group">
             <label>副標題</label>
-            <textarea 
-              v-model="heroSubtitle" 
-              class="prop-textarea"
-              rows="3"
-              placeholder="輸入首圖副標題"
-              @input="updateHeroData"
-            ></textarea>
+            <textarea v-model="heroSubtitle" class="prop-textarea" rows="3" placeholder="輸入首圖副標題" @input="updateHeroData"></textarea>
           </div>
           
           <div class="metadata-section">
@@ -134,13 +135,7 @@
             <div class="prop-group">
               <label>首圖高度</label>
               <div class="height-selector">
-                <input 
-                  v-model="heroHeight" 
-                  type="text" 
-                  class="prop-input"
-                  placeholder="600（）"
-                  @input="updateHeroData"
-                />
+                <input v-model="heroHeight" type="text" class="prop-input" placeholder="600（）" @input="updateHeroData" />
               </div>
               <div class="height-presets">
                 <button @click="setHeroHeight('500')" class="preset-btn">小</button>
@@ -152,113 +147,52 @@
             
             <div class="prop-group">
               <label>遮罩透明度 ({{ overlayOpacity }}%)</label>
-              <input 
-                v-model.number="overlayOpacity" 
-                type="range" 
-                min="0"
-                max="100"
-                class="prop-slider"
-                @input="updateHeroData"
-              />
-              <div class="slider-labels">
-                <span>透明</span>
-                <span>不透明</span>
-              </div>
+              <input v-model.number="overlayOpacity" type="range" min="0" max="100" class="prop-slider" @input="updateHeroData" />
+              <div class="slider-labels"><span>透明</span><span>不透明</span></div>
             </div>
             
             <div class="prop-group">
               <label>遮罩顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="overlayColor" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateHeroData"
-                />
-                <input 
-                  v-model="overlayColor" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="#000000"
-                  @input="updateHeroData"
-                />
+                <input v-model="overlayColor" type="color" class="prop-color" @input="updateHeroData" />
+                <input v-model="overlayColor" type="text" class="prop-input color-text" placeholder="#000000" @input="updateHeroData" />
               </div>
             </div>
             
             <div class="prop-group">
               <label>文字框圓角</label>
               <div class="input-with-unit">
-                <input 
-                  v-model="textBoxBorderRadius" 
-                  type="text" 
-                  class="prop-input"
-                  placeholder="12（）"
-                  @input="updateHeroData"
-                />
+                <input v-model="textBoxBorderRadius" type="text" class="prop-input" placeholder="12（）" @input="updateHeroData" />
               </div>
             </div>
             
             <div class="prop-group">
               <label>標題顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="titleColor" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateHeroData"
-                />
-                <input 
-                  v-model="titleColor" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="#333333"
-                  @input="updateHeroData"
-                />
+                <input v-model="titleColor" type="color" class="prop-color" @input="updateHeroData" />
+                <input v-model="titleColor" type="text" class="prop-input color-text" placeholder="#333333" @input="updateHeroData" />
               </div>
             </div>
             
             <div class="prop-group">
               <label>標題字體大小</label>
               <div class="input-with-unit">
-                <input 
-                  v-model="titleFontSize" 
-                  type="text" 
-                  class="prop-input"
-                  placeholder="48（）"
-                  @input="updateHeroData"
-                />
+                <input v-model="titleFontSize" type="text" class="prop-input" placeholder="48（）" @input="updateHeroData" />
               </div>
             </div>
             
             <div class="prop-group">
               <label>副標題顏色</label>
               <div class="color-input-group">
-                <input 
-                  v-model="subtitleColor" 
-                  type="color" 
-                  class="prop-color"
-                  @input="updateHeroData"
-                />
-                <input 
-                  v-model="subtitleColor" 
-                  type="text" 
-                  class="prop-input color-text"
-                  placeholder="#666666"
-                  @input="updateHeroData"
-                />
+                <input v-model="subtitleColor" type="color" class="prop-color" @input="updateHeroData" />
+                <input v-model="subtitleColor" type="text" class="prop-input color-text" placeholder="#666666" @input="updateHeroData" />
               </div>
             </div>
             
             <div class="prop-group">
               <label>副標題字體大小</label>
               <div class="input-with-unit">
-                <input 
-                  v-model="subtitleFontSize" 
-                  type="text" 
-                  class="prop-input"
-                  placeholder="20（）"
-                  @input="updateHeroData"
-                />
+                <input v-model="subtitleFontSize" type="text" class="prop-input" placeholder="20（）" @input="updateHeroData" />
               </div>
             </div>
           </div>
@@ -271,15 +205,7 @@
           <div class="prop-group">
             <label>輪播高度</label>
             <div class="height-selector">
-              <input
-                v-model.number="carouselWallHeight"
-                type="number"
-                class="prop-input"
-                min="200"
-                max="1000"
-                step="50"
-                @input="updateCarouselWallSettings"
-              />
+              <input v-model.number="carouselWallHeight" type="number" class="prop-input" min="200" max="1000" step="50" @input="updateCarouselWallSettings" />
               <span class="unit">px</span>
             </div>
             <div class="height-presets">
@@ -299,53 +225,149 @@
 
           <div class="prop-group" v-if="carouselWallAutoPlay">
             <label>播放間隔 (毫秒)</label>
-            <input
-              v-model.number="carouselWallInterval"
-              type="number"
-              class="prop-input"
-              min="1000"
-              step="500"
-              @input="updateCarouselWallSettings"
-            />
+            <input v-model.number="carouselWallInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselWallSettings" />
             <span class="unit-hint">建議 3000–8000 毫秒</span>
           </div>
 
-          <div class="prop-group">
+          <div class="prop-group" style="margin-top: 24px;">
             <label>輪播圖片 ({{ carouselWallImages.length }} 張)</label>
-
-            <div v-if="carouselWallImages.length > 0" class="carousel-images-list">
+            <div v-if="carouselWallImages.length > 0" class="carousel-images-list-vertical">
               <div
                 v-for="(img, index) in carouselWallImages"
                 :key="img.id || index"
-                class="carousel-image-item"
+                class="carousel-image-card"
+                :class="{ 'drag-over': carouselWallDragOver === index }"
+                draggable="true"
+                @dragstart="onCarouselWallDragStart(index)"
+                @dragover.prevent="carouselWallDragOver = index"
+                @dragleave="carouselWallDragOver = null"
+                @drop.prevent="onCarouselWallDrop(index)"
+                @dragend="carouselWallDragOver = null"
               >
-                <img
-                  :src="img.src"
-                  :alt="`圖片 ${index + 1}`"
-                  class="carousel-thumbnail"
-                />
-                <button
-                  class="remove-image-btn"
-                  @click="removeCarouselWallImage(index)"
-                  title="刪除圖片"
-                >
-                  ✕
-                </button>
+                <!-- 圖片預覽列 -->
+                <div class="card-image-row">
+                  <div class="drag-handle card-drag">⠿</div>
+                  <img :src="img.src" :alt="`圖片 ${index + 1}`" class="card-thumbnail" />
+                  <span class="card-index">第 {{ index + 1 }} 張</span>
+                  <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" title="刪除圖片">✕</button>
+                </div>
+                <!-- 標題 -->
+                <div class="card-field">
+                  <label class="card-label">標題</label>
+                  <input
+                    :value="img.title || ''"
+                    type="text"
+                    class="prop-input card-input"
+                    placeholder="此張圖片的標題（選填）"
+                    @input="updateCarouselWallImageField(index, 'title', $event.target.value)"
+                  />
+                </div>
+                <!-- 副標題 -->
+                <div class="card-field">
+                  <label class="card-label">副標題</label>
+                  <textarea
+                    :value="img.subtitle || ''"
+                    class="prop-textarea card-textarea"
+                    rows="2"
+                    placeholder="此張圖片的副標題（選填）"
+                    @input="updateCarouselWallImageField(index, 'subtitle', $event.target.value)"
+                  ></textarea>
+                </div>
+                <!-- 樣式設定（可折疊） -->
+                <div class="card-field card-style-toggle" @click="toggleCardStyle(index)">
+                  <span class="card-label">樣式設定</span>
+                  <span class="card-toggle-icon">{{ expandedCardStyles.includes(index) ? '▲' : '▼' }}</span>
+                </div>
+                <template v-if="expandedCardStyles.includes(index)">
+                  <!-- 遮罩透明度 -->
+                  <div class="card-field">
+                    <label class="card-label">遮罩透明度 ({{ img.overlayOpacity ?? 40 }}%)</label>
+                    <input
+                      :value="img.overlayOpacity ?? 40"
+                      type="range" min="0" max="100"
+                      class="prop-slider card-slider"
+                      @input="updateCarouselWallImageField(index, 'overlayOpacity', Number($event.target.value))"
+                    />
+                    <div class="slider-labels"><span>透明</span><span>不透明</span></div>
+                  </div>
+                  <!-- 遮罩顏色 -->
+                  <div class="card-field">
+                    <label class="card-label">遮罩顏色</label>
+                    <div class="color-input-group">
+                      <input
+                        :value="img.overlayColor || '#000000'"
+                        type="color" class="prop-color"
+                        @input="updateCarouselWallImageField(index, 'overlayColor', $event.target.value)"
+                      />
+                      <input
+                        :value="img.overlayColor || '#000000'"
+                        type="text" class="prop-input color-text" placeholder="#000000"
+                        @input="updateCarouselWallImageField(index, 'overlayColor', $event.target.value)"
+                      />
+                    </div>
+                  </div>
+                  <!-- 標題顏色 -->
+                  <div class="card-field">
+                    <label class="card-label">標題顏色</label>
+                    <div class="color-input-group">
+                      <input
+                        :value="img.titleColor || '#ffffff'"
+                        type="color" class="prop-color"
+                        @input="updateCarouselWallImageField(index, 'titleColor', $event.target.value)"
+                      />
+                      <input
+                        :value="img.titleColor || '#ffffff'"
+                        type="text" class="prop-input color-text" placeholder="#ffffff"
+                        @input="updateCarouselWallImageField(index, 'titleColor', $event.target.value)"
+                      />
+                    </div>
+                  </div>
+                  <!-- 標題字體大小 -->
+                  <div class="card-field">
+                    <label class="card-label">標題字體大小</label>
+                    <div class="input-with-suffix">
+                      <input
+                        :value="img.titleFontSize ?? 48"
+                        type="number" class="prop-input" placeholder="48" min="12"
+                        @input="updateCarouselWallImageField(index, 'titleFontSize', Number($event.target.value))"
+                      />
+                      <span class="input-suffix">px</span>
+                    </div>
+                  </div>
+                  <!-- 副標題顏色 -->
+                  <div class="card-field">
+                    <label class="card-label">副標題顏色</label>
+                    <div class="color-input-group">
+                      <input
+                        :value="img.subtitleColor || '#eeeeee'"
+                        type="color" class="prop-color"
+                        @input="updateCarouselWallImageField(index, 'subtitleColor', $event.target.value)"
+                      />
+                      <input
+                        :value="img.subtitleColor || '#eeeeee'"
+                        type="text" class="prop-input color-text" placeholder="#eeeeee"
+                        @input="updateCarouselWallImageField(index, 'subtitleColor', $event.target.value)"
+                      />
+                    </div>
+                  </div>
+                  <!-- 副標題字體大小 -->
+                  <div class="card-field">
+                    <label class="card-label">副標題字體大小</label>
+                    <div class="input-with-suffix">
+                      <input
+                        :value="img.subtitleFontSize ?? 20"
+                        type="number" class="prop-input" placeholder="20" min="10"
+                        @input="updateCarouselWallImageField(index, 'subtitleFontSize', Number($event.target.value))"
+                      />
+                      <span class="input-suffix">px</span>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
-
-            <div v-else class="no-image">
-              <span>尚未上傳圖片</span>
-            </div>
-
-            <button
-              @click="handleUploadCarouselWall"
-              class="upload-btn"
-              :disabled="isUploadingCarouselWall"
-            >
-              <template v-if="isUploadingCarouselWall">
-                <span class="btn-spinner"></span>上傳中...
-              </template>
+            <div v-else class="no-image"><span>尚未上傳圖片</span></div>
+            <button @click="handleUploadCarouselWall" class="upload-btn" :disabled="isUploadingCarouselWall">
+              <template v-if="isUploadingCarouselWall"><span class="btn-spinner"></span>上傳中...</template>
               <template v-else>＋ 新增圖片</template>
             </button>
           </div>
@@ -354,15 +376,9 @@
         <!-- ✅ 其他框架類型 -->
         <template v-else>
           <h4 class="section-title">框架設定</h4>
-          
           <div class="prop-group">
             <label>框架類型</label>
-            <input 
-              :value="selectedFrame.type" 
-              type="text" 
-              class="prop-input"
-              disabled
-            />
+            <input :value="selectedFrame.type" type="text" class="prop-input" disabled />
           </div>
         </template>
       </div>
@@ -372,45 +388,16 @@
         <!-- Logo 元件 -->
         <template v-if="selectedElement.type === 'logo'">
           <h4 class="section-title">Logo 設定</h4>
-          
           <div class="prop-group">
             <label>Logo 圖片</label>
             <div class="image-upload">
-              <div v-if="isUploadingLogo" class="uploading-state">
-                <div class="spinner"></div>
-                <span>上傳中...</span>
-              </div>
-              
-              <img 
-                v-else-if="localLogoSrc" 
-                :src="localLogoSrc" 
-                :alt="selectedElement.frame?.data?.temple_name || 'Logo'"
-                class="preview-image logo-preview"
-                @error="handleLogoImageError"
-              />
-              
-              <div v-else class="no-image">
-                <span>尚未上傳 Logo</span>
-              </div>
-              
-              <button 
-                @click="handleUploadLogo" 
-                class="upload-btn"
-                :disabled="isUploadingLogo"
-              >
+              <div v-if="isUploadingLogo" class="uploading-state"><div class="spinner"></div><span>上傳中...</span></div>
+              <img v-else-if="localLogoSrc" :src="localLogoSrc" :alt="selectedElement.frame?.data?.temple_name || 'Logo'" class="preview-image logo-preview" @error="handleLogoImageError" />
+              <div v-else class="no-image"><span>尚未上傳 Logo</span></div>
+              <button @click="handleUploadLogo" class="upload-btn" :disabled="isUploadingLogo">
                 <template v-if="isUploadingLogo">上傳中...</template>
-                <template v-else>
-                  {{ localLogoSrc ? '更換 Logo' : '上傳 Logo' }}
-                </template>
+                <template v-else>{{ localLogoSrc ? '更換 Logo' : '上傳 Logo' }}</template>
               </button>
-            </div>
-            
-            <div v-if="false" class="debug-info">
-              <small>
-                Local Logo: {{ localLogoSrc ? '有' : '無' }}<br>
-                Frame Logo: {{ selectedElement.frame?.data?.logoImgSrc ? '有' : '無' }}<br>
-                Data Logo: {{ selectedElement.data?.src ? '有' : '無' }}
-              </small>
             </div>
           </div>
         </template>
@@ -418,20 +405,12 @@
         <!-- TEXT 元件 -->
         <template v-else-if="selectedElement.element?.type === 'TEXT'">
           <h4 class="section-title">文字設定</h4>
-          
           <div class="prop-group">
             <label>文字內容</label>
-            <textarea 
-              v-model="selectedElement.element.value.text" 
-              class="prop-textarea"
-              rows="6"
-              placeholder="輸入文字內容（支援 HTML）"
-            ></textarea>
+            <textarea v-model="selectedElement.element.value.text" class="prop-textarea" rows="6" placeholder="輸入文字內容（支援 HTML）"></textarea>
           </div>
-
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
-            
             <div class="prop-group">
               <label>文字顏色</label>
               <div class="color-input-group">
@@ -440,7 +419,6 @@
                 <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
-
             <div class="prop-group">
               <label>字體大小</label>
               <div class="font-size-row">
@@ -453,18 +431,13 @@
                 </div>
               </div>
             </div>
-
             <div class="prop-group">
-              <label>字體粗細</label>
-              <select v-model="elementMetadata.fontWeight" class="prop-select" @change="updateMetadata">
-                <option :value="null">預設</option>
-                <option value="normal">正常 (400)</option>
-                <option value="500">中等 (500)</option>
-                <option value="600">半粗 (600)</option>
-                <option value="bold">粗體 (700)</option>
-              </select>
+              <label>字體粗細 <span class="label-value">{{ elementMetadata.fontWeight ?? '預設' }}</span></label>
+              <input v-model.number="elementMetadata.fontWeight" type="range" min="300" max="900" step="100" class="prop-slider" @input="updateMetadata" />
+              <div class="font-weight-labels">
+                <span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span>
+              </div>
             </div>
-
             <div class="prop-group">
               <label>文字對齊</label>
               <div class="align-buttons">
@@ -474,7 +447,6 @@
                 <button @click="elementMetadata.textAlign = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
-
             <div class="prop-group">
               <label>背景顏色</label>
               <div class="color-input-group">
@@ -484,33 +456,18 @@
               </div>
             </div>
           </div>
-
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -519,22 +476,12 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
             <div class="prop-group">
               <label>最大寬度</label>
               <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
+                <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
                 <span class="input-suffix">%</span>
               </div>
             </div>
@@ -549,42 +496,20 @@
         <!-- IMG 元件 -->
         <template v-else-if="selectedElement.element?.type === 'IMG'">
           <h4 class="section-title">圖片設定</h4>
-          
           <div class="prop-group">
             <label>圖片</label>
             <div class="image-upload">
-              <div v-if="isUploadingImage" class="uploading-state">
-                <div class="spinner"></div>
-                <span>上傳中...</span>
-              </div>
-              
-              <img 
-                v-else-if="selectedElement.element.value?.src"
-                :src="selectedElement.element.value.src" 
-                alt="圖片預覽"
-                class="preview-image"
-              />
-              
-              <div v-else class="no-image">
-                <span>尚未上傳圖片</span>
-              </div>
-              
+              <div v-if="isUploadingImage" class="uploading-state"><div class="spinner"></div><span>上傳中...</span></div>
+              <img v-else-if="selectedElement.element.value?.src" :src="selectedElement.element.value.src" alt="圖片預覽" class="preview-image" />
+              <div v-else class="no-image"><span>尚未上傳圖片</span></div>
               <button @click="handleUploadImage" class="upload-btn" :disabled="isUploadingImage">
                 <template v-if="isUploadingImage">上傳中...</template>
                 <template v-else>{{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}</template>
               </button>
             </div>
           </div>
-
-          <!-- <div class="prop-group">
-            <label>Alt 文字（替代文字）</label>
-            <input v-model="imageAlt" type="text" class="prop-input" placeholder="描述圖片內容，用於無障礙輔助" @input="updateImageAlt" />
-            <span class="hint-text">用於螢幕閱讀器和圖片無法顯示時</span>
-          </div> -->
-
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
-            
             <div class="prop-group">
               <label>圖片對齊</label>
               <div class="align-buttons">
@@ -594,50 +519,34 @@
                 <button @click="elementMetadata.textAlign = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
-            
             <div class="prop-group">
               <label>寬度</label>
-              <div class="input-with-unit">
-                <input v-model="elementMetadata.width" type="text" class="prop-input" placeholder="100%, 500px, auto" @input="updateMetadata" />
-                <span class="unit-hint">例如: 100%, 500px, auto</span>
+              <div class="input-with-suffix">
+                <input v-model="imgWidth" type="number" class="prop-input" placeholder="500" min="1" @input="updateImgSize" />
+                <span class="input-suffix">px</span>
               </div>
             </div>
-
             <div class="prop-group">
               <label>高度</label>
-              <div class="input-with-unit">
-                <input v-model="elementMetadata.height" type="text" class="prop-input" placeholder="auto, 300px" @input="updateMetadata" />
-                <span class="unit-hint">例如: auto, 300px</span>
+              <div class="input-with-suffix">
+                <input v-model="imgHeight" type="number" class="prop-input" placeholder="auto" min="1" @input="updateImgSize" />
+                <span class="input-suffix">px</span>
               </div>
+              <span class="unit-hint">留空則為 auto</span>
             </div>
           </div>
-
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -646,22 +555,12 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
             <div class="prop-group">
               <label>最大寬度</label>
               <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
+                <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
                 <span class="input-suffix">%</span>
               </div>
             </div>
@@ -676,20 +575,10 @@
         <!-- BUTTON 元件 -->
         <template v-else-if="selectedElement.element?.type === 'BUTTON'">
           <h4 class="section-title">按鈕設定</h4>
-          
-          <div class="prop-group">
-            <label>按鈕文字</label>
-            <input v-model="selectedElement.element.value.text" type="text" class="prop-input" placeholder="輸入按鈕文字" />
-          </div>
-
-          <div class="prop-group">
-            <label>連結網址</label>
-            <input v-model="selectedElement.element.value.url" type="text" class="prop-input" placeholder="輸入連結 (例如: https://example.com)" />
-          </div>
-
+          <div class="prop-group"><label>按鈕文字</label><input v-model="selectedElement.element.value.text" type="text" class="prop-input" placeholder="輸入按鈕文字" /></div>
+          <div class="prop-group"><label>連結網址</label><input v-model="selectedElement.element.value.url" type="text" class="prop-input" placeholder="輸入連結 (例如: https://example.com)" /></div>
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
-            
             <div class="prop-group">
               <label>文字顏色</label>
               <div class="color-input-group">
@@ -698,7 +587,6 @@
                 <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
-
             <div class="prop-group">
               <label>背景顏色</label>
               <div class="color-input-group">
@@ -707,7 +595,6 @@
                 <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
               </div>
             </div>
-
             <div class="prop-group">
               <label>字體大小</label>
               <div class="font-size-row">
@@ -720,45 +607,26 @@
                 </div>
               </div>
             </div>
-
             <div class="prop-group">
-              <label>字體粗細</label>
-              <select v-model="elementMetadata.fontWeight" class="prop-select" @change="updateMetadata">
-                <option :value="null">預設</option>
-                <option value="normal">正常 (400)</option>
-                <option value="500">中等 (500)</option>
-                <option value="600">半粗 (600)</option>
-                <option value="bold">粗體 (700)</option>
-              </select>
+              <label>字體粗細 <span class="label-value">{{ elementMetadata.fontWeight ?? '預設' }}</span></label>
+              <input v-model.number="elementMetadata.fontWeight" type="range" min="300" max="900" step="100" class="prop-slider" @input="updateMetadata" />
+              <div class="font-weight-labels">
+                <span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span>
+              </div>
             </div>
           </div>
-
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -767,22 +635,12 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
             <div class="prop-group">
               <label>最大寬度</label>
               <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
+                <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
                 <span class="input-suffix">%</span>
               </div>
             </div>
@@ -797,43 +655,20 @@
         <!-- HORIZON_LINE 元件 -->
         <template v-else-if="selectedElement.element?.type === 'HORIZON_LINE'">
           <h4 class="section-title">水平線設定</h4>
-          
-          <div class="prop-group">
-            <label>顏色</label>
-            <input v-model="selectedElement.element.value.color" type="color" class="prop-color" />
-          </div>
-
-          <div class="prop-group">
-            <label>粗細</label>
-            <input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" />
-          </div>
-
+          <div class="prop-group"><label>顏色</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
+          <div class="prop-group"><label>粗細</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" /></div>
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -842,73 +677,30 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group">
-              <label>最大寬度</label>
-              <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
-                <span class="input-suffix">%</span>
-              </div>
-            </div>
-            <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
-            </div>
+            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
           </div>
         </template>
 
         <!-- VERTICAL_LINE 元件 -->
         <template v-else-if="selectedElement.element?.type === 'VERTICAL_LINE'">
           <h4 class="section-title">垂直線設定</h4>
-          
-          <div class="prop-group">
-            <label>顏色</label>
-            <input v-model="selectedElement.element.value.color" type="color" class="prop-color" />
-          </div>
-
-          <div class="prop-group">
-            <label>粗細</label>
-            <input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" />
-          </div>
-
+          <div class="prop-group"><label>顏色</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
+          <div class="prop-group"><label>粗細</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" /></div>
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -917,37 +709,16 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group">
-              <label>最大寬度</label>
-              <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
-                <span class="input-suffix">%</span>
-              </div>
-            </div>
-            <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
-            </div>
+            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
           </div>
         </template>
 
         <!-- CAROUSEL 元件 -->
         <template v-else-if="selectedElement.element?.type === 'CAROUSEL_IMG'">
           <h4 class="section-title">輪播設定</h4>
-          
           <div class="prop-group">
             <label>輪播高度</label>
             <div class="height-selector">
@@ -955,66 +726,48 @@
               <span class="unit">px</span>
             </div>
             <div class="height-presets">
-              <button v-for="preset in heightPresets" :key="preset.value" @click="setCarouselHeight(preset.value)" class="preset-btn" :class="{ active: carouselHeight === preset.value }">
-                {{ preset.label }}
-              </button>
+              <button v-for="preset in heightPresets" :key="preset.value" @click="setCarouselHeight(preset.value)" class="preset-btn" :class="{ active: carouselHeight === preset.value }">{{ preset.label }}</button>
             </div>
           </div>
-          
           <div class="prop-group">
             <label>輪播圖片 ({{ carouselImages.length }})</label>
-            
             <div v-if="carouselImages.length > 0" class="carousel-images-list">
-              <div v-for="(image, index) in carouselImages" :key="image.id || index" class="carousel-image-item">
+              <div
+                v-for="(image, index) in carouselImages"
+                :key="image.id || index"
+                class="carousel-image-item"
+                :class="{ 'drag-over': carouselDragOver === index }"
+                draggable="true"
+                @dragstart="onCarouselDragStart(index)"
+                @dragover.prevent="carouselDragOver = index"
+                @dragleave="carouselDragOver = null"
+                @drop.prevent="onCarouselDrop(index)"
+                @dragend="carouselDragOver = null"
+              >
+                <div class="drag-handle">⠿</div>
                 <img :src="image.src || image" :alt="`圖片 ${index + 1}`" class="carousel-thumbnail" />
                 <button @click="removeCarouselImage(index)" class="remove-image-btn" title="刪除圖片">✕</button>
               </div>
             </div>
-
             <button @click="addCarouselImage" class="upload-btn" :disabled="isUploadingCarousel">
               <template v-if="isUploadingCarousel"><span class="btn-spinner"></span>上傳中...</template>
               <template v-else>＋ 新增圖片</template>
             </button>
           </div>
-
-          <div class="prop-group">
-            <label class="checkbox-label">
-              <input v-model="carouselAutoPlay" type="checkbox" @change="updateCarouselSettings" />
-              <span>自動播放</span>
-            </label>
-          </div>
-
-          <div class="prop-group" v-if="carouselAutoPlay">
-            <label>播放間隔 (毫秒)</label>
-            <input v-model.number="carouselInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselSettings" />
-          </div>
-
+          <div class="prop-group"><label class="checkbox-label"><input v-model="carouselAutoPlay" type="checkbox" @change="updateCarouselSettings" /><span>自動播放</span></label></div>
+          <div class="prop-group" v-if="carouselAutoPlay"><label>播放間隔 (毫秒)</label><input v-model.number="carouselInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselSettings" /></div>
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1023,90 +776,41 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group">
-              <label>最大寬度</label>
-              <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
-                <span class="input-suffix">%</span>
-              </div>
-            </div>
-            <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
-            </div>
+            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
           </div>
         </template>
 
         <!-- GOOGLE_MAP 元件 -->
         <template v-else-if="selectedElement.element?.type === 'GOOGLE_MAP'">
           <h4 class="section-title">地圖設定</h4>
-          <div class="prop-group">
-            <label>地址</label>
-            <input v-model="mapAddress" type="text" class="prop-input" placeholder="輸入地址，例如：台北市信義區信義路五段7號" @input="updateMapData" />
-          </div>
-          <div class="prop-group">
-            <label>緯度 (Latitude)</label>
-            <input v-model.number="mapLat" type="number" class="prop-input" placeholder="25.033" step="0.001" @input="updateMapData" />
-            <span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span>
-          </div>
-          <div class="prop-group">
-            <label>經度 (Longitude)</label>
-            <input v-model.number="mapLng" type="number" class="prop-input" placeholder="121.565" step="0.001" @input="updateMapData" />
-            <span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span>
-          </div>
+          <div class="prop-group"><label>地址</label><input v-model="mapAddress" type="text" class="prop-input" placeholder="輸入地址，例如：台北市信義區信義路五段7號" @input="updateMapData" /></div>
+          <div class="prop-group"><label>緯度 (Latitude)</label><input v-model.number="mapLat" type="number" class="prop-input" placeholder="25.033" step="0.001" @input="updateMapData" /><span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span></div>
+          <div class="prop-group"><label>經度 (Longitude)</label><input v-model.number="mapLng" type="number" class="prop-input" placeholder="121.565" step="0.001" @input="updateMapData" /><span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span></div>
           <div class="prop-group">
             <label>縮放級別 ({{ mapZoom }})</label>
             <input v-model.number="mapZoom" type="range" min="10" max="18" class="prop-slider" @input="updateMapData" />
-            <div class="slider-labels">
-              <span>遠</span>
-              <span>近</span>
-            </div>
+            <div class="slider-labels"><span>遠</span><span>近</span></div>
           </div>
           <div class="zoom-presets">
             <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">城市</button>
             <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">街區</button>
             <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">建築</button>
           </div>
-
           <div class="padding-section">
             <h5 class="subsection-title">元件間距</h5>
             <div class="padding-controls">
-              <div class="padding-visual">
-                <div class="padding-box">
-                  <div class="padding-input-group top">
-                    <label>上</label>
-                    <input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
-                  <div class="padding-sides">
-                    <div class="padding-input-group left">
-                      <label>左</label>
-                      <input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                    <div class="content-preview">內容區域</div>
-                    <div class="padding-input-group right">
-                      <label>右</label>
-                      <input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                    </div>
-                  </div>
-                  <div class="padding-input-group bottom">
-                    <label>下</label>
-                    <input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" />
-                  </div>
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">內容區域</div>
+                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-              </div>
+                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
               <div class="padding-presets">
                 <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
                 <button @click="setElementPadding(10)" class="preset-btn">小</button>
@@ -1115,40 +819,17 @@
               </div>
             </div>
           </div>
-
-          <!-- ✅ 元件寬度 - % 在外面 -->
           <div class="width-section">
             <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group">
-              <label>最大寬度</label>
-              <div class="input-with-suffix">
-                <input 
-                  v-model="elementWidth" 
-                  type="number" 
-                  class="prop-input"
-                  placeholder="100"
-                  min="1"
-                  max="100"
-                  @input="updateElementWidthDebounced"
-                />
-                <span class="input-suffix">%</span>
-              </div>
-            </div>
-            <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
-            </div>
+            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
           </div>
         </template>
 
         <!-- 未知元件類型 -->
         <template v-else>
           <h4 class="section-title">元件資訊</h4>
-          <div class="prop-group">
-            <label>元件類型</label>
-            <input :value="selectedElement.element?.type || 'Unknown'" type="text" class="prop-input" disabled />
-          </div>
+          <div class="prop-group"><label>元件類型</label><input :value="selectedElement.element?.type || 'Unknown'" type="text" class="prop-input" disabled /></div>
         </template>
       </div>
 
@@ -1161,11 +842,13 @@
         </div>
       </div>
     </div>
+
+    </template><!-- end v-if="!isCollapsed" -->
   </div>
 </template>
 
 <script setup>
-import { ref, watch, inject } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 import { useRoute } from 'vue-router'
 
 const pageEditorStore = inject('pageEditorStore')
@@ -1179,6 +862,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update-logo', 'update-cell-padding'])
+
+// ==================== 收合狀態（新增）====================
+const isCollapsed = ref(false)
 
 // ==================== 工具函數 ====================
 
@@ -1201,13 +887,21 @@ const stripPx = (value) => {
   return str
 }
 
-// ✅ 從存儲的寬度值（含%）提取純數字，供 input 顯示
 const stripPercent = (value) => {
   if (!value) return '100'
   const str = String(value).trim()
   if (str.includes('%')) return str.replace('%', '')
   if (str === 'auto') return '100'
   return str
+}
+
+const normalizeFontWeight = (value) => {
+  if (!value) return 400
+  if (value === 'normal') return 400
+  if (value === 'bold') return 700
+  const n = parseInt(value)
+  if (!isNaN(n)) return n
+  return 400
 }
 
 // ==================== 響應式狀態 ====================
@@ -1222,11 +916,17 @@ const isUploadingImage = ref(false)
 const isUploadingHeroBackground = ref(false)
 const isUploadingCarousel = ref(false)
 
-const carouselWallImages = ref([])
+// computed 直接讀 props，任何欄位變動都能響應，且不重建陣列避免重渲染
+const carouselWallImages = computed(() =>
+  Array.isArray(props.selectedFrame?.data?.caroiselWallImgs)
+    ? props.selectedFrame.data.caroiselWallImgs
+    : []
+)
 const isUploadingCarouselWall = ref(false)
 const carouselWallHeight = ref(600)
 const carouselWallAutoPlay = ref(true)
 const carouselWallInterval = ref(5000)
+const expandedCardStyles = ref([])
 
 const carouselImages = ref([])
 const carouselAutoPlay = ref(true)
@@ -1245,14 +945,12 @@ const subtitleColor = ref('#666666')
 const subtitleFontSize = ref('20')
 
 const elementPadding = ref({ top: 20, right: 20, bottom: 20, left: 20 })
-
-// ✅ elementWidth 只存純數字（不含%），顯示在 input 裡
 const elementWidth = ref('100')
 
 const elementMetadata = ref({
   color: null,
   fontSize: null,
-  fontWeight: null,
+  fontWeight: 400,
   textAlign: null,
   width: null,
   height: null,
@@ -1260,6 +958,8 @@ const elementMetadata = ref({
 })
 
 const imageAlt = ref('')
+const imgWidth = ref('')
+const imgHeight = ref('')
 const frameWidth = ref('1200')
 const mapAddress = ref('')
 const mapLat = ref(25.033)
@@ -1300,8 +1000,12 @@ watch(() => props.selectedElement, (newVal) => {
 
   if (newVal?.element?.type === 'IMG') {
     imageAlt.value = newVal.element.value?.alt || ''
+    imgWidth.value = stripPx(newVal.element.metadata?.width || '')
+    imgHeight.value = stripPx(newVal.element.metadata?.height || '')
   } else {
     imageAlt.value = ''
+    imgWidth.value = ''
+    imgHeight.value = ''
   }
 
   if (newVal?.element?.metadata) {
@@ -1309,7 +1013,7 @@ watch(() => props.selectedElement, (newVal) => {
     elementMetadata.value = {
       color: m.color || null,
       fontSize: stripPx(m.fontSize || m.font_size) || null,
-      fontWeight: m.fontWeight || m.font_weight || null,
+      fontWeight: normalizeFontWeight(m.fontWeight || m.font_weight),
       textAlign: m.textAlign || m.text_align || null,
       width: m.width || null,
       height: m.height || null,
@@ -1317,7 +1021,7 @@ watch(() => props.selectedElement, (newVal) => {
     }
   } else {
     elementMetadata.value = {
-      color: null, fontSize: null, fontWeight: null,
+      color: null, fontSize: null, fontWeight: 400,
       textAlign: null, width: null, height: null, backgroundColor: null
     }
   }
@@ -1326,7 +1030,6 @@ watch(() => props.selectedElement, (newVal) => {
     ? { ...newVal.element.padding }
     : { top: 20, right: 20, bottom: 20, left: 20 }
 
-  // ✅ 讀取時去掉 %，只顯示數字
   elementWidth.value = stripPercent(newVal?.element?.width || '100%')
 
 }, { immediate: true, deep: true })
@@ -1384,15 +1087,18 @@ watch(() => props.selectedFrame, (newVal) => {
   }
 
   if (newVal?.type === 'CAROUSEL_WALL') {
-    carouselWallImages.value = Array.isArray(newVal.data?.caroiselWallImgs)
-      ? [...newVal.data.caroiselWallImgs]
-      : []
     carouselWallHeight.value = newVal.data?.carouselWallHeight ?? 600
     carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
     carouselWallInterval.value = newVal.data?.carouselWallInterval ?? 5000
+    // 注意：expandedCardStyles 不在這裡重置，避免 deep watch 每次 data 變動都清空
   }
 
 }, { immediate: true, deep: true })
+
+// 只有在切換到不同 frame（物件參考改變）時，才重置展開狀態
+watch(() => props.selectedFrame, () => {
+  expandedCardStyles.value = []
+})
 
 // ==================== 框架寬度更新 ====================
 
@@ -1429,6 +1135,13 @@ const updateImageAlt = () => {
   }
 }
 
+const updateImgSize = () => {
+  if (props.selectedElement?.element?.type !== 'IMG') return
+  if (!props.selectedElement.element.metadata) props.selectedElement.element.metadata = {}
+  props.selectedElement.element.metadata.width = imgWidth.value ? imgWidth.value + 'px' : null
+  props.selectedElement.element.metadata.height = imgHeight.value ? imgHeight.value + 'px' : null
+}
+
 // ==================== 元件 Padding 更新 ====================
 
 const updateElementPadding = () => {
@@ -1450,7 +1163,6 @@ const setElementPadding = (value) => {
 
 // ==================== 元件寬度更新 ====================
 
-// ✅ debounce 工具
 const debounce = (fn, delay) => {
   let timer = null
   return (...args) => {
@@ -1461,7 +1173,6 @@ const debounce = (fn, delay) => {
 
 const updateElementWidth = () => {
   if (props.selectedElement?.element) {
-    // ✅ input 只有數字，寫回時自動補 %
     const raw = String(elementWidth.value).trim()
     const finalWidth = raw ? raw + '%' : '100%'
     props.selectedElement.element.width = finalWidth
@@ -1469,7 +1180,6 @@ const updateElementWidth = () => {
   }
 }
 
-// ✅ 0.2 秒 debounce，給 template @input 使用
 const updateElementWidthDebounced = debounce(updateElementWidth, 200)
 
 const adjustSiblingCellsWidth = () => {
@@ -1490,11 +1200,9 @@ const adjustSiblingCellsWidth = () => {
 
   if (!frame.elements) frame.elements = []
 
-  // ✅ elementWidth 現在是純數字，parseWidth 直接解析
   const currentWidth = parseFloat(elementWidth.value)
   if (isNaN(currentWidth) || currentWidth <= 0 || currentWidth >= 100) return
 
-  // ✅ 複合框架 A/B/C/D：兩欄互補到 100%
   const compositeMap = {
     'A': { leftCells: [0], rightCells: [1, 2] },
     'B': { leftCells: [0, 1], rightCells: [2] },
@@ -1512,7 +1220,6 @@ const adjustSiblingCellsWidth = () => {
     const newWidth = currentWidth.toFixed(1) + '%'
 
     sameSideCells.forEach(idx => {
-      // ✅ 跳過自己，避免 toFixed(1) 把 '5' 覆蓋成 '5.0'
       if (idx !== cellIndex && frame.elements[idx]?.type) {
         frame.elements[idx].width = newWidth
       }
@@ -1523,7 +1230,6 @@ const adjustSiblingCellsWidth = () => {
     return
   }
 
-  // 單層 / 雙層框架
   const rowCells = getRowCells(layout, cellIndex)
   if (rowCells.length <= 1) return
   const remainingWidth = 100 - currentWidth
@@ -1534,15 +1240,6 @@ const adjustSiblingCellsWidth = () => {
       frame.elements[index].width = widthPerCell.toFixed(1) + '%'
     }
   })
-}
-
-const parseWidth = (widthStr) => {
-  if (!widthStr || widthStr === 'auto') return null
-  if (widthStr.includes('%')) {
-    const num = parseFloat(widthStr)
-    return isNaN(num) ? null : num
-  }
-  return null
 }
 
 const getRowCells = (layout, currentIndex) => {
@@ -1575,7 +1272,6 @@ const getRowCells = (layout, currentIndex) => {
 }
 
 const setElementWidth = (width) => {
-  // ✅ preset 傳入純數字字串，直接設定
   elementWidth.value = width
   updateElementWidth()
 }
@@ -1782,8 +1478,6 @@ const handleUploadCarouselWall = async () => {
         if (!uploadedFile) continue
         props.selectedFrame.data.caroiselWallImgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl })
       }
-
-      carouselWallImages.value = [...props.selectedFrame.data.caroiselWallImgs]
     } catch (error) {
       console.error('❌ 輪播牆圖片上傳失敗:', error)
       alert('輪播牆圖片上傳失敗: ' + error.message)
@@ -1801,7 +1495,59 @@ const removeCarouselWallImage = (index) => {
   const removedImg = imgs[index]
   if (removedImg?.id) pageEditorStore.markFileForDeletion(removedImg.id)
   imgs.splice(index, 1)
-  carouselWallImages.value = [...imgs]
+}
+
+const updateCarouselWallImageField = (index, field, value) => {
+  const imgs = props.selectedFrame?.data?.caroiselWallImgs
+  if (!imgs || !imgs[index]) return
+  imgs[index][field] = value
+}
+
+const toggleCardStyle = (index) => {
+  const pos = expandedCardStyles.value.indexOf(index)
+  if (pos === -1) expandedCardStyles.value.push(index)
+  else expandedCardStyles.value.splice(pos, 1)
+}
+
+// ==================== 輪播牆拖曳排序 ====================
+
+const carouselWallDragOver = ref(null)
+const carouselWallDragIndex = ref(null)
+
+const onCarouselWallDragStart = (index) => {
+  carouselWallDragIndex.value = index
+}
+
+const onCarouselWallDrop = (toIndex) => {
+  const fromIndex = carouselWallDragIndex.value
+  if (fromIndex === null || fromIndex === toIndex) return
+  const imgs = props.selectedFrame?.data?.caroiselWallImgs
+  if (!imgs) return
+  const moved = imgs.splice(fromIndex, 1)[0]
+  imgs.splice(toIndex, 0, moved)
+  carouselWallDragIndex.value = null
+  carouselWallDragOver.value = null
+}
+
+// ==================== 輪播元件拖曳排序 ====================
+
+const carouselDragOver = ref(null)
+const carouselDragIndex = ref(null)
+
+const onCarouselDragStart = (index) => {
+  carouselDragIndex.value = index
+}
+
+const onCarouselDrop = (toIndex) => {
+  const fromIndex = carouselDragIndex.value
+  if (fromIndex === null || fromIndex === toIndex) return
+  const imgs = props.selectedElement?.element?.value?.imgs
+  if (!imgs) return
+  const moved = imgs.splice(fromIndex, 1)[0]
+  imgs.splice(toIndex, 0, moved)
+  carouselImages.value = [...imgs]
+  carouselDragIndex.value = null
+  carouselDragOver.value = null
 }
 
 // ==================== GOOGLE_MAP 元件操作 ====================
@@ -1831,8 +1577,70 @@ const setMapZoom = (zoom) => {
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
+  position: relative; /* 新增 */
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* 新增 */
 }
 
+/* ===== 新增：收合狀態 ===== */
+.props-panel.is-collapsed {
+  width: 36px;
+}
+
+/* ===== 新增：收合按鈕 ===== */
+.collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: -14px;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.collapse-btn:hover {
+  background: #E8572A;
+  border-color: #E8572A;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(232, 87, 42, 0.3);
+}
+
+.collapse-icon {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: block;
+}
+
+/* PropsPanel 展開時箭頭朝右 (>)，收合後朝左 (<) */
+.collapse-icon.is-flipped {
+  transform: rotate(180deg);
+}
+
+/* ===== 新增：收合時垂直標題 ===== */
+.collapsed-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 13px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 2px;
+  margin: auto;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ===== 以下全部與原版相同，未做任何修改 ===== */
 .panel-header {
   padding: 20px;
   border-bottom: 1px solid #e5e5e5;
@@ -1962,7 +1770,6 @@ const setMapZoom = (zoom) => {
   .unit-hint { display: block; margin-top: 4px; font-size: 11px; color: #999; }
 }
 
-// ✅ 新增：% 後綴輸入框樣式
 .input-with-suffix {
   display: flex;
   align-items: stretch;
@@ -2102,15 +1909,6 @@ const setMapZoom = (zoom) => {
   &:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
 }
 
-.debug-info {
-  margin-top: 8px;
-  padding: 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  font-family: monospace;
-  small { font-size: 11px; color: #666; line-height: 1.6; }
-}
-
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -2165,6 +1963,117 @@ const setMapZoom = (zoom) => {
   margin-bottom: 12px;
 }
 
+// 輪播牆圖片卡片（垂直列表，帶標題/副標題輸入）
+.carousel-images-list-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.carousel-image-card {
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  background: #fafafa;
+  &:hover { border-color: #E8572A; }
+  &.drag-over { border-color: #E8572A; border-style: dashed; opacity: 0.7; }
+}
+
+.card-image-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: grab;
+  &:active { cursor: grabbing; }
+}
+
+.card-drag {
+  position: static;
+  opacity: 1;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  font-size: 16px;
+  background: rgba(0,0,0,0.15);
+  &:hover { opacity: 1; }
+}
+
+.card-thumbnail {
+  width: 56px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid #ddd;
+}
+
+.card-index {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.card-remove {
+  position: static;
+  opacity: 1;
+  flex-shrink: 0;
+  &:hover { background: #dc2626; transform: scale(1.1); }
+}
+
+.card-field {
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid #ebebeb;
+  &:last-child { border-bottom: none; }
+}
+
+.card-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-input {
+  font-size: 12px !important;
+  padding: 6px 8px !important;
+}
+
+.card-textarea {
+  font-size: 12px !important;
+  padding: 6px 8px !important;
+  resize: none;
+}
+
+.card-style-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: #f0f0f0;
+  padding: 8px 10px !important;
+  user-select: none;
+  &:hover { background: #e8e8e8; }
+  .card-label { margin: 0; color: #555; }
+}
+
+.card-toggle-icon {
+  font-size: 10px;
+  color: #888;
+}
+
+.card-slider {
+  width: 100%;
+}
+
 .carousel-image-item {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -2172,7 +2081,30 @@ const setMapZoom = (zoom) => {
   overflow: hidden;
   border: 2px solid #ddd;
   transition: border-color 0.2s;
-  &:hover { border-color: #E8572A; .remove-image-btn { opacity: 1; } }
+  cursor: grab;
+  &:hover { border-color: #E8572A; .remove-image-btn { opacity: 1; } .drag-handle { opacity: 1; } }
+  &.drag-over { border-color: #E8572A; border-style: dashed; opacity: 0.6; }
+  &:active { cursor: grabbing; }
+}
+
+.drag-handle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: grab;
+  user-select: none;
 }
 
 .carousel-thumbnail { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2297,6 +2229,20 @@ const setMapZoom = (zoom) => {
   span { font-size: 11px; color: #999; }
 }
 
+.font-weight-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  span { font-size: 11px; color: #999; }
+}
+
+.label-value {
+  font-weight: normal;
+  color: #E8572A;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
 .font-size-row {
   display: flex;
   gap: 8px;
@@ -2310,4 +2256,6 @@ const setMapZoom = (zoom) => {
     .preset-btn { flex: 1; padding: 8px 2px; font-size: 12px; }
   }
 }
+
+.unit-hint { display: block; margin-top: 4px; font-size: 11px; color: #999; }
 </style>

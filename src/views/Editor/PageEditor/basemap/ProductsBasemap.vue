@@ -272,7 +272,7 @@ const addToCart = (product) => {
   }
 }
 
-/* ==================== RWD ==================== */
+/* ==================== device prop RWD ==================== */
 .products-section.device-tablet {
   .container      { padding: 0 1.25rem; }
   .products-grid  { grid-template-columns: repeat(2, 1fr); }
@@ -284,7 +284,7 @@ const addToCart = (product) => {
   padding: 1.5rem 0 2.5rem;
 
   .container      { padding: 0 0.75rem; }
-  .products-grid  { grid-template-columns: repeat(2, 1fr); }
+  .products-grid  { grid-template-columns: 1fr; }
   .product-info   { padding: 10px 12px 14px; }
   .product-title  { font-size: 13px; margin-bottom: 12px; }
   .product-price  { font-size: 15px; }
@@ -294,5 +294,27 @@ const addToCart = (product) => {
   .rank-badge      { font-size: 11px; padding: 4px 10px; }
   .section-title   { font-size: 18px; }
   .view-more-wrap  { margin-top: 24px; }
+}
+
+/* ==================== media query RWD（瀏覽器實際寬度）==================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .products-section .container     { padding: 0 1.25rem; }
+  .products-section .products-grid { grid-template-columns: repeat(2, 1fr); }
+  .products-section .product-title { font-size: 15px; }
+  .products-section .product-price { font-size: 17px; }
+}
+
+@media (max-width: 768px) {
+  .products-section                    { padding: 1.5rem 0 2.5rem; }
+  .products-section .container         { padding: 0 0.75rem; }
+  .products-section .products-grid     { grid-template-columns: 1fr; }
+  .products-section .product-info      { padding: 10px 12px 14px; }
+  .products-section .product-title     { font-size: 13px; margin-bottom: 12px; }
+  .products-section .product-price     { font-size: 15px; }
+  .products-section .add-to-cart-btn   { width: 32px; height: 32px; }
+  .products-section .cart-icon         { width: 14px; height: 14px; }
+  .products-section .rank-badge        { font-size: 11px; padding: 4px 10px; }
+  .products-section .section-title     { font-size: 18px; }
+  .products-section .view-more-wrap    { margin-top: 24px; }
 }
 </style>

@@ -186,7 +186,7 @@ const handleDonate = () => {
 <style scoped>
 .donation-product-basemap {
   width: 100%;
-  background: #fff;
+  background: transparent;
   padding: 60px 0;
 }
 
@@ -258,6 +258,7 @@ const handleDonate = () => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background-color: #fff;
   border: 1px solid #e5e5e5;
   border-radius: 4px;
   padding: 32px;

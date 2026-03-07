@@ -46,7 +46,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
               </button>
             </div>
-            <div v-if="(item.type==='service'||item.type==='festival')&&item.checked" class="target-section">
+            <div v-if="(item.type==='service'||item.type==='donation')&&item.checked" class="target-section">
               <div class="ts-header">
                 <span class="ts-title">服務對象設定 <em class="req">*</em></span>
                 <span class="ts-hint">（需設定 {{ item.qty }} 位）</span>
@@ -62,14 +62,6 @@
                     <button v-for="tab in targetTabs" :key="tab.v" class="tgt-tab" :class="{active:tgt.tab===tab.v}" @click="switchTab(tgt,tab.v)">{{ tab.l }}</button>
                   </div>
                   <template v-if="tgt.tab==='manual'||tgt.tab==='personal'">
-                    <div v-if="tgt.tab==='personal'" class="frow">
-                      <div class="ff full"><label>選擇個人資料</label>
-                        <select v-model="tgt.selProfile" @change="fillProfile(tgt)" class="fi-sel">
-                          <option value="">請選擇</option>
-                          <option v-for="p in personalProfiles" :key="p.id" :value="p.id">{{ p.name }}</option>
-                        </select>
-                      </div>
-                    </div>
                     <div class="frow">
                       <div class="ff"><label>姓名 <em class="req">*</em></label><input v-model="tgt.name" class="fi" placeholder="請輸入姓名" :readonly="tgt.tab==='personal'&&!!tgt.selProfile"/></div>
                       <div class="ff"><label>性別 <em class="req">*</em></label>
@@ -138,13 +130,21 @@
             </div>
           </div>
           <div class="temple-footer">
-            <span class="tf-label">運費：</span>
-            <span class="tf-val">NT$ {{ templeShipping(temple).toLocaleString() }}</span>
-            <span class="tf-hint">普通運費 ${{ templeNormalShip(temple) }} + 特殊運費 ${{ templeSpecialShip(temple) }}</span>
-            <span class="tf-label ml">商品金額：</span>
-            <span class="tf-val">NT$ {{ templeItemTotal(temple).toLocaleString() }}</span>
-            <span class="tf-label ml">小計：</span>
-            <span class="tf-subtotal">NT$ {{ (templeItemTotal(temple)+templeShipping(temple)).toLocaleString() }}</span>
+            <div class="tf-row">
+              <span class="tf-label">運費：</span>
+              <div class="tf-right">
+                <span class="tf-val">NT$ {{ templeShipping(temple).toLocaleString() }}</span>
+                <span class="tf-hint">普通運費 ${{ templeNormalShip(temple) }} + 特殊運費 ${{ templeSpecialShip(temple) }}</span>
+              </div>
+            </div>
+            <div class="tf-row">
+              <span class="tf-label">商品金額：</span>
+              <span class="tf-val">NT$ {{ templeItemTotal(temple).toLocaleString() }}</span>
+            </div>
+            <div class="tf-row">
+              <span class="tf-label">小計：</span>
+              <span class="tf-subtotal">NT$ {{ (templeItemTotal(temple)+templeShipping(temple)).toLocaleString() }}</span>
+            </div>
           </div>
         </div>
         <div class="extra-card">
@@ -221,15 +221,15 @@ const cartItems=ref([
   {cartId:4, templeId:'longshan',templeName:'萬華龍山寺',type:'product', name:'觀音佛珠手鍊', image:'https://picsum.photos/seed/c4/80/80', specs:[{value:'檀木款',label:'檀木款'},{value:'水晶款',label:'水晶款'}],                 spec:'檀木款', price:450, qty:1,checked:true,specialShipping:null,  targets:[]},
   {cartId:5, templeId:'longshan',templeName:'萬華龍山寺',type:'service', name:'光明燈服務',   image:'https://picsum.photos/seed/c5/80/80', specs:[{value:'一年期',label:'一年期'},{value:'三年期',label:'三年期'}],                 spec:'一年期', price:800, qty:1,checked:true,specialShipping:null,  targets:[emptyTarget()]},
   {cartId:6, templeId:'longshan',templeName:'萬華龍山寺',type:'service', name:'安太歲服務',   image:'https://picsum.photos/seed/c6/80/80', specs:[{value:'個人',label:'個人'},{value:'家庭',label:'家庭'}],                     spec:'個人',   price:600, qty:1,checked:true,specialShipping:null,  targets:[emptyTarget()]},
-  {cartId:7, templeId:'longshan',templeName:'萬華龍山寺',type:'festival',name:'中元普渡',     image:'https://picsum.photos/seed/c7/80/80', specs:[{value:'歷代祖先',label:'歷代祖先'},{value:'普渡眾生',label:'普渡眾生'}],         spec:'歷代祖先',price:1500,qty:1,checked:true,specialShipping:null, targets:[emptyTarget()]},
+  {cartId:7, templeId:'longshan',templeName:'萬華龍山寺',type:'donation',name:'中元普渡',     image:'https://picsum.photos/seed/c7/80/80', specs:[{value:'歷代祖先',label:'歷代祖先'},{value:'普渡眾生',label:'普渡眾生'}],         spec:'歷代祖先',price:1500,qty:1,checked:true,specialShipping:null, targets:[emptyTarget()]},
   {cartId:8, templeId:'xingtian',templeName:'行天宮',    type:'product', name:'關聖帝君護身卡',image:'https://picsum.photos/seed/c8/80/80',specs:[{value:'卡片版',label:'卡片版'},{value:'吊飾版',label:'吊飾版'}],               spec:'卡片版', price:100, qty:2,checked:true,specialShipping:null,  targets:[]},
   {cartId:9, templeId:'xingtian',templeName:'行天宮',    type:'product', name:'五路財神香包',  image:'https://picsum.photos/seed/c9/80/80',specs:[{value:'小型',label:'小型'},{value:'大型',label:'大型'}],                     spec:'小型',   price:120, qty:1,checked:true,specialShipping:200,   targets:[]},
   {cartId:10,templeId:'xingtian',templeName:'行天宮',    type:'product', name:'平安米',        image:'https://picsum.photos/seed/c10/80/80',specs:[{value:'300g',label:'300g'},{value:'600g',label:'600g'}],                  spec:'300g',   price:150, qty:1,checked:true,specialShipping:null,  targets:[]},
-  {cartId:11,templeId:'xingtian',templeName:'行天宮',    type:'festival',name:'平安祈福法會',  image:'https://picsum.photos/seed/c11/80/80',specs:[{value:'個人祈福',label:'個人祈福'},{value:'全家祈福',label:'全家祈福'}],       spec:'個人祈福',price:600, qty:2,checked:true,specialShipping:null, targets:[emptyTarget(),emptyTarget()]},
+  {cartId:11,templeId:'xingtian',templeName:'行天宮',    type:'donation',name:'平安祈福法會',  image:'https://picsum.photos/seed/c11/80/80',specs:[{value:'個人祈福',label:'個人祈福'},{value:'全家祈福',label:'全家祈福'}],       spec:'個人祈福',price:600, qty:2,checked:true,specialShipping:null, targets:[emptyTarget(),emptyTarget()]},
 ])
 
 const syncTargets=(item)=>{
-  if(item.type!=='service'&&item.type!=='festival') return
+  if(item.type!=='service'&&item.type!=='donation') return
   const diff=item.qty-item.targets.length
   if(diff>0) for(let i=0;i<diff;i++) item.targets.push(emptyTarget())
   else if(diff<0) item.targets.splice(item.qty)
@@ -251,7 +251,7 @@ const isTempleIndeterminate=(id)=>{
   const g=groupedByTemple.value.find(t=>t.templeId===id);const n=g.items.filter(i=>i.checked).length;return n>0&&n<g.items.length
 }
 const toggleTemple=(id,val)=>groupedByTemple.value.find(t=>t.templeId===id).items.forEach(i=>{i.checked=val})
-const typeLabel=(t)=>({product:'商品',service:'服務',festival:'節慶'}[t]||t)
+const typeLabel=(t)=>({product:'商品',service:'服務',donation:'捐款'}[t]||t)
 
 const fillProfile=(tgt)=>{const p=personalProfiles.value.find(x=>x.id===Number(tgt.selProfile));if(p)Object.assign(tgt,{name:p.name,gender:p.gender,birthday:p.birthday,phone:p.phone,email:p.email,address:p.address})}
 const fillFamily =(tgt)=>{const f=familyProfiles.value.find(x=>x.id===Number(tgt.selFamily));  if(f)Object.assign(tgt,{name:f.name,gender:f.gender,birthday:f.birthday,phone:f.phone,email:f.email,address:f.address})}
@@ -270,7 +270,7 @@ const checkedCount=computed(()=>checkedItems.value.reduce((s,i)=>s+i.qty,0))
 const checkedItemTotal=computed(()=>checkedItems.value.reduce((s,i)=>s+i.price*i.qty,0))
 const checkedShippingTotal=computed(()=>groupedByTemple.value.reduce((s,t)=>s+templeShipping(t),0))
 const grandTotal=computed(()=>checkedItemTotal.value+checkedShippingTotal.value)
-const canCheckout=computed(()=>checkedItems.value.every(item=>(item.type!=='service'&&item.type!=='festival')||item.targets.every(t=>t.filled)))
+const canCheckout=computed(()=>checkedItems.value.every(item=>(item.type!=='service'&&item.type!=='donation')||item.targets.every(t=>t.filled)))
 const checkout=()=>{if(canCheckout.value)alert('前往結帳！')}
 
 const thankYouEmail=ref('unified')
@@ -312,7 +312,7 @@ const addRecommend=(rec)=>alert(`已將「${rec.name}」加入購物車`)
 .type-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
 .type-badge.product{background:#e8f4ff;color:#2563eb;}
 .type-badge.service{background:#fff3e0;color:#e67e00;}
-.type-badge.festival{background:#fce4ec;color:#c2185b;}
+.type-badge.donation{background:#fce4ec;color:#c2185b;}
 .spec-select{padding:7px 28px 7px 12px;border:1px solid #e0e0e0;border-radius:999px;font-size:13px;color:#333;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;min-width:100px;flex-shrink:0;}
 .spec-select:focus{outline:none;border-color:#E8572A;}
 .item-qty{display:flex;align-items:center;flex-shrink:0;}
@@ -358,11 +358,30 @@ const addRecommend=(rec)=>alert(`已將「${rec.name}」加入購物車`)
 .btn-save-tgt:hover{background:#d14a1f;}
 .btn-cancel-tgt{padding:8px 20px;background:#fff;color:#555;border:1px solid #ddd;border-radius:8px;font-size:13px;cursor:pointer;}
 .btn-cancel-tgt:hover{background:#f5f5f5;}
-.temple-footer{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;padding:14px 24px;border-top:1px solid #f0f0f0;background:#fafafa;font-size:12px;}
-.tf-label{color:#888;}
-.tf-val{color:#333;font-weight:500;}
-.tf-hint{color:#bbb;font-size:11px;}
-.tf-subtotal{color:#E8572A;font-size:15px;font-weight:700;}
+.temple-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+  font-size: 12px;
+}
+.tf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+.tf-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.tf-label { color: #888; }
+.tf-val { color: #333; font-weight: 500; font-size: 13px; }
+.tf-hint { color: #bbb; font-size: 11px; }
+.tf-subtotal { color: #E8572A; font-size: 15px; font-weight: 700; }
 .ml{margin-left:6px;}
 .extra-card{background:#fff;border-radius:16px;padding:22px 26px;margin-bottom:20px;box-shadow:0 1px 6px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:20px;}
 .extra-title{font-size:14px;font-weight:600;color:#222;margin-bottom:10px;}

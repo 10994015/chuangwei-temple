@@ -56,13 +56,8 @@ const router = createRouter({
                 isCustomerAccount: true
               }
             },
-            // 未來擴充：
-            // { path: 'photos',     name: 'app.cms.customer-photos',     component: () => import('@/views/Customer/PhotosView.vue'),     meta: { title: '相片管理',    requiresAuth: true } },
-            { path: 'orders',     name: 'app.cms.customer-orders',     component: () => import('@/views/Customer/OrdersView.vue'),     meta: { title: '訂單紀錄',    requiresAuth: true } },
-            // { path: 'divination', name: 'app.cms.customer-divination', component: () => import('@/views/Customer/DivinationView.vue'), meta: { title: '求籤紀錄',    requiresAuth: true } },
-            // { path: 'checkin',    name: 'app.cms.customer-checkin',    component: () => import('@/views/Customer/CheckinView.vue'),    meta: { title: '打卡',        requiresAuth: true } },
-            // { path: 'favorites',  name: 'app.cms.customer-favorites',  component: () => import('@/views/Customer/FavoritesView.vue'),  meta: { title: '我的最愛宮廟', requiresAuth: true } },
-            { path: 'cart',       name: 'app.cms.customer-cart',       component: () => import('@/views/Customer/CartView.vue'),       meta: { title: '購物車',      requiresAuth: true } },
+            { path: 'orders', name: 'app.cms.customer-orders', component: () => import('@/views/Customer/OrdersView.vue'), meta: { title: '訂單紀錄', requiresAuth: true } },
+            { path: 'cart',   name: 'app.cms.customer-cart',   component: () => import('@/views/Customer/CartView.vue'),   meta: { title: '購物車',  requiresAuth: true } },
           ]
         },
 
@@ -82,18 +77,24 @@ const router = createRouter({
                 requiresAuth: true
               }
             },
-            // 未來有側邊欄的後台頁面繼續加在這裡：
-            { path: 'temple-info', name: 'app.temple.temple-info', component: () => import('@/views/Temple/TempleInfoView.vue'), meta: { title: '宮廟資料管理',   requiresAuth: true } },
-            { path: 'news',        name: 'app.temple.news',        component: () => import('@/views/Temple/NewsManagementView.vue'),       meta: { title: '最新消息管理',   requiresAuth: true } },
-            { path: 'news/create',        name: 'app.temple.news-create', component: () => import('@/views/Temple/NewsCreateView.vue') },
-            { path: 'news/:newsId/detail', name: 'app.temple.news-detail', component: () => import('@/views/Temple/NewsDetailView.vue') },
-            { path: 'news/:newsId/edit',   name: 'app.temple.news-edit',   component: () => import('@/views/Temple/NewsEditView.vue') },
-            // { path: 'events',      name: 'app.temple.events',      component: () => import('@/views/Temple/EventsView.vue'),     meta: { title: '活動與上架管理', requiresAuth: true } },
-            // { path: 'orders',      name: 'app.temple.orders',      component: () => import('@/views/Temple/OrdersView.vue'),     meta: { title: '訂單管理',       requiresAuth: true } },
-            { path: 'account-management', name: 'app.temple.account-management', component: () => import('@/views/Temple/AccountManagementView.vue'), meta: { title: '帳號管理', requiresAuth: true } },
-            { path: 'account-management/create', name: 'app.temple.account-create', component: () => import('@/views/Temple/AccountCreateView.vue'), meta: { title: '新增帳號', requiresAuth: true } },
-            { path: 'account-management/role/new',     name: 'app.temple.role-create',  component: () => import('@/views/Temple/RoleEditView.vue'),         meta: { title: '新增權限角色', requiresAuth: true } },
-            { path: 'account-management/role/:roleId', name: 'app.temple.role-edit',    component: () => import('@/views/Temple/RoleEditView.vue'),         meta: { title: '編輯權限角色', requiresAuth: true } },
+
+            // ── 宮廟資料管理 ──
+            { path: 'temple-info',                  name: 'app.temple.temple-info',   component: () => import('@/views/Temple/TempleInfoView.vue'),    meta: { title: '宮廟資料管理', requiresAuth: true } },
+            { path: 'temple-info/deity/create',    name: 'app.temple.deity-create',  component: () => import('@/views/Temple/DeityCreateView.vue'),   meta: { title: '新增神尊',     requiresAuth: true } },
+            { path: 'temple-info/branch/create',   name: 'app.temple.branch-create', component: () => import('@/views/Temple/BranchCreateView.vue'),  meta: { title: '新增分靈',     requiresAuth: true } },
+            { path: 'temple-info/asset/create',    name: 'app.temple.asset-create',  component: () => import('@/views/Temple/AssetCreateView.vue'),   meta: { title: '新增資產',     requiresAuth: true } },
+
+            // ── 最新消息 ──
+            { path: 'news',                     name: 'app.temple.news',           component: () => import('@/views/Temple/NewsManagementView.vue'), meta: { title: '最新消息管理', requiresAuth: true } },
+            { path: 'news/create',              name: 'app.temple.news-create',    component: () => import('@/views/Temple/NewsCreateView.vue') },
+            { path: 'news/:newsId/detail',      name: 'app.temple.news-detail',    component: () => import('@/views/Temple/NewsDetailView.vue') },
+            { path: 'news/:newsId/edit',        name: 'app.temple.news-edit',      component: () => import('@/views/Temple/NewsEditView.vue') },
+
+            // ── 帳號管理 ──
+            { path: 'account-management',             name: 'app.temple.account-management', component: () => import('@/views/Temple/AccountManagementView.vue'), meta: { title: '帳號管理',     requiresAuth: true } },
+            { path: 'account-management/create',      name: 'app.temple.account-create',     component: () => import('@/views/Temple/AccountCreateView.vue'),     meta: { title: '新增帳號',     requiresAuth: true } },
+            { path: 'account-management/role/new',    name: 'app.temple.role-create',        component: () => import('@/views/Temple/RoleEditView.vue'),          meta: { title: '新增權限角色', requiresAuth: true } },
+            { path: 'account-management/role/:roleId',name: 'app.temple.role-edit',          component: () => import('@/views/Temple/RoleEditView.vue'),          meta: { title: '編輯權限角色', requiresAuth: true } },
 
             // ── 活動與上架管理 ──
             { path: 'activity-management',                             name: 'app.temple.activity-management', component: () => import('@/views/Temple/ActivityManagementView.vue'), meta: { title: '活動與上架管理', requiresAuth: true } },
@@ -103,53 +104,30 @@ const router = createRouter({
           ]
         },
 
-        // ── 宮廟後台：不含側邊欄（直接掛在 AppLayout 下）──
+        // ── 宮廟後台：不含側邊欄 ──
         {
           path: ':templeId/website-setup',
           name: 'app.temple.website-setup',
           component: WebsiteSetupGuide,
-          meta: {
-            title: '建立您的宮廟網站',
-            breadcrumbs: [{ text: '建立您的宮廟網站', to: null }],
-            requiresAuth: true,
-            checkWebsite: true,
-            isTempleRoute: true
-          }
+          meta: { title: '建立您的宮廟網站', requiresAuth: true, checkWebsite: true, isTempleRoute: true }
         },
         {
           path: ':templeId/subdomain-setup/:templateId',
           name: 'app.temple.subdomain-setup',
           component: SubdomainSetup,
-          meta: {
-            title: '子網域設定',
-            breadcrumbs: [{ text: '子網域設定', to: null }],
-            requiresAuth: true,
-            checkWebsite: true,
-            isTempleRoute: true
-          }
+          meta: { title: '子網域設定', requiresAuth: true, checkWebsite: true, isTempleRoute: true }
         },
         {
           path: ':templeId/template-selection',
           name: 'app.temple.template-selection',
           component: TemplateSelection,
-          meta: {
-            title: '模板選擇',
-            breadcrumbs: [{ text: '模板選擇', to: null }],
-            requiresAuth: true,
-            checkWebsite: true,
-            isTempleRoute: true
-          }
+          meta: { title: '模板選擇', requiresAuth: true, checkWebsite: true, isTempleRoute: true }
         },
         {
           path: ':templeId/pricing-plans',
           name: 'app.temple.pricing-plans',
           component: PricingPlans,
-          meta: {
-            title: '升級方案',
-            breadcrumbs: [{ text: '升級方案', to: null }],
-            requiresAuth: true,
-            isTempleRoute: true
-          }
+          meta: { title: '升級方案', requiresAuth: true, isTempleRoute: true }
         },
       ]
     },
@@ -163,30 +141,19 @@ const router = createRouter({
           path: ':templeId/page-editor',
           name: 'app.temple.page-editor',
           component: PageEditor,
-          meta: {
-            title: '頁面編輯器',
-            breadcrumbs: [{ text: '頁面編輯器', to: null }],
-            requiresAuth: true
-          }
+          meta: { title: '頁面編輯器', requiresAuth: true }
         },
         {
           path: ':templeId/website-settings',
           name: 'app.temple.website-settings',
           component: Websitesettings,
-          meta: {
-            title: '網站設定',
-            breadcrumbs: [{ text: '網站設定', to: null }],
-            requiresAuth: true
-          }
+          meta: { title: '網站設定', requiresAuth: true }
         },
         {
           path: ':templeId/preview',
           name: 'app.temple.preview',
           component: PreviewPage,
-          meta: {
-            title: '頁面預覽',
-            requiresAuth: true
-          }
+          meta: { title: '頁面預覽', requiresAuth: true }
         }
       ]
     },
@@ -196,10 +163,7 @@ const router = createRouter({
       path: '/init-password/:token',
       name: 'init-password',
       component: InitPassword,
-      meta: {
-        title: '重設密碼',
-        requiresAuth: false
-      }
+      meta: { title: '重設密碼', requiresAuth: false }
     },
   ],
 })

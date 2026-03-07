@@ -287,6 +287,6 @@ onMounted(() => loadPreviewData())
 .preview-area.device-desktop .device-screen::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
 
 .website-preview { width: 100%; min-height: 100%; background: #fff; }
-.basemap-section { position: relative; width: 100%; min-height: 100px; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.basemap-section { position: relative; width: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
 .basemap-section :deep(.system-frame-preview), .basemap-section :deep(.custom-frame-preview) { background: transparent !important; }
 </style>
