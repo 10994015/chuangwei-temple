@@ -2,32 +2,35 @@
   <section
     class="donation-section"
     :style="{ background: backgroundColor }"
+    @click.stop="handleSectionClick"
   >
     <div class="donation-content">
-      <!-- 標題 - 可編輯 -->
+      <!-- 標題 -->
       <h2
         class="donation-title"
         :class="{ 'is-editable': isEditMode, 'is-selected': isTitleSelected }"
-        @click="isEditMode && handleElementClick('title')"
+        @click.stop="isEditMode && handleElementClick('title')"
       >
-        {{ currentTitle }}
+        <span v-if="isHtml(currentTitle)" v-html="currentTitle"></span>
+        <template v-else>{{ currentTitle }}</template>
       </h2>
 
-      <!-- 內文 - 可編輯 -->
+      <!-- 內文 -->
       <p
         class="donation-text"
         :class="{ 'is-editable': isEditMode, 'is-selected': isTextSelected }"
-        @click="isEditMode && handleElementClick('text')"
+        @click.stop="isEditMode && handleElementClick('text')"
       >
-        {{ currentText }}
+        <span v-if="isHtml(currentText)" v-html="currentText"></span>
+        <template v-else>{{ currentText }}</template>
       </p>
 
-      <!-- 按鈕 - 可編輯 -->
+      <!-- 按鈕 -->
       <a
         :href="isEditMode ? '#' : currentButtonLink"
         class="donation-btn"
         :class="{ 'is-editable': isEditMode, 'is-selected': isButtonSelected }"
-        @click="isEditMode ? handleElementClick('button', $event) : null"
+        @click.stop="isEditMode ? handleElementClick('button', $event) : null"
       >
         {{ currentButtonText }}
       </a>
@@ -36,69 +39,52 @@
 </template>
 
 <script setup>
-import { computed, reactive, watch, ref } from 'vue'
+import { computed, reactive, watch } from 'vue'
 
 const props = defineProps({
-  backgroundColor: {
-    type: String,
-    default: 'linear-gradient(135deg, #8b7355 0%, #a0826d 100%)'
-  },
-  isEditMode:    { type: Boolean, default: false },
-  frameData:     { type: Object,  default: null },
-  frame:         { type: Object,  default: null },
-  selectedElement: { type: Object, default: null },
-  donationTitle:      { type: String, default: '捐款護持' },
-  donationBrief:      { type: String, default: '您的捐款將用於宮廟維護與慈善公益\n支持本宮日常運作、建設修繕及幫助弱勢族群\n每一分善款都將妥善運用 功德無量' },
-  donationButtonText: { type: String, default: '前往捐款 ›' },
-  donationButtonLink: { type: String, default: '#' },
+  backgroundColor:    { type: String,  default: 'linear-gradient(135deg, #8b7355 0%, #a0826d 100%)' },
+  isEditMode:         { type: Boolean, default: false },
+  frameData:          { type: Object,  default: null },
+  frame:              { type: Object,  default: null },
+  selectedElement:    { type: Object,  default: null },
+  donationTitle:      { type: String,  default: '捐款護持' },
+  donationBrief:      { type: String,  default: '您的捐款將用於宮廟維護與慈善公益\n支持本宮日常運作、建設修繕及幫助弱勢族群\n每一分善款都將妥善運用 功德無量' },
+  donationButtonText: { type: String,  default: '前往捐款 ›' },
+  donationButtonLink: { type: String,  default: '#' },
 })
 
-const emit = defineEmits(['select-element'])
+const emit = defineEmits(['select-element', 'select-frame'])
 
-// ==================== 取得當前內容 ====================
+// 判斷是否為 HTML 字串（RichTextEditor 輸出的內容）
+const isHtml = (str) => typeof str === 'string' && /<[a-z][\s\S]*>/i.test(str)
 
-// 優先從 frame.data 取值，沒有才用 props 預設值
-const currentTitle = computed(() => {
-  if (props.frame?.data?.donationTitle) return props.frame.data.donationTitle
-  return props.donationTitle
-})
+// ==================== 當前內容 ====================
+const currentTitle      = computed(() => props.frame?.data?.donationTitle      ?? props.donationTitle)
+const currentText       = computed(() => props.frame?.data?.donationBrief       ?? props.donationBrief)
+const currentButtonText = computed(() => props.frame?.data?.donationButtonText  ?? props.donationButtonText)
+const currentButtonLink = computed(() => props.frame?.data?.donationButtonLink  ?? props.donationButtonLink)
 
-const currentText = computed(() => {
-  if (props.frame?.data?.donationBrief) return props.frame.data.donationBrief
-  return props.donationBrief
-})
+// ==================== 選中狀態 ====================
+const isTitleSelected  = computed(() => props.selectedElement?.element?.id === 'donationTitle')
+const isTextSelected   = computed(() => props.selectedElement?.element?.id === 'donationBrief')
+const isButtonSelected = computed(() => props.selectedElement?.element?.id === 'donationButtonText')
 
-const currentButtonText = computed(() => {
-  if (props.frame?.data?.donationButtonText) return props.frame.data.donationButtonText
-  return props.donationButtonText
-})
+// ==================== 點擊處理 ====================
 
-const currentButtonLink = computed(() => {
-  if (props.frame?.data?.donationButtonLink) return props.frame.data.donationButtonLink
-  return props.donationButtonLink
-})
-// ==================== 選中狀態判斷 ====================
+// section 層：編輯模式點擊空白區域 → 選取框架（emit select-frame），
+// 非編輯模式不需任何動作，但仍 .stop 防止冒泡到 SystemFrame 容器
+const handleSectionClick = () => {
+  if (props.isEditMode && props.frame) {
+    emit('select-frame', props.frame)
+  }
+}
 
-const isTitleSelected = computed(() => {
-  return props.selectedElement?.element?.id === 'donationTitle'
-})
-
-const isTextSelected = computed(() => {
-  return props.selectedElement?.element?.id === 'donationBrief'
-})
-
-const isButtonSelected = computed(() => {
-  return props.selectedElement?.element?.id === 'donationButtonText'
-})
-
-// ==================== 處理點擊 ====================
-
-// 儲存 watcher stop handles，避免重複點擊累積 watcher
 let stopHandles = []
 
 const handleElementClick = (elementType, event) => {
   if (event) event.preventDefault()
 
+  // 清除上一次的 watchers
   stopHandles.forEach(stop => stop())
   stopHandles = []
 
@@ -108,45 +94,36 @@ const handleElementClick = (elementType, event) => {
 
   if (elementType === 'title') {
     element = reactive({
-      type: 'TEXT',
-      id: 'donationTitle',
+      type: 'TEXT', id: 'donationTitle',
       value: { text: data.donationTitle ?? props.donationTitle },
       metadata: {}
     })
-    stopHandles.push(
-      watch(() => element.value.text, (val) => { props.frame.data.donationTitle = val })
-    )
+    stopHandles.push(watch(() => element.value.text, val => { props.frame.data.donationTitle = val }))
 
   } else if (elementType === 'text') {
     element = reactive({
-      type: 'TEXT',
-      id: 'donationBrief',
+      type: 'TEXT', id: 'donationBrief',
       value: { text: data.donationBrief ?? props.donationBrief },
       metadata: {}
     })
-    stopHandles.push(
-      watch(() => element.value.text, (val) => { props.frame.data.donationBrief = val })
-    )
+    stopHandles.push(watch(() => element.value.text, val => { props.frame.data.donationBrief = val }))
 
   } else if (elementType === 'button') {
     element = reactive({
-      type: 'BUTTON',
-      id: 'donationButtonText',
+      type: 'BUTTON', id: 'donationButtonText',
       value: {
         text: data.donationButtonText ?? props.donationButtonText,
-        url:  data.donationButtonLink  ?? props.donationButtonLink
+        url:  data.donationButtonLink ?? props.donationButtonLink,
       },
       metadata: {}
     })
     stopHandles.push(
-      watch(() => element.value.text, (val) => { props.frame.data.donationButtonText = val }),
-      watch(() => element.value.url,  (val) => { props.frame.data.donationButtonLink = val })
+      watch(() => element.value.text, val => { props.frame.data.donationButtonText = val }),
+      watch(() => element.value.url,  val => { props.frame.data.donationButtonLink = val }),
     )
   }
 
-  if (element) {
-    emit('select-element', { element, frame: props.frame })
-  }
+  if (element) emit('select-element', { element, frame: props.frame })
 }
 </script>
 
@@ -194,6 +171,8 @@ const handleElementClick = (elementType, event) => {
   font-size: 36px;
   font-weight: 500;
   width: 100%;
+  // ✅ 讓文字色跟隨主題，但 fallback 維持白色（捐款框一般是深色背景）
+  color: #fff;
 }
 
 .donation-text {
@@ -202,6 +181,7 @@ const handleElementClick = (elementType, event) => {
   opacity: 0.95;
   white-space: pre-line;
   width: 100%;
+  color: #fff;
 }
 
 .donation-btn {

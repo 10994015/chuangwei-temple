@@ -6,32 +6,20 @@
       <div class="filter-bar">
         <div class="filter-group">
           <label class="filter-label">慶典活動</label>
-          <select class="filter-select wide">
-            <option>全部</option>
-          </select>
+          <select class="filter-select wide"><option>全部</option></select>
         </div>
-
         <div class="filter-group">
           <label class="filter-label">類型</label>
-          <select class="filter-select narrow">
-            <option>全部</option>
-          </select>
+          <select class="filter-select narrow"><option>全部</option></select>
         </div>
-
         <div class="filter-group">
           <label class="filter-label">需求分類</label>
-          <select class="filter-select mid">
-            <option>全部</option>
-          </select>
+          <select class="filter-select mid"><option>全部</option></select>
         </div>
-
         <div class="filter-group">
           <label class="filter-label">排序方式</label>
-          <select class="filter-select mid">
-            <option>價格低到高</option>
-          </select>
+          <select class="filter-select mid"><option>價格低到高</option></select>
         </div>
-
         <div class="filter-group search-group">
           <label class="filter-label">關鍵字搜尋</label>
           <div class="search-box">
@@ -56,7 +44,6 @@
           :key="product.id"
           class="product-card"
         >
-          <!-- 圖片區 -->
           <div class="product-image">
             <div v-if="product.rank" class="rank-badge">NO.{{ product.rank }}</div>
             <img
@@ -71,7 +58,6 @@
             </div>
           </div>
 
-          <!-- 資訊區 -->
           <div class="product-info">
             <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
               {{ product.badge }}
@@ -120,10 +106,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['add-to-cart'])
-
-const addToCart = (product) => {
-  emit('add-to-cart', product)
-}
+const addToCart = (product) => emit('add-to-cart', product)
 </script>
 
 <style lang="scss" scoped>
@@ -159,23 +142,23 @@ const addToCart = (product) => {
 
 .filter-label {
   font-size: 13px;
-  color: #555;
+  color: var(--frame-text-secondary, #555);
   font-weight: 400;
   white-space: nowrap;
 }
 
 .filter-select {
   padding: 8px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--frame-border-color, #ccc);
   border-radius: 0;
   font-size: 14px;
-  color: #333;
-  background: #fff;
+  color: var(--frame-text-color, #333);
+  background: var(--frame-card-bg, #fff);
   cursor: pointer;
   appearance: auto;
   height: 36px;
 
-  &:focus { outline: none; border-color: #8b7355; }
+  &:focus { outline: none; border-color: var(--frame-link-color, #8b7355); }
 
   &.wide   { min-width: 160px; }
   &.mid    { min-width: 120px; }
@@ -190,35 +173,37 @@ const addToCart = (product) => {
 
 .search-box {
   display: flex;
-  gap: 0;
   height: 36px;
 }
 
 .search-input {
   flex: 1;
   padding: 0 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--frame-border-color, #ccc);
   border-right: none;
   border-radius: 0;
   font-size: 14px;
   height: 36px;
   box-sizing: border-box;
+  background: var(--frame-card-bg, #fff);
+  color: var(--frame-text-color, #333);
 
-  &:focus { outline: none; border-color: #8b7355; }
+  &:focus { outline: none; border-color: var(--frame-link-color, #8b7355); }
+  &::placeholder { color: var(--frame-text-muted, #aaa); }
 }
 
 .search-btn {
   padding: 0 20px;
-  background: #8b7355;
+  background: var(--frame-link-color, #8b7355);
   color: #fff;
   border: none;
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
   height: 36px;
-  transition: background 0.2s;
+  transition: filter 0.2s;
 
-  &:hover { background: #6a5a47; }
+  &:hover { filter: brightness(0.85); }
 }
 
 /* ==================== 批次選擇 ==================== */
@@ -230,48 +215,47 @@ const addToCart = (product) => {
 
 .batch-select-btn {
   padding: 6px 20px;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: var(--frame-card-bg, #fff);
+  border: 1px solid var(--frame-border-color, #ccc);
   border-radius: 2px;
   font-size: 14px;
-  color: #555;
+  color: var(--frame-text-secondary, #555);
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover { border-color: #8b7355; color: #8b7355; }
+  &:hover { border-color: var(--frame-link-color, #8b7355); color: var(--frame-link-color, #8b7355); }
 }
 
 /* ==================== 標題 ==================== */
 .section-title {
   font-size: 22px;
   font-weight: 600;
-  color: #222;
+  color: var(--frame-heading-color, #222);
   margin: 0 0 1.5rem 0;
 }
 
-/* ==================== 商品 Grid — 3 欄 ==================== */
+/* ==================== 商品 Grid ==================== */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--frame-border-color, #ddd);
 }
 
 /* ==================== 商品卡片 ==================== */
 .product-card {
   cursor: pointer;
   transition: box-shadow 0.2s;
-  border: 1px solid #ddd;
+  border: 1px solid var(--frame-border-color, #ddd);
 
-  &:hover { box-shadow: 0 0 0 2px #c9a55a; }
+  &:hover { box-shadow: 0 0 0 2px var(--frame-link-color, #c9a55a); }
 }
 
-/* 圖片區 */
 .product-image {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: #efefef;
+  background: var(--frame-tag-bg, #efefef);
   overflow: hidden;
 }
 
@@ -280,7 +264,7 @@ const addToCart = (product) => {
   top: 0;
   left: 0;
   padding: 6px 14px;
-  background: #8b7355;
+  background: var(--frame-link-color, #8b7355);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -301,19 +285,18 @@ const addToCart = (product) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #efefef;
+  background: var(--frame-tag-bg, #efefef);
 
   span {
     font-size: 13px;
-    color: #bbb;
+    color: var(--frame-text-muted, #bbb);
     letter-spacing: 1px;
   }
 }
 
-/* 資訊區 */
 .product-info {
   padding: 16px 20px 20px;
-  background-color: #fff;
+  background-color: var(--frame-card-bg, #fff);
 }
 
 .product-badge {
@@ -338,7 +321,7 @@ const addToCart = (product) => {
 .product-title {
   font-size: 17px;
   font-weight: 500;
-  color: #222;
+  color: var(--frame-text-color, #222);
   margin: 0 0 20px 0;
   line-height: 1.4;
 }
@@ -352,14 +335,14 @@ const addToCart = (product) => {
 .product-price {
   font-size: 20px;
   font-weight: 600;
-  color: #8b7355;
+  color: var(--frame-link-color, #8b7355);
 }
 
 .add-to-cart-btn {
   width: 38px;
   height: 38px;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: var(--frame-card-bg, #fff);
+  border: 1px solid var(--frame-border-color, #ccc);
   border-radius: 2px;
   cursor: pointer;
   display: flex;
@@ -368,8 +351,8 @@ const addToCart = (product) => {
   transition: all 0.2s;
 
   &:hover {
-    border-color: #8b7355;
-    background: #8b7355;
+    border-color: var(--frame-link-color, #8b7355);
+    background: var(--frame-link-color, #8b7355);
     .cart-icon { color: #fff; }
   }
 }
@@ -377,14 +360,14 @@ const addToCart = (product) => {
 .cart-icon {
   width: 18px;
   height: 18px;
-  color: #888;
+  color: var(--frame-text-muted, #888);
   transition: color 0.2s;
 }
 
 /* ==================== device prop RWD ==================== */
 .product-list-section.device-tablet {
-  .container    { padding: 0 1.25rem; }
-  .filter-bar   { justify-content: flex-start; padding: 1rem; }
+  .container     { padding: 0 1.25rem; }
+  .filter-bar    { justify-content: flex-start; padding: 1rem; }
   .products-grid { grid-template-columns: repeat(2, 1fr); }
   .product-title { font-size: 15px; }
   .product-price { font-size: 17px; }
@@ -392,9 +375,8 @@ const addToCart = (product) => {
 
 .product-list-section.device-mobile {
   padding: 1rem 0 2rem;
-
-  .container    { padding: 0 0.75rem; }
-  .filter-bar   { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
+  .container     { padding: 0 0.75rem; }
+  .filter-bar    { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
   .filter-select { width: 100%; }
   .search-group  { min-width: auto; max-width: 100%; }
   .products-grid { grid-template-columns: 1fr; }
@@ -408,7 +390,6 @@ const addToCart = (product) => {
   .batch-actions { margin-bottom: 1rem; }
 }
 
-/* ==================== media query RWD（瀏覽器實際寬度）==================== */
 @media (min-width: 769px) and (max-width: 1024px) {
   .product-list-section .container     { padding: 0 1.25rem; }
   .product-list-section .filter-bar    { justify-content: flex-start; padding: 1rem; }

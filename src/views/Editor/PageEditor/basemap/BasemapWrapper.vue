@@ -85,17 +85,21 @@
 
     <!-- 背景圖片編輯彈窗 -->
     <teleport to="body">
-      <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div v-if="showModal" class="modal-overlay" @click="tryCloseModal">
         <div class="modal-dialog" @click.stop>
           <div class="modal-header">
             <h3>編輯背景圖片</h3>
-            <button class="modal-close-btn" @click="closeModal">✕</button>
+            <button class="modal-close-btn" @click="tryCloseModal">✕</button>
           </div>
 
           <div class="modal-body">
             <!-- 桌面版背景 -->
-            <div class="bg-item">
-              <label>桌面版背景</label>
+            <div class="bg-item" :class="{ 'bg-item--required-error': desktopRequired }">
+              <label>
+                桌面版背景
+                <span class="required-mark">*必填</span>
+                <span v-if="desktopRequired" class="required-hint">（請先上傳桌面版）</span>
+              </label>
               <div class="preview-box">
                 <img
                   v-if="backgrounds.desktop"
@@ -103,7 +107,9 @@
                   alt="桌面版背景"
                   class="preview-img"
                 />
-                <div v-else class="no-preview">尚未上傳</div>
+                <div v-else class="no-preview" :class="{ 'no-preview--error': desktopRequired }">
+                  尚未上傳
+                </div>
               </div>
               <div v-if="uploadingState.desktop" class="uploading-row">
                 <div class="upload-spinner"></div>
@@ -124,7 +130,7 @@
 
             <!-- 平板版背景 -->
             <div class="bg-item">
-              <label>平板版背景</label>
+              <label>平板版背景<span class="optional-mark">選填</span></label>
               <div class="preview-box">
                 <img
                   v-if="backgrounds.tablet"
@@ -153,7 +159,7 @@
 
             <!-- 手機版背景 -->
             <div class="bg-item">
-              <label>手機版背景</label>
+              <label>手機版背景<span class="optional-mark">選填</span></label>
               <div class="preview-box">
                 <img
                   v-if="backgrounds.mobile"
@@ -182,8 +188,8 @@
           </div>
 
           <div class="modal-footer">
-            <p class="hint-text">💡 建議圖片寬度 1920px 以上，格式 JPG/PNG/WebP</p>
-            <button class="btn-close" @click="closeModal">關閉</button>
+            <p class="hint-text">💡 桌面版為必填；平板/手機未設定時自動沿用桌面版</p>
+            <button class="btn-close" @click="tryCloseModal">關閉</button>
           </div>
         </div>
       </div>
@@ -206,7 +212,6 @@ const props = defineProps({
 
 const emit = defineEmits(['add-basemap', 'delete-basemap', 'move-basemap', 'update-background'])
 
-// ✅ 注入 Store
 const pageEditorStore = inject('pageEditorStore')
 
 const isHovered = ref(false)
@@ -219,7 +224,13 @@ const uploadingState = ref({ desktop: false, tablet: false, mobile: false })
 const canMoveUp = computed(() => props.index > 1)
 const canMoveDown = computed(() => props.index < props.totalBasemaps - 2)
 
-// 監聽 basemap 變化，同步背景圖片
+// 是否顯示「桌機必填」錯誤狀態：
+// 有平板或手機，但桌機是空的
+const desktopRequired = computed(() =>
+  !backgrounds.value.desktop &&
+  (!!backgrounds.value.tablet || !!backgrounds.value.mobile)
+)
+
 watch(
   () => props.basemap,
   (newBasemap) => {
@@ -261,9 +272,41 @@ const handleMoveDown = () => {
 // ==================== 背景圖片處理 ====================
 
 const openBackgroundModal = () => { showModal.value = true }
-const closeModal = () => { showModal.value = false }
 
-// ✅ 上傳背景圖片（更換前先標記舊 ID 待刪除）
+// 關閉前檢查：有平板或手機但桌機為空 → 阻止關閉
+const tryCloseModal = () => {
+  if (desktopRequired.value) {
+    alert('已設定平板或手機背景，請同時上傳桌面版背景（必填），或清除其他版本的背景後再關閉。')
+    return
+  }
+  showModal.value = false
+}
+
+// ==================== 寫入 basemap 輔助 ====================
+
+const applyUploadToBasemap = (type, uploadedFile) => {
+  if (!props.basemap) return
+  switch (type) {
+    case 'desktop':
+      props.basemap.bgPcImgSrc = uploadedFile.fileUrl
+      props.basemap.bgPcImgId  = uploadedFile.id
+      backgrounds.value.desktop = uploadedFile.fileUrl
+      break
+    case 'tablet':
+      props.basemap.bgTabletImgSrc = uploadedFile.fileUrl
+      props.basemap.bgTabletImgId  = uploadedFile.id
+      backgrounds.value.tablet = uploadedFile.fileUrl
+      break
+    case 'mobile':
+      props.basemap.bgPhoneImgSrc = uploadedFile.fileUrl
+      props.basemap.bgPhoneImgId  = uploadedFile.id
+      backgrounds.value.mobile = uploadedFile.fileUrl
+      break
+  }
+}
+
+// ==================== 上傳 ====================
+
 const uploadImage = (type) => {
   const input = document.createElement('input')
   input.type = 'file'
@@ -274,65 +317,44 @@ const uploadImage = (type) => {
     if (!file) return
 
     if (!pageEditorStore?.uploadImage) {
-      console.error('❌ pageEditorStore.uploadImage 不可用')
       alert('上傳功能初始化失敗，請重新整理頁面')
       return
     }
 
-    // ✅ 標記舊圖片 ID 待刪除
+    // 標記舊圖片 ID 待刪除
     if (props.basemap) {
-      switch (type) {
-        case 'desktop':
-          pageEditorStore.markFileForDeletion(props.basemap.bgPcImgId)
-          break
-        case 'tablet':
-          pageEditorStore.markFileForDeletion(props.basemap.bgTabletImgId)
-          break
-        case 'mobile':
-          pageEditorStore.markFileForDeletion(props.basemap.bgPhoneImgId)
-          break
+      const oldIdMap = {
+        desktop: props.basemap.bgPcImgId,
+        tablet:  props.basemap.bgTabletImgId,
+        mobile:  props.basemap.bgPhoneImgId,
       }
+      pageEditorStore.markFileForDeletion(oldIdMap[type])
     }
 
     uploadingState.value[type] = true
 
     try {
-      console.log(`📤 開始上傳底圖背景 (${type}):`, file.name)
-
       const uploadedFile = await pageEditorStore.uploadImage(file)
-
       if (!uploadedFile) {
         alert('背景圖片上傳失敗，請稍後再試')
         return
       }
 
-      console.log(`✓ 底圖背景上傳成功 (${type}):`, uploadedFile)
+      // 寫入目標版本
+      applyUploadToBasemap(type, uploadedFile)
 
-      // 更新本地預覽
-      // backgrounds.value[type] = uploadedFile.fileUrl
-
-      // 直接更新 basemap 物件
-      if (props.basemap) {
-        switch (type) {
-          case 'desktop':
-            props.basemap.bgPcImgSrc = uploadedFile.fileUrl
-            props.basemap.bgPcImgId = uploadedFile.id
-            break
-          case 'tablet':
-            props.basemap.bgTabletImgSrc = uploadedFile.fileUrl
-            props.basemap.bgTabletImgId = uploadedFile.id
-            break
-          case 'mobile':
-            props.basemap.bgPhoneImgSrc = uploadedFile.fileUrl
-            props.basemap.bgPhoneImgId = uploadedFile.id
-            break
-        }
+      // ✅ 核心規則：上傳平板或手機時，若桌機目前是空的，自動同步到桌機
+      if (type !== 'desktop' && !backgrounds.value.desktop) {
+        // 同一個檔案已上傳，直接把相同的 url/id 也寫入桌機，不需重複上傳
+        pageEditorStore.markFileForDeletion(null) // 桌機本來就空，不需標記刪除
+        applyUploadToBasemap('desktop', uploadedFile)
+        console.log(`✓ 桌機版自動同步為 ${type} 版圖片`)
       }
 
       emit('update-background', {
         basemapId: props.basemapId,
         basemap: props.basemap,
-        type: type,
+        type,
         imageData: uploadedFile.fileUrl,
         imageId: uploadedFile.id
       })
@@ -348,31 +370,31 @@ const uploadImage = (type) => {
   input.click()
 }
 
-// ✅ 清除背景圖片（標記舊 ID 待刪除）
-const clearBackground = (type) => {
-  // ✅ 清除前先標記舊 ID 待刪除
-  if (props.basemap) {
-    switch (type) {
-      case 'desktop':
-        pageEditorStore.markFileForDeletion(props.basemap.bgPcImgId)
-        props.basemap.bgPcImgSrc = null
-        props.basemap.bgPcImgId = null
-        break
-      case 'tablet':
-        pageEditorStore.markFileForDeletion(props.basemap.bgTabletImgId)
-        props.basemap.bgTabletImgSrc = null
-        props.basemap.bgTabletImgId = null
-        break
-      case 'mobile':
-        pageEditorStore.markFileForDeletion(props.basemap.bgPhoneImgId)
-        props.basemap.bgPhoneImgSrc = null
-        props.basemap.bgPhoneImgId = null
-        break
-    }
-  }
+// ==================== 清除 ====================
 
-  backgrounds.value[type] = null
-  console.log(`✓ 底圖背景已清除 (${type})`)
+const clearBackground = (type) => {
+  if (!props.basemap) return
+
+  switch (type) {
+    case 'desktop':
+      pageEditorStore.markFileForDeletion(props.basemap.bgPcImgId)
+      props.basemap.bgPcImgSrc = null
+      props.basemap.bgPcImgId  = null
+      backgrounds.value.desktop = null
+      break
+    case 'tablet':
+      pageEditorStore.markFileForDeletion(props.basemap.bgTabletImgId)
+      props.basemap.bgTabletImgSrc = null
+      props.basemap.bgTabletImgId  = null
+      backgrounds.value.tablet = null
+      break
+    case 'mobile':
+      pageEditorStore.markFileForDeletion(props.basemap.bgPhoneImgId)
+      props.basemap.bgPhoneImgSrc = null
+      props.basemap.bgPhoneImgId  = null
+      backgrounds.value.mobile = null
+      break
+  }
 }
 </script>
 
@@ -597,7 +619,46 @@ const clearBackground = (type) => {
 }
 
 .bg-item {
-  label { display: block; font-size: 14px; font-weight: 500; color: #666; margin-bottom: 12px; }
+  label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  // 桌機必填錯誤狀態
+  &--required-error {
+    label { color: #ef4444; }
+    .preview-box { border-color: #ef4444; }
+  }
+}
+
+.required-mark {
+  font-size: 11px;
+  font-weight: 600;
+  color: #E8572A;
+  background: #fff5f2;
+  border: 1px solid #E8572A;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.optional-mark {
+  font-size: 11px;
+  font-weight: 400;
+  color: #999;
+  background: #f5f5f5;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.required-hint {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 400;
 }
 
 .preview-box {
@@ -611,10 +672,20 @@ const clearBackground = (type) => {
   align-items: center;
   justify-content: center;
   background: #fafafa;
+  transition: border-color 0.2s;
 }
 
 .preview-img { width: 100%; height: 100%; object-fit: cover; }
-.no-preview { color: #999; font-size: 14px; }
+
+.no-preview {
+  color: #999;
+  font-size: 14px;
+
+  &--error {
+    color: #ef4444;
+    font-weight: 500;
+  }
+}
 
 .btn-row {
   display: flex;

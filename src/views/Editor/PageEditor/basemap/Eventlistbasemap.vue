@@ -14,7 +14,6 @@
         </button>
       </div>
 
-      <!-- 分隔線 -->
       <hr class="divider" />
 
       <!-- 活動 Grid -->
@@ -25,7 +24,6 @@
           class="event-card"
           @click="viewEventDetail(event)"
         >
-          <!-- 圖片區 -->
           <div class="event-image">
             <img
               v-if="event.image && !event.imageFailed"
@@ -44,22 +42,14 @@
             </div>
           </div>
 
-          <!-- 資訊區 -->
           <div class="event-info">
-            <!-- badge 在標題上方 -->
             <div class="event-tags" v-if="event.tags && event.tags.length > 0">
-              <span 
-                v-for="tag in event.tags" 
-                :key="tag"
-                class="event-tag"
-                :class="getTagClass(tag)"
-              >{{ tag }}</span>
+              <span v-for="tag in event.tags" :key="tag" class="event-tag" :class="getTagClass(tag)">{{ tag }}</span>
             </div>
-            <!-- 無 badge 時保持間距一致 -->
             <div v-else class="tags-placeholder"></div>
 
             <h3 class="event-title">{{ event.title }}</h3>
-            
+
             <div class="event-details">
               <div class="event-detail">
                 <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -70,7 +60,6 @@
                 </svg>
                 <span>{{ event.date }}</span>
               </div>
-              
               <div class="event-detail">
                 <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"/>
@@ -78,7 +67,6 @@
                 </svg>
                 <span>{{ event.time }}</span>
               </div>
-              
               <div class="event-detail">
                 <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -91,36 +79,18 @@
         </div>
       </div>
 
-      <!-- 無資料 -->
       <div v-if="filteredEvents.length === 0" class="empty-state">
         <p>此分類目前沒有活動</p>
       </div>
 
       <!-- 頁碼 -->
       <div v-if="totalPages > 1" class="pagination">
-        <button
-          class="page-btn page-nav"
-          :class="{ disabled: currentPage === 1 }"
-          :disabled="currentPage === 1"
-          @click="goToPage(currentPage - 1)"
-        >上一頁</button>
-
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === 1 }" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一頁</button>
         <template v-for="page in pageNumbers" :key="page">
           <span v-if="page === '...'" class="page-ellipsis">...</span>
-          <button
-            v-else
-            class="page-btn"
-            :class="{ active: currentPage === page }"
-            @click="goToPage(page)"
-          >{{ page }}</button>
+          <button v-else class="page-btn" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
         </template>
-
-        <button
-          class="page-btn page-nav"
-          :class="{ disabled: currentPage === totalPages }"
-          :disabled="currentPage === totalPages"
-          @click="goToPage(currentPage + 1)"
-        >下一頁</button>
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === totalPages }" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一頁</button>
       </div>
     </div>
   </section>
@@ -133,97 +103,19 @@ const props = defineProps({
   eventsList: {
     type: Array,
     default: () => [
-      {
-        id: 1,
-        title: '農曆九月初九 天公聖誕慶典',
-        date: '2024-12-10',
-        time: '上午8:00 - 下午5:00',
-        location: '本宮大殿',
-        tags: ['熱門', '推薦'],
-        image: null
-      },
-      {
-        id: 2,
-        title: '冬至祭祖法會',
-        date: '2024-12-21',
-        time: '上午9:00 - 下午3:00',
-        location: '本宮後殿',
-        tags: [],
-        image: null
-      },
-      {
-        id: 3,
-        title: '新春開廟門迎春',
-        date: '2025-01-29 - 2025-02-02',
-        time: '凌晨12:00',
-        location: '本宮',
-        tags: ['熱門'],
-        image: null
-      },
-      {
-        id: 4,
-        title: '元宵燈會活動',
-        date: '2025-02-12',
-        time: '下午6:00 - 晚上10:00',
-        location: '本宮廣場',
-        tags: [],
-        image: null
-      },
-      {
-        id: 5,
-        title: '清明祭祖大典',
-        date: '2025-04-04',
-        time: '上午8:00 - 下午4:00',
-        location: '本宮大殿',
-        tags: [],
-        image: null
-      },
-      {
-        id: 6,
-        title: '端午祈福慶典',
-        date: '2025-05-31',
-        time: '上午9:00 - 下午5:00',
-        location: '本宮',
-        tags: [],
-        image: null
-      },
-      {
-        id: 7,
-        title: '中元普渡法會',
-        date: '2025-08-22',
-        time: '上午8:00 - 下午6:00',
-        location: '本宮大殿',
-        tags: ['推薦'],
-        image: null
-      },
-      {
-        id: 8,
-        title: '中秋賞月活動',
-        date: '2025-09-15',
-        time: '下午7:00 - 晚上11:00',
-        location: '本宮廣場',
-        tags: ['熱門'],
-        image: null
-      },
-      {
-        id: 9,
-        title: '重陽敬老活動',
-        date: '2025-10-11',
-        time: '上午9:00 - 下午3:00',
-        location: '本宮',
-        tags: [],
-        image: null
-      }
+      { id: 1, title: '農曆九月初九 天公聖誕慶典', date: '2024-12-10',              time: '上午8:00 - 下午5:00',  location: '本宮大殿', tags: ['熱門', '推薦'], image: null },
+      { id: 2, title: '冬至祭祖法會',               date: '2024-12-21',              time: '上午9:00 - 下午3:00',  location: '本宮後殿', tags: [],              image: null },
+      { id: 3, title: '新春開廟門迎春',             date: '2025-01-29 - 2025-02-02', time: '凌晨12:00',            location: '本宮',     tags: ['熱門'],        image: null },
+      { id: 4, title: '元宵燈會活動',               date: '2025-02-12',              time: '下午6:00 - 晚上10:00', location: '本宮廣場', tags: [],              image: null },
+      { id: 5, title: '清明祭祖大典',               date: '2025-04-04',              time: '上午8:00 - 下午4:00',  location: '本宮大殿', tags: [],              image: null },
+      { id: 6, title: '端午祈福慶典',               date: '2025-05-31',              time: '上午9:00 - 下午5:00',  location: '本宮',     tags: [],              image: null },
+      { id: 7, title: '中元普渡法會',               date: '2025-08-22',              time: '上午8:00 - 下午6:00',  location: '本宮大殿', tags: ['推薦'],        image: null },
+      { id: 8, title: '中秋賞月活動',               date: '2025-09-15',              time: '下午7:00 - 晚上11:00', location: '本宮廣場', tags: ['熱門'],        image: null },
+      { id: 9, title: '重陽敬老活動',               date: '2025-10-11',              time: '上午9:00 - 下午3:00',  location: '本宮',     tags: [],              image: null },
     ]
   },
-  perPage: {
-    type: Number,
-    default: 3
-  },
-  device: {
-    type: String,
-    default: 'desktop'
-  }
+  perPage: { type: Number, default: 3 },
+  device:  { type: String,  default: 'desktop' }
 })
 
 const emit = defineEmits(['view-detail'])
@@ -233,58 +125,36 @@ const categories = [
   { id: 'ceremony',  name: '慶典法會' },
   { id: 'prayer',    name: '祈福活動' },
   { id: 'culture',   name: '文化活動' },
-  { id: 'volunteer', name: '志工服務' }
+  { id: 'volunteer', name: '志工服務' },
 ]
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)
 
-const onCategoryClick = (id) => {
-  selectedCategory.value = id
-  currentPage.value = 1
-}
+const onCategoryClick = (id) => { selectedCategory.value = id; currentPage.value = 1 }
 
-const filteredEvents = computed(() => {
-  if (selectedCategory.value === 'all') return props.eventsList
-  return props.eventsList.filter(e => e.category === selectedCategory.value)
-})
+const filteredEvents = computed(() =>
+  selectedCategory.value === 'all' ? props.eventsList : props.eventsList.filter(e => e.category === selectedCategory.value)
+)
 
 const totalPages = computed(() => Math.ceil(filteredEvents.value.length / props.perPage))
-
 const pagedEvents = computed(() => {
   const start = (currentPage.value - 1) * props.perPage
   return filteredEvents.value.slice(start, start + props.perPage)
 })
 
-const goToPage = (page) => {
-  if (page < 1 || page > totalPages.value) return
-  currentPage.value = page
-}
+const goToPage = (page) => { if (page >= 1 && page <= totalPages.value) currentPage.value = page }
 
 const pageNumbers = computed(() => {
-  const total = totalPages.value
-  const cur   = currentPage.value
+  const total = totalPages.value, cur = currentPage.value
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-
-  const pages = []
-  if (cur <= 4) {
-    pages.push(...[1, 2, 3, 4, 5], '...', total)
-  } else if (cur >= total - 3) {
-    pages.push(1, '...', ...[total-4, total-3, total-2, total-1, total])
-  } else {
-    pages.push(1, '...', cur-1, cur, cur+1, '...', total)
-  }
-  return pages
+  if (cur <= 4)         return [...[1,2,3,4,5], '...', total]
+  if (cur >= total - 3) return [1, '...', ...[total-4,total-3,total-2,total-1,total]]
+  return [1, '...', cur-1, cur, cur+1, '...', total]
 })
 
-const getTagClass = (tag) => {
-  const tagMap = { '熱門': 'hot', '推薦': 'recommended' }
-  return tagMap[tag] || 'default'
-}
-
-const viewEventDetail = (event) => {
-  emit('view-detail', event)
-}
+const getTagClass = (tag) => ({ '熱門': 'hot', '推薦': 'recommended' }[tag] || 'default')
+const viewEventDetail = (event) => emit('view-detail', event)
 </script>
 
 <style lang="scss" scoped>
@@ -315,29 +185,24 @@ const viewEventDetail = (event) => {
   border: none;
   background: transparent;
   font-size: 15px;
-  color: #666;
+  color: var(--frame-text-secondary, #666);
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.2s;
   white-space: nowrap;
   font-weight: 400;
 
-  &:hover  { color: #333; }
-  &.active {
-    background: #8b6f47;
-    color: #fff;
-    font-weight: 500;
-    border-radius: 6px;
-  }
+  &:hover  { color: var(--frame-text-color, #333); }
+  &.active { background: var(--frame-link-color, #8b6f47); color: #fff; font-weight: 500; }
 }
 
 .divider {
   border: none;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--frame-border-color, #e0e0e0);
   margin: 14px 0 36px;
 }
 
-/* ==================== 活動 Grid — 3 欄 ==================== */
+/* ==================== 活動 Grid ==================== */
 .events-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -346,25 +211,22 @@ const viewEventDetail = (event) => {
 
 /* ==================== 活動卡片 ==================== */
 .event-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--frame-card-bg, #fff);
+  border: 1px solid var(--frame-border-color, #e0e0e0);
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
   transition: box-shadow 0.2s;
 
-  &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  }
+  &:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
 }
 
-/* 圖片區 */
 .event-image {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #e8e8e8;
+  background: var(--frame-tag-bg, #e8e8e8);
 }
 
 .image {
@@ -373,7 +235,6 @@ const viewEventDetail = (event) => {
   object-fit: cover;
   display: block;
   transition: transform 0.4s ease;
-
   .event-card:hover & { transform: scale(1.04); }
 }
 
@@ -384,36 +245,18 @@ const viewEventDetail = (event) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #e8e8e8;
+  background: var(--frame-tag-bg, #e8e8e8);
   gap: 12px;
 }
 
-.placeholder-icon {
-  width: 80px;
-  height: 80px;
-}
-
-.placeholder-text {
-  font-size: 13px;
-  color: #aaa;
-}
+.placeholder-icon { width: 80px; height: 80px; }
+.placeholder-text { font-size: 13px; color: var(--frame-text-muted, #aaa); }
 
 /* 資訊區 */
-.event-info {
-  padding: 20px 24px 24px;
-}
+.event-info { padding: 20px 24px 24px; }
 
-/* badge 在標題上方 */
-.event-tags {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.tags-placeholder {
-  height: 26px;
-  margin-bottom: 12px;
-}
+.event-tags      { display: flex; gap: 6px; margin-bottom: 12px; }
+.tags-placeholder { height: 26px; margin-bottom: 12px; }
 
 .event-tag {
   display: inline-block;
@@ -426,44 +269,40 @@ const viewEventDetail = (event) => {
 
   &.hot         { background: #dc3545; }
   &.recommended { background: #1a73e8; }
+  &.default     { background: #95a5a6; }
 }
 
 .event-title {
   font-size: 18px;
   font-weight: 600;
-  color: #222;
+  color: var(--frame-text-color, #222);
   margin: 0 0 16px 0;
   line-height: 1.5;
 }
 
-.event-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.event-details { display: flex; flex-direction: column; gap: 8px; }
 
 .event-detail {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: #666;
+  color: var(--frame-text-secondary, #666);
   line-height: 1.5;
-
   span { flex: 1; }
 }
 
 .detail-icon {
   width: 16px;
   height: 16px;
-  color: #999;
+  color: var(--frame-text-muted, #999);
   flex-shrink: 0;
 }
 
 .empty-state {
   text-align: center;
   padding: 60px 0;
-  color: #aaa;
+  color: var(--frame-text-muted, #aaa);
   font-size: 14px;
 }
 
@@ -483,7 +322,7 @@ const viewEventDetail = (event) => {
   border: none;
   background: transparent;
   font-size: 14px;
-  color: #555;
+  color: var(--frame-text-secondary, #555);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -492,23 +331,22 @@ const viewEventDetail = (event) => {
   justify-content: center;
 
   &:hover:not(.disabled):not(.active) {
-    background: #f5f5f5;
-    color: #333;
+    background: var(--frame-tag-bg, #f5f5f5);
+    color: var(--frame-text-color, #333);
   }
 
   &.active {
-    background: #8b6f47;
+    background: var(--frame-link-color, #8b6f47);
     color: #fff;
     font-weight: 500;
   }
 
   &.page-nav {
-    color: #999;
+    color: var(--frame-text-muted, #999);
     font-size: 13px;
     min-width: auto;
     padding: 0 14px;
-
-    &.disabled { color: #ccc; cursor: default; }
+    &.disabled { opacity: 0.4; cursor: default; }
   }
 }
 
@@ -519,7 +357,7 @@ const viewEventDetail = (event) => {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #bbb;
+  color: var(--frame-text-muted, #bbb);
   letter-spacing: 2px;
 }
 
@@ -534,25 +372,15 @@ const viewEventDetail = (event) => {
 
 .event-list-section.device-mobile {
   padding: 1rem 0 2rem;
-
-  .container   { padding: 0 0.75rem; }
-  .filter-bar  { gap: 2px; }
-  .filter-btn  { font-size: 13px; padding: 7px 14px; }
-  .divider     { margin: 12px 0 20px; }
-  .events-grid { grid-template-columns: 1fr; gap: 14px; }
-  .event-info  { padding: 14px 16px 18px; }
-  .event-title { font-size: 15px; margin-bottom: 12px; }
-
-  .event-detail {
-    font-size: 13px;
-    gap: 8px;
-  }
-
-  .detail-icon {
-    width: 14px;
-    height: 14px;
-  }
-
+  .container    { padding: 0 0.75rem; }
+  .filter-bar   { gap: 2px; }
+  .filter-btn   { font-size: 13px; padding: 7px 14px; }
+  .divider      { margin: 12px 0 20px; }
+  .events-grid  { grid-template-columns: 1fr; gap: 14px; }
+  .event-info   { padding: 14px 16px 18px; }
+  .event-title  { font-size: 15px; margin-bottom: 12px; }
+  .event-detail { font-size: 13px; gap: 8px; }
+  .detail-icon  { width: 14px; height: 14px; }
   .pagination        { margin-top: 32px; }
   .page-btn          { min-width: 32px; height: 32px; font-size: 13px; }
   .page-btn.page-nav { padding: 0 8px; }

@@ -2,7 +2,6 @@
   <section class="album-list-section" :class="`device-${device}`">
     <div class="container">
 
-      <!-- 分類 Tab 篩選列 -->
       <div class="filter-bar">
         <button
           v-for="cat in categories"
@@ -15,38 +14,24 @@
         </button>
       </div>
 
-      <!-- 分隔線 -->
       <hr class="divider" />
 
-      <!-- 相簿 Grid -->
       <div class="album-grid">
-        <div
-          v-for="album in pagedAlbums"
-          :key="album.id"
-          class="album-card"
-        >
-          <!-- 封面圖 -->
+        <div v-for="album in pagedAlbums" :key="album.id" class="album-card">
           <div class="album-cover-wrap">
-          <div class="album-cover">
-            <img
-              v-if="album.coverImage"
-              :src="album.coverImage"
-              :alt="album.title"
-              class="cover-image"
-            />
-            <div v-else class="cover-placeholder">
-              <!-- 線條風格 placeholder，對應截圖樣式 -->
-              <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="8" width="48" height="36" rx="3" stroke="#bbb" stroke-width="2.5"/>
-                <circle cx="18" cy="22" r="4" stroke="#bbb" stroke-width="2.5"/>
-                <path d="M4 36l13-13 9 10 7-8 12 13" stroke="#bbb" stroke-width="2.5" stroke-linejoin="round"/>
-              </svg>
-              <span class="placeholder-text">相簿封面</span>
+            <div class="album-cover">
+              <img v-if="album.coverImage" :src="album.coverImage" :alt="album.title" class="cover-image" />
+              <div v-else class="cover-placeholder">
+                <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="8" width="48" height="36" rx="3" stroke="#bbb" stroke-width="2.5"/>
+                  <circle cx="18" cy="22" r="4" stroke="#bbb" stroke-width="2.5"/>
+                  <path d="M4 36l13-13 9 10 7-8 12 13" stroke="#bbb" stroke-width="2.5" stroke-linejoin="round"/>
+                </svg>
+                <span class="placeholder-text">相簿封面</span>
+              </div>
             </div>
           </div>
-          </div>
 
-          <!-- 資訊 -->
           <div class="album-info">
             <div class="meta-row">
               <span v-if="album.tag" class="tag">{{ album.tag }}</span>
@@ -58,36 +43,17 @@
         </div>
       </div>
 
-      <!-- 無資料 -->
       <div v-if="filteredAlbums.length === 0" class="empty-state">
         <p>此分類目前沒有相簿</p>
       </div>
 
-      <!-- 頁碼 -->
       <div v-if="totalPages > 1" class="pagination">
-        <button
-          class="page-btn page-nav"
-          :class="{ disabled: currentPage === 1 }"
-          :disabled="currentPage === 1"
-          @click="goToPage(currentPage - 1)"
-        >上一頁</button>
-
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === 1 }" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一頁</button>
         <template v-for="page in pageNumbers" :key="page">
           <span v-if="page === '...'" class="page-ellipsis">...</span>
-          <button
-            v-else
-            class="page-btn"
-            :class="{ active: currentPage === page }"
-            @click="goToPage(page)"
-          >{{ page }}</button>
+          <button v-else class="page-btn" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
         </template>
-
-        <button
-          class="page-btn page-nav"
-          :class="{ disabled: currentPage === totalPages }"
-          :disabled="currentPage === totalPages"
-          @click="goToPage(currentPage + 1)"
-        >下一頁</button>
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === totalPages }" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一頁</button>
       </div>
 
     </div>
@@ -98,43 +64,20 @@
 import { ref, computed } from 'vue'
 
 const props = defineProps({
-  albumList: {
-    type: [Array, Object],
-    default: undefined
-  },
-  albumCategories: {
-    type: Array,
-    default: () => []
-  },
-  categoryList: {
-    type: Array,
-    default: () => []
-  },
-  device: {
-    type: String,
-    default: 'desktop'
-  },
-  perPage: {
-    type: Number,
-    default: 3
-  }
+  albumList:       { type: [Array, Object], default: undefined },
+  albumCategories: { type: Array, default: () => [] },
+  categoryList:    { type: Array, default: () => [] },
+  device:          { type: String, default: 'desktop' },
+  perPage:         { type: Number, default: 3 },
 })
 
-
-// ==================== 安全取得陣列 ====================
 const safeAlbumList = computed(() => {
   const raw = props.albumList
-  if (raw && typeof raw === 'object' && Array.isArray(raw.data)) {
-    return raw.data  // 直接回傳，空陣列也沒關係
-  }
-  if (Array.isArray(raw)) {
-    return raw
-  }
-  return []  // fallback 空陣列，畫面會顯示「此分類目前沒有相簿」
+  if (raw && typeof raw === 'object' && Array.isArray(raw.data)) return raw.data
+  if (Array.isArray(raw)) return raw
+  return []
 })
 
-// ==================== 欄位正規化 ====================
-// 統一對應 API 回傳欄位（imgSrc → coverImage、category → tag、createdAt → date）
 const normalizedAlbums = computed(() =>
   safeAlbumList.value.map(a => ({
     ...a,
@@ -145,68 +88,44 @@ const normalizedAlbums = computed(() =>
   }))
 )
 
-// ==================== 分類 Tab ====================
 const categories = computed(() => {
   const base = [{ label: '全部', value: 'all' }]
   const catSource = props.albumCategories?.length > 0
     ? props.albumCategories
-    : props.categoryList?.length > 0
-      ? props.categoryList
-      : null
+    : props.categoryList?.length > 0 ? props.categoryList : null
 
-  if (catSource) {
-    return [...base, ...catSource.map(c => ({
-      label: c.label || c.name || c,
-      value: c.value || c.id || c
-    }))]
-  }
+  if (catSource) return [...base, ...catSource.map(c => ({ label: c.label || c.name || c, value: c.value || c.id || c }))]
+
   const tags = [...new Set(normalizedAlbums.value.map(a => a.tag).filter(Boolean))]
   return [...base, ...tags.map(t => ({ label: t, value: t }))]
 })
 
 const activeCategory = ref('all')
-const currentPage = ref(1)
+const currentPage    = ref(1)
 
-const onCategoryClick = (value) => {
-  activeCategory.value = value
-  currentPage.value = 1
-}
+const onCategoryClick = (value) => { activeCategory.value = value; currentPage.value = 1 }
 
-// ==================== 篩選 ====================
-const filteredAlbums = computed(() => {
-  if (activeCategory.value === 'all') return normalizedAlbums.value
-  return normalizedAlbums.value.filter(a => a.tag === activeCategory.value)
-})
+const filteredAlbums = computed(() =>
+  activeCategory.value === 'all' ? normalizedAlbums.value : normalizedAlbums.value.filter(a => a.tag === activeCategory.value)
+)
 
-// ==================== 分頁 ====================
 const totalPages = computed(() => Math.ceil(filteredAlbums.value.length / props.perPage))
-
 const pagedAlbums = computed(() => {
   const start = (currentPage.value - 1) * props.perPage
   return filteredAlbums.value.slice(start, start + props.perPage)
 })
 
-const goToPage = (page) => {
-  if (page < 1 || page > totalPages.value) return
-  currentPage.value = page
-}
+const goToPage = (page) => { if (page >= 1 && page <= totalPages.value) currentPage.value = page }
 
 const pageNumbers = computed(() => {
-  const total = totalPages.value
-  const cur   = currentPage.value
+  const total = totalPages.value, cur = currentPage.value
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-
-  const pages = []
-  if (cur <= 4) {
-    pages.push(...[1, 2, 3, 4, 5], '...', total)
-  } else if (cur >= total - 3) {
-    pages.push(1, '...', ...[total-4, total-3, total-2, total-1, total])
-  } else {
-    pages.push(1, '...', cur-1, cur, cur+1, '...', total)
-  }
-  return pages
+  if (cur <= 4)         return [...[1,2,3,4,5], '...', total]
+  if (cur >= total - 3) return [1, '...', ...[total-4,total-3,total-2,total-1,total]]
+  return [1, '...', cur-1, cur, cur+1, '...', total]
 })
 </script>
+
 <style lang="scss" scoped>
 .album-list-section {
   padding: 3rem 0 4rem;
@@ -233,19 +152,19 @@ const pageNumbers = computed(() => {
   border: none;
   background: transparent;
   font-size: 15px;
-  color: #666;
+  color: var(--frame-text-secondary, #666);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
   white-space: nowrap;
 
-  &:hover  { color: #333; }
-  &.active { background: #8b6f47; color: #fff; font-weight: 500; }
+  &:hover  { color: var(--frame-text-color, #333); }
+  &.active { background: var(--frame-link-color, #8b6f47); color: #fff; font-weight: 500; }
 }
 
 .divider {
   border: none;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--frame-border-color, #e5e5e5);
   margin: 16px 0 32px;
 }
 
@@ -258,9 +177,9 @@ const pageNumbers = computed(() => {
 
 /* ==================== 相簿卡片 ==================== */
 .album-card {
-  border: 1px solid #ddd;
+  border: 1px solid var(--frame-border-color, #ddd);
   border-radius: 8px;
-  background: #fff;
+  background: var(--frame-card-bg, #fff);
   cursor: pointer;
   overflow: hidden;
   transition: box-shadow 0.2s, transform 0.2s;
@@ -271,17 +190,13 @@ const pageNumbers = computed(() => {
   }
 }
 
-/* 封面外層：帶 margin，讓圖片縮在卡片內 */
-.album-cover-wrap {
-  padding: 12px 12px 0;
-}
+.album-cover-wrap { padding: 12px 12px 0; }
 
-/* 封面圖：帶圓角 */
 .album-cover {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #e8e8e8;
+  background: var(--frame-tag-bg, #e8e8e8);
   border-radius: 4px;
   position: relative;
 }
@@ -292,7 +207,6 @@ const pageNumbers = computed(() => {
   object-fit: cover;
   display: block;
   transition: transform 0.4s ease;
-
   .album-card:hover & { transform: scale(1.04); }
 }
 
@@ -303,22 +217,15 @@ const pageNumbers = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #e8e8e8;
+  background: var(--frame-tag-bg, #e8e8e8);
   gap: 10px;
-
   svg { width: 72px; height: 72px; }
 }
 
-.placeholder-text {
-  font-size: 13px;
-  color: #bbb;
-  margin: 0;
-}
+.placeholder-text { font-size: 13px; color: var(--frame-text-muted, #bbb); margin: 0; }
 
 /* 資訊區 */
-.album-info {
-  padding: 16px 16px 20px;
-}
+.album-info { padding: 16px 16px 20px; }
 
 .meta-row {
   display: flex;
@@ -330,7 +237,7 @@ const pageNumbers = computed(() => {
 .tag {
   display: inline-block;
   padding: 3px 10px;
-  background: #8b6f47;
+  background: var(--frame-link-color, #8b6f47);
   color: #fff;
   font-size: 12px;
   font-weight: 500;
@@ -338,22 +245,19 @@ const pageNumbers = computed(() => {
   white-space: nowrap;
 }
 
-.date {
-  font-size: 13px;
-  color: #999;
-}
+.date { font-size: 13px; color: var(--frame-text-muted, #999); }
 
 .album-title {
   font-size: 18px;
   font-weight: 600;
-  color: #222;
+  color: var(--frame-text-color, #222);
   margin: 0 0 8px;
   line-height: 1.4;
 }
 
 .album-description {
   font-size: 13px;
-  color: #888;
+  color: var(--frame-text-secondary, #888);
   margin: 0;
   line-height: 1.6;
   display: -webkit-box;
@@ -365,7 +269,7 @@ const pageNumbers = computed(() => {
 .empty-state {
   text-align: center;
   padding: 60px 0;
-  color: #aaa;
+  color: var(--frame-text-muted, #aaa);
   font-size: 14px;
 }
 
@@ -385,7 +289,7 @@ const pageNumbers = computed(() => {
   border: none;
   background: transparent;
   font-size: 14px;
-  color: #555;
+  color: var(--frame-text-secondary, #555);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -394,26 +298,22 @@ const pageNumbers = computed(() => {
   justify-content: center;
 
   &:hover:not(.disabled):not(.active) {
-    background: #f5f5f5;
-    color: #333;
+    background: var(--frame-tag-bg, #f5f5f5);
+    color: var(--frame-text-color, #333);
   }
 
   &.active {
-    background: #8b6f47;
+    background: var(--frame-link-color, #8b6f47);
     color: #fff;
     font-weight: 500;
   }
 
   &.page-nav {
-    color: #999;
+    color: var(--frame-text-muted, #999);
     font-size: 13px;
     min-width: auto;
     padding: 0 14px;
-
-    &.disabled {
-      color: #ccc;
-      cursor: default;
-    }
+    &.disabled { opacity: 0.4; cursor: default; }
   }
 }
 
@@ -424,7 +324,7 @@ const pageNumbers = computed(() => {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #bbb;
+  color: var(--frame-text-muted, #bbb);
   letter-spacing: 2px;
 }
 
@@ -438,7 +338,6 @@ const pageNumbers = computed(() => {
 
 .album-list-section.device-mobile {
   padding: 1.5rem 0 2rem;
-
   .container         { padding: 0 0.75rem; }
   .album-grid        { grid-template-columns: 1fr; gap: 14px; }
   .filter-btn        { padding: 7px 14px; font-size: 13px; }

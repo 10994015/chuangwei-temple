@@ -373,12 +373,132 @@
           </div>
         </template>
         
-        <!-- ✅ 其他框架類型 -->
+        <!-- ✅ 頁尾 (FOOTER) -->
+        <template v-else-if="selectedFrame.type === 'FOOTER'">
+          <h4 class="section-title">頁尾設定</h4>
+
+          <div class="metadata-section">
+            <h5 class="subsection-title">背景色</h5>
+            <div class="prop-group">
+              <label>背景顏色</label>
+              <div class="color-input-group">
+                <input v-model="footerBgColor" type="color" class="prop-color" @input="updateFooterStyle" />
+                <input v-model="footerBgColor" type="text" class="prop-input color-text" placeholder="#2d2d2d" @input="updateFooterStyle" />
+              </div>
+              <div class="color-quick-btns" style="margin-top:10px;">
+                <button @click="footerBgColor='#2d2d2d'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#2d2d2d' }">深灰</button>
+                <button @click="footerBgColor='#1a1a2e'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#1a1a2e' }">深藍</button>
+                <button @click="footerBgColor='#3b1f0a'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#3b1f0a' }">深褐</button>
+                <button @click="footerBgColor='#1b2a1b'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#1b2a1b' }">深綠</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="metadata-section">
+            <h5 class="subsection-title">文字色</h5>
+            <div class="prop-group">
+              <label>文字顏色</label>
+              <div class="color-input-group">
+                <input v-model="footerTextColor" type="color" class="prop-color" @input="updateFooterStyle" />
+                <input v-model="footerTextColor" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateFooterStyle" />
+              </div>
+              <div class="color-quick-btns" style="margin-top:10px;">
+                <button @click="footerTextColor='#ffffff'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#ffffff' }">白色</button>
+                <button @click="footerTextColor='#f5d9b0'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#f5d9b0' }">金色</button>
+                <button @click="footerTextColor='#a8d8a8'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#a8d8a8' }">淺綠</button>
+                <button @click="footerTextColor='#adc8e6'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#adc8e6' }">淺藍</button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- ✅ 捐款區 (INDEX_DONATION) -->
+        <template v-else-if="selectedFrame.type === 'INDEX_DONATION'">
+          <h4 class="section-title">捐款區設定</h4>
+
+          <div class="metadata-section">
+            <h5 class="subsection-title">背景色</h5>
+            <div class="prop-group">
+              <label>背景顏色 / 漸層</label>
+              <div class="color-input-group">
+                <input v-model="donationBgColorA" type="color" class="prop-color" @input="updateDonationStyle" />
+                <input v-model="donationBgColorA" type="text" class="prop-input color-text" placeholder="#8b7355" @input="updateDonationStyle" />
+              </div>
+              <div class="color-input-group" style="margin-top: 8px;">
+                <input v-model="donationBgColorB" type="color" class="prop-color" @input="updateDonationStyle" />
+                <input v-model="donationBgColorB" type="text" class="prop-input color-text" placeholder="#a0826d（漸層第二色，留空為純色）" @input="updateDonationStyle" />
+              </div>
+              <span class="unit-hint">設定兩個顏色會產生漸層，只設一個則為純色</span>
+            </div>
+          </div>
+
+          <div class="metadata-section">
+            <h5 class="subsection-title">文字色</h5>
+            <div class="prop-group">
+              <label>文字顏色</label>
+              <div class="color-input-group">
+                <input v-model="donationTextColor" type="color" class="prop-color" @input="updateDonationStyle" />
+                <input v-model="donationTextColor" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateDonationStyle" />
+              </div>
+            </div>
+            <div class="color-quick-btns">
+              <button @click="donationTextColor = '#ffffff'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#ffffff' }">白色</button>
+              <button @click="donationTextColor = '#333333'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#333333' }">深色</button>
+              <button @click="donationTextColor = '#f5d9b0'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#f5d9b0' }">金色</button>
+              <button @click="donationTextColor = '#fde68a'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#fde68a' }">黃色</button>
+            </div>
+          </div>
+        </template>
+
+        <!-- ✅ 其他系統框架類型 -->
         <template v-else>
           <h4 class="section-title">框架設定</h4>
           <div class="prop-group">
             <label>框架類型</label>
             <input :value="selectedFrame.type" type="text" class="prop-input" disabled />
+          </div>
+
+          <!-- 文字色主題 -->
+          <div class="metadata-section">
+            <h5 class="subsection-title">文字色主題</h5>
+            <div class="prop-group">
+              <label>選擇主題</label>
+              <div class="theme-buttons">
+                <button
+                  v-for="t in textThemeOptions" :key="t.value"
+                  class="theme-btn"
+                  :class="{ active: systemFrameTextTheme === t.value }"
+                  :style="{ borderColor: systemFrameTextTheme === t.value ? '#E8572A' : 'transparent' }"
+                  @click="setSystemFrameTheme(t.value)"
+                  type="button"
+                >
+                  <div class="theme-btn-swatch" :style="{ background: t.bg, color: t.fg }">
+                    <div class="theme-btn-dots">
+                      <span class="dot" :style="{ background: t.fg }"></span>
+                      <span class="dot" :style="{ background: t.fg, opacity: '0.5' }"></span>
+                      <span class="dot" :style="{ background: t.fg, opacity: '0.25' }"></span>
+                    </div>
+                    <span style="font-size:10px; opacity:0.8;">Aa</span>
+                  </div>
+                  <div class="theme-btn-label" :style="{ color: t.labelColor || '#555' }">{{ t.label }}</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- 自訂色 -->
+            <div v-if="systemFrameTextTheme === 'custom'" class="prop-group">
+              <label>自訂文字顏色</label>
+              <div class="color-input-group">
+                <input v-model="systemFrameTextColor" type="color" class="prop-color" @input="updateSystemFrameTheme" />
+                <input v-model="systemFrameTextColor" type="text" class="prop-input color-text" placeholder="#333333" @input="updateSystemFrameTheme" />
+              </div>
+            </div>
+
+            <!-- 預覽說明 -->
+            <div class="theme-preview-hint">
+              <span class="hint-icon">💡</span>
+              <p>主題會套用到此框架內所有標題、內文、卡片背景等文字元素。</p>
+            </div>
           </div>
         </template>
       </div>
@@ -407,7 +527,16 @@
           <h4 class="section-title">文字設定</h4>
           <div class="prop-group">
             <label>文字內容</label>
-            <textarea v-model="selectedElement.element.value.text" class="prop-textarea" rows="6" placeholder="輸入文字內容（支援 HTML）"></textarea>
+            <!-- 捐款區的標題/內文是純文字，不用富文字編輯器 -->
+            <template v-if="selectedElement.element?.id === 'donationTitle'">
+              <input v-model="selectedElement.element.value.text" type="text" class="prop-input" placeholder="輸入標題" />
+            </template>
+            <template v-else-if="selectedElement.element?.id === 'donationBrief'">
+              <textarea v-model="selectedElement.element.value.text" class="prop-textarea" rows="4" placeholder="輸入內文"></textarea>
+            </template>
+            <template v-else>
+              <RichTextEditor v-model="selectedElement.element.value.text" />
+            </template>
           </div>
           <div class="metadata-section">
             <h5 class="subsection-title">樣式設定</h5>
@@ -850,6 +979,7 @@
 <script setup>
 import { ref, computed, watch, inject } from 'vue'
 import { useRoute } from 'vue-router'
+import RichTextEditor from './elements/RichTextEditor.vue'
 
 const pageEditorStore = inject('pageEditorStore')
 const route = useRoute()
@@ -961,6 +1091,57 @@ const imageAlt = ref('')
 const imgWidth = ref('')
 const imgHeight = ref('')
 const frameWidth = ref('1200')
+
+// ==================== 頁尾樣式 ====================
+const footerBgColor   = ref('#2d2d2d')
+const footerTextColor = ref('#ffffff')
+
+const updateFooterStyle = () => {
+  if (!props.selectedFrame?.data) return
+  props.selectedFrame.data.footerBgColor   = footerBgColor.value
+  props.selectedFrame.data.footerTextColor = footerTextColor.value
+}
+
+// ==================== 捐款區樣式 ====================
+const donationBgColorA = ref('#8b7355')
+const donationBgColorB = ref('#a0826d')
+const donationTextColor = ref('#ffffff')
+
+const updateDonationStyle = () => {
+  if (!props.selectedFrame?.data) return
+  // 背景：若 B 有值就做漸層，否則純色
+  const a = donationBgColorA.value || '#8b7355'
+  const b = donationBgColorB.value?.trim()
+  props.selectedFrame.data.donationBgColor = b
+    ? `linear-gradient(135deg, ${a} 0%, ${b} 100%)`
+    : a
+  props.selectedFrame.data.donationTextColor = donationTextColor.value
+}
+
+// ==================== 系統框架文字主題 ====================
+const systemFrameTextTheme = ref('light')
+const systemFrameTextColor = ref('#333333')
+
+const textThemeOptions = [
+  { value: 'light',  label: '☀️ 亮版', bg: '#f8f8f8',                               fg: '#333333', labelColor: '#444' },
+  { value: 'dark',   label: '🌙 暗版', bg: '#1a1a2e',                               fg: '#f0f0f0', labelColor: '#444' },
+  { value: 'sepia',  label: '📜 復古', bg: '#fdf0dc',                               fg: '#4a3728', labelColor: '#7a5830' },
+  { value: 'custom', label: '🎨 自訂', bg: 'linear-gradient(135deg,#ffe0d0,#ffd0f0)', fg: '#c04060', labelColor: '#c04060' },
+]
+
+const setSystemFrameTheme = (theme) => {
+  systemFrameTextTheme.value = theme
+  updateSystemFrameTheme()
+}
+
+const updateSystemFrameTheme = () => {
+  if (!props.selectedFrame) return
+  if (!props.selectedFrame.data) props.selectedFrame.data = {}
+  props.selectedFrame.data.textTheme = systemFrameTextTheme.value
+  if (systemFrameTextTheme.value === 'custom') {
+    props.selectedFrame.data.textColor = systemFrameTextColor.value
+  }
+}
 const mapAddress = ref('')
 const mapLat = ref(25.033)
 const mapLng = ref(121.565)
@@ -1086,11 +1267,36 @@ watch(() => props.selectedFrame, (newVal) => {
     subtitleFontSize.value = stripPx(newVal.data.subtitleFontSize || '20px')
   }
 
+  // 同步系統框架主題狀態
+  if (newVal && !newVal.type?.startsWith('FRAME') &&
+      newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'CAROUSEL_WALL') {
+    systemFrameTextTheme.value = newVal.data?.textTheme || 'light'
+    systemFrameTextColor.value = newVal.data?.textColor || '#333333'
+  }
+
   if (newVal?.type === 'CAROUSEL_WALL') {
     carouselWallHeight.value = newVal.data?.carouselWallHeight ?? 600
     carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
     carouselWallInterval.value = newVal.data?.carouselWallInterval ?? 5000
     // 注意：expandedCardStyles 不在這裡重置，避免 deep watch 每次 data 變動都清空
+  }
+
+  if (newVal?.type === 'FOOTER') {
+    footerBgColor.value   = newVal.data?.footerBgColor   || '#2d2d2d'
+    footerTextColor.value = newVal.data?.footerTextColor || '#ffffff'
+  }
+
+  if (newVal?.type === 'INDEX_DONATION') {
+    const bg = newVal.data?.donationBgColor || 'linear-gradient(135deg, #8b7355 0%, #a0826d 100%)'
+    const gradMatch = bg.match(/linear-gradient\([^,]+,\s*(#[\da-fA-F]+)[^,]*,\s*(#[\da-fA-F]+)/)
+    if (gradMatch) {
+      donationBgColorA.value = gradMatch[1]
+      donationBgColorB.value = gradMatch[2]
+    } else {
+      donationBgColorA.value = bg.startsWith('#') ? bg : '#8b7355'
+      donationBgColorB.value = ''
+    }
+    donationTextColor.value = newVal.data?.donationTextColor || '#ffffff'
   }
 
 }, { immediate: true, deep: true })
@@ -1768,6 +1974,92 @@ const setMapZoom = (zoom) => {
 
 .input-with-unit {
   .unit-hint { display: block; margin-top: 4px; font-size: 11px; color: #999; }
+
+.color-quick-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+// ==================== 文字色主題按鈕 ====================
+.theme-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.theme-btn {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+
+  .theme-btn-swatch {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .theme-btn-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+
+  .theme-btn-label {
+    padding: 5px 0;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(0,0,0,0.04);
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  &.active {
+    border-color: #E8572A;
+    box-shadow: 0 0 0 3px rgba(232,87,42,0.2);
+    .theme-btn-label { background: rgba(232,87,42,0.08); color: #E8572A; }
+  }
+}
+
+.theme-preview-hint {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #fffbf5;
+  border: 1px solid #f0e0c8;
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  p { margin: 0; font-size: 11px; color: #a07840; line-height: 1.6; }
+  .hint-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+}
 }
 
 .input-with-suffix {
@@ -2258,4 +2550,11 @@ const setMapZoom = (zoom) => {
 }
 
 .unit-hint { display: block; margin-top: 4px; font-size: 11px; color: #999; }
+
+.color-quick-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
 </style>

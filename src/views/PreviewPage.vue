@@ -47,7 +47,8 @@
           <div class="notch-bar"></div>
         </div>
 
-        <div class="device-screen">
+        <!-- ✅ ref 綁定捲動容器 -->
+        <div ref="screenRef" class="device-screen">
           <div class="website-preview" :style="previewContentStyle">
             <template v-for="(basemap, index) in basemaps" :key="`basemap-${index}`">
               <div
@@ -56,7 +57,6 @@
                 :style="getBasemapStyle(basemap)"
               >
                 <template v-for="(frame, frameIndex) in basemap.frames" :key="`frame-${frameIndex}`">
-                  <!-- ✅ 傳入 device -->
                   <SystemFramePreview 
                     v-if="isSystemFrame(frame)"
                     :frame-type="frame.type"
@@ -74,6 +74,23 @@
               </div>
             </template>
           </div>
+
+          <!-- ✅ Scroll-to-top 按鈕（sticky 在捲動容器內右下角） -->
+          <Transition name="scroll-top">
+            <button
+              v-if="showScrollTop"
+              class="scroll-top-btn"
+              :class="`scroll-top-btn--${currentDevice}`"
+              @click="scrollToTop"
+              title="回到頂部"
+              aria-label="回到頂部"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"/>
+              </svg>
+            </button>
+          </Transition>
         </div>
 
         <div v-if="currentDevice === 'mobile'" class="device-home-bar"></div>
@@ -84,11 +101,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import SystemFramePreview from './PreviewPage/SystemFramePreview.vue'
 import CustomFramePreview from './PreviewPage/CustomFramePreview.vue'
 import axiosClient from '@/axios'
+
 const router = useRouter()
 const route = useRoute()
 const pageEditorStore = inject('pageEditorStore', null)
@@ -99,6 +117,48 @@ const basemaps = ref([])
 const currentSlug = ref('home')
 const currentDevice = ref('desktop')
 
+// ==================== Scroll-to-top ====================
+const screenRef = ref(null)
+const showScrollTop = ref(false)
+
+const handleScroll = () => {
+  showScrollTop.value = (screenRef.value?.scrollTop ?? 0) > 300
+}
+
+const scrollToTop = () => {
+  screenRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 切換裝置時重置狀態
+watch(currentDevice, () => {
+  showScrollTop.value = false
+  // 重新綁定 scroll 監聽（nextTick 確保 DOM 更新後 ref 已就緒）
+  screenRef.value?.scrollTo({ top: 0 })
+})
+
+onMounted(() => {
+  // 用事件委派方式，screenRef 本身 mounted 後再 attach
+  // 由於 v-else 條件，screenRef 在 loading/error 時不存在，用 watch 補上
+  attachScrollListener()
+})
+
+onUnmounted(() => {
+  screenRef.value?.removeEventListener('scroll', handleScroll)
+})
+
+const attachScrollListener = () => {
+  screenRef.value?.addEventListener('scroll', handleScroll, { passive: true })
+}
+
+// loading 完成後 screenRef 才掛載，需要 watch 補綁
+watch(isLoading, (loading) => {
+  if (!loading) {
+    // DOM 更新後才能取到 ref
+    setTimeout(attachScrollListener, 50)
+  }
+})
+
+// ==================== Device ====================
 const deviceConfig = {
   desktop: { width: 1280, label: '1280px' },
   tablet:  { width: 768,  label: '768px'  },
@@ -110,10 +170,10 @@ const setDevice = (device) => { currentDevice.value = device }
 
 const previewContentStyle = computed(() => {
   if (currentDevice.value === 'desktop') return {}
-  // ✅ 讓內容撐滿螢幕容器，不設固定 px 寬度
   return { width: '100%', minWidth: 'unset', overflowX: 'hidden' }
 })
 
+// ==================== Locale ====================
 const currentLocale = ref(route.query.locale || pageEditorStore?.currentLocale || 'zh-TW')
 
 if (pageEditorStore) {
@@ -132,6 +192,7 @@ watch(() => route.query.locale, (newLocale) => {
   }
 })
 
+// ==================== Data ====================
 const getTempleId = () => route.params.templeId
 const getSlug    = () => route.query.slug || 'home'
 
@@ -190,19 +251,15 @@ const isSystemFrame = (frame) => {
   return !frame.type.startsWith('FRAME')
 }
 
-// ✅ 兼容 camelCase（bgType）與 snake_case（bg_type）
-const getBasemapType = (basemap) => {
-  return basemap.bgType || basemap.bg_type || 'content'
-}
+const getBasemapType = (basemap) => basemap.bgType || basemap.bg_type || 'content'
 
 const getBasemapStyle = (basemap) => {
   const style = {}
-
   const pcSrc     = basemap.bgPcImgSrc     || basemap.bg_pc_img_src
   const tabletSrc = basemap.bgTabletImgSrc || basemap.bg_tablet_img_src
   const mobileSrc = basemap.bgPhoneImgSrc  || basemap.bg_phone_img_src
 
-  let imgSrc = pcSrc  // 預設桌機版
+  let imgSrc = pcSrc
   if (currentDevice.value === 'tablet') imgSrc = tabletSrc || pcSrc
   if (currentDevice.value === 'mobile') imgSrc = mobileSrc || pcSrc
 
@@ -219,7 +276,7 @@ onMounted(() => loadPreviewData())
 </script>
 
 <style scoped>
-.preview-page { display: flex; flex-direction: column; height: 100vh; width: 100vw; background: #f0f0f0; overflow: hidden; }
+.preview-page { display: flex; flex-direction: column; height: 100vh; max-width:1920px; margin:0 auto; width: 100vw; background: #f0f0f0; overflow: hidden; }
 
 .preview-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 0 24px; height: 60px; background: #fff; border-bottom: 1px solid #e5e5e5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 100; flex-shrink: 0; }
 .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 12px; flex: 1; }
@@ -251,36 +308,25 @@ onMounted(() => loadPreviewData())
 .preview-area.device-desktop .device-screen { height: 100%; overflow-y: auto; overflow-x: hidden; border-radius: 0; }
 
 .device-frame { position: relative; background: #1a1a1a; border-radius: 40px; box-shadow: 0 0 0 2px #3a3a3a, 0 30px 80px rgba(0,0,0,0.35), 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; flex-shrink: 0; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-/* ✅ 手機外框：寬度 = 目標內容寬度 390px，用 border 模擬機殼，不用 padding */
+
 .device-frame--mobile {
-  width: 390px;
-  height: 80vh;
-  max-height: 860px;
-  border-radius: 44px;
-  border: 10px solid #2a2a2a;
-  box-sizing: content-box; /* border 加在外側，螢幕內部剛好 390px */
-  padding: 0;
+  width: 390px; height: 80vh; max-height: 860px;
+  border-radius: 44px; border: 10px solid #2a2a2a;
+  box-sizing: content-box; padding: 0;
 }
-
-/* ✅ 平板外框：寬度 = 目標內容寬度 768px */
 .device-frame--tablet {
-  width: 768px;
-  height: 80vh;
-  max-height: 1080px;
-  border-radius: 20px;
-  border: 12px solid #2a2a2a;
-  box-sizing: content-box;
-  padding: 0;
+  width: 768px; height: 80vh; max-height: 1080px;
+  border-radius: 20px; border: 12px solid #2a2a2a;
+  box-sizing: content-box; padding: 0;
 }
 
-/* 頂部裝飾（notch）縮小，不佔螢幕空間 */
 .device-notch { position: relative; display: flex; align-items: center; justify-content: center; height: 0; }
 .notch-bar { display: none; }
 .device-home-bar { display: none; }
 .device-tablet-bar { display: none; }
 
-.device-screen { background: #fff; border-radius: 34px; overflow-y: auto; overflow-x: hidden; height: 100%; width: 100%; }
-.device-frame--tablet .device-screen { border-radius: 10px; height: 100%; }
+.device-screen { background: #fff; border-radius: 34px; overflow-y: auto; overflow-x: hidden; height: 100%; width: 100%; position: relative; }
+.device-frame--tablet .device-screen { border-radius: 10px; }
 .device-screen::-webkit-scrollbar { width: 0; }
 .preview-area.device-desktop .device-screen::-webkit-scrollbar { width: 8px; }
 .preview-area.device-desktop .device-screen::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -288,5 +334,72 @@ onMounted(() => loadPreviewData())
 
 .website-preview { width: 100%; min-height: 100%; background: #fff; }
 .basemap-section { position: relative; width: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
-.basemap-section :deep(.system-frame-preview), .basemap-section :deep(.custom-frame-preview) { background: transparent !important; }
+.basemap-section :deep(.system-frame-preview),
+.basemap-section :deep(.custom-frame-preview) { background: transparent !important; }
+
+/* ==================== Scroll-to-top ==================== */
+
+.scroll-top-btn {
+  /* sticky 定位在捲動容器內部右下角 */
+  position: sticky;
+  bottom: 32px;
+  /* 靠右：margin-left auto 推到右側 */
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 不佔 flow 空間 */
+  margin-top: -56px;
+  margin-right: 32px;
+  z-index: 200;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #E8572A;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(232, 87, 42, 0.45);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+/* 手機/平板模式下縮小一點，避免遮到內容 */
+.scroll-top-btn--mobile,
+.scroll-top-btn--tablet {
+  width: 36px;
+  height: 36px;
+  bottom: 20px;
+  margin-right: 12px;
+  margin-top: -50px;
+}
+
+.scroll-top-btn svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.scroll-top-btn--mobile svg,
+.scroll-top-btn--tablet svg {
+  width: 16px;
+  height: 16px;
+}
+
+.scroll-top-btn:hover {
+  background: #d14a1f;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(232, 87, 42, 0.5);
+}
+
+.scroll-top-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(232, 87, 42, 0.3);
+}
+
+/* 進場 / 離場動畫 */
+.scroll-top-enter-active,
+.scroll-top-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.scroll-top-enter-from,
+.scroll-top-leave-to { opacity: 0; transform: translateY(12px); }
 </style>

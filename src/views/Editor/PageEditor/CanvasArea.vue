@@ -1,81 +1,55 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import BasemapWrapper from './basemap/BasemapWrapper.vue'
 import SystemFrame from './SystemFrame.vue'
 import CustomFrame from './CustomFrame.vue'
 
-// Props - 直接接收 API 格式的 basemaps
+// Props
 const props = defineProps({
-  basemaps: {
-    type: Array,
-    default: () => []
-  },
-  selectedBasemap: {
-    type: Object,
-    default: null
-  },
-  selectedFrame: {
-    type: Object,
-    default: null
-  },
-  selectedElement: {
-    type: Object,
-    default: null
-  },
-  selectedCell: {
-    type: Object,
-    default: null
-  },
-  currentPageSlug: {
-    type: String,
-    default: null
-  }
+  basemaps: { type: Array, default: () => [] },
+  selectedBasemap: { type: Object, default: null },
+  selectedFrame: { type: Object, default: null },
+  selectedElement: { type: Object, default: null },
+  selectedCell: { type: Object, default: null },
+  currentPageSlug: { type: String, default: null }
 })
 
 // Emits
 const emit = defineEmits([
-  'select-basemap',
-  'select-frame',
-  'select-element',
-  'select-cell',
-  'drop-to-basemap',
-  'drop-to-cell',
-  'delete-basemap',
-  'delete-element',
-  'delete-frame',  // ✅ 新增：刪除框架
-  'update-element',
-  'update-background',
-  'update-cell-padding',
-  'add-basemap',
-  'move-basemap-up',
-  'move-basemap-down',
-  'change-page'
+  'select-basemap', 'select-frame', 'select-element', 'select-cell',
+  'drop-to-basemap', 'drop-to-cell', 'delete-basemap', 'delete-element',
+  'delete-frame', 'update-element', 'update-background', 'update-cell-padding',
+  'add-basemap', 'move-basemap-up', 'move-basemap-down', 'change-page'
 ])
 
-// 拖曳懸浮狀態
-const dragOverBasemap = ref(null)
+// ==================== Scroll-to-top ====================
+const canvasRef = ref(null)
+const showScrollTop = ref(false)
 
-// ✅ 全局拖曳狀態（追蹤是否正在拖曳）
+const handleScroll = () => {
+  showScrollTop.value = (canvasRef.value?.scrollTop ?? 0) > 300
+}
+
+const scrollToTop = () => {
+  canvasRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => {
+  canvasRef.value?.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  canvasRef.value?.removeEventListener('scroll', handleScroll)
+})
+
+// ==================== 拖曳狀態 ====================
+const dragOverBasemap = ref(null)
 const isDragging = ref(false)
 
-// ✅ 監聽全局拖曳事件
 if (typeof window !== 'undefined') {
-  // 開始拖曳
-  window.addEventListener('dragstart', () => {
-    isDragging.value = true
-  })
-  
-  // 結束拖曳
-  window.addEventListener('dragend', () => {
-    isDragging.value = false
-    dragOverBasemap.value = null
-  })
-  
-  // 放置完成
-  window.addEventListener('drop', () => {
-    isDragging.value = false
-    dragOverBasemap.value = null
-  })
+  window.addEventListener('dragstart', () => { isDragging.value = true })
+  window.addEventListener('dragend', () => { isDragging.value = false; dragOverBasemap.value = null })
+  window.addEventListener('drop', () => { isDragging.value = false; dragOverBasemap.value = null })
 }
 
 // ==================== 頁面切換 ====================
@@ -85,11 +59,7 @@ const handleChangePage = (slug) => {
 }
 
 // ==================== 選擇事件 ====================
-
-// 判斷底圖是否被選中
-const isBasemapSelected = (basemap) => {
-  return props.selectedBasemap === basemap
-}
+const isBasemapSelected = (basemap) => props.selectedBasemap === basemap
 
 const handleBasemapClick = (basemap) => {
   console.log('點擊底圖:', basemap.bgType)
@@ -101,25 +71,12 @@ const handleSelectFrame = (frame) => {
   emit('select-frame', frame)
 }
 
-const handleSelectElement = (data) => {
-  emit('select-element', data)
-}
-
-const handleUpdateElement = (data) => {
-  emit('update-element', data)
-}
-
-const handleSelectCell = (data) => {
-  emit('select-cell', data)
-}
-
-// ✅ 更新格子 padding
-const handleUpdateCellPadding = (data) => {
-  emit('update-cell-padding', data)
-}
+const handleSelectElement = (data) => { emit('select-element', data) }
+const handleUpdateElement = (data) => { emit('update-element', data) }
+const handleSelectCell = (data) => { emit('select-cell', data) }
+const handleUpdateCellPadding = (data) => { emit('update-cell-padding', data) }
 
 // ==================== 底圖操作 ====================
-
 const handleAddBasemap = (currentIndex) => {
   console.log('在索引', currentIndex, '後新增空白底圖')
   emit('add-basemap', currentIndex)
@@ -132,40 +89,26 @@ const handleDeleteBasemap = (index) => {
 
 const handleMoveBasemap = ({ fromIndex, direction }) => {
   console.log('移動底圖:', direction)
-  
-  if (direction === 'up') {
-    emit('move-basemap-up', fromIndex)
-  } else if (direction === 'down') {
-    emit('move-basemap-down', fromIndex)
-  }
+  if (direction === 'up') emit('move-basemap-up', fromIndex)
+  else if (direction === 'down') emit('move-basemap-down', fromIndex)
 }
 
-// ⭐ 更新底圖背景
 const handleUpdateBackground = (data) => {
   console.log('CanvasArea 收到背景更新事件:', data)
-  
-  // 直接向上層發送事件，讓 PageEditor 或 Store 處理
   emit('update-background', data)
 }
 
 // ==================== 拖曳事件 ====================
-
 const handleDragOver = (event, basemap) => {
   event.preventDefault()
   event.stopPropagation()
-  
-  const basemapId = `${basemap.bgType}-${basemap.bgSequence}`
-  
-  // 預設允許放置
   event.dataTransfer.dropEffect = 'copy'
-  dragOverBasemap.value = basemapId
+  dragOverBasemap.value = `${basemap.bgType}-${basemap.bgSequence}`
 }
 
 const handleDragLeave = (event) => {
   event.preventDefault()
   event.stopPropagation()
-  
-  // ✅ 檢查是否真的離開了該元素
   const relatedTarget = event.relatedTarget
   if (!relatedTarget || !event.currentTarget.contains(relatedTarget)) {
     dragOverBasemap.value = null
@@ -175,119 +118,54 @@ const handleDragLeave = (event) => {
 const handleDrop = (event, basemap, basemapIndex) => {
   event.preventDefault()
   dragOverBasemap.value = null
-  
   try {
     const data = event.dataTransfer.getData('application/json')
-    
-    if (!data) {
-      return
-    }
-    
+    if (!data) return
     const dragData = JSON.parse(data)
     console.log('📦 放置到底圖:', dragData)
-    
-    // 元件不能直接放到底圖
+
     if (dragData.dragType === 'element') {
       console.log('元件不能直接放到底圖')
       return
     }
-    
-    // ✅ 檢查框架放置規則
+
     const hasFrames = basemap.frames && basemap.frames.length > 0
-    
     if (hasFrames) {
-      // 檢查已有框架的類型
-      const hasSystemFrame = basemap.frames.some(frame => {
-        // 系統框架：不以 FRAME 開頭
-        return frame.type && !frame.type.startsWith('FRAME')
-      })
-      
+      const hasSystemFrame = basemap.frames.some(f => f.type && !f.type.startsWith('FRAME'))
       const isDraggingSystemFrame = dragData.dragType === 'system-frame'
-      const isDraggingCustomFrame = dragData.dragType === 'custom-frame'
-      
-      console.log('🔍 框架檢查:', {
-        hasSystemFrame,
-        isDraggingSystemFrame,
-        isDraggingCustomFrame
-      })
-      
-      // 規則 1: 底圖已有系統框架 → 不能再放任何框架
-      if (hasSystemFrame) {
-        alert('此底圖已有系統框架，不能再添加其他框架')
-        return
-      }
-      
-      // 規則 2: 底圖已有自訂框架 + 拖曳系統框架 → 不允許
-      if (!hasSystemFrame && isDraggingSystemFrame) {
-        alert('此底圖已有自訂框架，不能添加系統框架')
-        return
-      }
-      
-      // 規則 3: 底圖已有自訂框架 + 拖曳自訂框架 → 允許（多個自訂框架）
-      // 這種情況直接通過，繼續執行
+
+      if (hasSystemFrame) { alert('此底圖已有系統框架，不能再添加其他框架'); return }
+      if (!hasSystemFrame && isDraggingSystemFrame) { alert('此底圖已有自訂框架，不能添加系統框架'); return }
     }
-    
-    // 發送放置事件
-    emit('drop-to-basemap', {
-      basemap: basemap,
-      basemapIndex: basemapIndex,
-      frame: dragData
-    })
-    
+
+    emit('drop-to-basemap', { basemap, basemapIndex, frame: dragData })
   } catch (error) {
     console.error('處理拖放時發生錯誤:', error)
   }
 }
 
 // ==================== 元件操作 ====================
+const handleDropToCell = (data) => { emit('drop-to-cell', data) }
+const handleDeleteElement = (data) => { emit('delete-element', data) }
 
-const handleDropToCell = (data) => {
-  emit('drop-to-cell', data)
-}
-
-const handleDeleteElement = (data) => {
-  emit('delete-element', data)
-}
-
-// ✅ 刪除框架
 const handleDeleteFrame = (data, basemap, basemapIndex) => {
   console.log('CanvasArea: 刪除框架', data)
-  emit('delete-frame', {
-    ...data,
-    basemap,
-    basemapIndex
-  })
+  emit('delete-frame', { ...data, basemap, basemapIndex })
 }
 
 // ==================== 輔助函數 ====================
-
-// 判斷框架類型
 const isSystemFrame = (frame) => {
-  // 檢查 frame 是否存在且有 type 屬性
-  if (!frame || !frame.type) {
-    return false
-  }
-  
-  const type = frame.type
-  
-  // 自訂框架：以 FRAME 開頭
-  // FRAME1_1, FRAME1_2, FRAME_A, FRAME_B 等都是自訂框架
-  if (type.startsWith('FRAME')) {
-    return false  // 這是自訂框架
-  }
-  
-  // 系統框架：HEADER, FOOTER, INDEX_NEWS, CAROUSEL_WALL 等
-  return true
+  if (!frame || !frame.type) return false
+  return !frame.type.startsWith('FRAME')
 }
 
-// 獲取底圖 ID（用於 key）
 const getBasemapKey = (basemap, index) => {
   return `${basemap.bgType}-${basemap.bgSequence}-${index}`
 }
 </script>
 
 <template>
-  <div class="canvas-area" :class="{ 'is-dragging': isDragging }">
+  <div ref="canvasRef" class="canvas-area" :class="{ 'is-dragging': isDragging }">
     <div class="temple-website">
       <!-- 動態渲染底圖 -->
       <template v-for="(basemap, index) in basemaps" :key="getBasemapKey(basemap, index)">
@@ -304,7 +182,6 @@ const getBasemapKey = (basemap, index) => {
           @move-basemap="handleMoveBasemap"
           @update-background="handleUpdateBackground"
         >
-          <!-- ✅ 統一底圖容器（空白/有框架都套背景圖片） -->
           <div 
             class="basemap-with-frames"
             :class="{ 
@@ -312,14 +189,11 @@ const getBasemapKey = (basemap, index) => {
               'has-frame': basemap.frames && basemap.frames.length > 0,
               'is-selected': isBasemapSelected(basemap)
             }"
-            :style="{
-              backgroundImage: basemap.bgPcImgSrc ? `url(${basemap.bgPcImgSrc})` : 'none'
-            }"
+            :style="{ backgroundImage: basemap.bgPcImgSrc ? `url(${basemap.bgPcImgSrc})` : 'none' }"
             @dragover="handleDragOver($event, basemap)"
             @dragleave="handleDragLeave"
             @drop="handleDrop($event, basemap, index)"
           >
-            <!-- 底圖選擇疊加層 -->
             <div 
               class="basemap-overlay"
               :class="{ 'show': isBasemapSelected(basemap) }"
@@ -327,7 +201,6 @@ const getBasemapKey = (basemap, index) => {
               title="點擊選擇底圖以編輯背景"
             ></div>
 
-            <!-- ✅ 空白底圖提示（沒有框架時顯示） -->
             <div 
               v-if="!basemap.frames || basemap.frames.length === 0" 
               class="blank-basemap"
@@ -342,18 +215,12 @@ const getBasemapKey = (basemap, index) => {
                 <div class="blank-icon">📄</div>
                 <p class="blank-text">空白底圖</p>
                 <p class="blank-hint">從左側拖曳框架至此處</p>
-                <p class="blank-note" v-if="!basemap.bgAllowMultipleFrames">
-                  此底圖只允許一個框架
-                </p>
-                <p class="blank-note" v-else>
-                  此底圖可以有多個框架
-                </p>
+                <p class="blank-note" v-if="!basemap.bgAllowMultipleFrames">此底圖只允許一個框架</p>
+                <p class="blank-note" v-else>此底圖可以有多個框架</p>
               </div>
             </div>
             
-            <!-- 渲染所有框架 -->
             <template v-for="(frame, frameIndex) in basemap.frames" :key="`frame-${frameIndex}`">
-              <!-- 系統框架 -->
               <SystemFrame 
                 v-if="isSystemFrame(frame)"
                 :frame-type="frame.type"
@@ -371,7 +238,6 @@ const getBasemapKey = (basemap, index) => {
                 @delete-frame="(data) => handleDeleteFrame(data, basemap, index)"
               />
               
-              <!-- 自訂框架 -->
               <CustomFrame
                 v-else
                 :frame="frame"
@@ -393,6 +259,22 @@ const getBasemapKey = (basemap, index) => {
         </BasemapWrapper>
       </template>
     </div>
+
+    <!-- Scroll-to-top 按鈕 -->
+    <Transition name="scroll-top">
+      <button
+        v-if="showScrollTop"
+        class="scroll-top-btn"
+        @click="scrollToTop"
+        title="回到頂部"
+        aria-label="回到頂部"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+      </button>
+    </Transition>
   </div>
 </template>
 
@@ -406,6 +288,8 @@ const getBasemapKey = (basemap, index) => {
   overflow-x: hidden;
   min-width: 0;
   position: relative;
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 .temple-website {
@@ -414,6 +298,63 @@ const getBasemapKey = (basemap, index) => {
   color: #333;
   background: #fff;
 }
+
+// ==================== Scroll-to-top ====================
+
+.scroll-top-btn {
+  position: sticky;
+  bottom: 32px;
+  // 靠右下，margin-left: auto 推到右側，再配合自身寬度偏移
+  align-self: flex-end;
+  margin-right: 32px;
+  // 讓它浮在內容上方，不佔 flow 空間
+  margin-top: -56px; // 負 margin 讓它不推擠下方內容
+  z-index: 100;
+  width: 44px;
+  min-height: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #E8572A;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(232, 87, 42, 0.4);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  pointer-events: auto;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: #d14a1f;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(232, 87, 42, 0.5);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(232, 87, 42, 0.3);
+  }
+}
+
+// 進場/離場動畫
+.scroll-top-enter-active,
+.scroll-top-leave-active {
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+.scroll-top-enter-from,
+.scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+// ==================== 以下與原版相同 ====================
 
 .blank-basemap {
   min-height: 300px;
@@ -426,7 +367,6 @@ const getBasemapKey = (basemap, index) => {
   transition: all 0.3s ease;
   cursor: pointer;
 
-  // ✅ 有背景圖片時，所有狀態都保持半透明
   &.has-bg {
     .blank-content {
       background: rgba(0, 0, 0, 0.35);
@@ -438,7 +378,6 @@ const getBasemapKey = (basemap, index) => {
     .blank-icon { opacity: 0.7; color: #fff; }
     .blank-text, .blank-hint, .blank-note { opacity: 0.85; color: #fff; }
 
-    // hover：加深半透明底，不用純色覆蓋
     &:hover {
       background: transparent;
       border-color: rgba(255, 255, 255, 0.5);
@@ -447,7 +386,6 @@ const getBasemapKey = (basemap, index) => {
       .blank-text, .blank-hint { opacity: 1; }
     }
 
-    // selected：橘色邊框，底保持半透明
     &.is-selected {
       background: transparent;
       border-color: #E8572A;
@@ -458,7 +396,6 @@ const getBasemapKey = (basemap, index) => {
       .blank-text, .blank-hint { opacity: 1; }
     }
 
-    // drag-over：橘色邊框，底保持半透明
     &.drag-over {
       background: transparent;
       border-color: #E8572A;
@@ -475,14 +412,8 @@ const getBasemapKey = (basemap, index) => {
   &:hover {
     background: #fafafa;
     border-color: #ddd;
-    
-    .blank-icon {
-      opacity: 0.3;
-    }
-    
-    .blank-text, .blank-hint {
-      opacity: 1;
-    }
+    .blank-icon { opacity: 0.3; }
+    .blank-text, .blank-hint { opacity: 1; }
   }
   
   &.is-selected {
@@ -490,14 +421,8 @@ const getBasemapKey = (basemap, index) => {
     border-color: #E8572A;
     border-style: solid;
     box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
-    
-    .blank-icon {
-      opacity: 0.3;
-    }
-    
-    .blank-text, .blank-hint {
-      opacity: 1;
-    }
+    .blank-icon { opacity: 0.3; }
+    .blank-text, .blank-hint { opacity: 1; }
   }
   
   &.drag-over {
@@ -507,30 +432,16 @@ const getBasemapKey = (basemap, index) => {
     border-style: solid;
     box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
     transform: scale(1.01);
-    
-    .blank-icon {
-      opacity: 0.6;
-      transform: scale(1.1);
-    }
-    
-    .blank-text, .blank-hint {
-      color: #E8572A;
-      opacity: 1;
-    }
+    .blank-icon { opacity: 0.6; transform: scale(1.1); }
+    .blank-text, .blank-hint { color: #E8572A; opacity: 1; }
   }
 }
 
 .canvas-area.is-dragging .blank-basemap {
   background: #fafafa;
   border-color: #ddd;
-  
-  .blank-icon {
-    opacity: 0.2;
-  }
-  
-  .blank-text, .blank-hint {
-    opacity: 0.8;
-  }
+  .blank-icon { opacity: 0.2; }
+  .blank-text, .blank-hint { opacity: 0.8; }
 }
 
 .blank-content {
@@ -581,19 +492,13 @@ const getBasemapKey = (basemap, index) => {
     outline: 3px solid #E8572A;
     outline-offset: -3px;
     box-shadow: 0 0 0 4px rgba(232, 87, 42, 0.1);
-    
-    .basemap-overlay {
-      opacity: 1;
-    }
+    .basemap-overlay { opacity: 1; }
   }
 }
 
 .basemap-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(232, 87, 42, 0.05);
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -601,15 +506,8 @@ const getBasemapKey = (basemap, index) => {
   z-index: 1;
   pointer-events: none;
   
-  &:hover {
-    opacity: 1;
-    background: rgba(232, 87, 42, 0.08);
-  }
-  
-  &.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  &:hover { opacity: 1; background: rgba(232, 87, 42, 0.08); }
+  &.show { opacity: 1; pointer-events: auto; }
 }
 
 .relative-frame {
@@ -617,31 +515,11 @@ const getBasemapKey = (basemap, index) => {
   z-index: 2;
 }
 
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-.canvas-area::-webkit-scrollbar {
-  width: 8px;
-}
-
-.canvas-area::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
+.canvas-area::-webkit-scrollbar { width: 8px; }
+.canvas-area::-webkit-scrollbar-track { background: #f1f1f1; }
 .canvas-area::-webkit-scrollbar-thumb {
   background: #ddd;
   border-radius: 4px;
-}
-
-.canvas-area::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
+  &:hover { background: #ccc; }
 }
 </style>
