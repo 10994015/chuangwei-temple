@@ -1986,12 +1986,12 @@ const setMapZoom = (zoom) => {
 .theme-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
 .theme-btn {
   padding: 0;
-  border: 2px solid transparent;
+  border: 2px solid #e5e5e5;
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
@@ -2003,14 +2003,15 @@ const setMapZoom = (zoom) => {
   flex-direction: column;
   align-items: stretch;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: #fff;
 
   .theme-btn-swatch {
-    height: 36px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    font-size: 11px;
+    gap: 6px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.5px;
   }
@@ -2022,32 +2023,37 @@ const setMapZoom = (zoom) => {
   }
 
   .dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-    opacity: 0.7;
   }
 
   .theme-btn-label {
-    padding: 5px 0;
-    font-size: 11px;
+    padding: 6px 4px;
+    font-size: 12px;
     font-weight: 600;
     background: rgba(0,0,0,0.04);
     border-top: 1px solid rgba(0,0,0,0.06);
+    color: #555;
+    white-space: nowrap;
   }
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #ccc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   }
 
   &.active {
     border-color: #E8572A;
-    box-shadow: 0 0 0 3px rgba(232,87,42,0.2);
-    .theme-btn-label { background: rgba(232,87,42,0.08); color: #E8572A; }
+    box-shadow: 0 0 0 3px rgba(232,87,42,0.15);
+
+    .theme-btn-label {
+      background: rgba(232,87,42,0.08);
+      color: #E8572A;
+    }
   }
 }
-
 .theme-preview-hint {
   margin-top: 12px;
   padding: 10px 12px;
