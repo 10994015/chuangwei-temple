@@ -1782,7 +1782,6 @@ const setMapZoom = (zoom) => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  overflow: hidden;
   position: relative; /* 新增 */
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* 新增 */
 }
@@ -1796,7 +1795,7 @@ const setMapZoom = (zoom) => {
 .collapse-btn {
   position: absolute;
   top: 50%;
-  left: -14px;
+  left: -22px;
   transform: translateY(-50%);
   z-index: 10;
   width: 28px;
