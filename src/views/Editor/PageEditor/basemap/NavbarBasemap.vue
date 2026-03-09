@@ -227,7 +227,7 @@ const handleMobileTabClick = (tab) => {
   // ==================== 桌機導航 ====================
   .nav-menu {
     display: flex;
-    gap: 2rem;
+    gap: 1rem;
     flex: 1;
     justify-content: center;
   }
