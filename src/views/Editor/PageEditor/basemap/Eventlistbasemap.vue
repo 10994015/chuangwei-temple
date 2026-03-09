@@ -165,7 +165,7 @@ const viewEventDetail = (event) => emit('view-detail', event)
 }
 
 .container {
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
 }

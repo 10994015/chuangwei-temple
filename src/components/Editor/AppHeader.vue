@@ -288,7 +288,7 @@ watch(() => route.path, () => {
 }
 
 .header-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
   height: 64px;

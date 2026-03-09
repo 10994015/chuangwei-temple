@@ -91,7 +91,7 @@ const addToCart = (product) => emit('add-to-cart', product)
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }

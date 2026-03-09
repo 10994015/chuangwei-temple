@@ -31,22 +31,30 @@
       <button class="btn btn-icon" @click="handleUpgrade">升級方案</button>
       <div class="toolbar-divider"></div>
       <button class="btn btn-icon" @click="handlePreview">預覽</button>
-      <button class="btn btn-icon" @click="handleSave">
-        儲存草稿
-      </button>
+      <button class="btn btn-icon" @click="handleSave">儲存草稿</button>
       <button class="btn btn-icon btn-danger" @click="handleDelete">刪除草稿</button>
       <div class="toolbar-divider"></div>
-      <button class="btn btn-icon btn-secondary" @click="handleGoToWebsite">前往網站</button>
+      <button
+        class="btn btn-icon btn-secondary"
+        @click="handleGoToWebsite"
+        :disabled="!domainName"
+        :title="domainName || '尚未設定網站網址'"
+      >
+        前往網站
+      </button>
       <button class="btn btn-primary" @click="handlePublish">發布網站</button>
     </div>
   </header>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { usePageEditorStore } from '@/stores/pageEditor'
 
 const router = useRouter()
 const route = useRoute()
+const store = usePageEditorStore()
 
 const props = defineProps({
   currentLocale: {
@@ -75,10 +83,11 @@ const emit = defineEmits([
   'publish'
 ])
 
+// 從 store 取得 domainName
+const domainName = computed(() => store.websiteSettings?.domainName || null)
+
 // 獲取 templeId
-const getTempleId = () => {
-  return route.params.templeId
-}
+const getTempleId = () => route.params.templeId
 
 // 返回管理後台
 const handleBackToDashboard = () => {
@@ -92,48 +101,28 @@ const handleBackToDashboard = () => {
 }
 
 // 語言切換
-const handleLocaleChange = (event) => {
-  emit('locale-change', event.target.value)
-}
+const handleLocaleChange = (event) => emit('locale-change', event.target.value)
 
-// 設定
-const handleSettings = () => {
-  emit('settings')
-}
+const handleSettings       = () => emit('settings')
+const handleSelectTemplate = () => emit('select-template')
+const handleUpgrade        = () => emit('upgrade')
+const handlePreview        = () => emit('preview')
+const handleSave           = () => emit('save')
+const handleDelete         = () => emit('delete')
+const handlePublish        = () => emit('publish')
 
-// 選擇模板
-const handleSelectTemplate = () => {
-  emit('select-template')
-}
-
-// 升級方案
-const handleUpgrade = () => {
-  emit('upgrade')
-}
-
-// 預覽
-const handlePreview = () => {
-  emit('preview')
-}
-
-// 儲存
-const handleSave = () => {
-  emit('save')
-}
-
-// 刪除
-const handleDelete = () => {
-  emit('delete')
-}
-
-// 前往網站
+// 前往網站：直接用 domainName 開新分頁
 const handleGoToWebsite = () => {
-  emit('go-to-website')
-}
+  if (!domainName.value) return
 
-// 發布
-const handlePublish = () => {
-  emit('publish')
+  emit('go-to-website')   // 保留 emit，父層可監聽
+
+  let url = domainName.value.trim()
+  // 若沒有 protocol，自動補上 https://
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url
+  }
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 </script>
 
@@ -225,7 +214,7 @@ const handlePublish = () => {
   border-color: #E8572A;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: #fff5f2;
 }
 

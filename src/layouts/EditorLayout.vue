@@ -320,7 +320,7 @@ const handleDelete = async () => {
 }
 
 const handleGoToWebsite = () => {
-  window.location.href = "http://127.0.0.1:8000/site/" + getTempleId()
+  // window.location.href = "http://127.0.0.1:8000/site/" + getTempleId()
 }
 
 const handlePublish = () => {

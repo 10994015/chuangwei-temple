@@ -211,7 +211,7 @@ const subtitleStyle = computed(() => ({
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1200px;
   padding: 0 40px;
   display: flex;
   align-items: center;
