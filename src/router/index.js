@@ -101,6 +101,19 @@ const router = createRouter({
             { path: 'activity-management/activity/create',             name: 'app.temple.activity-create',     component: () => import('@/views/Temple/ActivityFormView.vue'),       meta: { title: '新增活動',       requiresAuth: true } },
             { path: 'activity-management/activity/:activityId/detail', name: 'app.temple.activity-detail',     component: () => import('@/views/Temple/ActivityDetailView.vue'),     meta: { title: '活動詳細資料',   requiresAuth: true } },
             { path: 'activity-management/activity/:activityId/edit',   name: 'app.temple.activity-edit',       component: () => import('@/views/Temple/ActivityFormView.vue'),       meta: { title: '編輯活動',       requiresAuth: true } },
+            { path: 'activity-management/service/create',              name: 'app.temple.service-create',      component: () => import('@/views/Temple/ServiceFormView.vue'),        meta: { title: '新增服務',       requiresAuth: true } },
+            { path: 'activity-management/service/:serviceId/detail',   name: 'app.temple.service-detail',      component: () => import('@/views/Temple/ServiceDetailView.vue'),      meta: { title: '服務詳細資料',   requiresAuth: true } },
+            { path: 'activity-management/service/:serviceId/edit',     name: 'app.temple.service-edit',        component: () => import('@/views/Temple/ServiceFormView.vue'),        meta: { title: '編輯服務',       requiresAuth: true } },
+
+            { path: 'activity-management/donation-settings', name: 'app.temple.donation-settings', component: () => import('@/views/Temple/DonationSettingsView.vue'), meta: { title: '捐款設定', requiresAuth: true } },
+
+
+
+
+
+
+
+
           ]
         },
 

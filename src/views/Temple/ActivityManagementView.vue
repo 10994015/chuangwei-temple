@@ -79,7 +79,7 @@
     <!-- ===== 服務管理 ===== -->
     <div v-if="activeTab === 'services'" class="tab-content">
       <div class="toolbar">
-        <button class="btn-primary">＋ 新增服務</button>
+        <button class="btn-primary" @click="goCreateService">＋ 新增服務</button>
       </div>
       <div class="filter-grid filter-grid-4">
         <div class="filter-item">
@@ -149,8 +149,8 @@
               <td><span class="badge" :class="statusClass(item.status)">{{ item.status }}</span></td>
               <td class="col-action">
                 <button class="icon-btn">⬇</button>
-                <button class="icon-btn">👁</button>
-                <button class="icon-btn">✏️</button>
+                <button class="icon-btn" @click="goViewService(item.id)">👁</button>
+                <button class="icon-btn" @click="goEditService(item.id)">✏️</button>
                 <button class="icon-btn del">🗑️</button>
               </td>
             </tr>
@@ -282,7 +282,7 @@
       </div>
 
       <div class="toolbar">
-        <button class="btn-primary btn-settings">⚙ 捐款設定</button>
+        <button class="btn-primary btn-settings" @click="goDonationSettings">⚙ 捐款設定</button>
       </div>
 
       <div class="filter-grid filter-grid-4">
@@ -429,7 +429,18 @@ const goViewActivity = (id) => {
 const goEditActivity = (id) => {
   router.push({ name: 'app.temple.activity-edit', params: { templeId: templeId.value, activityId: id } })
 }
-
+const goCreateService = () => {
+  router.push({ name: 'app.temple.service-create', params: { templeId: templeId.value } })
+}
+const goViewService = (id) => {
+  router.push({ name: 'app.temple.service-detail', params: { templeId: templeId.value, serviceId: id } })
+}
+const goEditService = (id) => {
+  router.push({ name: 'app.temple.service-edit', params: { templeId: templeId.value, serviceId: id } })
+}
+const goDonationSettings = () => {
+  router.push({ name: 'app.temple.donation-settings', params: { templeId: templeId.value } })
+}
 // ── 狀態 badge ──
 const statusClass = (s) => ({
   'badge-published': s === '已發佈',
