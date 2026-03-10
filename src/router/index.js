@@ -220,7 +220,7 @@ router.beforeEach(async (to, from, next) => {
 // 路由切換後更新標題
 router.afterEach((to) => {
   window.scrollTo(0, 0)
-  const systemName = '宮掌櫃 CMS'
+  const systemName = '宮掌櫃'
   document.title = to.meta?.title ? `${to.meta.title} - ${systemName}` : systemName
 })
 

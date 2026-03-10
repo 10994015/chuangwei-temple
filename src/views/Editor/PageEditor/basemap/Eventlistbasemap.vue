@@ -12,8 +12,8 @@
         >
           {{ category.name }}
         </button>
+        
       </div>
-
       <hr class="divider" />
 
       <!-- 活動 Grid -->
@@ -160,12 +160,12 @@ const viewEventDetail = (event) => emit('view-detail', event)
 <style lang="scss" scoped>
 .event-list-section {
   padding: 2rem 0 4rem;
-  background: transparent;
+  background: transparent !important;
   min-height: 100vh;
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
