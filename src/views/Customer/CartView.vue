@@ -286,7 +286,7 @@ const addRecommend=(rec)=>alert(`已將「${rec.name}」加入購物車`)
 </script>
 
 <style scoped>
-.cart-page{padding:20px 32px 80px;background:#f5f5f3;min-height:100vh;font-family:'PingFang TC','Noto Sans TC',sans-serif;}
+.cart-page{padding:20px 32px 80px;background:#F3F4F6;min-height:100vh;font-family:'PingFang TC','Noto Sans TC',sans-serif;}
 .breadcrumb{font-size:13px;color:#999;margin-bottom:20px;display:flex;align-items:center;gap:6px;}
 .bc-link{color:#E8572A;cursor:pointer;}
 .bc-link:hover{text-decoration:underline;}

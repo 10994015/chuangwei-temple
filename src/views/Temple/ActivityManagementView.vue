@@ -558,7 +558,7 @@ const resetShipping = () => {
 .activity-mgmt {
   padding: 24px 32px 80px;
   min-height: 100%;
-  background: #f8f8f6;
+  background: #F3F4F6;
 }
 
 /* 麵包屑 */
