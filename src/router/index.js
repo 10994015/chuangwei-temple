@@ -106,15 +106,12 @@ const router = createRouter({
             { path: 'activity-management/service/:serviceId/edit',     name: 'app.temple.service-edit',        component: () => import('@/views/Temple/ServiceFormView.vue'),        meta: { title: '編輯服務',       requiresAuth: true } },
 
             { path: 'activity-management/donation-settings', name: 'app.temple.donation-settings', component: () => import('@/views/Temple/DonationSettingsView.vue'), meta: { title: '捐款設定', requiresAuth: true } },
+            { path: 'activity-management/product/select',          name: 'app.temple.product-select', component: () => import('@/views/Temple/ProductTypeSelectView.vue'), meta: { title: '選擇商品類型', requiresAuth: true } },
+            { path: 'activity-management/product/create',          name: 'app.temple.product-create', component: () => import('@/views/Temple/ProductFormView.vue'),       meta: { title: '新增商品',     requiresAuth: true } },
+            { path: 'activity-management/product/:productId/edit', name: 'app.temple.product-edit',   component: () => import('@/views/Temple/ProductFormView.vue'),       meta: { title: '編輯商品',     requiresAuth: true } },
+            { path: 'activity-management/product/normal/create', name: 'app.temple.product-normal-create', component: () => import('@/views/Temple/NormalProductFormView.vue'), meta: { title: '新增普通商品', requiresAuth: true } },
 
-
-
-
-
-
-
-
-          ]
+          ] 
         },
 
         // ── 宮廟後台：不含側邊欄 ──

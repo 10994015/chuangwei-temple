@@ -10,7 +10,7 @@
     <!-- Tab 導航 -->
     <div class="tab-nav">
       <button v-for="tab in tabs" :key="tab.key" class="tab-btn"
-        :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">
+        :class="{ active: activeTab === tab.key }" @click="setTab(tab.key)">
         {{ tab.label }}
       </button>
     </div>
@@ -167,7 +167,7 @@
     <!-- ===== 商品管理 ===== -->
     <div v-if="activeTab === 'products'" class="tab-content">
       <div class="toolbar">
-        <button class="btn-primary">＋ 新增商品</button>
+        <button class="btn-primary" @click="goSelectProductType">＋ 新增商品</button>
       </div>
       <div class="filter-grid filter-grid-4">
         <div class="filter-item">
@@ -236,8 +236,8 @@
               <td><span class="badge" :class="statusClass(item.status)">{{ item.status }}</span></td>
               <td class="col-action">
                 <button class="icon-btn">⬇</button>
-                <button class="icon-btn">👁</button>
-                <button class="icon-btn">✏️</button>
+                <button class="icon-btn" @click="goViewProduct(item.id)">👁</button>
+                <button class="icon-btn" @click="goEditProduct(item.id)">✏️</button>
                 <button class="icon-btn del">🗑️</button>
               </td>
             </tr>
@@ -403,12 +403,14 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 const templeId = computed(() => route.params.templeId)
+
+const VALID_TABS = ['events', 'services', 'products', 'donations', 'shipping']
 
 const tabs = [
   { key: 'events',    label: '活動管理' },
@@ -417,9 +419,26 @@ const tabs = [
   { key: 'donations', label: '捐款管理' },
   { key: 'shipping',  label: '運費管理' },
 ]
-const activeTab = ref('events')
 
-// ── 活動管理導航 ──
+// 從 route.query.tab 初始化，fallback 到 'events'
+const activeTab = ref(
+  VALID_TABS.includes(route.query.tab) ? route.query.tab : 'events'
+)
+
+// 切換 tab：更新 state + URL query（replace 不產生新歷史）
+const setTab = (key) => {
+  activeTab.value = key
+  router.replace({ query: { ...route.query, tab: key } })
+}
+
+// 監聽 URL query 變化（例如瀏覽器上一頁/下一頁）
+watch(() => route.query.tab, (val) => {
+  if (val && VALID_TABS.includes(val) && val !== activeTab.value) {
+    activeTab.value = val
+  }
+})
+
+// ── 導航方法（帶 tab query 讓子頁面返回時恢復） ──
 const goCreateActivity = () => {
   router.push({ name: 'app.temple.activity-create', params: { templeId: templeId.value } })
 }
@@ -441,6 +460,16 @@ const goEditService = (id) => {
 const goDonationSettings = () => {
   router.push({ name: 'app.temple.donation-settings', params: { templeId: templeId.value } })
 }
+const goSelectProductType = () => {
+  router.push({ name: 'app.temple.product-select', params: { templeId: templeId.value } })
+}
+const goViewProduct = (id) => {
+  router.push({ name: 'app.temple.product-detail', params: { templeId: templeId.value, productId: id } })
+}
+const goEditProduct = (id) => {
+  router.push({ name: 'app.temple.product-edit', params: { templeId: templeId.value, productId: id } })
+}
+
 // ── 狀態 badge ──
 const statusClass = (s) => ({
   'badge-published': s === '已發佈',
@@ -461,7 +490,6 @@ const filteredEvents = computed(() => events.value.filter(e => {
   if (eventFilter.category && e.category !== eventFilter.category) return false
   return true
 }))
-
 const eventNames = computed(() => events.value.map(e => e.name))
 
 // ── 服務管理 ──
@@ -478,11 +506,11 @@ const services = ref([
 const productFilter = reactive({ keyword: '', category: '', minPrice: '', maxPrice: '', onDate: '', offDate: '', event: '', permanent: false })
 const productCategories = ['法器', '香品', '福袋', '護身符']
 const products = ref([
-  { id: 1, name: '平安福袋', spec: '小福袋', price: 200,  onDate: '2024-01-01', offDate: null, event: '', stock: null, status: '已發佈' },
-  { id: 2, name: '平安福袋', spec: '大福袋', price: 500,  onDate: '2024-01-01', offDate: null, event: '', stock: null, status: '已發佈' },
-  { id: 3, name: '媽祖護身符', spec: '標準款', price: 300, onDate: '2024-01-01', offDate: null, event: '', stock: null, status: '已發佈' },
-  { id: 4, name: '檀香環香', spec: '一盒',  price: 180,  onDate: '2024-01-01', offDate: null, event: '', stock: '167 / 500', status: '已發佈' },
-  { id: 5, name: '春節供品組', spec: '基本組', price: 800, onDate: '2024-01-20', offDate: '2024-02-20', event: '春節祈福法會', stock: '45 / 100', status: '排程中' },
+  { id: 1, name: '平安福袋',   spec: '小福袋', price: 200,  onDate: '2024-01-01', offDate: null,         event: '',         stock: null,        status: '已發佈' },
+  { id: 2, name: '平安福袋',   spec: '大福袋', price: 500,  onDate: '2024-01-01', offDate: null,         event: '',         stock: null,        status: '已發佈' },
+  { id: 3, name: '媽祖護身符', spec: '標準款', price: 300,  onDate: '2024-01-01', offDate: null,         event: '',         stock: null,        status: '已發佈' },
+  { id: 4, name: '檀香環香',   spec: '一盒',   price: 180,  onDate: '2024-01-01', offDate: null,         event: '',         stock: '167 / 500', status: '已發佈' },
+  { id: 5, name: '春節供品組', spec: '基本組', price: 800,  onDate: '2024-01-20', offDate: '2024-02-20', event: '春節祈福法會', stock: '45 / 100',  status: '排程中' },
 ])
 
 // ── 捐款管理 ──
@@ -507,31 +535,16 @@ const shippingTiers = ref([
   { id: 2, min: 501,  max: 1000, fee: 60,  isAbove: false },
   { id: 3, min: 1001, max: 1000, fee: 0,   isAbove: true  },
 ])
-
 const tierPreview = (tier) => {
   if (tier.isAbove) return `訂單金額 $${tier.min} 以上，運費 $${tier.fee}`
   return `訂單金額 $${tier.min} - $${tier.max}，運費 $${tier.fee}`
 }
-
 const addTier = () => {
   const last = shippingTiers.value[shippingTiers.value.length - 1]
-  shippingTiers.value.push({
-    id: ++tierIdCounter,
-    min: last ? Number(last.max) + 1 : 0,
-    max: 0,
-    fee: 0,
-    isAbove: false
-  })
+  shippingTiers.value.push({ id: ++tierIdCounter, min: last ? Number(last.max) + 1 : 0, max: 0, fee: 0, isAbove: false })
 }
-
-const removeTier = (idx) => {
-  shippingTiers.value.splice(idx, 1)
-}
-
-const onAboveChange = (tier) => {
-  if (tier.isAbove) tier.max = tier.min
-}
-
+const removeTier = (idx) => { shippingTiers.value.splice(idx, 1) }
+const onAboveChange = (tier) => { if (tier.isAbove) tier.max = tier.min }
 const resetShipping = () => {
   shippingTiers.value = [
     { id: 1, min: 0,    max: 500,  fee: 100, isAbove: false },
@@ -584,143 +597,66 @@ const resetShipping = () => {
 
 /* 按鈕 */
 .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 20px;
-  background: #E8572A;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 20px; background: #E8572A; color: #fff;
+  border: none; border-radius: 8px; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: background 0.2s;
 }
 .btn-primary:hover { background: #d14a1f; }
-
 .btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 20px;
-  background: #fff;
-  color: #555;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
+  display: inline-flex; align-items: center;
+  padding: 9px 20px; background: #fff; color: #555;
+  border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: background 0.2s;
 }
 .btn-secondary:hover { background: #f5f5f5; }
-
 .btn-settings { background: #E8572A; }
 .btn-save { background: #E8572A; }
 .btn-save:disabled { background: #f0b09a; cursor: not-allowed; }
-
 .toolbar { margin-bottom: 20px; }
 
 /* 篩選網格 */
-.filter-grid {
-  display: grid;
-  gap: 12px 16px;
-  margin-bottom: 16px;
-}
+.filter-grid { display: grid; gap: 12px 16px; margin-bottom: 16px; }
 .filter-grid-4 { grid-template-columns: repeat(4, 1fr); }
-
 .filter-label { font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 500; }
-
 .search-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 8px 12px;
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px;
 }
 .search-icon { font-size: 13px; color: #aaa; flex-shrink: 0; }
-
 .filter-input {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #333;
-  background: #fff;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
+  width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 14px; color: #333; background: #fff; box-sizing: border-box; transition: border-color 0.2s;
 }
 .filter-input:focus { outline: none; border-color: #E8572A; }
 .filter-date::placeholder { color: #aaa; }
-
-.search-wrap .filter-input {
-  border: none;
-  padding: 0;
-  outline: none;
-  box-shadow: none;
-}
+.search-wrap .filter-input { border: none; padding: 0; outline: none; box-shadow: none; }
 .search-wrap .filter-input:focus { box-shadow: none; }
-
 .filter-select {
-  width: 100%;
-  padding: 9px 32px 9px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #333;
-  background: #fff;
-  appearance: none;
+  width: 100%; padding: 9px 32px 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 14px; color: #333; background: #fff; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  cursor: pointer;
-  box-sizing: border-box;
+  background-repeat: no-repeat; background-position: right 10px center;
+  cursor: pointer; box-sizing: border-box;
 }
 .filter-select:focus { outline: none; border-color: #E8572A; }
-
 .checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  padding: 9px 0;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: #333; cursor: pointer; padding: 9px 0;
 }
 .checkbox-label input { accent-color: #E8572A; width: 15px; height: 15px; }
 
 /* 匯出列 */
-.export-bar {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-bottom: 16px;
-}
+.export-bar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px; }
 .btn-export {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #555;
-  cursor: pointer;
-  transition: background 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: #fff; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 13px; color: #555; cursor: pointer; transition: background 0.15s;
 }
 .btn-export:hover { background: #f5f5f5; }
 
 /* 表格 */
-.table-wrap {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  margin-bottom: 20px;
-}
+.table-wrap { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 20px; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .data-table thead tr { background: #fafafa; border-bottom: 1px solid #eee; }
 .data-table th { padding: 13px 16px; text-align: left; font-weight: 600; color: #555; font-size: 13px; white-space: nowrap; }
@@ -728,15 +664,12 @@ const resetShipping = () => {
 .data-table tbody tr:last-child { border-bottom: none; }
 .data-table tbody tr:hover { background: #fafafa; }
 .data-table td { padding: 14px 16px; color: #333; vertical-align: middle; }
-
 .td-bold { font-weight: 600; }
 .td-orange { color: #E8572A; font-weight: 600; }
 .col-action { text-align: right; white-space: nowrap; }
-
 .icon-btn {
   background: none; border: none; cursor: pointer;
-  font-size: 14px; padding: 4px 5px;
-  border-radius: 5px; transition: background 0.15s; opacity: 0.65;
+  font-size: 14px; padding: 4px 5px; border-radius: 5px; transition: background 0.15s; opacity: 0.65;
 }
 .icon-btn:hover { background: #f0f0f0; opacity: 1; }
 .icon-btn.del:hover { background: #fff0f0; }
@@ -755,36 +688,15 @@ const resetShipping = () => {
 .page-num.active { background: #E8572A; border-color: #E8572A; color: #fff; font-weight: 600; }
 
 /* 捐款統計 */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.4fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-.stat-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 24px 28px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.4fr; gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 14px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .stat-label { font-size: 13px; color: #888; margin-bottom: 12px; }
 .stat-value { font-size: 1.9rem; font-weight: 700; color: #1a1a1a; }
 .stat-orange { color: #E8572A; }
-
 .stat-ranking { padding: 20px 24px; }
 .stat-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.btn-more {
-  padding: 4px 14px;
-  border: 1px solid #E8572A;
-  border-radius: 20px;
-  color: #E8572A;
-  font-size: 12px;
-  background: none;
-  cursor: pointer;
-  transition: background 0.15s;
-}
+.btn-more { padding: 4px 14px; border: 1px solid #E8572A; border-radius: 20px; color: #E8572A; font-size: 12px; background: none; cursor: pointer; transition: background 0.15s; }
 .btn-more:hover { background: #fff3ef; }
-
 .ranking-list { display: flex; flex-direction: column; gap: 10px; }
 .ranking-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
 .ranking-no { color: #333; font-weight: 500; }
@@ -792,119 +704,29 @@ const resetShipping = () => {
 
 /* 運費管理 */
 .shipping-tab { max-width: 100%; }
-
 .section-title { font-size: 1.4rem; font-weight: 700; color: #1a1a1a; margin: 0 0 8px; }
 .section-desc { font-size: 13px; color: #777; margin: 0 0 24px; }
-
-.tier-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 24px 28px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.tier-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+.tier-card { background: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.tier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .tier-title { font-size: 15px; font-weight: 600; color: #222; }
-.tier-delete {
-  background: none;
-  border: none;
-  color: #e53e3e;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: background 0.15s;
-  line-height: 1;
-}
+.tier-delete { background: none; border: none; color: #e53e3e; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; line-height: 1; }
 .tier-delete:hover { background: #fff0f0; }
-
-.tier-fields {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr 1fr;
-  gap: 16px;
-  align-items: end;
-  margin-bottom: 16px;
-}
+.tier-fields { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 16px; align-items: end; margin-bottom: 16px; }
 .tier-label { font-size: 13px; color: #555; margin-bottom: 6px; display: block; font-weight: 500; }
-.tier-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #333;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-}
+.tier-input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; color: #333; box-sizing: border-box; transition: border-color 0.2s; }
 .tier-input:focus { outline: none; border-color: #E8572A; }
 .tier-input:disabled { background: #f5f5f5; color: #aaa; }
-
 .tier-field-max { display: flex; flex-direction: column; }
-.tier-field-max .tier-input-row { display: flex; align-items: center; gap: 10px; }
-
-.above-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #444;
-  margin-top: 8px;
-  cursor: pointer;
-}
-.above-checkbox { accent-color: #E8572A; width: 14px; height: 14px; }
-
-.tier-field-max {
-  display: flex;
-  flex-direction: column;
-}
 .tier-field-max > label { margin-bottom: 6px; font-size: 13px; color: #555; font-weight: 500; }
-.tier-max-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.tier-max-row { display: flex; align-items: center; gap: 10px; }
 .tier-input-max { flex: 1; }
-
-.tier-preview {
-  font-size: 13px;
-  color: #888;
-  padding-top: 12px;
-  border-top: 1px dashed #eee;
-}
-
-.btn-add-tier {
-  display: block;
-  width: 200px;
-  margin: 8px auto 24px;
-  padding: 10px 0;
-  background: none;
-  border: 1px dashed #ccc;
-  border-radius: 20px;
-  font-size: 14px;
-  color: #888;
-  cursor: pointer;
-  text-align: center;
-  transition: border-color 0.2s, color 0.2s;
-}
+.above-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #444; margin-top: 8px; cursor: pointer; }
+.above-checkbox { accent-color: #E8572A; width: 14px; height: 14px; }
+.tier-preview { font-size: 13px; color: #888; padding-top: 12px; border-top: 1px dashed #eee; }
+.btn-add-tier { display: block; width: 200px; margin: 8px auto 24px; padding: 10px 0; background: none; border: 1px dashed #ccc; border-radius: 20px; font-size: 14px; color: #888; cursor: pointer; text-align: center; transition: border-color 0.2s, color 0.2s; }
 .btn-add-tier:hover { border-color: #E8572A; color: #E8572A; }
-
-.shipping-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-
-.shipping-notice {
-  background: #eef3ff;
-  border-radius: 12px;
-  padding: 20px 24px;
-}
+.shipping-actions { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 32px; }
+.shipping-notice { background: #eef3ff; border-radius: 12px; padding: 20px 24px; }
 .notice-title { font-weight: 700; color: #3355cc; margin-bottom: 12px; font-size: 14px; }
 .shipping-notice p { font-size: 13px; color: #334; margin: 0 0 8px; line-height: 1.7; }
 .shipping-notice p:last-child { margin: 0; }
