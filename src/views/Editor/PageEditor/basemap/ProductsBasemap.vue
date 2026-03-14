@@ -4,7 +4,7 @@
 
       <!-- 標題列 -->
       <div class="section-header">
-        <h2 class="section-title">祈福商品</h2>
+        <h2 class="section-title">{{ t('productsBasemap.title') }}</h2>
       </div>
 
       <!-- 商品 Grid — 固定 3 筆 -->
@@ -24,7 +24,7 @@
               @error="product.imageFailed = true"
             />
             <div v-else class="image-placeholder">
-              <span>商品圖片</span>
+              <span>{{ t('productsBasemap.imagePlaceholder') }}</span>
             </div>
           </div>
 
@@ -53,7 +53,7 @@
       <!-- 查看更多 -->
       <div class="view-more-wrap">
         <a href="#" class="view-more-btn" @click.prevent="$emit('view-all')">
-          查看更多商品
+          {{ t('productsBasemap.viewMore') }}
         </a>
       </div>
 
@@ -63,6 +63,8 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   productsList: {

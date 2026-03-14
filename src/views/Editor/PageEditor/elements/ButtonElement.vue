@@ -14,12 +14,15 @@
         padding: ensureUnit(content.padding, '12px 32px')
       }"
     >
-      {{ content.text || '按鈕文字' }}
+      {{ content.text || t('buttonElement.defaultText') }}
     </a>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const props = defineProps({
   content: {
     type: Object,

@@ -8,13 +8,19 @@ const route = useRoute()
 const templeId = route.params.templeId
 
 // ── Tab ──
-const activeTab = ref('basic')
+const validTabs = ['basic', 'deity', 'branch', 'asset']
+const activeTab = ref(validTabs.includes(route.query.tab) ? route.query.tab : 'basic')
 const tabs = [
   { key: 'basic',  label: '基本資料' },
   { key: 'deity',  label: '神尊管理' },
   { key: 'branch', label: '分靈管理' },
   { key: 'asset',  label: '資產管理' },
 ]
+
+const setTab = (key) => {
+  activeTab.value = key
+  router.replace({ query: { ...route.query, tab: key } })
+}
 
 // ══════════════════════════════════════
 // 基本資料
@@ -141,7 +147,7 @@ const goAssetCreate = () => router.push({ name: 'app.temple.asset-create', param
         :key="tab.key"
         class="tab-btn"
         :class="{ active: activeTab === tab.key }"
-        @click="activeTab = tab.key"
+        @click="setTab(tab.key)"
       >
         {{ tab.label }}
       </button>
@@ -486,10 +492,54 @@ const goAssetCreate = () => router.push({ name: 'app.temple.asset-create', param
 }
 
 @media (max-width: 768px) {
-  .temple-info-view { padding: 16px; }
-  .info-grid { grid-template-columns: 1fr; }
-  .edit-grid { grid-template-columns: 1fr; }
-  .toolbar { flex-wrap: wrap; }
-  .search-box { min-width: 100%; }
+  .temple-info-view { padding: 14px 14px 40px; gap: 16px; }
+
+  /* tab 橫向捲動 */
+  .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+  .tab-btn { white-space: nowrap; padding: 10px 16px; font-size: 14px; }
+
+  /* card */
+  .card-header { padding: 16px 18px; flex-wrap: wrap; gap: 10px; }
+  .card-title { font-size: 16px; }
+
+  /* 閱讀模式 grid */
+  .info-grid { grid-template-columns: 1fr; padding: 0 18px 16px; }
+  .info-field.full { grid-column: 1; }
+
+  /* 編輯模式 grid */
+  .edit-grid { grid-template-columns: 1fr; padding: 0 18px 8px; }
+  .edit-field.full { grid-column: 1; }
+
+  /* 編輯操作列 */
+  .edit-actions { padding: 14px 18px 16px; }
+
+  /* toolbar */
+  .toolbar { flex-wrap: wrap; gap: 10px; }
+  .toolbar-right { flex-wrap: wrap; width: 100%; }
+  .search-box { min-width: 0; flex: 1; }
+
+  /* 表格橫向捲動 */
+  .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table {
+    min-width: 560px;
+    th, td { padding: 12px 14px; }
+  }
+}
+
+@media (max-width: 480px) {
+  .temple-info-view { padding: 10px 10px 32px; }
+
+  .tab-btn { padding: 8px 12px; font-size: 13px; }
+
+  .card-header { padding: 14px; }
+  .btn-edit { padding: 6px 12px; font-size: 13px; }
+
+  .info-grid { padding: 0 14px 12px; }
+  .edit-grid { padding: 0 14px 6px; }
+
+  .btn-save, .btn-cancel { padding: 8px 18px; font-size: 13px; }
+  .btn-add { padding: 8px 14px; font-size: 13px; }
+
+  .edit-actions { padding: 12px 14px 14px; }
 }
 </style>

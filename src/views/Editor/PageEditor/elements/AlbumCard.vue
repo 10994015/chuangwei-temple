@@ -1,24 +1,23 @@
 <template>
-  <div class="album-card" :class="{ 'has-image': content.image }">
+  <div class="album-card has-image">
     <div class="card-image">
-      <img 
-        v-if="content.image" 
-        :src="content.image" 
-        :alt="content.title || '相簿圖片'"
+      <img
+        :src="content.image || '/images/service-card/01.png'"
+        :alt="content.title || t('albumCard.imageAlt')"
       />
-      <div v-else class="card-image-placeholder">
-        <span>📷</span>
-      </div>
     </div>
     <div class="card-content">
-      <span class="card-tag">{{ content.tag || '相簿封面' }}</span>
-      <h3 class="card-title">{{ content.title || '相簿標題' }}</h3>
+      <span class="card-tag">{{ content.tag || t('albumCard.tag') }}</span>
+      <h3 class="card-title">{{ content.title || t('albumCard.title') }}</h3>
       <p v-if="content.description" class="card-description">{{ content.description }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 defineProps({
   content: {
     type: Object,

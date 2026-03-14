@@ -146,10 +146,24 @@ onMounted(async () => {
   }
 })
 
+// 手機版選單
+const isMobileMenuOpen = ref(false)
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+  document.body.style.overflow = isMobileMenuOpen.value ? 'hidden' : ''
+}
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+  document.body.style.overflow = ''
+}
+
 // 監聽路由變化，關閉下拉選單
 watch(() => route.path, () => {
   showAdminMenu.value = false
   showLanguageMenu.value = false
+  closeMobileMenu()
 })
 </script>
 
@@ -172,6 +186,13 @@ watch(() => route.path, () => {
           {{ item.label }}
         </a>
       </nav>
+
+      <!-- 漢堡選單按鈕（手機版） -->
+      <button class="hamburger-btn" @click="toggleMobileMenu" :aria-expanded="isMobileMenuOpen">
+        <span class="hamburger-line" :class="{ open: isMobileMenuOpen }"></span>
+        <span class="hamburger-line" :class="{ open: isMobileMenuOpen }"></span>
+        <span class="hamburger-line" :class="{ open: isMobileMenuOpen }"></span>
+      </button>
 
       <!-- 右側按鈕區 -->
       <div class="actions-section">
@@ -268,11 +289,95 @@ watch(() => route.path, () => {
     </div>
 
     <!-- 登入彈窗組件 -->
-    <LoginModal 
-      :show="showLoginModal" 
+    <LoginModal
+      :show="showLoginModal"
       @close="closeLoginModal"
       @login-success="handleLoginSuccess"
     />
+
+    <!-- 手機版遮罩 -->
+    <Transition name="fade">
+      <div v-if="isMobileMenuOpen" class="mobile-overlay" @click="closeMobileMenu" />
+    </Transition>
+
+    <!-- 手機版抽屜選單 -->
+    <Transition name="slide-down">
+      <div v-if="isMobileMenuOpen" class="mobile-drawer">
+        <!-- 導覽連結 -->
+        <nav class="mobile-nav">
+          <a
+            v-for="item in navItems"
+            :key="item.path"
+            class="mobile-nav-item"
+            @click="handleNavClick(item.path); closeMobileMenu()"
+          >
+            {{ item.label }}
+          </a>
+        </nav>
+
+        <div class="mobile-divider" />
+
+        <!-- 動作按鈕 -->
+        <div class="mobile-actions">
+          <!-- 未登入 -->
+          <button v-if="!isLoggedIn" class="mobile-action-btn" @click="openLoginModal(); closeMobileMenu()">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+            登入
+          </button>
+
+          <!-- 已登入 -->
+          <template v-if="isLoggedIn">
+            <button
+              v-if="isInTempleRoute"
+              class="mobile-action-btn"
+              @click="handleSiteManagement(); closeMobileMenu()"
+            >
+              網站管理
+            </button>
+
+            <!-- 管理後台 -->
+            <div class="mobile-section-label">管理後台</div>
+            <button class="mobile-action-btn" @click="handleAdminOption('customer-account'); closeMobileMenu()">
+              香客帳號管理
+            </button>
+            <button
+              v-for="temple in templeRolesList"
+              :key="temple.tenantId"
+              class="mobile-action-btn"
+              :class="{ active: currentTempleId === temple.tenantId }"
+              @click="handleAdminOption(temple.tenantId); closeMobileMenu()"
+            >
+              {{ temple.tenantName }}
+            </button>
+
+            <div class="mobile-divider" />
+            <button class="mobile-action-btn danger" @click="handleLogout(); closeMobileMenu()">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+              </svg>
+              登出
+            </button>
+          </template>
+
+          <!-- 語言選擇 -->
+          <div class="mobile-divider" />
+          <div class="mobile-section-label">語言</div>
+          <div class="mobile-lang-row">
+            <button
+              v-for="lang in languages"
+              :key="lang"
+              class="mobile-lang-btn"
+              :class="{ active: lang === currentLanguage }"
+              @click="selectLanguage(lang)"
+            >
+              {{ lang }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </header>
 </template>
 
@@ -651,31 +756,207 @@ watch(() => route.path, () => {
   }
 }
 
+// ========== 漢堡按鈕 ==========
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+
+  &:hover { background-color: #f9fafb; }
+}
+
+.hamburger-line {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #374151;
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  transform-origin: center;
+
+  &:nth-child(1).open { transform: translateY(7px) rotate(45deg); }
+  &:nth-child(2).open { opacity: 0; transform: scaleX(0); }
+  &:nth-child(3).open { transform: translateY(-7px) rotate(-45deg); }
+}
+
+// ========== 手機版遮罩 ==========
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 998;
+}
+
+// ========== 手機版抽屜選單 ==========
+.mobile-drawer {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 999;
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+  padding: 8px 0 16px;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-nav-item {
+  display: block;
+  padding: 12px 20px;
+  font-size: 15px;
+  color: #374151;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  text-decoration: none;
+
+  &:hover { background-color: #f9fafb; }
+  &:active { background-color: #f3f4f6; }
+}
+
+.mobile-divider {
+  height: 1px;
+  background-color: #f3f4f6;
+  margin: 8px 0;
+}
+
+.mobile-actions {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  gap: 4px;
+}
+
+.mobile-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 8px 4px;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+}
+
+.mobile-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover { background-color: #f3f4f6; }
+
+  &.active {
+    background-color: #fff7f3;
+    color: #E8572A;
+    font-weight: 500;
+  }
+
+  &.danger {
+    color: #dc2626;
+    &:hover { background-color: #fef2f2; }
+  }
+}
+
+.mobile-lang-row {
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+  flex-wrap: wrap;
+}
+
+.mobile-lang-btn {
+  padding: 7px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: none;
+  font-size: 13px;
+  color: #374151;
+  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: #9ca3af; background-color: #f9fafb; }
+
+  &.active {
+    background-color: #E8572A;
+    border-color: #E8572A;
+    color: #ffffff;
+    font-weight: 500;
+  }
+}
+
+// ========== 手機抽屜動畫 ==========
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.slide-down-enter-from,
+.slide-down-leave-to {
+  transform: translateY(-12px);
+  opacity: 0;
+}
+
+// ========== RWD ==========
 @media (max-width: 768px) {
   .header-container {
     padding: 0 16px;
     height: 56px;
+    gap: 12px;
   }
 
   .nav-menu {
     display: none;
   }
 
+  .actions-section {
+    display: none;
+  }
+
+  .hamburger-btn {
+    display: flex;
+    margin-left: auto;
+  }
+
   .logo-text {
     font-size: 18px;
-  }
-
-  .btn {
-    padding: 6px 16px;
-    font-size: 13px;
-  }
-
-  .actions-section {
-    gap: 8px;
-  }
-
-  .user-name {
-    display: none;
   }
 }
 </style>

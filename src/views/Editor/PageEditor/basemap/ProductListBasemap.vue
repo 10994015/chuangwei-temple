@@ -5,37 +5,37 @@
       <!-- 篩選欄 -->
       <div class="filter-bar">
         <div class="filter-group">
-          <label class="filter-label">慶典活動</label>
-          <select class="filter-select wide"><option>全部</option></select>
+          <label class="filter-label">{{ t('productListBasemap.labelEvent') }}</label>
+          <select class="filter-select wide"><option>{{ t('productListBasemap.all') }}</option></select>
         </div>
         <div class="filter-group">
-          <label class="filter-label">類型</label>
-          <select class="filter-select narrow"><option>全部</option></select>
+          <label class="filter-label">{{ t('productListBasemap.labelType') }}</label>
+          <select class="filter-select narrow"><option>{{ t('productListBasemap.all') }}</option></select>
         </div>
         <div class="filter-group">
-          <label class="filter-label">需求分類</label>
-          <select class="filter-select mid"><option>全部</option></select>
+          <label class="filter-label">{{ t('productListBasemap.labelCategory') }}</label>
+          <select class="filter-select mid"><option>{{ t('productListBasemap.all') }}</option></select>
         </div>
         <div class="filter-group">
-          <label class="filter-label">排序方式</label>
-          <select class="filter-select mid"><option>價格低到高</option></select>
+          <label class="filter-label">{{ t('productListBasemap.labelSort') }}</label>
+          <select class="filter-select mid"><option>{{ t('productListBasemap.sortPriceAsc') }}</option></select>
         </div>
         <div class="filter-group search-group">
-          <label class="filter-label">關鍵字搜尋</label>
+          <label class="filter-label">{{ t('productListBasemap.labelKeyword') }}</label>
           <div class="search-box">
-            <input type="text" placeholder="搜尋商品或服務名稱" class="search-input" />
-            <button class="search-btn">搜尋</button>
+            <input type="text" :placeholder="t('productListBasemap.searchPlaceholder')" class="search-input" />
+            <button class="search-btn">{{ t('productListBasemap.searchBtn') }}</button>
           </div>
         </div>
       </div>
 
       <!-- 批次選擇 -->
       <div class="batch-actions">
-        <button class="batch-select-btn">批次選擇</button>
+        <button class="batch-select-btn">{{ t('productListBasemap.batchSelect') }}</button>
       </div>
 
       <!-- 精選推薦 -->
-      <h2 class="section-title">精選推薦</h2>
+      <h2 class="section-title">{{ t('productListBasemap.sectionTitle') }}</h2>
 
       <!-- 商品 Grid -->
       <div class="products-grid">
@@ -54,7 +54,7 @@
               @error="product.imageFailed = true"
             />
             <div v-else class="image-placeholder">
-              <span>商品圖片</span>
+              <span>{{ t('productListBasemap.imagePlaceholder') }}</span>
             </div>
           </div>
 
@@ -86,6 +86,8 @@
 
 <script setup>
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   productsList: {

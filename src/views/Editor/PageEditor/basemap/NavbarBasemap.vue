@@ -16,7 +16,7 @@
           v-if="isEditMode && logoSrc"
           class="delete-logo-btn"
           @click.stop="handleDeleteLogo"
-          title="刪除 Logo"
+          :title="t('navbarBasemap.deleteLogo')"
         >✕</button>
       </div>
       <!-- ✅ 桌機導航：device === 'desktop' 才顯示 -->
@@ -32,7 +32,7 @@
       <!-- ✅ 桌機右側操作：device === 'desktop' 才顯示 -->
       <div v-if="isDesktop" class="nav-actions">
         <button class="cart-btn" :class="{ disabled: isEditMode }">🛒</button>
-        <button class="login-btn" :class="{ disabled: isEditMode }">會員登入</button>
+        <button class="login-btn" :class="{ disabled: isEditMode }">{{ t('navbarBasemap.login') }}</button>
       </div>
 
       <!-- ✅ 漢堡按鈕：非桌機才顯示 -->
@@ -41,7 +41,7 @@
         class="hamburger-btn"
         :class="{ 'is-open': mobileMenuOpen }"
         @click.stop="toggleMobileMenu"
-        aria-label="開啟選單"
+        :aria-label="t('navbarBasemap.openMenu')"
       >
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
@@ -68,8 +68,8 @@
           </nav>
 
           <div class="mobile-actions">
-            <button class="mobile-cart-btn" :class="{ disabled: isEditMode }">🛒 購物車</button>
-            <button class="mobile-login-btn" :class="{ disabled: isEditMode }">會員登入</button>
+            <button class="mobile-cart-btn" :class="{ disabled: isEditMode }">{{ t('navbarBasemap.cart') }}</button>
+            <button class="mobile-login-btn" :class="{ disabled: isEditMode }">{{ t('navbarBasemap.login') }}</button>
           </div>
         </div>
       </transition>
@@ -84,6 +84,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   frameData:       { type: Object,  default: () => ({}) },
@@ -135,7 +137,7 @@ const handleSelectLogo = () => {
 }
 
 const handleDeleteLogo = () => {
-  if (confirm('確定要刪除 Logo 嗎？')) {
+  if (confirm(t('navbarBasemap.confirmDeleteLogo'))) {
     emit('delete-logo', { frame: props.frame })
   }
 }

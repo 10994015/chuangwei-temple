@@ -415,4 +415,67 @@ const addRecommend=(rec)=>alert(`已將「${rec.name}」加入購物車`)
 .btn-checkout:hover:not(.disabled){background:#d14a1f;}
 .btn-checkout.disabled{background:#ccc;cursor:not-allowed;}
 .checkout-warn{text-align:center;font-size:11px;color:#E8572A;margin-top:8px;}
+
+/* ========== RWD ========== */
+@media (max-width: 900px) {
+  .rec-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .cart-page { padding: 14px 14px 60px; }
+
+  /* 單欄佈局，摘要移到最上方 */
+  .cart-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .summary-panel {
+    position: static;
+    order: -1;
+  }
+
+  /* 商品列 */
+  .item-main {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .item-img { width: 56px; height: 56px; }
+  .item-info { flex: 1; min-width: 120px; }
+  .spec-select { min-width: 80px; font-size: 12px; }
+  .item-qty { order: 10; }
+  .item-price-col { order: 11; margin-left: auto; }
+  .del-btn { order: 12; }
+
+  /* 服務對象縮排 */
+  .target-section { padding: 0 16px 16px 16px; }
+
+  /* 服務對象 tab 2欄 */
+  .tgt-tabs { grid-template-columns: repeat(2, 1fr); }
+
+  /* 表單 1欄 */
+  .frow { grid-template-columns: 1fr; }
+  .ff.full { grid-column: 1; }
+
+  /* temple header/footer */
+  .temple-header { padding: 14px 16px; }
+  .temple-footer { padding: 12px 16px; }
+
+  /* 推薦商品 */
+  .rec-grid { grid-template-columns: repeat(2, 1fr); }
+  .rec-card, .extra-card { padding: 18px 16px; }
+}
+
+@media (max-width: 480px) {
+  .cart-page { padding: 10px 10px 48px; }
+
+  .item-main { padding: 12px; gap: 8px; }
+  .item-img { width: 48px; height: 48px; }
+  .qty-num { width: 28px; font-size: 13px; }
+  .qty-btn { width: 26px; height: 26px; font-size: 13px; }
+  .item-price { font-size: 13px; }
+
+  .temple-name { font-size: 14px; }
+  .sp-total { font-size: 18px; }
+}
 </style>

@@ -7,7 +7,7 @@
       <!-- 無資料時的佔位 -->
       <div v-if="!hasLocation" class="map-placeholder">
         <div class="placeholder-icon">🗺️</div>
-        <p>請在右側設定地址或經緯度</p>
+        <p>{{ t('mapElement.placeholder') }}</p>
       </div>
 
       <!-- 地址信息 -->
@@ -21,6 +21,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
+
+const mapsLanguage = computed(() => {
+  const map = { 'ZH-TW': 'zh-TW', 'ZH-CN': 'zh-CN', 'EN-US': 'en' }
+  return map[locale.value] ?? 'zh-TW'
+})
 
 const props = defineProps({
   content: {
@@ -70,7 +78,7 @@ const loadGoogleMaps = () => {
 
     const script = document.createElement('script')
     script.id = 'google-maps-script'
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${props.apiKey}&loading=async`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${props.apiKey}&loading=async&language=${mapsLanguage.value}`
     script.async = true
     script.defer = true
     script.onload = () => {

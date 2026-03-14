@@ -38,7 +38,7 @@
                 <circle cx="28" cy="32" r="7" stroke="#bbb" stroke-width="3"/>
                 <path d="M8 50l18-16 14 14 10-10 18 18" stroke="#bbb" stroke-width="3" stroke-linejoin="round"/>
               </svg>
-              <span class="placeholder-text">活動圖片</span>
+              <span class="placeholder-text">{{ t('eventListBasemap.imagePlaceholder') }}</span>
             </div>
           </div>
 
@@ -80,17 +80,17 @@
       </div>
 
       <div v-if="filteredEvents.length === 0" class="empty-state">
-        <p>此分類目前沒有活動</p>
+        <p>{{ t('eventListBasemap.empty') }}</p>
       </div>
 
       <!-- 頁碼 -->
       <div v-if="totalPages > 1" class="pagination">
-        <button class="page-btn page-nav" :class="{ disabled: currentPage === 1 }" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一頁</button>
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === 1 }" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">{{ t('eventListBasemap.prev') }}</button>
         <template v-for="page in pageNumbers" :key="page">
           <span v-if="page === '...'" class="page-ellipsis">...</span>
           <button v-else class="page-btn" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
         </template>
-        <button class="page-btn page-nav" :class="{ disabled: currentPage === totalPages }" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一頁</button>
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === totalPages }" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">{{ t('eventListBasemap.next') }}</button>
       </div>
     </div>
   </section>
@@ -98,6 +98,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   eventsList: {
@@ -120,13 +123,13 @@ const props = defineProps({
 
 const emit = defineEmits(['view-detail'])
 
-const categories = [
-  { id: 'all',       name: '全部' },
-  { id: 'ceremony',  name: '慶典法會' },
-  { id: 'prayer',    name: '祈福活動' },
-  { id: 'culture',   name: '文化活動' },
-  { id: 'volunteer', name: '志工服務' },
-]
+const categories = computed(() => [
+  { id: 'all',       name: t('eventListBasemap.catAll') },
+  { id: 'ceremony',  name: t('eventListBasemap.catCeremony') },
+  { id: 'prayer',    name: t('eventListBasemap.catPrayer') },
+  { id: 'culture',   name: t('eventListBasemap.catCulture') },
+  { id: 'volunteer', name: t('eventListBasemap.catVolunteer') },
+])
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)
@@ -153,7 +156,11 @@ const pageNumbers = computed(() => {
   return [1, '...', cur-1, cur, cur+1, '...', total]
 })
 
-const getTagClass = (tag) => ({ '熱門': 'hot', '推薦': 'recommended' }[tag] || 'default')
+const getTagClass = (tag) => {
+  if (tag === t('eventListBasemap.tagHot'))         return 'hot'
+  if (tag === t('eventListBasemap.tagRecommended')) return 'recommended'
+  return 'default'
+}
 const viewEventDetail = (event) => emit('view-detail', event)
 </script>
 

@@ -41,12 +41,31 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+const PLACEHOLDER_SLIDES = computed(() => [
+  { 
+    image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=600&fit=crop', 
+    title: t('heroBasemap.placeholder1'), 
+    subtitle: '' 
+  },
+  { 
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=1280&h=600&fit=crop', 
+    title: t('heroBasemap.placeholder2'), 
+    subtitle: '' 
+  },
+  { 
+    image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=1280&h=600&fit=crop', 
+    title: t('heroBasemap.placeholder3'), 
+    subtitle: '' 
+  }
+])
 
-const PLACEHOLDER_SLIDES = [
-  { image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=600&fit=crop', title: '輪播圖片 1', subtitle: '' },
-  { image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=1280&h=600&fit=crop', title: '輪播圖片 2', subtitle: '' },
-  { image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=1280&h=600&fit=crop', title: '輪播圖片 3', subtitle: '' }
-]
+const displaySlides = computed(() => 
+  normalizedSlides.value.length > 0 
+    ? normalizedSlides.value 
+    : PLACEHOLDER_SLIDES.value  
+)
 
 const props = defineProps({
   slides: { type: Array, default: null },
@@ -85,7 +104,6 @@ const normalizedSlides = computed(() => {
   return []
 })
 
-const displaySlides = computed(() => normalizedSlides.value.length > 0 ? normalizedSlides.value : PLACEHOLDER_SLIDES)
 
 // 每張圖片讀取自己的樣式
 const getOverlayStyle = (slide) => ({

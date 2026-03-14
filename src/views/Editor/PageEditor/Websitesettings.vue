@@ -4,17 +4,17 @@
     <div class="settings-header">
       <button class="back-button" @click="handleBack">
         <span class="icon">←</span>
-        返回編輯器
+        {{ t('websiteSettings.backBtn') }}
       </button>
-      <h1 class="settings-title">網站設定</h1>
+      <h1 class="settings-title">{{ t('websiteSettings.pageTitle') }}</h1>
       <div class="header-actions">
-        <button 
-          class="save-button" 
+        <button
+          class="save-button"
           @click="handleSave"
           :disabled="isSaving || !hasChanges"
         >
-          <span v-if="isSaving">儲存中...</span>
-          <span v-else>儲存變更</span>
+          <span v-if="isSaving">{{ t('websiteSettings.saving') }}</span>
+          <span v-else>{{ t('websiteSettings.saveBtn') }}</span>
         </button>
       </div>
     </div>
@@ -22,7 +22,7 @@
     <!-- 載入狀態 -->
     <div v-if="isLoading" class="loading-container">
       <div class="spinner"></div>
-      <p>載入中...</p>
+      <p>{{ t('websiteSettings.loading') }}</p>
     </div>
 
     <!-- 錯誤訊息 -->
@@ -30,7 +30,7 @@
       <div class="error-banner">
         <span class="error-icon">⚠️</span>
         <span>{{ error }}</span>
-        <button class="retry-button" @click="loadSettings">重試</button>
+        <button class="retry-button" @click="loadSettings">{{ t('websiteSettings.retry') }}</button>
       </div>
     </div>
 
@@ -39,14 +39,14 @@
       <!-- 字型設定區塊 -->
       <section class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">字型設定</h2>
-          <p class="section-description">選擇網站使用的字型樣式</p>
+          <h2 class="section-title">{{ t('websiteSettings.fontSection') }}</h2>
+          <p class="section-description">{{ t('websiteSettings.fontSectionDesc') }}</p>
         </div>
 
         <!-- 繁體中文字型 -->
         <div class="form-group">
           <label class="form-label" for="font-family-zh-tw">
-            繁體中文字型（ZH-TW）
+            {{ t('websiteSettings.fontZhTwLabel') }}
             <span class="required">*</span>
           </label>
           <select
@@ -55,7 +55,7 @@
             class="form-select"
             @change="markAsChanged"
           >
-            <option value="">請選擇字型</option>
+            <option value="">{{ t('websiteSettings.fontSelectPlaceholder') }}</option>
             <option v-for="font in zhTwFonts" :key="font.value" :value="font.value">
               {{ font.label }}
             </option>
@@ -71,7 +71,7 @@
         <!-- 簡體中文字型 -->
         <div class="form-group">
           <label class="form-label" for="font-family-zh-cn">
-            簡體中文字型（ZH-CN）
+            {{ t('websiteSettings.fontZhCnLabel') }}
             <span class="required">*</span>
           </label>
           <select
@@ -80,7 +80,7 @@
             class="form-select"
             @change="markAsChanged"
           >
-            <option value="">請選擇字型</option>
+            <option value="">{{ t('websiteSettings.fontSelectPlaceholder') }}</option>
             <option v-for="font in zhCnFonts" :key="font.value" :value="font.value">
               {{ font.label }}
             </option>
@@ -96,7 +96,7 @@
         <!-- 英文字型 -->
         <div class="form-group">
           <label class="form-label" for="font-family-en-us">
-            英文字型（EN-US）
+            {{ t('websiteSettings.fontEnUsLabel') }}
             <span class="required">*</span>
           </label>
           <select
@@ -105,7 +105,7 @@
             class="form-select"
             @change="markAsChanged"
           >
-            <option value="">請選擇字型</option>
+            <option value="">{{ t('websiteSettings.fontSelectPlaceholder') }}</option>
             <option v-for="font in enFonts" :key="font.value" :value="font.value">
               {{ font.label }}
             </option>
@@ -122,13 +122,13 @@
       <!-- SEO 設定區塊 -->
       <section class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">SEO 設定</h2>
-          <p class="section-description">優化您的網站在搜尋引擎中的排名</p>
+          <h2 class="section-title">{{ t('websiteSettings.seoSection') }}</h2>
+          <p class="section-description">{{ t('websiteSettings.seoSectionDesc') }}</p>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="seo-title">
-            網站標題 (SEO Title)
+            {{ t('websiteSettings.seoTitleLabel') }}
             <span class="required">*</span>
           </label>
           <input
@@ -142,7 +142,7 @@
           />
           <div class="input-hint">
             <span :class="{ 'text-warning': formData.seoTitle.length > 50 }">
-              {{ formData.seoTitle.length }} / 60 字
+              {{ t('websiteSettings.charCount', { n: formData.seoTitle.length, max: 60 }) }}
             </span>
             <span class="hint-text"></span>
           </div>
@@ -150,7 +150,7 @@
 
         <div class="form-group">
           <label class="form-label" for="seo-description">
-            網站描述 (SEO Description)
+            {{ t('websiteSettings.seoDescLabel') }}
             <span class="required">*</span>
           </label>
           <textarea
@@ -164,7 +164,7 @@
           ></textarea>
           <div class="input-hint">
             <span :class="{ 'text-warning': formData.seoDescription.length > 150 }">
-              {{ formData.seoDescription.length }} / 160 字
+              {{ t('websiteSettings.charCount', { n: formData.seoDescription.length, max: 160 }) }}
             </span>
             <span class="hint-text"></span>
           </div>
@@ -172,7 +172,7 @@
 
         <div class="form-group">
           <label class="form-label" for="seo-keywords">
-            關鍵字 (SEO Keywords)
+            {{ t('websiteSettings.seoKeywordsLabel') }}
           </label>
           <input
             id="seo-keywords"
@@ -196,11 +196,11 @@
             v-model="formData.metaPixel"
             type="text"
             class="form-input"
-            placeholder="例如：1234567890"
+            :placeholder="t('websiteSettings.metaPixelPlaceholder')"
             @input="markAsChanged"
           />
           <p class="input-hint">
-            <span class="hint-text">用於 Facebook 廣告追蹤</span>
+            <span class="hint-text">{{ t('websiteSettings.metaPixelHint') }}</span>
           </p>
         </div>
       </section>
@@ -208,10 +208,10 @@
       <!-- 變更提示 -->
       <div v-if="hasChanges" class="changes-banner">
         <span class="changes-icon">✏️</span>
-        <span>您有未儲存的變更</span>
+        <span>{{ t('websiteSettings.unsavedChanges') }}</span>
         <div class="changes-actions">
-          <button class="cancel-button" @click="handleCancel">取消</button>
-          <button class="save-button-small" @click="handleSave">儲存</button>
+          <button class="cancel-button" @click="handleCancel">{{ t('websiteSettings.cancelBtn') }}</button>
+          <button class="save-button-small" @click="handleSave">{{ t('websiteSettings.saveSmallBtn') }}</button>
         </div>
       </div>
     </div>
@@ -222,10 +222,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePageEditorStore } from '@/stores/pageEditor'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const route = useRoute()
 const pageEditorStore = usePageEditorStore()
+const { t } = useI18n()
 
 // ==================== 字型清單（按語言分類）====================
 
@@ -315,7 +317,7 @@ const loadSettings = async () => {
     }
   } catch (err) {
     console.error('❌ 載入設定失敗:', err)
-    error.value = pageEditorStore.error || '載入設定失敗，請稍後再試'
+    error.value = pageEditorStore.error || t('websiteSettings.errorLoad')
   } finally {
     isLoading.value = false
   }
@@ -325,11 +327,11 @@ const loadSettings = async () => {
 
 const handleSave = async () => {
   if (!formData.frontFamilyZhTw || !formData.frontFamilyZhCn || !formData.frontFamilyEnUs) {
-    alert('請選擇所有語言的網站字型')
+    alert(t('websiteSettings.alertSelectFonts'))
     return
   }
-  if (!formData.seoTitle.trim()) { alert('請填寫網站標題'); return }
-  if (!formData.seoDescription.trim()) { alert('請填寫網站描述'); return }
+  if (!formData.seoTitle.trim()) { alert(t('websiteSettings.alertFillTitle')); return }
+  if (!formData.seoDescription.trim()) { alert(t('websiteSettings.alertFillDesc')); return }
 
   isSaving.value = true
 
@@ -347,12 +349,12 @@ const handleSave = async () => {
     const success = await pageEditorStore.updateWebsiteSettings(templeId.value, settingsData)
 
     if (success) {
-      alert('設定已儲存！')
+      alert(t('websiteSettings.alertSaveSuccess'))
       // ✅ 重新讀取設定（顯示載入中，不整頁重新整理）
       await loadSettings()
     } else {
-      error.value = pageEditorStore.error || '儲存失敗，請稍後再試'
-      alert('儲存失敗：' + error.value)
+      error.value = pageEditorStore.error || t('websiteSettings.errorSave')
+      alert(t('websiteSettings.alertSaveFailed') + error.value)
     }
   } finally {
     isSaving.value = false
@@ -362,7 +364,7 @@ const handleSave = async () => {
 // ==================== 其他事件 ====================
 
 const handleCancel = () => {
-  if (confirm('確定要放棄所有未儲存的變更嗎？')) {
+  if (confirm(t('websiteSettings.confirmDiscard'))) {
     Object.assign(formData, originalData)
     hasChanges.value = false
   }
@@ -370,7 +372,7 @@ const handleCancel = () => {
 
 const handleBack = () => {
   if (hasChanges.value) {
-    if (confirm('您有未儲存的變更，確定要離開嗎？')) router.back()
+    if (confirm(t('websiteSettings.confirmLeave'))) router.back()
   } else {
     router.back()
   }

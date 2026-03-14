@@ -2,7 +2,7 @@
   <div class="props-panel" :class="{ 'is-collapsed': isCollapsed }">
 
     <!-- ===== 新增：收合按鈕 ===== -->
-    <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? '展開' : '收合'">
+    <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? t('propsPanel.expand') : t('propsPanel.collapse')">
       <svg class="collapse-icon" :class="{ 'is-flipped': isCollapsed }"
         width="16" height="16" viewBox="0 0 24 24"
         fill="none" stroke="currentColor" stroke-width="2.5"
@@ -12,29 +12,29 @@
     </button>
 
     <!-- ===== 新增：收合時的垂直標題 ===== -->
-    <div v-if="isCollapsed" class="collapsed-label">屬性設定</div>
+    <div v-if="isCollapsed" class="collapsed-label">{{ t('propsPanel.panelTitle') }}</div>
 
     <!-- ===== 新增：展開時的完整內容包裝 ===== -->
     <template v-if="!isCollapsed">
 
     <div class="panel-header">
-      <h3>屬性設定</h3>
+      <h3>{{ t('propsPanel.panelTitle') }}</h3>
     </div>
 
     <div class="panel-body">
       <!-- 未選擇任何項目 -->
       <div v-if="!selectedBasemap && !selectedFrame && !selectedElement && !selectedCell" class="empty-state">
         <div class="empty-icon">⚙️</div>
-        <p>請選擇底圖、框架或元件</p>
-        <p class="hint">點擊畫布中的項目來編輯屬性</p>
+        <p>{{ t('propsPanel.emptyHint') }}</p>
+        <p class="hint">{{ t('propsPanel.emptyHintSub') }}</p>
       </div>
 
       <!-- 選擇了底圖 -->
       <div v-else-if="selectedBasemap" class="props-section">
-        <h4 class="section-title">底圖設定</h4>
-        
+        <h4 class="section-title">{{ t('propsPanel.basemapSettings') }}</h4>
+
         <div class="prop-group">
-          <label>底圖類型</label>
+          <label>{{ t('propsPanel.basemapType') }}</label>
           <input 
             :value="selectedBasemap.bgType" 
             type="text" 
@@ -48,10 +48,10 @@
       <div v-else-if="selectedFrame" class="props-section">
         <!-- ✅ 自訂框架 (FRAME 開頭) -->
         <template v-if="selectedFrame.type && selectedFrame.type.startsWith('FRAME')">
-          <h4 class="section-title">自訂框架設定</h4>
-          
+          <h4 class="section-title">{{ t('propsPanel.customFrameSettings') }}</h4>
+
           <div class="prop-group">
-            <label>框架類型</label>
+            <label>{{ t('propsPanel.frameType') }}</label>
             <input 
               :value="selectedFrame.type" 
               type="text" 
@@ -62,10 +62,10 @@
 
           <!-- ✅ 框架寬度設定 -->
           <div class="metadata-section">
-            <h5 class="subsection-title">框架寬度</h5>
-            
+            <h5 class="subsection-title">{{ t('propsPanel.frameWidthSection') }}</h5>
+
             <div class="prop-group">
-              <label>最大寬度</label>
+              <label>{{ t('propsPanel.maxWidth') }}</label>
               <div class="input-with-unit">
                 <input 
                   v-model="frameWidth" 
@@ -78,81 +78,81 @@
             </div>
 
             <div class="width-presets">
-              <button @click="setFrameWidth('900')" class="preset-btn">窄</button>
-              <button @click="setFrameWidth('1200')" class="preset-btn">中</button>
-              <button @click="setFrameWidth('1400')" class="preset-btn">寬</button>
-              <button @click="setFrameWidth('100%')" class="preset-btn">全寬</button>
+              <button @click="setFrameWidth('900')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button>
+              <button @click="setFrameWidth('1200')" class="preset-btn">{{ t('propsPanel.presetMedium') }}</button>
+              <button @click="setFrameWidth('1400')" class="preset-btn">{{ t('propsPanel.presetWide') }}</button>
+              <button @click="setFrameWidth('100%')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button>
             </div>
           </div>
         </template>
         
         <!-- ✅ 首圖框架 (FIRST_PICTURE) -->
         <template v-else-if="selectedFrame.type === 'FIRST_PICTURE'">
-          <h4 class="section-title">首圖設定</h4>
-          
+          <h4 class="section-title">{{ t('propsPanel.heroSettings') }}</h4>
+
           <div class="prop-group">
-            <label>背景圖片</label>
+            <label>{{ t('propsPanel.bgImage') }}</label>
             <div class="image-upload">
               <div v-if="isUploadingHeroBackground" class="uploading-state">
                 <div class="spinner"></div>
-                <span>上傳中...</span>
+                <span>{{ t('propsPanel.uploading') }}</span>
               </div>
-              <img 
+              <img
                 v-else-if="selectedFrame.data?.heroBgImgSrc"
-                :src="selectedFrame.data.heroBgImgSrc" 
-                alt="背景預覽"
+                :src="selectedFrame.data.heroBgImgSrc"
+                :alt="t('propsPanel.bgPreviewAlt')"
                 class="preview-image"
               />
               <div v-else class="no-image">
-                <span>尚未上傳背景圖片</span>
+                <span>{{ t('propsPanel.noBgImage') }}</span>
               </div>
-              <button 
-                @click="handleUploadHeroBackground" 
+              <button
+                @click="handleUploadHeroBackground"
                 class="upload-btn"
                 :disabled="isUploadingHeroBackground"
               >
-                <template v-if="isUploadingHeroBackground">上傳中...</template>
+                <template v-if="isUploadingHeroBackground">{{ t('propsPanel.uploading') }}</template>
                 <template v-else>
-                  {{ selectedFrame.data?.heroBgImgSrc ? '更換背景' : '上傳背景' }}
+                  {{ selectedFrame.data?.heroBgImgSrc ? t('propsPanel.changeBg') : t('propsPanel.uploadBg') }}
                 </template>
               </button>
             </div>
           </div>
-          
+
           <div class="prop-group">
-            <label>標題</label>
-            <input v-model="heroTitle" type="text" class="prop-input" placeholder="輸入首圖標題" @input="updateHeroData" />
+            <label>{{ t('propsPanel.titleLabel') }}</label>
+            <input v-model="heroTitle" type="text" class="prop-input" :placeholder="t('propsPanel.titlePlaceholder')" @input="updateHeroData" />
           </div>
-          
+
           <div class="prop-group">
-            <label>副標題</label>
-            <textarea v-model="heroSubtitle" class="prop-textarea" rows="3" placeholder="輸入首圖副標題" @input="updateHeroData"></textarea>
+            <label>{{ t('propsPanel.subtitleLabel') }}</label>
+            <textarea v-model="heroSubtitle" class="prop-textarea" rows="3" :placeholder="t('propsPanel.subtitlePlaceholder')" @input="updateHeroData"></textarea>
           </div>
-          
+
           <div class="metadata-section">
-            <h5 class="subsection-title">樣式設定</h5>
-            
+            <h5 class="subsection-title">{{ t('propsPanel.styleSettings') }}</h5>
+
             <div class="prop-group">
-              <label>首圖高度</label>
+              <label>{{ t('propsPanel.heroHeight') }}</label>
               <div class="height-selector">
                 <input v-model="heroHeight" type="text" class="prop-input" placeholder="600（）" @input="updateHeroData" />
               </div>
               <div class="height-presets">
-                <button @click="setHeroHeight('500')" class="preset-btn">小</button>
-                <button @click="setHeroHeight('600')" class="preset-btn">中</button>
-                <button @click="setHeroHeight('700')" class="preset-btn">大</button>
-                <button @click="setHeroHeight('100vh')" class="preset-btn">全螢幕</button>
+                <button @click="setHeroHeight('500')" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setHeroHeight('600')" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setHeroHeight('700')" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
+                <button @click="setHeroHeight('100vh')" class="preset-btn">{{ t('propsPanel.sizeFullscreen') }}</button>
               </div>
             </div>
-            
+
             <div class="prop-group">
-              <label>遮罩透明度 ({{ overlayOpacity }}%)</label>
+              <label>{{ t('propsPanel.overlayOpacityLabel', { n: overlayOpacity }) }}</label>
               <input v-model.number="overlayOpacity" type="range" min="0" max="100" class="prop-slider" @input="updateHeroData" />
-              <div class="slider-labels"><span>透明</span><span>不透明</span></div>
+              <div class="slider-labels"><span>{{ t('propsPanel.transparent') }}</span><span>{{ t('propsPanel.opaque') }}</span></div>
             </div>
-            
+
             <div class="prop-group">
-              <label>遮罩顏色</label>
+              <label>{{ t('propsPanel.overlayColor') }}</label>
               <div class="color-input-group">
                 <input v-model="overlayColor" type="color" class="prop-color" @input="updateHeroData" />
                 <input v-model="overlayColor" type="text" class="prop-input color-text" placeholder="#000000" @input="updateHeroData" />
@@ -160,37 +160,37 @@
             </div>
             
             <div class="prop-group">
-              <label>文字框圓角</label>
+              <label>{{ t('propsPanel.textBoxRadius') }}</label>
               <div class="input-with-unit">
                 <input v-model="textBoxBorderRadius" type="text" class="prop-input" placeholder="12（）" @input="updateHeroData" />
               </div>
             </div>
             
             <div class="prop-group">
-              <label>標題顏色</label>
+              <label>{{ t('propsPanel.titleColor') }}</label>
               <div class="color-input-group">
                 <input v-model="titleColor" type="color" class="prop-color" @input="updateHeroData" />
                 <input v-model="titleColor" type="text" class="prop-input color-text" placeholder="#333333" @input="updateHeroData" />
               </div>
             </div>
-            
+
             <div class="prop-group">
-              <label>標題字體大小</label>
+              <label>{{ t('propsPanel.titleFontSize') }}</label>
               <div class="input-with-unit">
                 <input v-model="titleFontSize" type="text" class="prop-input" placeholder="48（）" @input="updateHeroData" />
               </div>
             </div>
-            
+
             <div class="prop-group">
-              <label>副標題顏色</label>
+              <label>{{ t('propsPanel.subtitleColor') }}</label>
               <div class="color-input-group">
                 <input v-model="subtitleColor" type="color" class="prop-color" @input="updateHeroData" />
                 <input v-model="subtitleColor" type="text" class="prop-input color-text" placeholder="#666666" @input="updateHeroData" />
               </div>
             </div>
-            
+
             <div class="prop-group">
-              <label>副標題字體大小</label>
+              <label>{{ t('propsPanel.subtitleFontSize') }}</label>
               <div class="input-with-unit">
                 <input v-model="subtitleFontSize" type="text" class="prop-input" placeholder="20（）" @input="updateHeroData" />
               </div>
@@ -200,37 +200,37 @@
 
         <!-- ✅ 輪播牆 (CAROUSEL_WALL) -->
         <template v-else-if="selectedFrame.type === 'CAROUSEL_WALL'">
-          <h4 class="section-title">輪播牆設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.carouselWallSettings') }}</h4>
 
           <div class="prop-group">
-            <label>輪播高度</label>
+            <label>{{ t('propsPanel.carouselHeight') }}</label>
             <div class="height-selector">
               <input v-model.number="carouselWallHeight" type="number" class="prop-input" min="200" max="1000" step="50" @input="updateCarouselWallSettings" />
               <span class="unit">px</span>
             </div>
             <div class="height-presets">
-              <button @click="setCarouselWallHeight(400)" class="preset-btn" :class="{ active: carouselWallHeight === 400 }">小</button>
-              <button @click="setCarouselWallHeight(600)" class="preset-btn" :class="{ active: carouselWallHeight === 600 }">中</button>
-              <button @click="setCarouselWallHeight(800)" class="preset-btn" :class="{ active: carouselWallHeight === 800 }">大</button>
-              <button @click="setCarouselWallHeight(1000)" class="preset-btn" :class="{ active: carouselWallHeight === 1000 }">特大</button>
+              <button @click="setCarouselWallHeight(400)" class="preset-btn" :class="{ active: carouselWallHeight === 400 }">{{ t('propsPanel.sizeSmall') }}</button>
+              <button @click="setCarouselWallHeight(600)" class="preset-btn" :class="{ active: carouselWallHeight === 600 }">{{ t('propsPanel.sizeMedium') }}</button>
+              <button @click="setCarouselWallHeight(800)" class="preset-btn" :class="{ active: carouselWallHeight === 800 }">{{ t('propsPanel.sizeLarge') }}</button>
+              <button @click="setCarouselWallHeight(1000)" class="preset-btn" :class="{ active: carouselWallHeight === 1000 }">{{ t('propsPanel.sizeXL') }}</button>
             </div>
           </div>
 
           <div class="prop-group">
             <label class="checkbox-label">
               <input v-model="carouselWallAutoPlay" type="checkbox" @change="updateCarouselWallSettings" />
-              <span>自動播放</span>
+              <span>{{ t('propsPanel.autoPlay') }}</span>
             </label>
           </div>
 
           <div class="prop-group" v-if="carouselWallAutoPlay">
-            <label>播放間隔 (毫秒)</label>
+            <label>{{ t('propsPanel.playInterval') }}</label>
             <input v-model.number="carouselWallInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselWallSettings" />
-            <span class="unit-hint">建議 3000–8000 毫秒</span>
+            <span class="unit-hint">{{ t('propsPanel.intervalHint') }}</span>
           </div>
 
           <div class="prop-group" style="margin-top: 24px;">
-            <label>輪播圖片 ({{ carouselWallImages.length }} 張)</label>
+            <label>{{ t('propsPanel.carouselWallImgCount', { n: carouselWallImages.length }) }}</label>
             <div v-if="carouselWallImages.length > 0" class="carousel-images-list-vertical">
               <div
                 v-for="(img, index) in carouselWallImages"
@@ -247,52 +247,52 @@
                 <!-- 圖片預覽列 -->
                 <div class="card-image-row">
                   <div class="drag-handle card-drag">⠿</div>
-                  <img :src="img.src" :alt="`圖片 ${index + 1}`" class="card-thumbnail" />
-                  <span class="card-index">第 {{ index + 1 }} 張</span>
-                  <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" title="刪除圖片">✕</button>
+                  <img :src="img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
+                  <span class="card-index">{{ t('propsPanel.imgIndex', { n: index + 1 }) }}</span>
+                  <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" :title="t('propsPanel.deleteImg')">✕</button>
                 </div>
                 <!-- 標題 -->
                 <div class="card-field">
-                  <label class="card-label">標題</label>
+                  <label class="card-label">{{ t('propsPanel.cardTitle') }}</label>
                   <input
                     :value="img.title || ''"
                     type="text"
                     class="prop-input card-input"
-                    placeholder="此張圖片的標題（選填）"
+                    :placeholder="t('propsPanel.cardTitlePlaceholder')"
                     @input="updateCarouselWallImageField(index, 'title', $event.target.value)"
                   />
                 </div>
                 <!-- 副標題 -->
                 <div class="card-field">
-                  <label class="card-label">副標題</label>
+                  <label class="card-label">{{ t('propsPanel.cardSubtitle') }}</label>
                   <textarea
                     :value="img.subtitle || ''"
                     class="prop-textarea card-textarea"
                     rows="2"
-                    placeholder="此張圖片的副標題（選填）"
+                    :placeholder="t('propsPanel.cardSubtitlePlaceholder')"
                     @input="updateCarouselWallImageField(index, 'subtitle', $event.target.value)"
                   ></textarea>
                 </div>
                 <!-- 樣式設定（可折疊） -->
                 <div class="card-field card-style-toggle" @click="toggleCardStyle(index)">
-                  <span class="card-label">樣式設定</span>
+                  <span class="card-label">{{ t('propsPanel.cardStyle') }}</span>
                   <span class="card-toggle-icon">{{ expandedCardStyles.includes(index) ? '▲' : '▼' }}</span>
                 </div>
                 <template v-if="expandedCardStyles.includes(index)">
                   <!-- 遮罩透明度 -->
                   <div class="card-field">
-                    <label class="card-label">遮罩透明度 ({{ img.overlayOpacity ?? 40 }}%)</label>
+                    <label class="card-label">{{ t('propsPanel.overlayOpacityLabel', { n: img.overlayOpacity ?? 40 }) }}</label>
                     <input
                       :value="img.overlayOpacity ?? 40"
                       type="range" min="0" max="100"
                       class="prop-slider card-slider"
                       @input="updateCarouselWallImageField(index, 'overlayOpacity', Number($event.target.value))"
                     />
-                    <div class="slider-labels"><span>透明</span><span>不透明</span></div>
+                    <div class="slider-labels"><span>{{ t('propsPanel.transparent') }}</span><span>{{ t('propsPanel.opaque') }}</span></div>
                   </div>
                   <!-- 遮罩顏色 -->
                   <div class="card-field">
-                    <label class="card-label">遮罩顏色</label>
+                    <label class="card-label">{{ t('propsPanel.overlayColor') }}</label>
                     <div class="color-input-group">
                       <input
                         :value="img.overlayColor || '#000000'"
@@ -308,7 +308,7 @@
                   </div>
                   <!-- 標題顏色 -->
                   <div class="card-field">
-                    <label class="card-label">標題顏色</label>
+                    <label class="card-label">{{ t('propsPanel.titleColor') }}</label>
                     <div class="color-input-group">
                       <input
                         :value="img.titleColor || '#ffffff'"
@@ -324,7 +324,7 @@
                   </div>
                   <!-- 標題字體大小 -->
                   <div class="card-field">
-                    <label class="card-label">標題字體大小</label>
+                    <label class="card-label">{{ t('propsPanel.titleFontSize') }}</label>
                     <div class="input-with-suffix">
                       <input
                         :value="img.titleFontSize ?? 48"
@@ -336,7 +336,7 @@
                   </div>
                   <!-- 副標題顏色 -->
                   <div class="card-field">
-                    <label class="card-label">副標題顏色</label>
+                    <label class="card-label">{{ t('propsPanel.subtitleColor') }}</label>
                     <div class="color-input-group">
                       <input
                         :value="img.subtitleColor || '#eeeeee'"
@@ -352,7 +352,7 @@
                   </div>
                   <!-- 副標題字體大小 -->
                   <div class="card-field">
-                    <label class="card-label">副標題字體大小</label>
+                    <label class="card-label">{{ t('propsPanel.subtitleFontSize') }}</label>
                     <div class="input-with-suffix">
                       <input
                         :value="img.subtitleFontSize ?? 20"
@@ -365,48 +365,48 @@
                 </template>
               </div>
             </div>
-            <div v-else class="no-image"><span>尚未上傳圖片</span></div>
+            <div v-else class="no-image"><span>{{ t('propsPanel.noImage') }}</span></div>
             <button @click="handleUploadCarouselWall" class="upload-btn" :disabled="isUploadingCarouselWall">
-              <template v-if="isUploadingCarouselWall"><span class="btn-spinner"></span>上傳中...</template>
-              <template v-else>＋ 新增圖片</template>
+              <template v-if="isUploadingCarouselWall"><span class="btn-spinner"></span>{{ t('propsPanel.uploading') }}</template>
+              <template v-else>{{ t('propsPanel.addImage') }}</template>
             </button>
           </div>
         </template>
         
         <!-- ✅ 頁尾 (FOOTER) -->
         <template v-else-if="selectedFrame.type === 'FOOTER'">
-          <h4 class="section-title">頁尾設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.footerSettings') }}</h4>
 
           <div class="metadata-section">
-            <h5 class="subsection-title">背景色</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.bgColorSection') }}</h5>
             <div class="prop-group">
-              <label>背景顏色</label>
+              <label>{{ t('propsPanel.bgColor') }}</label>
               <div class="color-input-group">
                 <input v-model="footerBgColor" type="color" class="prop-color" @input="updateFooterStyle" />
                 <input v-model="footerBgColor" type="text" class="prop-input color-text" placeholder="#2d2d2d" @input="updateFooterStyle" />
               </div>
               <div class="color-quick-btns" style="margin-top:10px;">
-                <button @click="footerBgColor='#2d2d2d'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#2d2d2d' }">深灰</button>
-                <button @click="footerBgColor='#1a1a2e'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#1a1a2e' }">深藍</button>
-                <button @click="footerBgColor='#3b1f0a'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#3b1f0a' }">深褐</button>
-                <button @click="footerBgColor='#1b2a1b'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#1b2a1b' }">深綠</button>
+                <button @click="footerBgColor='#2d2d2d'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#2d2d2d' }">{{ t('propsPanel.colorDarkGray') }}</button>
+                <button @click="footerBgColor='#1a1a2e'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#1a1a2e' }">{{ t('propsPanel.colorDarkBlue') }}</button>
+                <button @click="footerBgColor='#3b1f0a'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#3b1f0a' }">{{ t('propsPanel.colorDarkBrown') }}</button>
+                <button @click="footerBgColor='#1b2a1b'; updateFooterStyle()" class="preset-btn" :class="{ active: footerBgColor==='#1b2a1b' }">{{ t('propsPanel.colorDarkGreen') }}</button>
               </div>
             </div>
           </div>
 
           <div class="metadata-section">
-            <h5 class="subsection-title">文字色</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.textColorSection') }}</h5>
             <div class="prop-group">
-              <label>文字顏色</label>
+              <label>{{ t('propsPanel.textColor') }}</label>
               <div class="color-input-group">
                 <input v-model="footerTextColor" type="color" class="prop-color" @input="updateFooterStyle" />
                 <input v-model="footerTextColor" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateFooterStyle" />
               </div>
               <div class="color-quick-btns" style="margin-top:10px;">
-                <button @click="footerTextColor='#ffffff'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#ffffff' }">白色</button>
-                <button @click="footerTextColor='#f5d9b0'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#f5d9b0' }">金色</button>
-                <button @click="footerTextColor='#a8d8a8'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#a8d8a8' }">淺綠</button>
-                <button @click="footerTextColor='#adc8e6'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#adc8e6' }">淺藍</button>
+                <button @click="footerTextColor='#ffffff'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#ffffff' }">{{ t('propsPanel.colorWhite') }}</button>
+                <button @click="footerTextColor='#f5d9b0'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#f5d9b0' }">{{ t('propsPanel.colorGold') }}</button>
+                <button @click="footerTextColor='#a8d8a8'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#a8d8a8' }">{{ t('propsPanel.colorLightGreen') }}</button>
+                <button @click="footerTextColor='#adc8e6'; updateFooterStyle()" class="preset-btn" :class="{ active: footerTextColor==='#adc8e6' }">{{ t('propsPanel.colorLightBlue') }}</button>
               </div>
             </div>
           </div>
@@ -414,55 +414,55 @@
 
         <!-- ✅ 捐款區 (INDEX_DONATION) -->
         <template v-else-if="selectedFrame.type === 'INDEX_DONATION'">
-          <h4 class="section-title">捐款區設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.donationSettings') }}</h4>
 
           <div class="metadata-section">
-            <h5 class="subsection-title">背景色</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.bgColorSection') }}</h5>
             <div class="prop-group">
-              <label>背景顏色 / 漸層</label>
+              <label>{{ t('propsPanel.bgGradient') }}</label>
               <div class="color-input-group">
                 <input v-model="donationBgColorA" type="color" class="prop-color" @input="updateDonationStyle" />
                 <input v-model="donationBgColorA" type="text" class="prop-input color-text" placeholder="#8b7355" @input="updateDonationStyle" />
               </div>
               <div class="color-input-group" style="margin-top: 8px;">
                 <input v-model="donationBgColorB" type="color" class="prop-color" @input="updateDonationStyle" />
-                <input v-model="donationBgColorB" type="text" class="prop-input color-text" placeholder="#a0826d（漸層第二色，留空為純色）" @input="updateDonationStyle" />
+                <input v-model="donationBgColorB" type="text" class="prop-input color-text" placeholder="#a0826d" @input="updateDonationStyle" />
               </div>
-              <span class="unit-hint">設定兩個顏色會產生漸層，只設一個則為純色</span>
+              <span class="unit-hint">{{ t('propsPanel.gradientHint') }}</span>
             </div>
           </div>
 
           <div class="metadata-section">
-            <h5 class="subsection-title">文字色</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.textColorSection') }}</h5>
             <div class="prop-group">
-              <label>文字顏色</label>
+              <label>{{ t('propsPanel.textColor') }}</label>
               <div class="color-input-group">
                 <input v-model="donationTextColor" type="color" class="prop-color" @input="updateDonationStyle" />
                 <input v-model="donationTextColor" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateDonationStyle" />
               </div>
             </div>
             <div class="color-quick-btns">
-              <button @click="donationTextColor = '#ffffff'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#ffffff' }">白色</button>
-              <button @click="donationTextColor = '#333333'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#333333' }">深色</button>
-              <button @click="donationTextColor = '#f5d9b0'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#f5d9b0' }">金色</button>
-              <button @click="donationTextColor = '#fde68a'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#fde68a' }">黃色</button>
+              <button @click="donationTextColor = '#ffffff'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#ffffff' }">{{ t('propsPanel.colorWhite') }}</button>
+              <button @click="donationTextColor = '#333333'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#333333' }">{{ t('propsPanel.colorDark') }}</button>
+              <button @click="donationTextColor = '#f5d9b0'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#f5d9b0' }">{{ t('propsPanel.colorGold') }}</button>
+              <button @click="donationTextColor = '#fde68a'; updateDonationStyle()" class="preset-btn" :class="{ active: donationTextColor === '#fde68a' }">{{ t('propsPanel.colorYellow') }}</button>
             </div>
           </div>
         </template>
 
         <!-- ✅ 其他系統框架類型 -->
         <template v-else>
-          <h4 class="section-title">框架設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.frameSettings') }}</h4>
           <div class="prop-group">
-            <label>框架類型</label>
+            <label>{{ t('propsPanel.frameType') }}</label>
             <input :value="selectedFrame.type" type="text" class="prop-input" disabled />
           </div>
 
           <!-- 文字色主題 -->
           <div class="metadata-section">
-            <h5 class="subsection-title">文字色主題</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.textColorTheme') }}</h5>
             <div class="prop-group">
-              <label>選擇主題</label>
+              <label>{{ t('propsPanel.selectTheme') }}</label>
               <div class="theme-buttons">
                 <button
                   v-for="t in textThemeOptions" :key="t.value"
@@ -487,7 +487,7 @@
 
             <!-- 自訂色 -->
             <div v-if="systemFrameTextTheme === 'custom'" class="prop-group">
-              <label>自訂文字顏色</label>
+              <label>{{ t('propsPanel.customTextColor') }}</label>
               <div class="color-input-group">
                 <input v-model="systemFrameTextColor" type="color" class="prop-color" @input="updateSystemFrameTheme" />
                 <input v-model="systemFrameTextColor" type="text" class="prop-input color-text" placeholder="#333333" @input="updateSystemFrameTheme" />
@@ -497,7 +497,7 @@
             <!-- 預覽說明 -->
             <div class="theme-preview-hint">
               <span class="hint-icon">💡</span>
-              <p>主題會套用到此框架內所有標題、內文、卡片背景等文字元素。</p>
+              <p>{{ t('propsPanel.themeHint') }}</p>
             </div>
           </div>
         </template>
@@ -507,16 +507,16 @@
       <div v-else-if="selectedElement" class="props-section">
         <!-- Logo 元件 -->
         <template v-if="selectedElement.type === 'logo'">
-          <h4 class="section-title">Logo 設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.logoSettings') }}</h4>
           <div class="prop-group">
-            <label>Logo 圖片</label>
+            <label>{{ t('propsPanel.logoImg') }}</label>
             <div class="image-upload">
-              <div v-if="isUploadingLogo" class="uploading-state"><div class="spinner"></div><span>上傳中...</span></div>
+              <div v-if="isUploadingLogo" class="uploading-state"><div class="spinner"></div><span>{{ t('propsPanel.uploading') }}</span></div>
               <img v-else-if="localLogoSrc" :src="localLogoSrc" :alt="selectedElement.frame?.data?.temple_name || 'Logo'" class="preview-image logo-preview" @error="handleLogoImageError" />
-              <div v-else class="no-image"><span>尚未上傳 Logo</span></div>
+              <div v-else class="no-image"><span>{{ t('propsPanel.noLogo') }}</span></div>
               <button @click="handleUploadLogo" class="upload-btn" :disabled="isUploadingLogo">
-                <template v-if="isUploadingLogo">上傳中...</template>
-                <template v-else>{{ localLogoSrc ? '更換 Logo' : '上傳 Logo' }}</template>
+                <template v-if="isUploadingLogo">{{ t('propsPanel.uploading') }}</template>
+                <template v-else>{{ localLogoSrc ? t('propsPanel.changeLogo') : t('propsPanel.uploadLogo') }}</template>
               </button>
             </div>
           </div>
@@ -524,220 +524,220 @@
 
         <!-- TEXT 元件 -->
         <template v-else-if="selectedElement.element?.type === 'TEXT'">
-          <h4 class="section-title">文字設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.textSettings') }}</h4>
           <div class="prop-group">
-            <label>文字內容</label>
+            <label>{{ t('propsPanel.textContent') }}</label>
             <!-- 捐款區的標題/內文是純文字，不用富文字編輯器 -->
             <template v-if="selectedElement.element?.id === 'donationTitle'">
-              <input v-model="selectedElement.element.value.text" type="text" class="prop-input" placeholder="輸入標題" />
+              <input v-model="selectedElement.element.value.text" type="text" class="prop-input" :placeholder="t('propsPanel.titleInputPlaceholder')" />
             </template>
             <template v-else-if="selectedElement.element?.id === 'donationBrief'">
-              <textarea v-model="selectedElement.element.value.text" class="prop-textarea" rows="4" placeholder="輸入內文"></textarea>
+              <textarea v-model="selectedElement.element.value.text" class="prop-textarea" rows="4" :placeholder="t('propsPanel.briefInputPlaceholder')"></textarea>
             </template>
             <template v-else>
               <RichTextEditor v-model="selectedElement.element.value.text" />
             </template>
           </div>
           <div class="metadata-section">
-            <h5 class="subsection-title">樣式設定</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.styleSettings') }}</h5>
             <div class="prop-group">
-              <label>文字顏色</label>
+              <label>{{ t('propsPanel.elementTextColor') }}</label>
               <div class="color-input-group">
                 <input v-model="elementMetadata.color" type="color" class="prop-color" @input="updateMetadata" />
                 <input v-model="elementMetadata.color" type="text" class="prop-input color-text" placeholder="#000000" @input="updateMetadata" />
-                <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
+                <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
             </div>
             <div class="prop-group">
-              <label>字體大小</label>
+              <label>{{ t('propsPanel.fontSize') }}</label>
               <div class="font-size-row">
                 <input v-model="elementMetadata.fontSize" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
                 <div class="font-size-presets">
-                  <button @click="elementMetadata.fontSize = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '12' }">小</button>
-                  <button @click="elementMetadata.fontSize = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '16' }">中</button>
-                  <button @click="elementMetadata.fontSize = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '24' }">大</button>
-                  <button @click="elementMetadata.fontSize = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '36' }">超大</button>
+                  <button @click="elementMetadata.fontSize = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '12' }">{{ t('propsPanel.sizeSmall') }}</button>
+                  <button @click="elementMetadata.fontSize = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '16' }">{{ t('propsPanel.sizeMedium') }}</button>
+                  <button @click="elementMetadata.fontSize = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '24' }">{{ t('propsPanel.sizeLarge') }}</button>
+                  <button @click="elementMetadata.fontSize = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '36' }">{{ t('propsPanel.sizeXXL') }}</button>
                 </div>
               </div>
             </div>
             <div class="prop-group">
-              <label>字體粗細 <span class="label-value">{{ elementMetadata.fontWeight ?? '預設' }}</span></label>
+              <label>{{ t('propsPanel.fontWeight') }} <span class="label-value">{{ elementMetadata.fontWeight ?? t('propsPanel.fontWeightDefault') }}</span></label>
               <input v-model.number="elementMetadata.fontWeight" type="range" min="300" max="900" step="100" class="prop-slider" @input="updateMetadata" />
               <div class="font-weight-labels">
                 <span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span>
               </div>
             </div>
             <div class="prop-group">
-              <label>文字對齊</label>
+              <label>{{ t('propsPanel.textAlign') }}</label>
               <div class="align-buttons">
-                <button @click="elementMetadata.textAlign = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'left' }">靠左</button>
-                <button @click="elementMetadata.textAlign = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'center' }">置中</button>
-                <button @click="elementMetadata.textAlign = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'right' }">靠右</button>
+                <button @click="elementMetadata.textAlign = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'left' }">{{ t('propsPanel.alignLeft') }}</button>
+                <button @click="elementMetadata.textAlign = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'center' }">{{ t('propsPanel.alignCenter') }}</button>
+                <button @click="elementMetadata.textAlign = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'right' }">{{ t('propsPanel.alignRight') }}</button>
                 <button @click="elementMetadata.textAlign = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
             <div class="prop-group">
-              <label>背景顏色</label>
+              <label>{{ t('propsPanel.backgroundColor') }}</label>
               <div class="color-input-group">
                 <input v-model="elementMetadata.backgroundColor" type="color" class="prop-color" @input="updateMetadata" />
                 <input v-model="elementMetadata.backgroundColor" type="text" class="prop-input color-text" placeholder="transparent" @input="updateMetadata" />
-                <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
+                <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
             </div>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
             <div class="prop-group">
-              <label>最大寬度</label>
+              <label>{{ t('propsPanel.maxWidth') }}</label>
               <div class="input-with-suffix">
                 <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
                 <span class="input-suffix">%</span>
               </div>
             </div>
             <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button>
+              <button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button>
+              <button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button>
             </div>
           </div>
         </template>
 
         <!-- IMG 元件 -->
         <template v-else-if="selectedElement.element?.type === 'IMG'">
-          <h4 class="section-title">圖片設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.imgSettings') }}</h4>
           <div class="prop-group">
-            <label>圖片</label>
+            <label>{{ t('propsPanel.imgLabel') }}</label>
             <div class="image-upload">
-              <div v-if="isUploadingImage" class="uploading-state"><div class="spinner"></div><span>上傳中...</span></div>
-              <img v-else-if="selectedElement.element.value?.src" :src="selectedElement.element.value.src" alt="圖片預覽" class="preview-image" />
-              <div v-else class="no-image"><span>尚未上傳圖片</span></div>
+              <div v-if="isUploadingImage" class="uploading-state"><div class="spinner"></div><span>{{ t('propsPanel.uploading') }}</span></div>
+              <img v-else-if="selectedElement.element.value?.src" :src="selectedElement.element.value.src" :alt="t('propsPanel.imgPreviewAlt')" class="preview-image" />
+              <div v-else class="no-image"><span>{{ t('propsPanel.noImgUploaded') }}</span></div>
               <button @click="handleUploadImage" class="upload-btn" :disabled="isUploadingImage">
-                <template v-if="isUploadingImage">上傳中...</template>
-                <template v-else>{{ selectedElement.element.value?.src ? '更換圖片' : '上傳圖片' }}</template>
+                <template v-if="isUploadingImage">{{ t('propsPanel.uploading') }}</template>
+                <template v-else>{{ selectedElement.element.value?.src ? t('propsPanel.changeImage') : t('propsPanel.uploadImage') }}</template>
               </button>
             </div>
           </div>
           <div class="metadata-section">
-            <h5 class="subsection-title">樣式設定</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.styleSettings') }}</h5>
             <div class="prop-group">
-              <label>圖片對齊</label>
+              <label>{{ t('propsPanel.imgAlign') }}</label>
               <div class="align-buttons">
-                <button @click="elementMetadata.textAlign = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'left' }">靠左</button>
-                <button @click="elementMetadata.textAlign = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'center' }">置中</button>
-                <button @click="elementMetadata.textAlign = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'right' }">靠右</button>
+                <button @click="elementMetadata.textAlign = 'left'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'left' }">{{ t('propsPanel.alignLeft') }}</button>
+                <button @click="elementMetadata.textAlign = 'center'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'center' }">{{ t('propsPanel.alignCenter') }}</button>
+                <button @click="elementMetadata.textAlign = 'right'; updateMetadata()" class="align-btn" :class="{ active: elementMetadata.textAlign === 'right' }">{{ t('propsPanel.alignRight') }}</button>
                 <button @click="elementMetadata.textAlign = null; updateMetadata()" class="align-btn clear">✕</button>
               </div>
             </div>
             <div class="prop-group">
-              <label>寬度</label>
+              <label>{{ t('propsPanel.width') }}</label>
               <div class="input-with-suffix">
                 <input v-model="imgWidth" type="number" class="prop-input" placeholder="500" min="1" @input="updateImgSize" />
                 <span class="input-suffix">px</span>
               </div>
             </div>
             <div class="prop-group">
-              <label>高度</label>
+              <label>{{ t('propsPanel.height') }}</label>
               <div class="input-with-suffix">
                 <input v-model="imgHeight" type="number" class="prop-input" placeholder="auto" min="1" @input="updateImgSize" />
                 <span class="input-suffix">px</span>
               </div>
-              <span class="unit-hint">留空則為 auto</span>
+              <span class="unit-hint">{{ t('propsPanel.autoHint') }}</span>
             </div>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
             <div class="prop-group">
-              <label>最大寬度</label>
+              <label>{{ t('propsPanel.maxWidth') }}</label>
               <div class="input-with-suffix">
                 <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
                 <span class="input-suffix">%</span>
               </div>
             </div>
             <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button>
+              <button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button>
+              <button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button>
             </div>
           </div>
         </template>
 
         <!-- BUTTON 元件 -->
         <template v-else-if="selectedElement.element?.type === 'BUTTON'">
-          <h4 class="section-title">按鈕設定</h4>
-          <div class="prop-group"><label>按鈕文字</label><input v-model="selectedElement.element.value.text" type="text" class="prop-input" placeholder="輸入按鈕文字" /></div>
-          <div class="prop-group"><label>連結網址</label><input v-model="selectedElement.element.value.url" type="text" class="prop-input" placeholder="輸入連結 (例如: https://example.com)" /></div>
+          <h4 class="section-title">{{ t('propsPanel.btnSettings') }}</h4>
+          <div class="prop-group"><label>{{ t('propsPanel.btnText') }}</label><input v-model="selectedElement.element.value.text" type="text" class="prop-input" :placeholder="t('propsPanel.btnTextPlaceholder')" /></div>
+          <div class="prop-group"><label>{{ t('propsPanel.linkUrl') }}</label><input v-model="selectedElement.element.value.url" type="text" class="prop-input" :placeholder="t('propsPanel.linkUrlPlaceholder')" /></div>
           <div class="metadata-section">
-            <h5 class="subsection-title">樣式設定</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.styleSettings') }}</h5>
             <div class="prop-group">
-              <label>文字顏色</label>
+              <label>{{ t('propsPanel.elementTextColor') }}</label>
               <div class="color-input-group">
                 <input v-model="elementMetadata.color" type="color" class="prop-color" @input="updateMetadata" />
                 <input v-model="elementMetadata.color" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateMetadata" />
-                <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
+                <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
             </div>
             <div class="prop-group">
-              <label>背景顏色</label>
+              <label>{{ t('propsPanel.backgroundColor') }}</label>
               <div class="color-input-group">
                 <input v-model="elementMetadata.backgroundColor" type="color" class="prop-color" @input="updateMetadata" />
                 <input v-model="elementMetadata.backgroundColor" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updateMetadata" />
-                <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" title="清除">✕</button>
+                <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
             </div>
             <div class="prop-group">
-              <label>字體大小</label>
+              <label>{{ t('propsPanel.fontSize') }}</label>
               <div class="font-size-row">
                 <input v-model="elementMetadata.fontSize" type="text" class="prop-input font-size-input" placeholder="16" @input="updateMetadata" />
                 <div class="font-size-presets">
-                  <button @click="elementMetadata.fontSize = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '12' }">小</button>
-                  <button @click="elementMetadata.fontSize = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '16' }">中</button>
-                  <button @click="elementMetadata.fontSize = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '24' }">大</button>
-                  <button @click="elementMetadata.fontSize = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '36' }">超大</button>
+                  <button @click="elementMetadata.fontSize = '12'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '12' }">{{ t('propsPanel.sizeSmall') }}</button>
+                  <button @click="elementMetadata.fontSize = '16'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '16' }">{{ t('propsPanel.sizeMedium') }}</button>
+                  <button @click="elementMetadata.fontSize = '24'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '24' }">{{ t('propsPanel.sizeLarge') }}</button>
+                  <button @click="elementMetadata.fontSize = '36'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.fontSize === '36' }">{{ t('propsPanel.sizeXXL') }}</button>
                 </div>
               </div>
             </div>
             <div class="prop-group">
-              <label>字體粗細 <span class="label-value">{{ elementMetadata.fontWeight ?? '預設' }}</span></label>
+              <label>{{ t('propsPanel.fontWeight') }} <span class="label-value">{{ elementMetadata.fontWeight ?? t('propsPanel.fontWeightDefault') }}</span></label>
               <input v-model.number="elementMetadata.fontWeight" type="range" min="300" max="900" step="100" class="prop-slider" @input="updateMetadata" />
               <div class="font-weight-labels">
                 <span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span>
@@ -745,111 +745,111 @@
             </div>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
             <div class="prop-group">
-              <label>最大寬度</label>
+              <label>{{ t('propsPanel.maxWidth') }}</label>
               <div class="input-with-suffix">
                 <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
                 <span class="input-suffix">%</span>
               </div>
             </div>
             <div class="width-presets">
-              <button @click="setElementWidth('50')" class="preset-btn">半寬</button>
-              <button @click="setElementWidth('80')" class="preset-btn">窄</button>
-              <button @click="setElementWidth('100')" class="preset-btn">全寬</button>
+              <button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button>
+              <button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button>
+              <button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button>
             </div>
           </div>
         </template>
 
         <!-- HORIZON_LINE 元件 -->
         <template v-else-if="selectedElement.element?.type === 'HORIZON_LINE'">
-          <h4 class="section-title">水平線設定</h4>
-          <div class="prop-group"><label>顏色</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
-          <div class="prop-group"><label>粗細</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" /></div>
+          <h4 class="section-title">{{ t('propsPanel.hlineSettings') }}</h4>
+          <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
+          <div class="prop-group"><label>{{ t('propsPanel.thickness') }}</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" /></div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
-            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
+            <div class="prop-group"><label>{{ t('propsPanel.maxWidth') }}</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button><button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button><button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button></div>
           </div>
         </template>
 
         <!-- VERTICAL_LINE 元件 -->
         <template v-else-if="selectedElement.element?.type === 'VERTICAL_LINE'">
-          <h4 class="section-title">垂直線設定</h4>
-          <div class="prop-group"><label>顏色</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
-          <div class="prop-group"><label>粗細</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" /></div>
+          <h4 class="section-title">{{ t('propsPanel.vlineSettings') }}</h4>
+          <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
+          <div class="prop-group"><label>{{ t('propsPanel.thickness') }}</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" /></div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
-            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
+            <div class="prop-group"><label>{{ t('propsPanel.maxWidth') }}</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button><button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button><button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button></div>
           </div>
         </template>
 
         <!-- CAROUSEL 元件 -->
         <template v-else-if="selectedElement.element?.type === 'CAROUSEL_IMG'">
-          <h4 class="section-title">輪播設定</h4>
+          <h4 class="section-title">{{ t('propsPanel.carouselSettings') }}</h4>
           <div class="prop-group">
-            <label>輪播高度</label>
+            <label>{{ t('propsPanel.carouselHeight') }}</label>
             <div class="height-selector">
               <input v-model.number="carouselHeight" type="number" class="prop-input" min="200" max="800" step="50" @input="updateCarouselSettings" />
               <span class="unit">px</span>
@@ -859,7 +859,7 @@
             </div>
           </div>
           <div class="prop-group">
-            <label>輪播圖片 ({{ carouselImages.length }})</label>
+            <label>{{ t('propsPanel.carouselImgCount', { n: carouselImages.length }) }}</label>
             <div v-if="carouselImages.length > 0" class="carousel-images-list">
               <div
                 v-for="(image, index) in carouselImages"
@@ -874,100 +874,100 @@
                 @dragend="carouselDragOver = null"
               >
                 <div class="drag-handle">⠿</div>
-                <img :src="image.src || image" :alt="`圖片 ${index + 1}`" class="carousel-thumbnail" />
-                <button @click="removeCarouselImage(index)" class="remove-image-btn" title="刪除圖片">✕</button>
+                <img :src="image.src || image" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="carousel-thumbnail" />
+                <button @click="removeCarouselImage(index)" class="remove-image-btn" :title="t('propsPanel.deleteImg')">✕</button>
               </div>
             </div>
             <button @click="addCarouselImage" class="upload-btn" :disabled="isUploadingCarousel">
-              <template v-if="isUploadingCarousel"><span class="btn-spinner"></span>上傳中...</template>
-              <template v-else>＋ 新增圖片</template>
+              <template v-if="isUploadingCarousel"><span class="btn-spinner"></span>{{ t('propsPanel.uploading') }}</template>
+              <template v-else>{{ t('propsPanel.addImage') }}</template>
             </button>
           </div>
-          <div class="prop-group"><label class="checkbox-label"><input v-model="carouselAutoPlay" type="checkbox" @change="updateCarouselSettings" /><span>自動播放</span></label></div>
-          <div class="prop-group" v-if="carouselAutoPlay"><label>播放間隔 (毫秒)</label><input v-model.number="carouselInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselSettings" /></div>
+          <div class="prop-group"><label class="checkbox-label"><input v-model="carouselAutoPlay" type="checkbox" @change="updateCarouselSettings" /><span>{{ t('propsPanel.autoPlay') }}</span></label></div>
+          <div class="prop-group" v-if="carouselAutoPlay"><label>{{ t('propsPanel.playInterval') }}</label><input v-model.number="carouselInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselSettings" /></div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
-            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
+            <div class="prop-group"><label>{{ t('propsPanel.maxWidth') }}</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button><button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button><button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button></div>
           </div>
         </template>
 
         <!-- GOOGLE_MAP 元件 -->
         <template v-else-if="selectedElement.element?.type === 'GOOGLE_MAP'">
-          <h4 class="section-title">地圖設定</h4>
-          <div class="prop-group"><label>地址</label><input v-model="mapAddress" type="text" class="prop-input" placeholder="輸入地址，例如：台北市信義區信義路五段7號" @input="updateMapData" /></div>
-          <div class="prop-group"><label>緯度 (Latitude)</label><input v-model.number="mapLat" type="number" class="prop-input" placeholder="25.033" step="0.001" @input="updateMapData" /><span class="hint-text">台灣範圍約在 21.9 ~ 25.3</span></div>
-          <div class="prop-group"><label>經度 (Longitude)</label><input v-model.number="mapLng" type="number" class="prop-input" placeholder="121.565" step="0.001" @input="updateMapData" /><span class="hint-text">台灣範圍約在 120.0 ~ 122.0</span></div>
+          <h4 class="section-title">{{ t('propsPanel.mapSettings') }}</h4>
+          <div class="prop-group"><label>{{ t('propsPanel.mapAddress') }}</label><input v-model="mapAddress" type="text" class="prop-input" :placeholder="t('propsPanel.mapAddressPlaceholder')" @input="updateMapData" /></div>
+          <div class="prop-group"><label>{{ t('propsPanel.mapLat') }}</label><input v-model.number="mapLat" type="number" class="prop-input" placeholder="25.033" step="0.001" @input="updateMapData" /><span class="hint-text">{{ t('propsPanel.mapLatHint') }}</span></div>
+          <div class="prop-group"><label>{{ t('propsPanel.mapLng') }}</label><input v-model.number="mapLng" type="number" class="prop-input" placeholder="121.565" step="0.001" @input="updateMapData" /><span class="hint-text">{{ t('propsPanel.mapLngHint') }}</span></div>
           <div class="prop-group">
-            <label>縮放級別 ({{ mapZoom }})</label>
+            <label>{{ t('propsPanel.zoomLevel', { n: mapZoom }) }}</label>
             <input v-model.number="mapZoom" type="range" min="10" max="18" class="prop-slider" @input="updateMapData" />
-            <div class="slider-labels"><span>遠</span><span>近</span></div>
+            <div class="slider-labels"><span>{{ t('propsPanel.zoomFar') }}</span><span>{{ t('propsPanel.zoomNear') }}</span></div>
           </div>
           <div class="zoom-presets">
-            <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">城市</button>
-            <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">街區</button>
-            <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">建築</button>
+            <button @click="setMapZoom(12)" class="preset-btn" :class="{ active: mapZoom === 12 }">{{ t('propsPanel.zoomCity') }}</button>
+            <button @click="setMapZoom(15)" class="preset-btn" :class="{ active: mapZoom === 15 }">{{ t('propsPanel.zoomDistrict') }}</button>
+            <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">{{ t('propsPanel.zoomBuilding') }}</button>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">元件間距</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
-                <div class="padding-input-group top"><label>上</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 <div class="padding-sides">
-                  <div class="padding-input-group left"><label>左</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
-                  <div class="content-preview">內容區域</div>
-                  <div class="padding-input-group right"><label>右</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
                 </div>
-                <div class="padding-input-group bottom"><label>下</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
               </div></div>
               <div class="padding-presets">
-                <button @click="setElementPadding(0)" class="preset-btn">無間距</button>
-                <button @click="setElementPadding(10)" class="preset-btn">小</button>
-                <button @click="setElementPadding(20)" class="preset-btn">中</button>
-                <button @click="setElementPadding(40)" class="preset-btn">大</button>
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
               </div>
             </div>
           </div>
           <div class="width-section">
-            <h5 class="subsection-title">元件寬度</h5>
-            <div class="prop-group"><label>最大寬度</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
-            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">半寬</button><button @click="setElementWidth('80')" class="preset-btn">窄</button><button @click="setElementWidth('100')" class="preset-btn">全寬</button></div>
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
+            <div class="prop-group"><label>{{ t('propsPanel.maxWidth') }}</label><div class="input-with-suffix"><input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" /><span class="input-suffix">%</span></div></div>
+            <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button><button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button><button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button></div>
           </div>
         </template>
 
         <!-- 未知元件類型 -->
         <template v-else>
-          <h4 class="section-title">元件資訊</h4>
-          <div class="prop-group"><label>元件類型</label><input :value="selectedElement.element?.type || 'Unknown'" type="text" class="prop-input" disabled /></div>
+          <h4 class="section-title">{{ t('propsPanel.elementInfo') }}</h4>
+          <div class="prop-group"><label>{{ t('propsPanel.elementType') }}</label><input :value="selectedElement.element?.type || 'Unknown'" type="text" class="prop-input" disabled /></div>
         </template>
       </div>
 
       <!-- ✅ 選擇了空格子 -->
       <div v-else-if="selectedCell" class="props-section">
-        <h4 class="section-title">空格子</h4>
+        <h4 class="section-title">{{ t('propsPanel.emptyCell') }}</h4>
         <div class="empty-cell-hint">
-          <p>此格子尚未放置元件</p>
-          <p class="hint">從左側拖曳元件至格子中</p>
+          <p>{{ t('propsPanel.emptyCellHint') }}</p>
+          <p class="hint">{{ t('propsPanel.emptyCellSub') }}</p>
         </div>
       </div>
     </div>
@@ -979,10 +979,12 @@
 <script setup>
 import { ref, computed, watch, inject } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import RichTextEditor from './elements/RichTextEditor.vue'
 
 const pageEditorStore = inject('pageEditorStore')
 const route = useRoute()
+const { t } = useI18n()
 
 const props = defineProps({
   selectedBasemap: { type: Object, default: null },
@@ -1122,12 +1124,12 @@ const updateDonationStyle = () => {
 const systemFrameTextTheme = ref('light')
 const systemFrameTextColor = ref('#333333')
 
-const textThemeOptions = [
-  { value: 'light',  label: '☀️ 亮版', bg: '#f8f8f8',                               fg: '#333333', labelColor: '#444' },
-  { value: 'dark',   label: '🌙 暗版', bg: '#1a1a2e',                               fg: '#f0f0f0', labelColor: '#444' },
-  { value: 'sepia',  label: '📜 復古', bg: '#fdf0dc',                               fg: '#4a3728', labelColor: '#7a5830' },
-  { value: 'custom', label: '🎨 自訂', bg: 'linear-gradient(135deg,#ffe0d0,#ffd0f0)', fg: '#c04060', labelColor: '#c04060' },
-]
+const textThemeOptions = computed(() => [
+  { value: 'light',  label: t('propsPanel.themeLight'), bg: '#f8f8f8',                               fg: '#333333', labelColor: '#444' },
+  { value: 'dark',   label: t('propsPanel.themeDark'),  bg: '#1a1a2e',                               fg: '#f0f0f0', labelColor: '#444' },
+  { value: 'sepia',  label: t('propsPanel.themeSepia'), bg: '#fdf0dc',                               fg: '#4a3728', labelColor: '#7a5830' },
+  { value: 'custom', label: t('propsPanel.themeCustom'),bg: 'linear-gradient(135deg,#ffe0d0,#ffd0f0)', fg: '#c04060', labelColor: '#c04060' },
+])
 
 const setSystemFrameTheme = (theme) => {
   systemFrameTextTheme.value = theme
@@ -1147,12 +1149,12 @@ const mapLat = ref(25.033)
 const mapLng = ref(121.565)
 const mapZoom = ref(15)
 
-const heightPresets = [
-  { label: '小', value: 300 },
-  { label: '中', value: 400 },
-  { label: '大', value: 500 },
-  { label: '特大', value: 600 }
-]
+const heightPresets = computed(() => [
+  { label: t('propsPanel.sizeSmall'),  value: 300 },
+  { label: t('propsPanel.sizeMedium'), value: 400 },
+  { label: t('propsPanel.sizeLarge'),  value: 500 },
+  { label: t('propsPanel.sizeXL'),     value: 600 },
+])
 
 // ==================== 監聽選中元件 ====================
 

@@ -2,7 +2,7 @@
   <aside class="sidebar-left" :class="{ 'is-collapsed': isCollapsed }">
 
     <!-- 收合按鈕 -->
-    <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? '展開' : '收合'">
+    <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? t('leftSidebar.expand') : t('leftSidebar.collapse')">
       <svg class="collapse-icon" :class="{ 'is-flipped': isCollapsed }"
         width="16" height="16" viewBox="0 0 24 24"
         fill="none" stroke="currentColor" stroke-width="2.5"
@@ -12,13 +12,13 @@
     </button>
 
     <!-- 收合時的垂直標題 -->
-    <div v-if="isCollapsed" class="collapsed-label">元件庫</div>
+    <div v-if="isCollapsed" class="collapsed-label">{{ t('leftSidebar.componentLibrary') }}</div>
 
     <!-- 展開時的完整內容 -->
     <template v-else>
       <!-- 標題 -->
       <div class="sidebar-header">
-        <h3>元件庫</h3>
+        <h3>{{ t('leftSidebar.componentLibrary') }}</h3>
       </div>
 
       <!-- 標籤切換 -->
@@ -27,19 +27,19 @@
           :class="['tab', { active: activeTab === 'system-frames' }]"
           @click="activeTab = 'system-frames'"
         >
-          系統框架
+          {{ t('leftSidebar.tabSystemFrames') }}
         </button>
         <button
           :class="['tab', { active: activeTab === 'custom-frames' }]"
           @click="activeTab = 'custom-frames'"
         >
-          自訂框架
+          {{ t('leftSidebar.tabCustomFrames') }}
         </button>
         <button
           :class="['tab', { active: activeTab === 'elements' }]"
           @click="activeTab = 'elements'"
         >
-          元件
+          {{ t('leftSidebar.tabElements') }}
         </button>
       </div>
 
@@ -49,18 +49,18 @@
         <div v-show="activeTab === 'system-frames'" class="tab-panel">
           <!-- ✅ 載入中 -->
           <div v-if="isLoadingSystemFrames" class="loading-state">
-            <div class="loading-spinner">載入中...</div>
+            <div class="loading-spinner">{{ t('leftSidebar.loading') }}</div>
           </div>
 
           <!-- ✅ 載入失敗 -->
           <div v-else-if="systemFramesError" class="error-state">
             <p class="error-text">⚠️ {{ systemFramesError }}</p>
-            <button @click="loadSystemFrames" class="retry-btn">重試</button>
+            <button @click="loadSystemFrames" class="retry-btn">{{ t('leftSidebar.retry') }}</button>
           </div>
 
           <!-- ✅ 沒有可用框架 -->
           <div v-else-if="!availableSystemFrames || availableSystemFrames.length === 0" class="empty-state">
-            <p>此頁面沒有可用的系統框架</p>
+            <p>{{ t('leftSidebar.noSystemFrames') }}</p>
           </div>
 
           <!-- ✅ 顯示系統框架 -->
@@ -88,7 +88,7 @@
         <div v-show="activeTab === 'custom-frames'" class="tab-panel">
           <!-- 單層框架 -->
           <div class="section">
-            <h4 class="section-title">單層框架</h4>
+            <h4 class="section-title">{{ t('leftSidebar.sectionSingle') }}</h4>
             <div class="frame-list">
               <div
                 v-for="frame in singleFrames"
@@ -111,7 +111,7 @@
 
           <!-- 雙層框架 -->
           <div class="section">
-            <h4 class="section-title">雙層框架</h4>
+            <h4 class="section-title">{{ t('leftSidebar.sectionDouble') }}</h4>
             <div class="frame-list">
               <div
                 v-for="frame in doubleFrames"
@@ -134,7 +134,7 @@
 
           <!-- 複合框架 -->
           <div class="section">
-            <h4 class="section-title">複合框架</h4>
+            <h4 class="section-title">{{ t('leftSidebar.sectionComplex') }}</h4>
             <div class="frame-list">
               <div
                 v-for="frame in complexFrames"
@@ -160,7 +160,7 @@
         <!-- 元件列表 -->
         <div v-show="activeTab === 'elements'" class="tab-panel">
           <div class="section">
-            <h4 class="section-title">基本元件</h4>
+            <h4 class="section-title">{{ t('leftSidebar.sectionBasic') }}</h4>
             <div class="element-list">
               <div
                 v-for="element in elements"
@@ -184,6 +184,8 @@
 
 <script setup>
 import { ref, computed, watch, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 // ==================== Props & Emits ====================
 const emit = defineEmits(['drag-start'])
@@ -237,25 +239,23 @@ watch(
   { immediate: true, deep: true }
 )
 
-// ✅ 系統框架顯示名稱對照表
-const frameDisplayNames = {
-  'CAROUSEL_WALL': '輪播牆',
-  'FIRST_PICTURE': '首圖',
-  'INDEX_NEWS': '首頁-最新消息',
-  'INDEX_PRODUCT': '首頁-商品標幅',
-  'INDEX_EVENT': '首頁-活動橫幅',
-  'INDEX_DONATION': '首頁-捐獻區',
-  'PRODUCT_LIST': '商品列表',
-  'NEWS_LIST': '消息列表',
-  'ALBUM_LIST': '相簿列表',
-  'EVENT_LIST': '活動列表',
-  'DONATION_PRODUCT': '捐款商品',
-  'BRIGHT_LAMP': '光明燈'
-}
-
 // ✅ 獲取框架顯示名稱
+const frameDisplayKeyMap = {
+  'CAROUSEL_WALL':    'leftSidebar.frameCarouselWall',
+  'FIRST_PICTURE':    'leftSidebar.frameFirstPicture',
+  'INDEX_NEWS':       'leftSidebar.frameIndexNews',
+  'INDEX_PRODUCT':    'leftSidebar.frameIndexProduct',
+  'INDEX_EVENT':      'leftSidebar.frameIndexEvent',
+  'INDEX_DONATION':   'leftSidebar.frameIndexDonation',
+  'PRODUCT_LIST':     'leftSidebar.frameProductList',
+  'NEWS_LIST':        'leftSidebar.frameNewsList',
+  'ALBUM_LIST':       'leftSidebar.frameAlbumList',
+  'EVENT_LIST':       'leftSidebar.frameEventList',
+  'DONATION_PRODUCT': 'leftSidebar.frameDonationProduct',
+  'BRIGHT_LAMP':      'leftSidebar.frameBrightLamp',
+}
 const getFrameDisplayName = (frameType) => {
-  return frameDisplayNames[frameType] || frameType
+  return frameDisplayKeyMap[frameType] ? t(frameDisplayKeyMap[frameType]) : frameType
 }
 const systemFrameDefaults = {
   'INDEX_DONATION': {
@@ -294,156 +294,39 @@ const loadSystemFrames = async () => {
 
 // ==================== 自訂框架 ====================
 
-const singleFrames = ref([
-  {
-    id: 'frame-1-1',
-    name: '單層 1-1',
-    layout: '1_1',
-    dragType: 'custom-frame',
-    columns: [{ id: 'col-1', span: 'normal' }]
-  },
-  {
-    id: 'frame-1-2',
-    name: '單層 1-2',
-    layout: '1_2',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'normal' },
-      { id: 'col-2', span: 'normal' }
-    ]
-  },
-  {
-    id: 'frame-1-3',
-    name: '單層 1-3',
-    layout: '1_3',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'normal' },
-      { id: 'col-2', span: 'normal' },
-      { id: 'col-3', span: 'normal' }
-    ]
-  },
-  {
-    id: 'frame-1-4',
-    name: '單層 1-4',
-    layout: '1_4',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'normal' },
-      { id: 'col-2', span: 'normal' },
-      { id: 'col-3', span: 'normal' },
-      { id: 'col-4', span: 'normal' }
-    ]
-  }
+const singleFrames = computed(() => [
+  { id: 'frame-1-1', name: t('leftSidebar.single11'), layout: '1_1', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }] },
+  { id: 'frame-1-2', name: t('leftSidebar.single12'), layout: '1_2', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }, { id: 'col-2', span: 'normal' }] },
+  { id: 'frame-1-3', name: t('leftSidebar.single13'), layout: '1_3', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }, { id: 'col-2', span: 'normal' }, { id: 'col-3', span: 'normal' }] },
+  { id: 'frame-1-4', name: t('leftSidebar.single14'), layout: '1_4', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }, { id: 'col-2', span: 'normal' }, { id: 'col-3', span: 'normal' }, { id: 'col-4', span: 'normal' }] },
 ])
 
-const doubleFrames = ref([
-  {
-    id: 'frame-2-2',
-    name: '雙層 2-2',
-    layout: '2_2',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'normal' },
-      { id: 'col-2', span: 'normal' },
-      { id: 'col-3', span: 'normal' },
-      { id: 'col-4', span: 'normal' }
-    ]
-  },
-  {
-    id: 'frame-2-3',
-    name: '雙層 2-3',
-    layout: '2_3',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'normal' },
-      { id: 'col-2', span: 'normal' },
-      { id: 'col-3', span: 'normal' },
-      { id: 'col-4', span: 'normal' },
-      { id: 'col-5', span: 'normal' },
-      { id: 'col-6', span: 'normal' }
-    ]
-  },
-  {
-    id: 'frame-2-4',
-    name: '雙層 2-4',
-    layout: '2_4',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'normal' },
-      { id: 'col-2', span: 'normal' },
-      { id: 'col-3', span: 'normal' },
-      { id: 'col-4', span: 'normal' },
-      { id: 'col-5', span: 'normal' },
-      { id: 'col-6', span: 'normal' },
-      { id: 'col-7', span: 'normal' },
-      { id: 'col-8', span: 'normal' }
-    ]
-  }
+const doubleFrames = computed(() => [
+  { id: 'frame-2-2', name: t('leftSidebar.double22'), layout: '2_2', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }, { id: 'col-2', span: 'normal' }, { id: 'col-3', span: 'normal' }, { id: 'col-4', span: 'normal' }] },
+  { id: 'frame-2-3', name: t('leftSidebar.double23'), layout: '2_3', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }, { id: 'col-2', span: 'normal' }, { id: 'col-3', span: 'normal' }, { id: 'col-4', span: 'normal' }, { id: 'col-5', span: 'normal' }, { id: 'col-6', span: 'normal' }] },
+  { id: 'frame-2-4', name: t('leftSidebar.double24'), layout: '2_4', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'normal' }, { id: 'col-2', span: 'normal' }, { id: 'col-3', span: 'normal' }, { id: 'col-4', span: 'normal' }, { id: 'col-5', span: 'normal' }, { id: 'col-6', span: 'normal' }, { id: 'col-7', span: 'normal' }, { id: 'col-8', span: 'normal' }] },
 ])
 
-const complexFrames = ref([
-  {
-    id: 'frame-a',
-    name: '複合 A',
-    layout: 'A',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'large' },
-      { id: 'col-2', span: 'small' },
-      { id: 'col-3', span: 'small' }
-    ]
-  },
-  {
-    id: 'frame-b',
-    name: '複合 B',
-    layout: 'B',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'small' },
-      { id: 'col-2', span: 'small' },
-      { id: 'col-3', span: 'large' }
-    ]
-  },
-  {
-    id: 'frame-c',
-    name: '複合 C',
-    layout: 'C',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'large' },
-      { id: 'col-2', span: 'small' },
-      { id: 'col-3', span: 'small' },
-      { id: 'col-4', span: 'small' }
-    ]
-  },
-  {
-    id: 'frame-d',
-    name: '複合 D',
-    layout: 'D',
-    dragType: 'custom-frame',
-    columns: [
-      { id: 'col-1', span: 'small' },
-      { id: 'col-2', span: 'small' },
-      { id: 'col-3', span: 'small' },
-      { id: 'col-4', span: 'large' }
-    ]
-  }
+const complexFrames = computed(() => [
+  { id: 'frame-a', name: t('leftSidebar.complexA'), layout: 'A', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'large' }, { id: 'col-2', span: 'small' }, { id: 'col-3', span: 'small' }] },
+  { id: 'frame-b', name: t('leftSidebar.complexB'), layout: 'B', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'small' }, { id: 'col-2', span: 'small' }, { id: 'col-3', span: 'large' }] },
+  { id: 'frame-c', name: t('leftSidebar.complexC'), layout: 'C', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'large' }, { id: 'col-2', span: 'small' }, { id: 'col-3', span: 'small' }, { id: 'col-4', span: 'small' }] },
+  { id: 'frame-d', name: t('leftSidebar.complexD'), layout: 'D', dragType: 'custom-frame', columns: [{ id: 'col-1', span: 'small' }, { id: 'col-2', span: 'small' }, { id: 'col-3', span: 'small' }, { id: 'col-4', span: 'large' }] },
 ])
 
 // ==================== 元件列表 ====================
-const elements = ref([
-  { id: 'text', name: '文字', icon: 'T', color: '#3b82f6', type: 'text', dragType: 'element' },
-  { id: 'image', name: '圖片', icon: '🖼️', color: '#f59e0b', type: 'image', dragType: 'element' },
-  { id: 'button', name: '按鈕', icon: '▭', color: '#10b981', type: 'button', dragType: 'element' },
-  { id: 'h-line', name: '橫線', icon: '─', color: '#6b7280', type: 'h-line', dragType: 'element' },
-  { id: 'v-line', name: '直線', icon: '│', color: '#6b7280', type: 'v-line', dragType: 'element' },
-  { id: 'carousel', name: '輪播圖片', icon: '🎠', color: '#ec4899', type: 'carousel', dragType: 'element' },
-  { id: 'map', name: 'Google地圖', icon: '🗺️', color: '#06b6d4', type: 'map', dragType: 'element' },
-  { id: 'album', name: '相簿卡片', icon: '📷', color: '#8b5cf6', type: 'album', dragType: 'element' },
-  { id: 'product-card', name: '商品卡片', icon: '🛍️', color: '#f97316', type: 'product-card', dragType: 'element' },
-  { id: 'service-card', name: '服務卡片', icon: '🙏', color: '#14b8a6', type: 'service-card', dragType: 'element' },
-  { id: 'event-card', name: '活動卡片', icon: '🎉', color: '#a855f7', type: 'event-card', dragType: 'element' }
+const elements = computed(() => [
+  { id: 'text',         name: t('leftSidebar.elemText'),        icon: 'T',   color: '#3b82f6', type: 'text',         dragType: 'element' },
+  { id: 'image',        name: t('leftSidebar.elemImage'),       icon: '🖼️', color: '#f59e0b', type: 'image',        dragType: 'element' },
+  { id: 'button',       name: t('leftSidebar.elemButton'),      icon: '▭',  color: '#10b981', type: 'button',       dragType: 'element' },
+  { id: 'h-line',       name: t('leftSidebar.elemHLine'),       icon: '─',  color: '#6b7280', type: 'h-line',       dragType: 'element' },
+  { id: 'v-line',       name: t('leftSidebar.elemVLine'),       icon: '│',  color: '#6b7280', type: 'v-line',       dragType: 'element' },
+  { id: 'carousel',     name: t('leftSidebar.elemCarousel'),    icon: '🎠', color: '#ec4899', type: 'carousel',     dragType: 'element' },
+  { id: 'map',          name: t('leftSidebar.elemMap'),         icon: '🗺️', color: '#06b6d4', type: 'map',          dragType: 'element' },
+  { id: 'album',        name: t('leftSidebar.elemAlbum'),       icon: '📷', color: '#8b5cf6', type: 'album',        dragType: 'element' },
+  { id: 'product-card', name: t('leftSidebar.elemProductCard'), icon: '🛍️', color: '#f97316', type: 'product-card', dragType: 'element' },
+  { id: 'service-card', name: t('leftSidebar.elemServiceCard'), icon: '🙏', color: '#14b8a6', type: 'service-card', dragType: 'element' },
+  { id: 'event-card',   name: t('leftSidebar.elemEventCard'),   icon: '🎉', color: '#a855f7', type: 'event-card',   dragType: 'element' },
 ])
 
 // ==================== 方法 ====================

@@ -1,14 +1,10 @@
 <template>
   <div class="service-card">
     <div class="card-image">
-      <img 
-        v-if="content.image" 
-        :src="content.image" 
+      <img
+        :src="content.image || '/images/service-card/03.png'"
         :alt="content.title || '服務圖片'"
       />
-      <div v-else class="card-image-placeholder">
-        <span>🙏</span>
-      </div>
     </div>
     <div class="card-content">
       <span class="card-tag">{{ content.tag || '祈福服務' }}</span>

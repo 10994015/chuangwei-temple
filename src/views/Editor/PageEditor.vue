@@ -340,6 +340,7 @@ const handleUpdateLogo = (logoData) => {
 
     <!-- 中間：畫布區 -->
     <CanvasArea
+      v-if="!pageEditorStore.isLoading"
       :basemaps="pageEditorStore.currentPageBasemaps"
       :selected-basemap="pageEditorStore.selected.basemap"
       :selected-frame="pageEditorStore.selected.frame"

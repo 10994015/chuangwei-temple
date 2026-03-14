@@ -20,13 +20,13 @@
       
       <div class="divider-buttons">
         <!-- 上移按鈕 -->
-        <button 
+        <button
           v-if="!isHeader"
-          class="divider-btn move-up-btn" 
+          class="divider-btn move-up-btn"
           :class="{ active: isHovered }"
           :disabled="!canMoveUp"
-          @click="handleMoveUp" 
-          title="上移底圖"
+          @click="handleMoveUp"
+          :title="t('basemapWrapper.moveUp')"
         >
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 19V5M5 12l7-7 7 7"/>
@@ -38,7 +38,7 @@
           class="add-basemap-btn" 
           :class="{ active: isHovered }"
           @click="addBlankBasemap"
-          title="新增空白底圖"
+          :title="t('basemapWrapper.addBasemap')"
         >
           <span class="plus-icon">+</span>
         </button>
@@ -49,8 +49,8 @@
           class="divider-btn move-down-btn" 
           :class="{ active: isHovered }"
           :disabled="!canMoveDown"
-          @click="handleMoveDown" 
-          title="下移底圖"
+          @click="handleMoveDown"
+          :title="t('basemapWrapper.moveDown')"
         >
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 5v14M19 12l-7 7-7-7"/>
@@ -62,7 +62,7 @@
           class="divider-btn bg-btn" 
           :class="{ active: isHovered }"
           @click="openBackgroundModal"
-          title="編輯背景圖片"
+          :title="t('basemapWrapper.editBg')"
         >
           <span class="icon">🖼️</span>
         </button>
@@ -74,7 +74,7 @@
           :class="{ active: isHovered }"
           :disabled="!isDeletable"
           @click="handleDelete" 
-          :title="isDeletable ? '刪除底圖' : '此底圖不可刪除'"
+          :title="isDeletable ? t('basemapWrapper.deleteBasemap') : t('basemapWrapper.cannotDelete')"
         >
           <span class="icon">✕</span>
         </button>
@@ -88,7 +88,7 @@
       <div v-if="showModal" class="modal-overlay" @click="tryCloseModal">
         <div class="modal-dialog" @click.stop>
           <div class="modal-header">
-            <h3>編輯背景圖片</h3>
+            <h3>{{ t('basemapWrapper.editBg') }}</h3>
             <button class="modal-close-btn" @click="tryCloseModal">✕</button>
           </div>
 
@@ -96,100 +96,100 @@
             <!-- 桌面版背景 -->
             <div class="bg-item" :class="{ 'bg-item--required-error': desktopRequired }">
               <label>
-                桌面版背景
-                <span class="required-mark">*必填</span>
-                <span v-if="desktopRequired" class="required-hint">（請先上傳桌面版）</span>
+                {{ t('basemapWrapper.desktopBg') }}
+                <span class="required-mark">{{ t('basemapWrapper.required') }}</span>
+                <span v-if="desktopRequired" class="required-hint">{{ t('basemapWrapper.uploadDesktopFirst') }}</span>
               </label>
               <div class="preview-box">
                 <img
                   v-if="backgrounds.desktop"
                   :src="backgrounds.desktop"
-                  alt="桌面版背景"
+                  :alt="t('basemapWrapper.desktopBg')"
                   class="preview-img"
                 />
                 <div v-else class="no-preview" :class="{ 'no-preview--error': desktopRequired }">
-                  尚未上傳
+                  {{ t('basemapWrapper.notUploaded') }}
                 </div>
               </div>
               <div v-if="uploadingState.desktop" class="uploading-row">
                 <div class="upload-spinner"></div>
-                <span>上傳中...</span>
+                <span>{{ t('basemapWrapper.uploading') }}</span>
               </div>
               <div v-else class="btn-row">
                 <button class="upload-btn" @click="uploadImage('desktop')">
-                  {{ backgrounds.desktop ? '更換圖片' : '上傳圖片' }}
+                  {{ backgrounds.desktop ? t('basemapWrapper.changeImage') : t('basemapWrapper.uploadImage') }}
                 </button>
-                <button 
+                <button
                   v-if="backgrounds.desktop"
                   class="clear-img-btn"
                   @click="clearBackground('desktop')"
-                  title="清除背景"
+                  :title="t('basemapWrapper.clearBg')"
                 >✕</button>
               </div>
             </div>
 
             <!-- 平板版背景 -->
             <div class="bg-item">
-              <label>平板版背景<span class="optional-mark">選填</span></label>
+              <label>{{ t('basemapWrapper.tabletBg') }}<span class="optional-mark">{{ t('basemapWrapper.optional') }}</span></label>
               <div class="preview-box">
                 <img
                   v-if="backgrounds.tablet"
                   :src="backgrounds.tablet"
-                  alt="平板版背景"
+                  :alt="t('basemapWrapper.tabletBg')"
                   class="preview-img"
                 />
-                <div v-else class="no-preview">未設定（使用桌面版）</div>
+                <div v-else class="no-preview">{{ t('basemapWrapper.fallbackToDesktop') }}</div>
               </div>
               <div v-if="uploadingState.tablet" class="uploading-row">
                 <div class="upload-spinner"></div>
-                <span>上傳中...</span>
+                <span>{{ t('basemapWrapper.uploading') }}</span>
               </div>
               <div v-else class="btn-row">
                 <button class="upload-btn" @click="uploadImage('tablet')">
-                  {{ backgrounds.tablet ? '更換圖片' : '上傳圖片' }}
+                  {{ backgrounds.tablet ? t('basemapWrapper.changeImage') : t('basemapWrapper.uploadImage') }}
                 </button>
-                <button 
+                <button
                   v-if="backgrounds.tablet"
                   class="clear-img-btn"
                   @click="clearBackground('tablet')"
-                  title="清除背景"
+                  :title="t('basemapWrapper.clearBg')"
                 >✕</button>
               </div>
             </div>
 
             <!-- 手機版背景 -->
             <div class="bg-item">
-              <label>手機版背景<span class="optional-mark">選填</span></label>
+              <label>{{ t('basemapWrapper.mobileBg') }}<span class="optional-mark">{{ t('basemapWrapper.optional') }}</span></label>
               <div class="preview-box">
                 <img
                   v-if="backgrounds.mobile"
                   :src="backgrounds.mobile"
-                  alt="手機版背景"
+                  :alt="t('basemapWrapper.mobileBg')"
                   class="preview-img"
                 />
-                <div v-else class="no-preview">未設定（使用桌面版）</div>
+                <div v-else class="no-preview">{{ t('basemapWrapper.fallbackToDesktop') }}</div>
               </div>
               <div v-if="uploadingState.mobile" class="uploading-row">
                 <div class="upload-spinner"></div>
-                <span>上傳中...</span>
+                <span>{{ t('basemapWrapper.uploading') }}</span>
               </div>
               <div v-else class="btn-row">
                 <button class="upload-btn" @click="uploadImage('mobile')">
-                  {{ backgrounds.mobile ? '更換圖片' : '上傳圖片' }}
+                  {{ backgrounds.mobile ? t('basemapWrapper.changeImage') : t('basemapWrapper.uploadImage') }}
                 </button>
-                <button 
+                <button
                   v-if="backgrounds.mobile"
                   class="clear-img-btn"
                   @click="clearBackground('mobile')"
-                  title="清除背景"
+                  :title="t('basemapWrapper.clearBg')"
                 >✕</button>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <p class="hint-text">💡 桌面版為必填；平板/手機未設定時自動沿用桌面版</p>
-            <button class="btn-close" @click="tryCloseModal">關閉</button>
+            <p class="hint-text">{{ t('basemapWrapper.hint') }}</p>
+            <button class="btn-close" @click="tryCloseModal">{{ t('basemapWrapper.close') }}</button>
           </div>
         </div>
       </div>
@@ -199,6 +199,9 @@
 
 <script setup>
 import { ref, computed, watch, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   isFooter: { type: Boolean, default: false },
@@ -253,8 +256,8 @@ const handleContentMouseLeave = () => { isContentHovered.value = false }
 const addBlankBasemap = () => { emit('add-basemap', props.index) }
 
 const handleDelete = () => {
-  if (!props.isDeletable) { alert('此底圖不可刪除'); return }
-  if (confirm('確定要刪除此底圖嗎？')) { emit('delete-basemap', props.basemapId) }
+  if (!props.isDeletable) { alert(t('basemapWrapper.cannotDelete')); return }
+  if (confirm(t('basemapWrapper.confirmDelete'))) { emit('delete-basemap', props.basemapId) }
 }
 
 const handleMoveUp = () => {
@@ -276,7 +279,7 @@ const openBackgroundModal = () => { showModal.value = true }
 // 關閉前檢查：有平板或手機但桌機為空 → 阻止關閉
 const tryCloseModal = () => {
   if (desktopRequired.value) {
-    alert('已設定平板或手機背景，請同時上傳桌面版背景（必填），或清除其他版本的背景後再關閉。')
+    alert(t('basemapWrapper.desktopRequiredAlert'))
     return
   }
   showModal.value = false
@@ -317,7 +320,7 @@ const uploadImage = (type) => {
     if (!file) return
 
     if (!pageEditorStore?.uploadImage) {
-      alert('上傳功能初始化失敗，請重新整理頁面')
+      alert(t('basemapWrapper.uploadInitFailed'))
       return
     }
 
@@ -336,7 +339,7 @@ const uploadImage = (type) => {
     try {
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) {
-        alert('背景圖片上傳失敗，請稍後再試')
+        alert(t('basemapWrapper.uploadFailed'))
         return
       }
 
@@ -361,7 +364,7 @@ const uploadImage = (type) => {
 
     } catch (error) {
       console.error(`❌ 底圖背景上傳失敗 (${type}):`, error)
-      alert('上傳失敗：' + error.message)
+      alert(t('basemapWrapper.uploadError') + error.message)
     } finally {
       uploadingState.value[type] = false
     }

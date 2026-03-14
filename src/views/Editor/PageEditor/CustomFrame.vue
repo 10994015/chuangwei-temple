@@ -15,7 +15,7 @@
       v-if="isFrameSelected && !hasAnyElement && frame.isDeletable"
       class="delete-frame-btn"
       @click.stop="handleDeleteFrame"
-      title="刪除框架"
+      :title="t('customFrame.deleteFrame')"
     >
       ✕
     </button>
@@ -49,7 +49,7 @@
                 <img 
                   v-if="element.value?.src" 
                   :src="element.value.src" 
-                  :alt="element.value?.alt || '圖片'"
+                  :alt="element.value?.alt || t('customFrame.imgAlt')"
                   class="element-img"
                   :style="getElementStyle(element)"
                 />
@@ -61,7 +61,7 @@
                   />
                   <div class="placeholder-overlay">
                     <span>🖼️</span>
-                    <p>請在右側上傳圖片</p>
+                    <p>{{ t('customFrame.uploadImgHint') }}</p>
                   </div>
                 </div>
               </div>
@@ -71,7 +71,7 @@
                 v-else-if="element.type === 'TEXT'" 
                 class="element-text"
                 :style="getElementStyle(element)"
-                v-html="element.value?.text || '文字內容'"
+                v-html="element.value?.text || t('customFrame.textPlaceholder')"
               ></div>
 
               <!-- BUTTON 元件 -->
@@ -82,7 +82,7 @@
                   :style="getButtonStyle(element)"
                   @click.prevent
                 >
-                  {{ element.value?.text || '按鈕' }}
+                  {{ element.value?.text || t('customFrame.buttonText') }}
                 </a>
               </div>
 
@@ -130,8 +130,8 @@
                 <AlbumCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '相簿封面',
-                    title: element.value?.title || '相簿標題',
+                    tag: element.value?.tag || t('customFrame.albumTag'),
+                    title: element.value?.title || t('customFrame.albumTitle'),
                     description: element.value?.description || ''
                   }"
                   :element="element"
@@ -143,8 +143,8 @@
                 <ProductCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '法會活動',
-                    title: element.value?.title || '商品標題',
+                    tag: element.value?.tag || t('customFrame.productTag'),
+                    title: element.value?.title || t('customFrame.productTitle'),
                     date: element.value?.date || '2024-08-22'
                   }"
                   :element="element"
@@ -156,8 +156,8 @@
                 <ServiceCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '祈福服務',
-                    title: element.value?.title || '服務標題',
+                    tag: element.value?.tag || t('customFrame.serviceTag'),
+                    title: element.value?.title || t('customFrame.serviceTitle'),
                     date: element.value?.date || '2024-08-22'
                   }"
                   :element="element"
@@ -169,9 +169,9 @@
                 <EventCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '法會活動',
-                    title: element.value?.title || '中元普渡法會',
-                    description: element.value?.description || '2024年中元普渡法會活動紀錄'
+                    tag: element.value?.tag || t('customFrame.eventTag'),
+                    title: element.value?.title || t('customFrame.eventTitle'),
+                    description: element.value?.description || t('customFrame.eventDesc')
                   }"
                   :element="element"
                 />
@@ -179,14 +179,14 @@
 
               <!-- 未知類型 -->
               <div v-else class="element-unknown">
-                <span>未知元件：{{ element.type }}</span>
+                <span>{{ t('customFrame.unknownElement') }}{{ element.type }}</span>
               </div>
 
               <!-- 刪除按鈕 -->
               <button 
                 class="delete-element-btn"
                 @click.stop="handleDeleteElement(index)"
-                title="刪除元件"
+                :title="t('customFrame.deleteElement')"
               >
                 ✕
               </button>
@@ -194,7 +194,7 @@
 
             <!-- 沒有元件：顯示空格子 -->
             <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === index }">
-              <span class="drop-hint">📦 拖曳元件至此</span>
+              <span class="drop-hint">📦 {{ t('customFrame.dropHint') }}</span>
             </div>
           </div>
         </div>
@@ -223,7 +223,7 @@
                 <img 
                   v-if="element.value?.src" 
                   :src="element.value.src" 
-                  :alt="element.value?.alt || '圖片'"
+                  :alt="element.value?.alt || t('customFrame.imgAlt')"
                   class="element-img"
                   :style="getElementStyle(element)"
                 />
@@ -235,7 +235,7 @@
                   />
                   <div class="placeholder-overlay">
                     <span>🖼️</span>
-                    <p>請在右側上傳圖片</p>
+                    <p>{{ t('customFrame.uploadImgHint') }}</p>
                   </div>
                 </div>
               </div>
@@ -245,7 +245,7 @@
                 v-else-if="element.type === 'TEXT'" 
                 class="element-text"
                 :style="getElementStyle(element)"
-                v-html="element.value?.text || '文字內容'"
+                v-html="element.value?.text || t('customFrame.textPlaceholder')"
               ></div>
 
               <!-- BUTTON 元件 -->
@@ -256,7 +256,7 @@
                   :style="getButtonStyle(element)"
                   @click.prevent
                 >
-                  {{ element.value?.text || '按鈕' }}
+                  {{ element.value?.text || t('customFrame.buttonText') }}
                 </a>
               </div>
 
@@ -304,8 +304,8 @@
                 <AlbumCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '相簿封面',
-                    title: element.value?.title || '相簿標題',
+                    tag: element.value?.tag || t('customFrame.albumTag'),
+                    title: element.value?.title || t('customFrame.albumTitle'),
                     description: element.value?.description || ''
                   }"
                   :element="element"
@@ -317,8 +317,8 @@
                 <ProductCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '法會活動',
-                    title: element.value?.title || '商品標題',
+                    tag: element.value?.tag || t('customFrame.productTag'),
+                    title: element.value?.title || t('customFrame.productTitle'),
                     date: element.value?.date || '2024-08-22'
                   }"
                   :element="element"
@@ -330,8 +330,8 @@
                 <ServiceCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '祈福服務',
-                    title: element.value?.title || '服務標題',
+                    tag: element.value?.tag || t('customFrame.serviceTag'),
+                    title: element.value?.title || t('customFrame.serviceTitle'),
                     date: element.value?.date || '2024-08-22'
                   }"
                   :element="element"
@@ -343,9 +343,9 @@
                 <EventCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '法會活動',
-                    title: element.value?.title || '中元普渡法會',
-                    description: element.value?.description || '2024年中元普渡法會活動紀錄'
+                    tag: element.value?.tag || t('customFrame.eventTag'),
+                    title: element.value?.title || t('customFrame.eventTitle'),
+                    description: element.value?.description || t('customFrame.eventDesc')
                   }"
                   :element="element"
                 />
@@ -353,14 +353,14 @@
 
               <!-- 未知類型 -->
               <div v-else class="element-unknown">
-                <span>未知元件：{{ element.type }}</span>
+                <span>{{ t('customFrame.unknownElement') }}{{ element.type }}</span>
               </div>
 
               <!-- 刪除按鈕 -->
               <button 
                 class="delete-element-btn"
                 @click.stop="handleDeleteElement(doubleLayoutCols + rIndex)"
-                title="刪除元件"
+                :title="t('customFrame.deleteElement')"
               >
                 ✕
               </button>
@@ -368,7 +368,7 @@
 
             <!-- 沒有元件：顯示空格子 -->
             <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === (doubleLayoutCols + rIndex) }">
-              <span class="drop-hint">📦 拖曳元件至此</span>
+              <span class="drop-hint">📦 {{ t('customFrame.dropHint') }}</span>
             </div>
           </div>
         </div>
@@ -396,15 +396,15 @@
             >
               <div v-if="displayElements[idx] && displayElements[idx].type" class="element-content">
                 <div v-if="displayElements[idx].type === 'IMG'" class="element-image" :style="getImageContainerStyle(displayElements[idx])">
-                  <img v-if="displayElements[idx].value?.src" :src="displayElements[idx].value.src" :alt="displayElements[idx].value?.alt || '圖片'" class="element-img" :style="getElementStyle(displayElements[idx])" />
+                  <img v-if="displayElements[idx].value?.src" :src="displayElements[idx].value.src" :alt="displayElements[idx].value?.alt || t('customFrame.imgAlt')" class="element-img" :style="getElementStyle(displayElements[idx])" />
                   <div v-else class="placeholder-image">
                     <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop" alt="placeholder" class="placeholder-img" />
-                    <div class="placeholder-overlay"><span>🖼️</span><p>請在右側上傳圖片</p></div>
+                    <div class="placeholder-overlay"><span>🖼️</span><p>{{ t('customFrame.uploadImgHint') }}</p></div>
                   </div>
                 </div>
-                <div v-else-if="displayElements[idx].type === 'TEXT'" class="element-text" :style="getElementStyle(displayElements[idx])" v-html="displayElements[idx].value?.text || '文字內容'"></div>
+                <div v-else-if="displayElements[idx].type === 'TEXT'" class="element-text" :style="getElementStyle(displayElements[idx])" v-html="displayElements[idx].value?.text || t('customFrame.textPlaceholder')"></div>
                 <div v-else-if="displayElements[idx].type === 'BUTTON'" class="element-button">
-                  <a :href="displayElements[idx].value?.url || '#'" class="button-link" :style="getButtonStyle(displayElements[idx])" @click.prevent>{{ displayElements[idx].value?.text || '按鈕' }}</a>
+                  <a :href="displayElements[idx].value?.url || '#'" class="button-link" :style="getButtonStyle(displayElements[idx])" @click.prevent>{{ displayElements[idx].value?.text || t('customFrame.buttonText') }}</a>
                 </div>
                 <div v-else-if="displayElements[idx].type === 'HORIZON_LINE'" class="element-hline">
                   <hr :style="{ borderColor: displayElements[idx].value?.color || '#ddd', borderWidth: displayElements[idx].value?.thickness || '2px' }" />
@@ -419,22 +419,22 @@
                   <MapElement :content="{ address: displayElements[idx].value?.address || '', lat: displayElements[idx].value?.lat || 25.033, lng: displayElements[idx].value?.lng || 121.565, zoom: displayElements[idx].value?.zoom || 15 }" :element="displayElements[idx]" :key="`map-cl-${idx}-${displayElements[idx].value?.lat}-${displayElements[idx].value?.lng}`" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'ALBUM'" class="element-card-wrapper">
-                  <AlbumCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '相簿封面', title: displayElements[idx].value?.title || '相簿標題', description: displayElements[idx].value?.description || '' }" :element="displayElements[idx]" />
+                  <AlbumCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.albumTag'), title: displayElements[idx].value?.title || t('customFrame.albumTitle'), description: displayElements[idx].value?.description || '' }" :element="displayElements[idx]" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'PRODUCT_CARD'" class="element-card-wrapper">
-                  <ProductCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '商品標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                  <ProductCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.productTag'), title: displayElements[idx].value?.title || t('customFrame.productTitle'), date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'SERVICE_CARD'" class="element-card-wrapper">
-                  <ServiceCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '祈福服務', title: displayElements[idx].value?.title || '服務標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                  <ServiceCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.serviceTag'), title: displayElements[idx].value?.title || t('customFrame.serviceTitle'), date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'EVENT_CARD'" class="element-card-wrapper">
-                  <EventCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '中元普渡法會', description: displayElements[idx].value?.description || '2024年中元普渡法會活動紀錄' }" :element="displayElements[idx]" />
+                  <EventCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.eventTag'), title: displayElements[idx].value?.title || t('customFrame.eventTitle'), description: displayElements[idx].value?.description || t('customFrame.eventDesc') }" :element="displayElements[idx]" />
                 </div>
-                <div v-else class="element-unknown"><span>未知元件：{{ displayElements[idx].type }}</span></div>
-                <button class="delete-element-btn" @click.stop="handleDeleteElement(idx)" title="刪除元件">✕</button>
+                <div v-else class="element-unknown"><span>{{ t('customFrame.unknownElement') }}{{ displayElements[idx].type }}</span></div>
+                <button class="delete-element-btn" @click.stop="handleDeleteElement(idx)" :title="t('customFrame.deleteElement')">✕</button>
               </div>
               <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === idx }">
-                <span class="drop-hint">📦 拖曳元件至此</span>
+                <span class="drop-hint">📦 {{ t('customFrame.dropHint') }}</span>
               </div>
             </div>
           </div>
@@ -458,15 +458,15 @@
             >
               <div v-if="displayElements[idx] && displayElements[idx].type" class="element-content">
                 <div v-if="displayElements[idx].type === 'IMG'" class="element-image" :style="getImageContainerStyle(displayElements[idx])">
-                  <img v-if="displayElements[idx].value?.src" :src="displayElements[idx].value.src" :alt="displayElements[idx].value?.alt || '圖片'" class="element-img" :style="getElementStyle(displayElements[idx])" />
+                  <img v-if="displayElements[idx].value?.src" :src="displayElements[idx].value.src" :alt="displayElements[idx].value?.alt || t('customFrame.imgAlt')" class="element-img" :style="getElementStyle(displayElements[idx])" />
                   <div v-else class="placeholder-image">
                     <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=300&fit=crop" alt="placeholder" class="placeholder-img" />
-                    <div class="placeholder-overlay"><span>🖼️</span><p>請在右側上傳圖片</p></div>
+                    <div class="placeholder-overlay"><span>🖼️</span><p>{{ t('customFrame.uploadImgHint') }}</p></div>
                   </div>
                 </div>
-                <div v-else-if="displayElements[idx].type === 'TEXT'" class="element-text" :style="getElementStyle(displayElements[idx])" v-html="displayElements[idx].value?.text || '文字內容'"></div>
+                <div v-else-if="displayElements[idx].type === 'TEXT'" class="element-text" :style="getElementStyle(displayElements[idx])" v-html="displayElements[idx].value?.text || t('customFrame.textPlaceholder')"></div>
                 <div v-else-if="displayElements[idx].type === 'BUTTON'" class="element-button">
-                  <a :href="displayElements[idx].value?.url || '#'" class="button-link" :style="getButtonStyle(displayElements[idx])" @click.prevent>{{ displayElements[idx].value?.text || '按鈕' }}</a>
+                  <a :href="displayElements[idx].value?.url || '#'" class="button-link" :style="getButtonStyle(displayElements[idx])" @click.prevent>{{ displayElements[idx].value?.text || t('customFrame.buttonText') }}</a>
                 </div>
                 <div v-else-if="displayElements[idx].type === 'HORIZON_LINE'" class="element-hline">
                   <hr :style="{ borderColor: displayElements[idx].value?.color || '#ddd', borderWidth: displayElements[idx].value?.thickness || '2px' }" />
@@ -481,22 +481,22 @@
                   <MapElement :content="{ address: displayElements[idx].value?.address || '', lat: displayElements[idx].value?.lat || 25.033, lng: displayElements[idx].value?.lng || 121.565, zoom: displayElements[idx].value?.zoom || 15 }" :element="displayElements[idx]" :key="`map-cr-${idx}-${displayElements[idx].value?.lat}-${displayElements[idx].value?.lng}`" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'ALBUM'" class="element-card-wrapper">
-                  <AlbumCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '相簿封面', title: displayElements[idx].value?.title || '相簿標題', description: displayElements[idx].value?.description || '' }" :element="displayElements[idx]" />
+                  <AlbumCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.albumTag'), title: displayElements[idx].value?.title || t('customFrame.albumTitle'), description: displayElements[idx].value?.description || '' }" :element="displayElements[idx]" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'PRODUCT_CARD'" class="element-card-wrapper">
-                  <ProductCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '商品標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                  <ProductCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.productTag'), title: displayElements[idx].value?.title || t('customFrame.productTitle'), date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'SERVICE_CARD'" class="element-card-wrapper">
-                  <ServiceCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '祈福服務', title: displayElements[idx].value?.title || '服務標題', date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
+                  <ServiceCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.serviceTag'), title: displayElements[idx].value?.title || t('customFrame.serviceTitle'), date: displayElements[idx].value?.date || '2024-08-22' }" :element="displayElements[idx]" />
                 </div>
                 <div v-else-if="displayElements[idx].type === 'EVENT_CARD'" class="element-card-wrapper">
-                  <EventCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || '法會活動', title: displayElements[idx].value?.title || '中元普渡法會', description: displayElements[idx].value?.description || '2024年中元普渡法會活動紀錄' }" :element="displayElements[idx]" />
+                  <EventCard :content="{ image: displayElements[idx].value?.image || null, tag: displayElements[idx].value?.tag || t('customFrame.eventTag'), title: displayElements[idx].value?.title || t('customFrame.eventTitle'), description: displayElements[idx].value?.description || t('customFrame.eventDesc') }" :element="displayElements[idx]" />
                 </div>
-                <div v-else class="element-unknown"><span>未知元件：{{ displayElements[idx].type }}</span></div>
-                <button class="delete-element-btn" @click.stop="handleDeleteElement(idx)" title="刪除元件">✕</button>
+                <div v-else class="element-unknown"><span>{{ t('customFrame.unknownElement') }}{{ displayElements[idx].type }}</span></div>
+                <button class="delete-element-btn" @click.stop="handleDeleteElement(idx)" :title="t('customFrame.deleteElement')">✕</button>
               </div>
               <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === idx }">
-                <span class="drop-hint">📦 拖曳元件至此</span>
+                <span class="drop-hint">📦 {{ t('customFrame.dropHint') }}</span>
               </div>
             </div>
           </div>
@@ -529,7 +529,7 @@
                 <img 
                   v-if="element.value?.src" 
                   :src="element.value.src" 
-                  :alt="element.value?.alt || '圖片'"
+                  :alt="element.value?.alt || t('customFrame.imgAlt')"
                   class="element-img"
                   :style="getElementStyle(element)"
                 />
@@ -541,7 +541,7 @@
                   />
                   <div class="placeholder-overlay">
                     <span>🖼️</span>
-                    <p>請在右側上傳圖片</p>
+                    <p>{{ t('customFrame.uploadImgHint') }}</p>
                   </div>
                 </div>
               </div>
@@ -551,7 +551,7 @@
                 v-else-if="element.type === 'TEXT'" 
                 class="element-text"
                 :style="getElementStyle(element)"
-                v-html="element.value?.text || '文字內容'"
+                v-html="element.value?.text || t('customFrame.textPlaceholder')"
               ></div>
 
               <!-- BUTTON 元件 -->
@@ -562,7 +562,7 @@
                   :style="getButtonStyle(element)"
                   @click.prevent
                 >
-                  {{ element.value?.text || '按鈕' }}
+                  {{ element.value?.text || t('customFrame.buttonText') }}
                 </a>
               </div>
 
@@ -610,8 +610,8 @@
                 <AlbumCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '相簿封面',
-                    title: element.value?.title || '相簿標題',
+                    tag: element.value?.tag || t('customFrame.albumTag'),
+                    title: element.value?.title || t('customFrame.albumTitle'),
                     description: element.value?.description || ''
                   }"
                   :element="element"
@@ -623,8 +623,8 @@
                 <ProductCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '法會活動',
-                    title: element.value?.title || '商品標題',
+                    tag: element.value?.tag || t('customFrame.productTag'),
+                    title: element.value?.title || t('customFrame.productTitle'),
                     date: element.value?.date || '2024-08-22'
                   }"
                   :element="element"
@@ -636,8 +636,8 @@
                 <ServiceCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '祈福服務',
-                    title: element.value?.title || '服務標題',
+                    tag: element.value?.tag || t('customFrame.serviceTag'),
+                    title: element.value?.title || t('customFrame.serviceTitle'),
                     date: element.value?.date || '2024-08-22'
                   }"
                   :element="element"
@@ -649,9 +649,9 @@
                 <EventCard 
                   :content="{
                     image: element.value?.image || null,
-                    tag: element.value?.tag || '法會活動',
-                    title: element.value?.title || '中元普渡法會',
-                    description: element.value?.description || '2024年中元普渡法會活動紀錄'
+                    tag: element.value?.tag || t('customFrame.eventTag'),
+                    title: element.value?.title || t('customFrame.eventTitle'),
+                    description: element.value?.description || t('customFrame.eventDesc')
                   }"
                   :element="element"
                 />
@@ -659,14 +659,14 @@
 
               <!-- 未知類型 -->
               <div v-else class="element-unknown">
-                <span>未知元件：{{ element.type }}</span>
+                <span>{{ t('customFrame.unknownElement') }}{{ element.type }}</span>
               </div>
 
               <!-- 刪除按鈕 -->
               <button 
                 class="delete-element-btn"
                 @click.stop="handleDeleteElement(index)"
-                title="刪除元件"
+                :title="t('customFrame.deleteElement')"
               >
                 ✕
               </button>
@@ -674,7 +674,7 @@
 
             <!-- 沒有元件：顯示空格子 -->
             <div v-else class="empty-cell" :class="{ 'drag-over': dragOverCell === index }">
-              <span class="drop-hint">📦 拖曳元件至此</span>
+              <span class="drop-hint">📦 {{ t('customFrame.dropHint') }}</span>
             </div>
           </div>
         </template>
@@ -686,12 +686,15 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import CarouselElement from './elements/CarouselElement.vue'
 import MapElement from './elements/MapElement.vue'
 import AlbumCard from './elements/AlbumCard.vue'
 import ProductCard from './elements/ProductCard.vue'
 import ServiceCard from './elements/ServiceCard.vue'
 import EventCard from './elements/EventCard.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   frame: {
@@ -1052,7 +1055,7 @@ const handleDrop = (event, index) => {
     
     const element = displayElements.value[index]
     if (element && element.type) {
-      alert('此格子已有元件')
+      alert(t('customFrame.cellOccupied'))
       return
     }
     
@@ -1077,7 +1080,7 @@ const handleDeleteElement = (index) => {
 }
 
 const handleDeleteFrame = () => {
-  if (confirm('確定要刪除此框架嗎？')) {
+  if (confirm(t('customFrame.confirmDeleteFrame'))) {
     emit('delete-frame', {
       frame: props.frame,
       basemap: props.basemap,
@@ -1106,9 +1109,9 @@ const createElementFromDrag = (dragData, index) => {
   let value = {}
   
   switch (dragData.type) {
-    case 'text':         value = { text: '<p>這是文字內容，點擊右側屬性面板進行編輯</p>' }; break
+    case 'text':         value = { text: `<p>${t('customFrame.initText')}</p>` }; break
     case 'image':        value = { id: null, src: null, alt: '' }; break
-    case 'button':       value = { text: '按鈕文字', url: '#' }; break
+    case 'button':       value = { text: t('customFrame.initButtonText'), url: '#' }; break
     case 'h-line':       value = { color: '#ddd', thickness: '2px' }; break
     case 'v-line':       value = { color: '#ddd', thickness: '2px' }; break
     case 'carousel':     value = { imgs: [], autoPlay: true, interval: 3000, height: 400 }; break

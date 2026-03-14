@@ -4,7 +4,7 @@
 
       <!-- 標題列 -->
       <div class="section-header">
-        <h2 class="section-title">慶典活動</h2>
+        <h2 class="section-title">{{ t('eventsBasemap.title') }}</h2>
       </div>
 
       <!-- 活動 Grid — 固定 3 筆 -->
@@ -29,7 +29,7 @@
                 <circle cx="28" cy="32" r="7" stroke="#bbb" stroke-width="3"/>
                 <path d="M8 50l18-16 14 14 10-10 18 18" stroke="#bbb" stroke-width="3" stroke-linejoin="round"/>
               </svg>
-              <span class="placeholder-text">活動圖片</span>
+              <span class="placeholder-text">{{ t('eventsBasemap.imagePlaceholder') }}</span>
             </div>
           </div>
 
@@ -78,7 +78,7 @@
       <!-- 查看更多 -->
       <div class="view-more-wrap">
         <a href="#" class="view-more-btn" @click.prevent="$emit('view-all')">
-          查看更多活動
+          {{ t('eventsBasemap.viewMore') }}
         </a>
       </div>
 
@@ -88,6 +88,8 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   eventsList: {
@@ -108,8 +110,11 @@ const emit = defineEmits(['view-detail', 'view-all'])
 const displayEvents = computed(() => props.eventsList.slice(0, 3))
 
 const getTagClass = (tag) => {
-  const tagMap = { '熱門': 'hot', '推薦': 'recommended', '重要': 'important', '法會': 'ceremony' }
-  return tagMap[tag] || 'default'
+  if (tag === t('eventsBasemap.tagHot')) return 'hot'
+  if (tag === t('eventsBasemap.tagRecommended')) return 'recommended'
+  if (tag === t('eventsBasemap.tagImportant')) return 'important'
+  if (tag === t('eventsBasemap.tagCeremony')) return 'ceremony'
+  return 'default'
 }
 
 const viewEventDetail = (event) => emit('view-detail', event)

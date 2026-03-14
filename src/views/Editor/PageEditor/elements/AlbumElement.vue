@@ -4,7 +4,7 @@
       <!-- 相簿標題 -->
       <div class="album-header" v-if="safeContent.title">
         <h3 class="album-title">{{ safeContent.title }}</h3>
-        <span class="photo-count">{{ photos.length }} 張照片</span>
+        <span class="photo-count">{{ t('albumElement.photoCount', { n: photos.length }) }}</span>
       </div>
 
       <!-- 照片網格 -->
@@ -17,7 +17,7 @@
         >
           <img
             :src="photo.src"
-            :alt="photo.alt || `照片 ${index + 1}`"
+            :alt="photo.alt || t('albumElement.photoAlt', { n: index + 1 })"
             class="photo-image"
           />
           <div class="photo-overlay">
@@ -33,7 +33,7 @@
         >
           <div class="more-content">
             <div class="more-icon">+{{ remainingCount }}</div>
-            <div class="more-text">查看更多</div>
+            <div class="more-text">{{ t('albumElement.viewMore') }}</div>
           </div>
         </div>
       </div>
@@ -41,7 +41,7 @@
       <!-- 查看全部按鈕 -->
       <div class="album-footer" v-if="safeContent.showViewAll">
         <button class="view-all-btn" @click="viewAll">
-          查看完整相簿
+          {{ t('albumElement.viewAll') }}
           <svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
           </svg>
@@ -53,6 +53,8 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   content: {

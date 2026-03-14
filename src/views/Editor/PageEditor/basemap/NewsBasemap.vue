@@ -2,8 +2,8 @@
   <section class="news-section" :class="`device-${device}`">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">最新消息</h2>
-        <a href="#" class="view-all">查看所有消息 ›</a>
+        <h2 class="section-title">{{ t('newsBasemap.title') }}</h2>
+        <a href="#" class="view-all">{{ t('newsBasemap.viewAll') }}</a>
       </div>
       
       <div class="news-list">
@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 const props = defineProps({
   newsList: {
     type: Array,
@@ -38,6 +39,8 @@ const props = defineProps({
   },
   device: { type: String, default: 'desktop' }
 })
+
+const { t } = useI18n()
 </script>
 
 <style lang="scss" scoped>

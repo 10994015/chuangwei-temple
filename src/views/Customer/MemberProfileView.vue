@@ -631,4 +631,86 @@ const deleteCompany = (idx) => {
 }
 .op-btn:hover { color: #E8572A; }
 .op-btn-del:hover { color: #e53e3e; }
+
+/* ========== RWD ========== */
+@media (max-width: 768px) {
+  .member-profile-page {
+    padding: 16px 16px 40px;
+  }
+
+  .section-card {
+    padding: 20px 18px 24px;
+    border-radius: 12px;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .section-header .section-title {
+    margin-bottom: 0;
+  }
+
+  .view-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-field.full-width {
+    grid-column: 1;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-group.full-width {
+    grid-column: 1;
+  }
+
+  .sub-form {
+    padding: 16px 14px;
+  }
+
+  /* 表格橫向捲動 */
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .member-profile-page {
+    padding: 12px 12px 32px;
+  }
+
+  .section-card {
+    padding: 16px 14px 20px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn-primary,
+  .btn-cancel-outline,
+  .btn-edit-outline {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .sub-form-actions {
+    flex-wrap: wrap;
+  }
+}
 </style>

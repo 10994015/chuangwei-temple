@@ -41,7 +41,7 @@
           :class="{ disabled: currentPage === 1 }"
           :disabled="currentPage === 1"
           @click="prevPage"
-        >上一頁</button>
+        >{{ t('newsListBasemap.prev') }}</button>
 
         <template v-for="page in pageNumbers" :key="page">
           <span v-if="page === '...'" class="page-ellipsis">...</span>
@@ -58,7 +58,7 @@
           :class="{ disabled: currentPage === totalPages }"
           :disabled="currentPage === totalPages"
           @click="nextPage"
-        >下一頁</button>
+        >{{ t('newsListBasemap.next') }}</button>
       </div>
     </div>
   </section>
@@ -66,6 +66,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   newsList: {
@@ -89,12 +91,12 @@ const props = defineProps({
 
 const emit = defineEmits(['view-detail'])
 
-const categories = [
-  { id: 'all',          name: '全部' },
-  { id: 'festival',     name: '節日慶典' },
-  { id: 'notice',       name: '法會通知' },
-  { id: 'announcement', name: '活動公告' }
-]
+const categories = computed(() => [
+  { id: 'all',          name: t('newsListBasemap.catAll') },
+  { id: 'festival',     name: t('newsListBasemap.catFestival') },
+  { id: 'notice',       name: t('newsListBasemap.catNotice') },
+  { id: 'announcement', name: t('newsListBasemap.catAnnouncement') },
+])
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)

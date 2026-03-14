@@ -1,14 +1,10 @@
 <template>
   <div class="event-card">
     <div class="card-image">
-      <img 
-        v-if="content.image" 
-        :src="content.image" 
+      <img
+        :src="content.image || '/images/service-card/04.png'"
         :alt="content.title || '活動圖片'"
       />
-      <div v-else class="card-image-placeholder">
-        <span>🎉</span>
-      </div>
     </div>
     <div class="card-content">
       <span class="card-tag">{{ content.tag || '法會活動' }}</span>

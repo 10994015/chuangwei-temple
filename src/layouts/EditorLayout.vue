@@ -62,6 +62,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { usePageEditorStore } from '@/stores/pageEditor'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
 import PublishDialog from '@/components/PublishDialog.vue'
+import { useI18n } from 'vue-i18n'
+const { locale } = useI18n()
 
 const router = useRouter()
 const route = useRoute()
@@ -161,10 +163,13 @@ onMounted(async () => {
     pageEditorStore.error = '無法載入頁面：缺少宮廟 ID'
     return
   }
+  
   pageEditorStore.resetStore()
 
   pageEditorStore.setTenantId(templeId)
   
+  locale.value = pageEditorStore.currentLocale
+
   try {
     // 載入網站設定（字型）
     await loadWebsiteSettings()
@@ -219,7 +224,7 @@ const handleLocaleChange = async (newLocale) => {
   
   try {
     pageEditorStore.currentLocale = newLocale
-    
+    locale.value = newLocale
     console.log('📥 重新載入頁面:', currentSlug, '語言:', newLocale)
     await pageEditorStore.reloadCurrentPage(newLocale)
     

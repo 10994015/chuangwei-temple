@@ -40,6 +40,9 @@
 
 <script setup>
 import { computed, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   backgroundColor:    { type: String,  default: 'linear-gradient(135deg, #8b7355 0%, #a0826d 100%)' },
@@ -47,9 +50,9 @@ const props = defineProps({
   frameData:          { type: Object,  default: null },
   frame:              { type: Object,  default: null },
   selectedElement:    { type: Object,  default: null },
-  donationTitle:      { type: String,  default: '捐款護持' },
-  donationBrief:      { type: String,  default: '您的捐款將用於宮廟維護與慈善公益\n支持本宮日常運作、建設修繕及幫助弱勢族群\n每一分善款都將妥善運用 功德無量' },
-  donationButtonText: { type: String,  default: '前往捐款 ›' },
+  donationTitle:      { type: String,  default: undefined },
+  donationBrief:      { type: String,  default: undefined },
+  donationButtonText: { type: String,  default: undefined },
   donationButtonLink: { type: String,  default: '#' },
 })
 
@@ -59,9 +62,9 @@ const emit = defineEmits(['select-element', 'select-frame'])
 const isHtml = (str) => typeof str === 'string' && /<[a-z][\s\S]*>/i.test(str)
 
 // ==================== 當前內容 ====================
-const currentTitle      = computed(() => props.frame?.data?.donationTitle      ?? props.donationTitle)
-const currentText       = computed(() => props.frame?.data?.donationBrief       ?? props.donationBrief)
-const currentButtonText = computed(() => props.frame?.data?.donationButtonText  ?? props.donationButtonText)
+const currentTitle      = computed(() => props.frame?.data?.donationTitle      ?? props.donationTitle      ?? t('donationBasemap.title'))
+const currentText       = computed(() => props.frame?.data?.donationBrief       ?? props.donationBrief       ?? t('donationBasemap.brief'))
+const currentButtonText = computed(() => props.frame?.data?.donationButtonText  ?? props.donationButtonText  ?? t('donationBasemap.buttonText'))
 const currentButtonLink = computed(() => props.frame?.data?.donationButtonLink  ?? props.donationButtonLink)
 
 // ==================== 選中狀態 ====================
@@ -95,7 +98,7 @@ const handleElementClick = (elementType, event) => {
   if (elementType === 'title') {
     element = reactive({
       type: 'TEXT', id: 'donationTitle',
-      value: { text: data.donationTitle ?? props.donationTitle },
+      value: { text: data.donationTitle ?? props.donationTitle ?? t('donationBasemap.title') },
       metadata: {}
     })
     stopHandles.push(watch(() => element.value.text, val => { props.frame.data.donationTitle = val }))
@@ -103,7 +106,7 @@ const handleElementClick = (elementType, event) => {
   } else if (elementType === 'text') {
     element = reactive({
       type: 'TEXT', id: 'donationBrief',
-      value: { text: data.donationBrief ?? props.donationBrief },
+      value: { text: data.donationBrief ?? props.donationBrief ?? t('donationBasemap.brief') },
       metadata: {}
     })
     stopHandles.push(watch(() => element.value.text, val => { props.frame.data.donationBrief = val }))
@@ -112,7 +115,7 @@ const handleElementClick = (elementType, event) => {
     element = reactive({
       type: 'BUTTON', id: 'donationButtonText',
       value: {
-        text: data.donationButtonText ?? props.donationButtonText,
+        text: data.donationButtonText ?? props.donationButtonText ?? t('donationBasemap.buttonText'),
         url:  data.donationButtonLink ?? props.donationButtonLink,
       },
       metadata: {}

@@ -27,7 +27,7 @@
                   <circle cx="18" cy="22" r="4" stroke="#bbb" stroke-width="2.5"/>
                   <path d="M4 36l13-13 9 10 7-8 12 13" stroke="#bbb" stroke-width="2.5" stroke-linejoin="round"/>
                 </svg>
-                <span class="placeholder-text">相簿封面</span>
+                <span class="placeholder-text">{{ t('albumListBasemap.coverPlaceholder') }}</span>
               </div>
             </div>
           </div>
@@ -44,16 +44,16 @@
       </div>
 
       <div v-if="filteredAlbums.length === 0" class="empty-state">
-        <p>此分類目前沒有相簿</p>
+        <p>{{ t('albumListBasemap.empty') }}</p>
       </div>
 
       <div v-if="totalPages > 1" class="pagination">
-        <button class="page-btn page-nav" :class="{ disabled: currentPage === 1 }" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一頁</button>
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === 1 }" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">{{ t('albumListBasemap.prev') }}</button>
         <template v-for="page in pageNumbers" :key="page">
           <span v-if="page === '...'" class="page-ellipsis">...</span>
           <button v-else class="page-btn" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
         </template>
-        <button class="page-btn page-nav" :class="{ disabled: currentPage === totalPages }" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一頁</button>
+        <button class="page-btn page-nav" :class="{ disabled: currentPage === totalPages }" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">{{ t('albumListBasemap.next') }}</button>
       </div>
 
     </div>
@@ -62,6 +62,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   albumList:       { type: [Array, Object], default: undefined },
@@ -89,7 +92,7 @@ const normalizedAlbums = computed(() =>
 )
 
 const categories = computed(() => {
-  const base = [{ label: '全部', value: 'all' }]
+  const base = [{ label: t('albumListBasemap.all'), value: 'all' }]
   const catSource = props.albumCategories?.length > 0
     ? props.albumCategories
     : props.categoryList?.length > 0 ? props.categoryList : null

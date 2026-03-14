@@ -573,13 +573,68 @@ onMounted(() => {
   color: #9ca3af;
 }
 
+// ========== RWD ==========
 @media (max-width: 1100px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .bottom-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .bottom-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 768px) {
-  .dashboard-view { padding: 16px; }
-  .cal-cell { min-height: 60px; }
+  .dashboard-view { padding: 12px 14px 32px; gap: 14px; }
+
+  // 統計卡片
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 16px 18px; border-radius: 10px; }
+  .stat-value { font-size: 26px; }
+  .stat-label { font-size: 12px; margin-bottom: 6px; }
+  .stat-growth { font-size: 12px; }
+
+  // 月曆工具列
+  .calendar-toolbar { padding: 12px 14px; }
+  .calendar-title { font-size: 14px; gap: 6px; }
+  .today-btn { padding: 4px 10px; font-size: 12px; }
+  .nav-btn { width: 26px; height: 26px; svg { width: 14px; height: 14px; } }
+
+  // 月曆格子
+  .cal-weekday { font-size: 11px; padding: 8px 0; }
+  .cal-cell { min-height: 52px; padding: 5px 4px; }
+  .cell-date { font-size: 12px; width: 20px; height: 20px; margin-bottom: 2px; }
+
+  // 活動標籤：只顯示色點，隱藏文字
+  .act-tag {
+    padding: 2px 4px;
+    font-size: 0;         // 隱藏文字
+    gap: 0;
+    width: fit-content;
+    border-radius: 50%;
+    padding: 0;
+  }
+  .act-dot { width: 7px; height: 7px; }
+
+  // 底部資料卡
+  .bottom-grid { grid-template-columns: 1fr; gap: 10px; }
+  .data-card { padding: 16px 18px; border-radius: 10px; }
+  .data-card-title { font-size: 14px; margin-bottom: 12px; }
+  .data-table {
+    font-size: 13px;
+    th { font-size: 12px; padding-bottom: 8px; }
+    td { padding: 10px 0; }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-view { padding: 10px 10px 28px; gap: 12px; }
+
+  // 統計卡片
+  .stats-grid { grid-template-columns: 1fr; gap: 8px; }
+  .stat-value { font-size: 30px; }
+
+  // 月曆工具列
+  .calendar-toolbar { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+
+  // 月曆格子更緊湊
+  .cal-cell { min-height: 40px; padding: 4px 2px; }
+  .cell-date { font-size: 11px; width: 18px; height: 18px; }
+  .cal-weekday { font-size: 10px; padding: 6px 0; }
 }
 </style>

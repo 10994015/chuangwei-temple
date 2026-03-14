@@ -4,7 +4,7 @@
       <!-- 左側：圖片區 -->
       <div class="image-section">
         <div class="main-image">
-          <img v-if="mainImage" :src="mainImage" alt="捐款商品主圖" class="main-img" />
+          <img v-if="mainImage" :src="mainImage" :alt="t('donationProductBasemap.mainImageAlt')" class="main-img" />
           <div v-else class="image-placeholder main-placeholder"></div>
         </div>
         <div class="thumbnail-row">
@@ -15,7 +15,7 @@
             :class="{ active: selectedThumb === index }"
             @click="selectedThumb = index"
           >
-            <img v-if="img" :src="img" :alt="`縮圖 ${index + 1}`" class="thumb-img" />
+            <img v-if="img" :src="img" :alt="`${t('donationProductBasemap.thumbAlt')} ${index + 1}`" class="thumb-img" />
             <div v-else class="image-placeholder thumb-placeholder"></div>
           </div>
         </div>
@@ -24,7 +24,7 @@
       <!-- 右側：捐款表單 -->
       <div class="form-section">
         <div class="form-group">
-          <label class="form-label">捐款項目</label>
+          <label class="form-label">{{ t('donationProductBasemap.itemLabel') }}</label>
           <select class="form-select" v-model="selectedItem">
             <option v-for="(item, index) in donationItems" :key="index" :value="item.value">
               {{ item.label }}
@@ -33,19 +33,19 @@
         </div>
 
         <div class="receipt-group" v-if="hasReceipt">
-          <p class="receipt-hint">購買此規格將提供</p>
-          <div class="receipt-badge">電子捐款收據</div>
+          <p class="receipt-hint">{{ t('donationProductBasemap.receiptHint') }}</p>
+          <div class="receipt-badge">{{ t('donationProductBasemap.receiptBadge') }}</div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">捐款金額</label>
+          <label class="form-label">{{ t('donationProductBasemap.amountLabel') }}</label>
           <div class="amount-input-wrapper">
             <span class="currency-label">NT$</span>
             <input
               type="number"
               class="amount-input"
               v-model.number="donationAmount"
-              :placeholder="`請輸入捐款金額（最低 NT$${minAmount}）`"
+              :placeholder="t('donationProductBasemap.amountPlaceholder', { min: minAmount })"
               :min="minAmount"
               @input="validateAmount"
             />
@@ -54,12 +54,12 @@
         </div>
 
         <div class="total-row">
-          <span class="total-label">總計</span>
+          <span class="total-label">{{ t('donationProductBasemap.total') }}</span>
           <span class="total-amount">NT$ {{ formattedTotal }}</span>
         </div>
 
         <button class="donate-btn" :disabled="!canDonate" @click="handleDonate">
-          立即捐款
+          {{ t('donationProductBasemap.donateBtn') }}
         </button>
       </div>
     </div>
@@ -68,15 +68,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   images:      { type: Array,   default: () => [] },
-  items:       { type: Array,   default: () => [
-    { label: '一般捐款', value: 'general' },
-    { label: '助建基金', value: 'fund' },
-    { label: '慈善專案', value: 'charity' },
-    { label: '祭典活動', value: 'festival' },
-  ]},
+  items:       { type: Array,   default: undefined },
   min_amount:  { type: Number,  default: 100 },
   has_receipt: { type: Boolean, default: true },
   device:      { type: String,  default: 'desktop' },
@@ -97,7 +95,12 @@ const thumbnails = computed(() =>
   })
 )
 
-const donationItems  = computed(() => props.items?.length ? props.items : [{ label: '一般捐款', value: 'general' }])
+const donationItems  = computed(() => props.items?.length ? props.items : [
+  { label: t('donationProductBasemap.defaultItem1'), value: 'general' },
+  { label: t('donationProductBasemap.defaultItem2'), value: 'fund' },
+  { label: t('donationProductBasemap.defaultItem3'), value: 'charity' },
+  { label: t('donationProductBasemap.defaultItem4'), value: 'festival' },
+])
 const selectedItem   = ref(donationItems.value[0]?.value || 'general')
 const donationAmount = ref(null)
 const amountError    = ref('')
@@ -106,7 +109,7 @@ const hasReceipt     = computed(() => props.has_receipt !== false)
 
 const validateAmount = () => {
   if (!donationAmount.value) { amountError.value = ''; return }
-  amountError.value = donationAmount.value < minAmount.value ? `最低捐款金額為 NT$${minAmount.value}` : ''
+  amountError.value = donationAmount.value < minAmount.value ? t('donationProductBasemap.amountError', { min: minAmount.value }) : ''
 }
 
 const formattedTotal = computed(() => {
