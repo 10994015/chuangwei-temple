@@ -63,19 +63,19 @@
                   </div>
                   <template v-if="tgt.tab==='manual'||tgt.tab==='personal'">
                     <div class="frow">
-                      <div class="ff"><label>姓名 <em class="req">*</em></label><input v-model="tgt.name" class="fi" placeholder="請輸入姓名" :readonly="tgt.tab==='personal'&&!!tgt.selProfile"/></div>
+                      <div class="ff"><label>姓名 <em class="req">*</em></label><input v-model="tgt.name" class="fi" placeholder="請輸入姓名"/></div>
                       <div class="ff"><label>性別 <em class="req">*</em></label>
-                        <select v-model="tgt.gender" class="fi-sel" :disabled="tgt.tab==='personal'&&!!tgt.selProfile">
+                        <select v-model="tgt.gender" class="fi-sel">
                           <option value="">請選擇</option><option>男</option><option>女</option>
                         </select>
                       </div>
                     </div>
                     <div class="frow">
-                      <div class="ff"><label>生日 <em class="req">*</em></label><input v-model="tgt.birthday" class="fi" placeholder="年/月/日" :readonly="tgt.tab==='personal'&&!!tgt.selProfile"/></div>
-                      <div class="ff"><label>手機 <em class="req">*</em></label><input v-model="tgt.phone" class="fi" placeholder="請輸入手機號碼" :readonly="tgt.tab==='personal'&&!!tgt.selProfile"/></div>
+                      <div class="ff"><label>生日 <em class="req">*</em></label><input v-model="tgt.birthday" class="fi" placeholder="年/月/日"/></div>
+                      <div class="ff"><label>手機 <em class="req">*</em></label><input v-model="tgt.phone" class="fi" placeholder="請輸入手機號碼"/></div>
                     </div>
-                    <div class="frow"><div class="ff full"><label>Email <em class="req">*</em></label><input v-model="tgt.email" class="fi" placeholder="請輸入Email" :readonly="tgt.tab==='personal'&&!!tgt.selProfile"/></div></div>
-                    <div class="frow"><div class="ff full"><label>地址</label><input v-model="tgt.address" class="fi" placeholder="請輸入地址" :readonly="tgt.tab==='personal'&&!!tgt.selProfile"/></div></div>
+                    <div class="frow"><div class="ff full"><label>Email <em class="req">*</em></label><input v-model="tgt.email" class="fi" placeholder="請輸入Email"/></div></div>
+                    <div class="frow"><div class="ff full"><label>地址</label><input v-model="tgt.address" class="fi" placeholder="請輸入地址"/></div></div>
                   </template>
                   <template v-else-if="tgt.tab==='family'">
                     <div class="frow">
@@ -256,7 +256,14 @@ const typeLabel=(t)=>({product:'商品',service:'服務',donation:'捐款'}[t]||
 const fillProfile=(tgt)=>{const p=personalProfiles.value.find(x=>x.id===Number(tgt.selProfile));if(p)Object.assign(tgt,{name:p.name,gender:p.gender,birthday:p.birthday,phone:p.phone,email:p.email,address:p.address})}
 const fillFamily =(tgt)=>{const f=familyProfiles.value.find(x=>x.id===Number(tgt.selFamily));  if(f)Object.assign(tgt,{name:f.name,gender:f.gender,birthday:f.birthday,phone:f.phone,email:f.email,address:f.address})}
 const fillCompany=(tgt)=>{const c=companyProfiles.value.find(x=>x.id===Number(tgt.selCompany));if(c)Object.assign(tgt,{companyName:c.name,companyPhone:c.phone,companyAddress:c.address,taxId:c.taxId,ownerName:c.ownerName,ownerAddress:c.ownerAddress})}
-const switchTab=(tgt,tab)=>{tgt.tab=tab;Object.assign(tgt,{selProfile:'',selFamily:'',selCompany:'',name:'',gender:'',birthday:'',phone:'',email:'',address:'',companyName:'',companyPhone:'',companyAddress:'',taxId:'',ownerName:'',ownerAddress:''})}
+const switchTab=(tgt,tab)=>{
+  tgt.tab=tab
+  Object.assign(tgt,{selProfile:'',selFamily:'',selCompany:'',name:'',gender:'',birthday:'',phone:'',email:'',address:'',companyName:'',companyPhone:'',companyAddress:'',taxId:'',ownerName:'',ownerAddress:''})
+  if(tab==='personal'&&personalProfiles.value.length>0){
+    const p=personalProfiles.value[0]
+    Object.assign(tgt,{selProfile:p.id,name:p.name,gender:p.gender,birthday:p.birthday,phone:p.phone,email:p.email,address:p.address})
+  }
+}
 const saveTgt=(tgt)=>{const ok=tgt.tab==='company'?tgt.companyName&&tgt.taxId&&tgt.ownerName:tgt.name&&tgt.gender&&tgt.birthday&&tgt.phone&&tgt.email;tgt.filled=!!ok;tgt.open=false}
 
 const NORMAL_SHIP=60
@@ -276,11 +283,11 @@ const checkout=()=>{if(canCheckout.value)alert('前往結帳！')}
 const thankYouEmail=ref('unified')
 const invoiceType=ref('personal')
 const recommendations=ref([
-  {id:1,temple:'松山慈祐宮',name:'健康長壽符',price:200,image:'https://picsum.photos/seed/r1/200/140'},
-  {id:2,temple:'北港朝天宮',name:'事業亨通符',price:220,image:'https://picsum.photos/seed/r2/200/140'},
-  {id:3,temple:'孔廟',      name:'金榜題名符',price:180,image:'https://picsum.photos/seed/r3/200/140'},
-  {id:4,temple:'天后宮',    name:'闔家平安符',price:280,image:'https://picsum.photos/seed/r4/200/140'},
-  {id:5,temple:'關渡宮',    name:'五路財神符',price:350,image:'https://picsum.photos/seed/r5/200/140'},
+  {id:1,temple:'松山慈祐宮',name:'健康長壽符',price:200,image:'/images/product-card/01.png'},
+  {id:2,temple:'北港朝天宮',name:'事業亨通符',price:220,image:'/images/product-card/02.png'},
+  {id:3,temple:'孔廟',      name:'金榜題名符',price:180,image:'/images/product-card/03.png'},
+  {id:4,temple:'天后宮',    name:'闔家平安符',price:280,image:'/images/product-card/04.png'},
+  {id:5,temple:'關渡宮',    name:'五路財神符',price:350,image:'/images/product-card/01.png'},
 ])
 const addRecommend=(rec)=>alert(`已將「${rec.name}」加入購物車`)
 </script>

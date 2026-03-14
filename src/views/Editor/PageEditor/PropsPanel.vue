@@ -2316,7 +2316,7 @@ const setMapZoom = (zoom) => {
   color: #555;
 }
 
-.card-remove {
+.remove-image-btn.card-remove {
   position: static;
   opacity: 1;
   flex-shrink: 0;

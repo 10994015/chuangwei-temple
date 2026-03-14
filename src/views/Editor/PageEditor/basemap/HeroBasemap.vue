@@ -184,7 +184,7 @@ onUnmounted(() => stopAutoPlay())
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px 60px;
+  padding: 40px 20px;
   pointer-events: none;
 }
 
@@ -244,6 +244,6 @@ onUnmounted(() => stopAutoPlay())
     &.prev { left: 1rem; }
     &.next { right: 1rem; }
   }
-  .slide-text-content { padding: 24px 30px; }
+  .slide-text-content { padding: 24px 15px; }
 }
 </style>
