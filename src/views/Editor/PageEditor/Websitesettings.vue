@@ -36,7 +36,8 @@
 
     <!-- 設定表單 -->
     <div v-if="!isLoading && !error" class="settings-content">
-      <!-- 字型設定區塊 -->
+
+      <!-- ===== 字型設定區塊 ===== -->
       <section class="settings-section">
         <div class="section-header">
           <h2 class="section-title">{{ t('websiteSettings.fontSection') }}</h2>
@@ -51,9 +52,9 @@
           </label>
           <select
             id="font-family-zh-tw"
-            v-model="formData.frontFamilyZhTw"
+            v-model="siteForm.frontFamilyZhTw"
             class="form-select"
-            @change="markAsChanged"
+            @change="markSiteChanged"
           >
             <option value="">{{ t('websiteSettings.fontSelectPlaceholder') }}</option>
             <option v-for="font in zhTwFonts" :key="font.value" :value="font.value">
@@ -61,9 +62,9 @@
             </option>
           </select>
         </div>
-        <div v-if="formData.frontFamilyZhTw" class="font-preview">
+        <div v-if="siteForm.frontFamilyZhTw" class="font-preview">
           <div class="preview-label">繁中字型預覽</div>
-          <div class="preview-content" :style="{ fontFamily: getFontFamily(formData.frontFamilyZhTw) }">
+          <div class="preview-content" :style="{ fontFamily: getFontFamily(siteForm.frontFamilyZhTw) }">
             <p class="preview-chinese">歡迎來到宮廟網站，這是繁體中文預覽文字。</p>
           </div>
         </div>
@@ -76,9 +77,9 @@
           </label>
           <select
             id="font-family-zh-cn"
-            v-model="formData.frontFamilyZhCn"
+            v-model="siteForm.frontFamilyZhCn"
             class="form-select"
-            @change="markAsChanged"
+            @change="markSiteChanged"
           >
             <option value="">{{ t('websiteSettings.fontSelectPlaceholder') }}</option>
             <option v-for="font in zhCnFonts" :key="font.value" :value="font.value">
@@ -86,9 +87,9 @@
             </option>
           </select>
         </div>
-        <div v-if="formData.frontFamilyZhCn" class="font-preview">
+        <div v-if="siteForm.frontFamilyZhCn" class="font-preview">
           <div class="preview-label">简中字型预览</div>
-          <div class="preview-content" :style="{ fontFamily: getFontFamily(formData.frontFamilyZhCn) }">
+          <div class="preview-content" :style="{ fontFamily: getFontFamily(siteForm.frontFamilyZhCn) }">
             <p class="preview-chinese">欢迎来到宫庙网站，这是简体中文预览文字。</p>
           </div>
         </div>
@@ -101,9 +102,9 @@
           </label>
           <select
             id="font-family-en-us"
-            v-model="formData.frontFamilyEnUs"
+            v-model="siteForm.frontFamilyEnUs"
             class="form-select"
-            @change="markAsChanged"
+            @change="markSiteChanged"
           >
             <option value="">{{ t('websiteSettings.fontSelectPlaceholder') }}</option>
             <option v-for="font in enFonts" :key="font.value" :value="font.value">
@@ -111,80 +112,19 @@
             </option>
           </select>
         </div>
-        <div v-if="formData.frontFamilyEnUs" class="font-preview">
+        <div v-if="siteForm.frontFamilyEnUs" class="font-preview">
           <div class="preview-label">EN Font Preview</div>
-          <div class="preview-content" :style="{ fontFamily: getFontFamily(formData.frontFamilyEnUs) }">
+          <div class="preview-content" :style="{ fontFamily: getFontFamily(siteForm.frontFamilyEnUs) }">
             <p class="preview-english">Welcome to Temple Website, this is English preview text.</p>
           </div>
         </div>
       </section>
 
-      <!-- SEO 設定區塊 -->
+      <!-- ===== 追蹤設定區塊 (Meta Pixel + Google GTM) ===== -->
       <section class="settings-section">
         <div class="section-header">
-          <h2 class="section-title">{{ t('websiteSettings.seoSection') }}</h2>
-          <p class="section-description">{{ t('websiteSettings.seoSectionDesc') }}</p>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="seo-title">
-            {{ t('websiteSettings.seoTitleLabel') }}
-            <span class="required">*</span>
-          </label>
-          <input
-            id="seo-title"
-            v-model="formData.seoTitle"
-            type="text"
-            class="form-input"
-            placeholder=""
-            maxlength="60"
-            @input="markAsChanged"
-          />
-          <div class="input-hint">
-            <span :class="{ 'text-warning': formData.seoTitle.length > 50 }">
-              {{ t('websiteSettings.charCount', { n: formData.seoTitle.length, max: 60 }) }}
-            </span>
-            <span class="hint-text"></span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="seo-description">
-            {{ t('websiteSettings.seoDescLabel') }}
-            <span class="required">*</span>
-          </label>
-          <textarea
-            id="seo-description"
-            v-model="formData.seoDescription"
-            class="form-textarea"
-            placeholder=""
-            maxlength="160"
-            rows="4"
-            @input="markAsChanged"
-          ></textarea>
-          <div class="input-hint">
-            <span :class="{ 'text-warning': formData.seoDescription.length > 150 }">
-              {{ t('websiteSettings.charCount', { n: formData.seoDescription.length, max: 160 }) }}
-            </span>
-            <span class="hint-text"></span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="seo-keywords">
-            {{ t('websiteSettings.seoKeywordsLabel') }}
-          </label>
-          <input
-            id="seo-keywords"
-            v-model="formData.seoKeywords"
-            type="text"
-            class="form-input"
-            placeholder=""
-            @input="markAsChanged"
-          />
-          <p class="input-hint">
-            <span class="hint-text"></span>
-          </p>
+          <h2 class="section-title">{{ t('websiteSettings.trackingSection') }}</h2>
+          <p class="section-description">{{ t('websiteSettings.trackingSectionDesc') }}</p>
         </div>
 
         <div class="form-group">
@@ -193,16 +133,128 @@
           </label>
           <input
             id="meta-pixel"
-            v-model="formData.metaPixel"
+            v-model="siteForm.metaPixel"
             type="text"
             class="form-input"
             :placeholder="t('websiteSettings.metaPixelPlaceholder')"
-            @input="markAsChanged"
+            @input="markSiteChanged"
           />
           <p class="input-hint">
             <span class="hint-text">{{ t('websiteSettings.metaPixelHint') }}</span>
           </p>
         </div>
+
+        <div class="form-group">
+          <label class="form-label" for="google-gtm">
+            Google GTM ID
+          </label>
+          <input
+            id="google-gtm"
+            v-model="siteForm.googleGtm"
+            type="text"
+            class="form-input"
+            placeholder="GTM-XXXXXXX"
+            @input="markSiteChanged"
+          />
+          <p class="input-hint">
+            <span class="hint-text">{{ t('websiteSettings.googleGtmHint') }}</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== SEO 設定區塊（依頁面分開） ===== -->
+      <section class="settings-section">
+        <div class="section-header">
+          <h2 class="section-title">{{ t('websiteSettings.seoSection') }}</h2>
+          <p class="section-description">{{ t('websiteSettings.seoSectionDesc') }}</p>
+        </div>
+
+        <!-- 頁面切換 Tab -->
+        <div class="seo-tabs">
+          <button
+            v-for="tab in pageEditorStore.headerTabs"
+            :key="tab.slug"
+            class="seo-tab"
+            :class="{ active: activeSeoSlug === tab.slug }"
+            @click="switchSeoTab(tab.slug)"
+          >
+            {{ tab.name }}
+          </button>
+        </div>
+
+        <!-- SEO 載入中 -->
+        <div v-if="isSeoLoading" class="seo-loading">
+          <div class="spinner spinner-sm"></div>
+          <span>載入 SEO 資料中...</span>
+        </div>
+
+        <!-- SEO 表單 -->
+        <template v-else-if="activeSeoSlug">
+          <div class="form-group">
+            <label class="form-label" for="seo-title">
+              {{ t('websiteSettings.seoTitleLabel') }}
+              <span class="required">*</span>
+            </label>
+            <input
+              id="seo-title"
+              v-model="seoForm.seoTitle"
+              type="text"
+              class="form-input"
+              maxlength="60"
+              @input="markSeoChanged"
+            />
+            <div class="input-hint">
+              <span :class="{ 'text-warning': seoForm.seoTitle.length > 50 }">
+                {{ t('websiteSettings.charCount', { n: seoForm.seoTitle.length, max: 60 }) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="seo-description">
+              {{ t('websiteSettings.seoDescLabel') }}
+              <span class="required">*</span>
+            </label>
+            <textarea
+              id="seo-description"
+              v-model="seoForm.seoDescription"
+              class="form-textarea"
+              maxlength="160"
+              rows="4"
+              @input="markSeoChanged"
+            ></textarea>
+            <div class="input-hint">
+              <span :class="{ 'text-warning': seoForm.seoDescription.length > 150 }">
+                {{ t('websiteSettings.charCount', { n: seoForm.seoDescription.length, max: 160 }) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="seo-keywords">
+              {{ t('websiteSettings.seoKeywordsLabel') }}
+            </label>
+            <input
+              id="seo-keywords"
+              v-model="seoForm.seoKeywords"
+              type="text"
+              class="form-input"
+              @input="markSeoChanged"
+            />
+          </div>
+
+          <!-- 單獨儲存 SEO 按鈕 -->
+          <div class="seo-save-row">
+            <button
+              class="save-button-small"
+              @click="handleSaveSeo"
+              :disabled="isSeoSaving || !hasSeoChanges"
+            >
+              <span v-if="isSeoSaving">儲存中...</span>
+              <span v-else>儲存此頁面 SEO</span>
+            </button>
+          </div>
+        </template>
       </section>
 
       <!-- 變更提示 -->
@@ -229,64 +281,81 @@ const route = useRoute()
 const pageEditorStore = usePageEditorStore()
 const { t } = useI18n()
 
-// ==================== 字型清單（按語言分類）====================
+// ==================== 字型清單 ====================
 
 const zhTwFonts = [
-  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    googleFont: 'IBM+Plex+Sans+TC:wght@400;600',                  cssFamily: "'IBM Plex Sans TC', sans-serif" },
-  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', googleFont: 'LXGW+WenKai+Mono+TC',                            cssFamily: "'LXGW WenKai Mono TC', monospace" },
-  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         googleFont: 'Noto+Sans+TC:wght@400;600',                      cssFamily: "'Noto Sans TC', sans-serif" },
-  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        googleFont: 'Noto+Serif+TC:wght@400;600',                     cssFamily: "'Noto Serif TC', serif" },
+  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    cssFamily: "'IBM Plex Sans TC', sans-serif" },
+  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', cssFamily: "'LXGW WenKai Mono TC', monospace" },
+  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         cssFamily: "'Noto Sans TC', sans-serif" },
+  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        cssFamily: "'Noto Serif TC', serif" },
 ]
 
 const zhCnFonts = [
-  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         googleFont: 'Noto+Sans+SC:wght@400;600',                      cssFamily: "'Noto Sans SC', sans-serif" },
-  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        googleFont: 'Noto+Serif+SC:wght@400;600',                     cssFamily: "'Noto Serif SC', serif" },
-  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     googleFont: 'IBM+Plex+Sans+SC:wght@400;600',                  cssFamily: "'IBM Plex Sans SC', sans-serif" },
+  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         cssFamily: "'Noto Sans SC', sans-serif" },
+  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        cssFamily: "'Noto Serif SC', serif" },
+  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     cssFamily: "'IBM Plex Sans SC', sans-serif" },
 ]
 
 const enFonts = [
-  { value: 'bona-nova',           label: 'Bona Nova',            googleFont: 'Bona+Nova:ital,wght@0,400;0,700;1,400',          cssFamily: "'Bona Nova', serif" },
-  { value: 'inter',               label: 'Inter',                googleFont: 'Inter:wght@400;600',                             cssFamily: "'Inter', sans-serif" },
-  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   googleFont: 'Cormorant+Garamond:ital,wght@0,400;0,600;1,400', cssFamily: "'Cormorant Garamond', serif" },
-  { value: 'montserrat',          label: 'Montserrat',           googleFont: 'Montserrat:wght@400;600',                        cssFamily: "'Montserrat', sans-serif" },
-  { value: 'playfair-display',    label: 'Playfair Display',     googleFont: 'Playfair+Display:ital,wght@0,400;0,600;1,400',   cssFamily: "'Playfair Display', serif" },
+  { value: 'bona-nova',           label: 'Bona Nova',            cssFamily: "'Bona Nova', serif" },
+  { value: 'inter',               label: 'Inter',                cssFamily: "'Inter', sans-serif" },
+  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   cssFamily: "'Cormorant Garamond', serif" },
+  { value: 'montserrat',          label: 'Montserrat',           cssFamily: "'Montserrat', sans-serif" },
+  { value: 'playfair-display',    label: 'Playfair Display',     cssFamily: "'Playfair Display', serif" },
 ]
 
-// 合併用於 getFontFamily 查找
 const allFonts = [...zhTwFonts, ...zhCnFonts, ...enFonts]
-
-// ==================== 狀態 ====================
-
-const templeId = computed(() => route.params.templeId)
-const isLoading = ref(true)
-const isSaving = ref(false)
-const error = ref(null)
-const hasChanges = ref(false)
-
-const formData = reactive({
-  frontFamilyZhTw: '',
-  frontFamilyZhCn: '',
-  frontFamilyEnUs: '',
-  seoTitle: '',
-  seoDescription: '',
-  seoKeywords: '',
-  metaPixel: ''
-})
-
-const originalData = reactive({
-  frontFamilyZhTw: '',
-  frontFamilyZhCn: '',
-  frontFamilyEnUs: '',
-  seoTitle: '',
-  seoDescription: '',
-  seoKeywords: '',
-  metaPixel: ''
-})
 
 const getFontFamily = (fontValue) => {
   const font = allFonts.find(f => f.value === fontValue)
   return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
 }
+
+// ==================== 狀態 ====================
+
+const templeId = computed(() => route.params.templeId)
+
+// 全域載入 / 錯誤（字型 + 追蹤）
+const isLoading = ref(true)
+const isSaving  = ref(false)
+const error     = ref(null)
+const hasChanges = ref(false)
+
+// SEO 獨立狀態
+const isSeoLoading  = ref(false)
+const isSeoSaving   = ref(false)
+const hasSeoChanges = ref(false)
+const activeSeoSlug = ref(null)
+
+// ===== 網站基本設定表單（字型 + 追蹤）=====
+const siteForm = reactive({
+  frontFamilyZhTw: '',
+  frontFamilyZhCn: '',
+  frontFamilyEnUs: '',
+  metaPixel: '',
+  googleGtm: '',
+})
+
+const originalSiteForm = reactive({
+  frontFamilyZhTw: '',
+  frontFamilyZhCn: '',
+  frontFamilyEnUs: '',
+  metaPixel: '',
+  googleGtm: '',
+})
+
+// ===== SEO 表單（單一頁面）=====
+const seoForm = reactive({
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
+})
+
+const originalSeoForm = reactive({
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
+})
 
 // ==================== 載入設定 ====================
 
@@ -296,25 +365,29 @@ const loadSettings = async () => {
 
   try {
     const settings = await pageEditorStore.fetchWebsiteSettings(templeId.value)
-    
+
     if (settings) {
-      formData.frontFamilyZhTw = settings.frontFamilyZhTw || 'noto-sans-tc'
-      formData.frontFamilyZhCn = settings.frontFamilyZhCn || 'noto-sans-sc'
-      formData.frontFamilyEnUs = settings.frontFamilyEnUs || 'inter'
-      formData.seoTitle        = settings.seoTitle        || ''
-      formData.seoDescription  = settings.seoDescription  || ''
-      formData.seoKeywords     = settings.seoKeywords     || ''
-      formData.metaPixel       = settings.metaPixel       || ''
+      siteForm.frontFamilyZhTw = settings.frontFamilyZhTw || 'noto-sans-tc'
+      siteForm.frontFamilyZhCn = settings.frontFamilyZhCn || 'noto-sans-sc'
+      siteForm.frontFamilyEnUs = settings.frontFamilyEnUs || 'inter'
+      siteForm.metaPixel       = settings.metaPixel       || ''
+      siteForm.googleGtm       = settings.googleGtm       || ''
 
-      Object.assign(originalData, formData)
+      Object.assign(originalSiteForm, siteForm)
       hasChanges.value = false
-
-      console.log('✓ 設定已載入 (從 API):', {
-        front_family: settings.front_family,
-        seo_title: settings.seo_title,
-        轉換後: formData
-      })
     }
+
+    // 載入頁面 Tab 清單（如果還沒載入）
+    if (pageEditorStore.headerTabs.length === 0) {
+      await pageEditorStore.fetchHeaderTabs(templeId.value)
+    }
+
+    // 預設載入第一個頁面的 SEO
+    if (pageEditorStore.headerTabs.length > 0) {
+      const firstSlug = pageEditorStore.headerTabs[0].slug
+      await switchSeoTab(firstSlug)
+    }
+
   } catch (err) {
     console.error('❌ 載入設定失敗:', err)
     error.value = pageEditorStore.error || t('websiteSettings.errorLoad')
@@ -323,34 +396,61 @@ const loadSettings = async () => {
   }
 }
 
-// ==================== 儲存設定 ====================
+// ==================== SEO Tab 切換 ====================
+
+const switchSeoTab = async (slug) => {
+  if (hasSeoChanges.value) {
+    if (!confirm('目前 SEO 有未儲存的變更，切換頁面將會捨棄，是否繼續？')) return
+  }
+
+  activeSeoSlug.value = slug
+  isSeoLoading.value = true
+  hasSeoChanges.value = false
+
+  try {
+    const data = await pageEditorStore.fetchPageSeo(templeId.value, slug)
+
+    if (data) {
+      seoForm.seoTitle       = data.seoTitle       || ''
+      seoForm.seoDescription = data.seoDescription || ''
+      seoForm.seoKeywords    = data.seoKeywords     || ''
+    } else {
+      seoForm.seoTitle       = ''
+      seoForm.seoDescription = ''
+      seoForm.seoKeywords    = ''
+    }
+
+    Object.assign(originalSeoForm, seoForm)
+  } catch (err) {
+    console.error('❌ 載入 SEO 失敗:', err)
+  } finally {
+    isSeoLoading.value = false
+  }
+}
+
+// ==================== 儲存網站基本設定（字型 + 追蹤）====================
 
 const handleSave = async () => {
-  if (!formData.frontFamilyZhTw || !formData.frontFamilyZhCn || !formData.frontFamilyEnUs) {
+  if (!siteForm.frontFamilyZhTw || !siteForm.frontFamilyZhCn || !siteForm.frontFamilyEnUs) {
     alert(t('websiteSettings.alertSelectFonts'))
     return
   }
-  if (!formData.seoTitle.trim()) { alert(t('websiteSettings.alertFillTitle')); return }
-  if (!formData.seoDescription.trim()) { alert(t('websiteSettings.alertFillDesc')); return }
 
   isSaving.value = true
 
   try {
-    const settingsData = {
-      frontFamilyZhTw: formData.frontFamilyZhTw,
-      frontFamilyZhCn: formData.frontFamilyZhCn,
-      frontFamilyEnUs: formData.frontFamilyEnUs,
-      seoTitle:        formData.seoTitle.trim(),
-      seoDescription:  formData.seoDescription.trim(),
-      seoKeywords:     formData.seoKeywords.trim(),
-      metaPixel:       formData.metaPixel.trim()
+    const payload = {
+      frontFamilyZhTw: siteForm.frontFamilyZhTw,
+      frontFamilyZhCn: siteForm.frontFamilyZhCn,
+      frontFamilyEnUs: siteForm.frontFamilyEnUs,
+      metaPixel:       siteForm.metaPixel.trim(),
+      googleGtm:       siteForm.googleGtm.trim(),
     }
 
-    const success = await pageEditorStore.updateWebsiteSettings(templeId.value, settingsData)
+    const success = await pageEditorStore.updateWebsiteSettings(templeId.value, payload)
 
     if (success) {
       alert(t('websiteSettings.alertSaveSuccess'))
-      // ✅ 重新讀取設定（顯示載入中，不整頁重新整理）
       await loadSettings()
     } else {
       error.value = pageEditorStore.error || t('websiteSettings.errorSave')
@@ -361,32 +461,75 @@ const handleSave = async () => {
   }
 }
 
+// ==================== 儲存 SEO ====================
+
+const handleSaveSeo = async () => {
+  if (!seoForm.seoTitle.trim()) {
+    alert(t('websiteSettings.alertFillTitle'))
+    return
+  }
+  if (!seoForm.seoDescription.trim()) {
+    alert(t('websiteSettings.alertFillDesc'))
+    return
+  }
+
+  isSeoSaving.value = true
+
+  try {
+    const payload = {
+      slug:           activeSeoSlug.value,
+      seoTitle:       seoForm.seoTitle.trim(),
+      seoDescription: seoForm.seoDescription.trim(),
+      seoKeywords:    seoForm.seoKeywords.trim(),
+    }
+
+    const success = await pageEditorStore.updatePageSeo(templeId.value, payload)
+
+    if (success) {
+      alert('SEO 已儲存！')
+      Object.assign(originalSeoForm, seoForm)
+      hasSeoChanges.value = false
+    } else {
+      alert('SEO 儲存失敗：' + (pageEditorStore.error || '未知錯誤'))
+    }
+  } finally {
+    isSeoSaving.value = false
+  }
+}
+
+// ==================== 變更追蹤 ====================
+
+const markSiteChanged = () => {
+  hasChanges.value =
+    siteForm.frontFamilyZhTw !== originalSiteForm.frontFamilyZhTw ||
+    siteForm.frontFamilyZhCn !== originalSiteForm.frontFamilyZhCn ||
+    siteForm.frontFamilyEnUs !== originalSiteForm.frontFamilyEnUs ||
+    siteForm.metaPixel       !== originalSiteForm.metaPixel       ||
+    siteForm.googleGtm       !== originalSiteForm.googleGtm
+}
+
+const markSeoChanged = () => {
+  hasSeoChanges.value =
+    seoForm.seoTitle       !== originalSeoForm.seoTitle       ||
+    seoForm.seoDescription !== originalSeoForm.seoDescription ||
+    seoForm.seoKeywords    !== originalSeoForm.seoKeywords
+}
+
 // ==================== 其他事件 ====================
 
 const handleCancel = () => {
   if (confirm(t('websiteSettings.confirmDiscard'))) {
-    Object.assign(formData, originalData)
+    Object.assign(siteForm, originalSiteForm)
     hasChanges.value = false
   }
 }
 
 const handleBack = () => {
-  if (hasChanges.value) {
+  if (hasChanges.value || hasSeoChanges.value) {
     if (confirm(t('websiteSettings.confirmLeave'))) router.back()
   } else {
     router.back()
   }
-}
-
-const markAsChanged = () => {
-  hasChanges.value =
-    formData.frontFamilyZhTw !== originalData.frontFamilyZhTw ||
-    formData.frontFamilyZhCn !== originalData.frontFamilyZhCn ||
-    formData.frontFamilyEnUs !== originalData.frontFamilyEnUs ||
-    formData.seoTitle        !== originalData.seoTitle        ||
-    formData.seoDescription  !== originalData.seoDescription  ||
-    formData.seoKeywords     !== originalData.seoKeywords     ||
-    formData.metaPixel       !== originalData.metaPixel
 }
 
 onMounted(() => { loadSettings() })
@@ -482,6 +625,12 @@ onMounted(() => { loadSettings() })
   animation: spin 1s linear infinite;
 }
 
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -526,7 +675,7 @@ onMounted(() => { loadSettings() })
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  max-width: 900px;
+  max-width: 1000px;
   width: 100%;
   margin: 0 auto;
   padding: 2rem;
@@ -623,10 +772,56 @@ onMounted(() => { loadSettings() })
   border: 1px solid #e0e0e0;
 }
 
-.preview-chinese { font-size: 1.25rem; line-height: 1.8; color: #333; margin: 0 0 1rem 0; }
-.preview-english { font-size: 1.1rem; line-height: 1.6; color: #555; margin: 0 0 1rem 0; }
-.preview-numbers { font-size: 1rem; color: #777; margin: 0; }
+.preview-chinese { font-size: 1.25rem; line-height: 1.8; color: #333; margin: 0; }
+.preview-english { font-size: 1.1rem; line-height: 1.6; color: #555; margin: 0; }
 
+/* ===== SEO Tabs ===== */
+.seo-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0;
+}
+
+.seo-tab {
+  padding: 0.6rem 1.2rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.95rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 4px 4px 0 0;
+}
+
+.seo-tab:hover { color: #E8572A; background: #fff5f2; }
+
+.seo-tab.active {
+  color: #E8572A;
+  border-bottom-color: #E8572A;
+  font-weight: 600;
+}
+
+.seo-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.seo-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+/* ===== 底部 Banner ===== */
 .changes-banner {
   position: fixed;
   bottom: 2rem;
@@ -668,7 +863,8 @@ onMounted(() => { loadSettings() })
   transition: all 0.2s;
 }
 
-.save-button-small:hover { background: #d14a1f; }
+.save-button-small:hover:not(:disabled) { background: #d14a1f; }
+.save-button-small:disabled { background: #ccc; cursor: not-allowed; }
 
 .settings-content::-webkit-scrollbar { width: 8px; }
 .settings-content::-webkit-scrollbar-track { background: #f5f5f5; }

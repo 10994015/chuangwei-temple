@@ -38,6 +38,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   // ✅ 網站設定（字型、SEO 等），讓 EditorLayout 可 reactive 讀取
   const websiteSettings = ref(null)
+  const pageSeoData = ref({})
 
   // ==================== Computed ====================
   
@@ -1040,7 +1041,92 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       return false
     }
   }
-
+   
+/**
+ * 查詢指定頁面的 SEO 資料
+ * GET /api/tenant/{tid}/web-site/page/seo/{slug}
+ */
+const fetchPageSeo = async (tid, slug) => {
+  if (!tid || !slug) {
+    console.error('❌ 缺少 tid 或 slug')
+    error.value = '缺少必要參數'
+    return null
+  }
+ 
+  try {
+    console.log(`📥 載入頁面 SEO (${slug})...`)
+    const response = await axiosClient.get(`/tenant/${tid}/web-site/page/seo/${slug}`)
+    const result = response.data
+ 
+    if (result.statusCode === 200 && result.data) {
+      // 存入 pageSeoData，以 slug 為 key
+      pageSeoData.value[slug] = result.data
+      console.log(`✓ SEO 已載入 (${slug}):`, result.data)
+      return result.data
+    }
+ 
+    const errorMsg = result.message || '載入 SEO 失敗'
+    console.error(`❌ ${errorMsg}`)
+    error.value = errorMsg
+    return null
+  } catch (err) {
+    console.error('❌ 載入 SEO 失敗:', err)
+    error.value = err.message || '網路連線失敗'
+    return null
+  }
+}
+ 
+/**
+ * 更新指定頁面的 SEO 資料
+ * PATCH /api/tenant/{tid}/web-site/page/seo
+ * body: { slug, seoTitle, seoDescription, seoKeywords }
+ */
+const updatePageSeo = async (tid, seoData) => {
+  if (!tid) {
+    console.error('❌ 缺少宮廟 ID (tid)')
+    error.value = '缺少宮廟 ID'
+    return false
+  }
+ 
+  if (!seoData || !seoData.slug) {
+    console.error('❌ 缺少 slug 或 SEO 資料')
+    error.value = '缺少必要資料'
+    return false
+  }
+ 
+  isLoading.value = true
+  error.value = null
+ 
+  try {
+    console.log(`💾 保存頁面 SEO (${seoData.slug})...`)
+    console.log('📤 請求資料:', seoData)
+ 
+    const response = await axiosClient.patch(`/tenant/${tid}/web-site/page/seo`, seoData)
+    const result = response.data
+ 
+    console.log('📥 完整回應:', result)
+ 
+    if (result.statusCode === 200) {
+      console.log(`✓ SEO 已保存 (${seoData.slug})`)
+      // 更新 store 快取
+      if (result.data) {
+        pageSeoData.value[seoData.slug] = result.data
+      }
+      return true
+    }
+ 
+    const errorMsg = result.message || '保存 SEO 失敗'
+    console.error(`❌ ${errorMsg}`)
+    error.value = errorMsg
+    return false
+  } catch (err) {
+    console.error('❌ 保存 SEO 失敗:', err)
+    error.value = err.message || '網路連線失敗'
+    return false
+  } finally {
+    isLoading.value = false
+  }
+}
   return {
     tenantId,
     headerTabs,
@@ -1050,14 +1136,15 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     pageData,
     selected,
     currentPageBasemaps,
-    currentPageSystemFrames,  // ✅ 導出
+    currentPageSystemFrames,  
     locales,
     currentLocale,
-    pendingDeleteFileIds,       // ✅ 新增導出
-    websiteSettings,            // ✅ 新增導出
+    pendingDeleteFileIds,       
+    websiteSettings,      
+    pageSeoData,      
     fetchHeaderTabs,
     fetchPageContent,
-    fetchSystemFrames,          // ✅ 導出
+    fetchSystemFrames,          
     savePageContent,
     fetchLocales,
     setTenantId,
@@ -1082,7 +1169,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     publishWebsite,
     uploadImage,
     deleteDraft,
-    markFileForDeletion,        // ✅ 新增導出
-    clearPendingDeleteFileIds,  // ✅ 新增導出
+    markFileForDeletion,        
+    clearPendingDeleteFileIds,  
+    fetchPageSeo,              
+    updatePageSeo,
   }
 })

@@ -399,5 +399,8 @@ export default {
     errorSave: 'Save failed, please try again later',
     confirmDiscard: 'Discard all unsaved changes?',
     confirmLeave: 'You have unsaved changes. Leave anyway?',
+    trackingSection: 'Tracking Code Settings',
+    trackingSectionDesc: 'Configure tracking codes for analytics and ad performance tracking',
+    googleGtmHint: 'Enter a container ID in GTM-XXXXXXX format',
   },
 }

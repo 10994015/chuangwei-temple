@@ -399,5 +399,8 @@ export default {
     errorSave: '保存失败，请稍后再试',
     confirmDiscard: '确定要放弃所有未保存的更改吗？',
     confirmLeave: '您有未保存的更改，确定要离开吗？',
+    trackingSection: '追踪码设定',
+    trackingSectionDesc: '设置各平台的追踪码，用于数据分析与广告效果追踪',
+    googleGtmHint: '请输入 GTM-XXXXXXX 格式的容器 ID',
   },
 }

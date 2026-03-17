@@ -399,5 +399,8 @@ export default {
     errorSave: '儲存失敗，請稍後再試',
     confirmDiscard: '確定要放棄所有未儲存的變更嗎？',
     confirmLeave: '您有未儲存的變更，確定要離開嗎？',
+    trackingSection: '追蹤碼設定',
+    trackingSectionDesc: '設定各平台的追蹤碼，用於數據分析與廣告成效追蹤',
+    googleGtmHint: '請輸入 GTM-XXXXXXX 格式的容器 ID',
   },
 }
