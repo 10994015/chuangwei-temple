@@ -79,20 +79,21 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   /**
    * GET /api/tenant/{tid}/web-site/draft-page/tab
    */
-  const fetchHeaderTabs = async (tid) => {
+  const fetchHeaderTabs = async (tid, locale = null) => {
     if (!tid) return []
 
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/tab`)
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/tab`, {
+        params: { locale: locale || currentLocale.value }  // ← 加這個
+      })
       const result = response.data
 
       if (result.statusCode === 200 && result.data) {
         headerTabs.value = result.data
         tenantId.value = tid
-        console.log('✓ Header Tabs:', result.data)
         return result.data
       }
       throw new Error(result.message || '載入失敗')
@@ -1042,91 +1043,103 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
    
-/**
- * 查詢指定頁面的 SEO 資料
- * GET /api/tenant/{tid}/web-site/page/seo/{slug}
- */
-const fetchPageSeo = async (tid, slug) => {
-  if (!tid || !slug) {
-    console.error('❌ 缺少 tid 或 slug')
-    error.value = '缺少必要參數'
-    return null
-  }
- 
-  try {
-    console.log(`📥 載入頁面 SEO (${slug})...`)
-    const response = await axiosClient.get(`/tenant/${tid}/web-site/page/seo/${slug}`)
-    const result = response.data
- 
-    if (result.statusCode === 200 && result.data) {
-      // 存入 pageSeoData，以 slug 為 key
-      pageSeoData.value[slug] = result.data
-      console.log(`✓ SEO 已載入 (${slug}):`, result.data)
-      return result.data
+  /**
+   * 查詢指定頁面的 SEO 資料
+   * GET /api/tenant/{tid}/web-site/page/seo/{slug}
+   */
+  const fetchPageSeo = async (tid, slug) => {
+    if (!tid || !slug) {
+      console.error('❌ 缺少 tid 或 slug')
+      error.value = '缺少必要參數'
+      return null
     }
- 
-    const errorMsg = result.message || '載入 SEO 失敗'
-    console.error(`❌ ${errorMsg}`)
-    error.value = errorMsg
-    return null
-  } catch (err) {
-    console.error('❌ 載入 SEO 失敗:', err)
-    error.value = err.message || '網路連線失敗'
-    return null
-  }
-}
- 
-/**
- * 更新指定頁面的 SEO 資料
- * PATCH /api/tenant/{tid}/web-site/page/seo
- * body: { slug, seoTitle, seoDescription, seoKeywords }
- */
-const updatePageSeo = async (tid, seoData) => {
-  if (!tid) {
-    console.error('❌ 缺少宮廟 ID (tid)')
-    error.value = '缺少宮廟 ID'
-    return false
-  }
- 
-  if (!seoData || !seoData.slug) {
-    console.error('❌ 缺少 slug 或 SEO 資料')
-    error.value = '缺少必要資料'
-    return false
-  }
- 
-  isLoading.value = true
-  error.value = null
- 
-  try {
-    console.log(`💾 保存頁面 SEO (${seoData.slug})...`)
-    console.log('📤 請求資料:', seoData)
- 
-    const response = await axiosClient.patch(`/tenant/${tid}/web-site/page/seo`, seoData)
-    const result = response.data
- 
-    console.log('📥 完整回應:', result)
- 
-    if (result.statusCode === 200) {
-      console.log(`✓ SEO 已保存 (${seoData.slug})`)
-      // 更新 store 快取
-      if (result.data) {
-        pageSeoData.value[seoData.slug] = result.data
+  
+    try {
+      console.log(`📥 載入頁面 SEO (${slug})...`)
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/page/seo/${slug}`)
+      const result = response.data
+  
+      if (result.statusCode === 200 && result.data) {
+        // 存入 pageSeoData，以 slug 為 key
+        pageSeoData.value[slug] = result.data
+        console.log(`✓ SEO 已載入 (${slug}):`, result.data)
+        return result.data
       }
-      return true
+  
+      const errorMsg = result.message || '載入 SEO 失敗'
+      console.error(`❌ ${errorMsg}`)
+      error.value = errorMsg
+      return null
+    } catch (err) {
+      console.error('❌ 載入 SEO 失敗:', err)
+      error.value = err.message || '網路連線失敗'
+      return null
     }
- 
-    const errorMsg = result.message || '保存 SEO 失敗'
-    console.error(`❌ ${errorMsg}`)
-    error.value = errorMsg
-    return false
-  } catch (err) {
-    console.error('❌ 保存 SEO 失敗:', err)
-    error.value = err.message || '網路連線失敗'
-    return false
-  } finally {
-    isLoading.value = false
   }
-}
+  
+  /**
+   * 更新指定頁面的 SEO 資料
+   * PATCH /api/tenant/{tid}/web-site/page/seo
+   * body: { slug, seoTitle, seoDescription, seoKeywords }
+   */
+  const updatePageSeo = async (tid, seoData) => {
+    if (!tid) {
+      console.error('❌ 缺少宮廟 ID (tid)')
+      error.value = '缺少宮廟 ID'
+      return false
+    }
+  
+    if (!seoData || !seoData.slug) {
+      console.error('❌ 缺少 slug 或 SEO 資料')
+      error.value = '缺少必要資料'
+      return false
+    }
+  
+    isLoading.value = true
+    error.value = null
+  
+    try {
+      console.log(`💾 保存頁面 SEO (${seoData.slug})...`)
+      console.log('📤 請求資料:', seoData)
+  
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/page/seo`, seoData)
+      const result = response.data
+  
+      console.log('📥 完整回應:', result)
+  
+      if (result.statusCode === 200) {
+        console.log(`✓ SEO 已保存 (${seoData.slug})`)
+        // 更新 store 快取
+        if (result.data) {
+          pageSeoData.value[seoData.slug] = result.data
+        }
+        return true
+      }
+  
+      const errorMsg = result.message || '保存 SEO 失敗'
+      console.error(`❌ ${errorMsg}`)
+      error.value = errorMsg
+      return false
+    } catch (err) {
+      console.error('❌ 保存 SEO 失敗:', err)
+      error.value = err.message || '網路連線失敗'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+  const switchPageWithLocale = async (slug, locale) => {
+    clearSelection()
+    
+    // ✅ 先把 slug 設好，navbar 繼續用 headerTabs 顯示，不會消失
+    currentPageSlug.value = slug
+    
+    // 背景載入新頁面內容
+    const data = await fetchPageContent(tenantId.value, slug, locale)
+    if (data) {
+      await fetchSystemFrames(tenantId.value, slug)
+    }
+  }
   return {
     tenantId,
     headerTabs,
@@ -1173,5 +1186,6 @@ const updatePageSeo = async (tid, seoData) => {
     clearPendingDeleteFileIds,  
     fetchPageSeo,              
     updatePageSeo,
+    switchPageWithLocale
   }
 })

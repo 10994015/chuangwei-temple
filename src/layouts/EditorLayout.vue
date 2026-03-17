@@ -101,9 +101,9 @@ const availableFonts = [
 // 依 locale 取得對應字型欄位值
 const currentFontValue = computed(() => {
   if (!websiteSettings.value) return null
-  const locale = pageEditorStore.currentLocale
-  if (locale === 'ZH-CN') return websiteSettings.value.frontFamilyZhCn
-  if (locale === 'EN-US') return websiteSettings.value.frontFamilyEnUs
+  const loc = pageEditorStore.currentLocale
+  if (loc === 'ZH-CN') return websiteSettings.value.frontFamilyZhCn
+  if (loc === 'EN-US') return websiteSettings.value.frontFamilyEnUs
   return websiteSettings.value.frontFamilyZhTw  // ZH-TW 及預設
 })
 
@@ -132,6 +132,13 @@ const loadWebsiteSettings = async () => {
   }
 }
 
+// ✅ 將 locale 寫入網址 query（不觸發頁面跳轉）
+const syncLocaleToUrl = (newLocale) => {
+  router.replace({
+    query: { ...route.query, locale: newLocale }
+  })
+}
+
 // 提供給子組件使用
 provide('setUnsavedChanges', (value) => {
   hasUnsavedChanges.value = value
@@ -153,7 +160,6 @@ const getTempleId = () => {
   return route.params.templeId
 }
 
-// 初始化
 onMounted(async () => {
   console.log('🚀 EditorLayout 初始化')
   
@@ -165,10 +171,18 @@ onMounted(async () => {
   }
   
   pageEditorStore.resetStore()
-
   pageEditorStore.setTenantId(templeId)
-  
-  locale.value = pageEditorStore.currentLocale
+
+  // ✅ 從網址 query 讀取 locale，有則優先使用，否則維持 store 預設值
+  const localeFromQuery = route.query.locale
+  if (localeFromQuery) {
+    pageEditorStore.currentLocale = localeFromQuery
+    locale.value = localeFromQuery
+    console.log('✓ 從網址讀取語言:', localeFromQuery)
+  } else {
+    syncLocaleToUrl(pageEditorStore.currentLocale)
+    locale.value = pageEditorStore.currentLocale
+  }
 
   try {
     // 載入網站設定（字型）
@@ -178,24 +192,39 @@ onMounted(async () => {
     await pageEditorStore.fetchLocales(templeId)
     console.log('✓ 語言清單已載入')
     
-    // 載入頁面選單
-    await pageEditorStore.fetchHeaderTabs(templeId)
+    // ✅ 載入頁面選單（帶入當前語言）
+    await pageEditorStore.fetchHeaderTabs(templeId, pageEditorStore.currentLocale)
     console.log('✓ Header Tabs 已載入:', pageEditorStore.headerTabs)
     
-    // 如果有頁面，初始化第一個頁面
     if (pageEditorStore.headerTabs.length > 0) {
-      const firstTab = pageEditorStore.headerTabs[0]
-      console.log('🔄 初始化第一個頁面:', firstTab.slug)
-      
-      await pageEditorStore.initializePage(firstTab.slug)
-      console.log('✓ 頁面已初始化:', firstTab.slug)
-      
+      // ✅ 從網址 query 讀取上次的 slug，找不到則用第一個 tab
+      const slugFromQuery = route.query.slug
+      const targetTab = slugFromQuery
+        ? pageEditorStore.headerTabs.find(t => t.slug === slugFromQuery)
+        : null
+      const initialTab = targetTab || pageEditorStore.headerTabs[0]
+
+      console.log('🔄 初始化頁面:', initialTab.slug, '(來源:', targetTab ? 'query' : '預設第一頁', ')')
+
+      // ✅ 強制帶 locale 載入，避免舊快取造成語言閃爍
+      await pageEditorStore.switchPageWithLocale(initialTab.slug, pageEditorStore.currentLocale)
+      console.log('✓ 頁面已初始化:', initialTab.slug)
+
       pageEditorStore.syncHeaderMenuFromTabs()
       console.log('✓ Header 選單已同步')
-      
-      await pageEditorStore.fetchSystemFrames(templeId, firstTab.slug)
+
+      await pageEditorStore.fetchSystemFrames(templeId, initialTab.slug)
       console.log('✓ 系統框架已載入:', pageEditorStore.currentPageSystemFrames)
-      
+
+      // ✅ 確保網址同時有 slug 和 locale
+      router.replace({
+        query: {
+          ...route.query,
+          slug: initialTab.slug,
+          locale: pageEditorStore.currentLocale
+        }
+      })
+
       hasUnsavedChanges.value = false
     } else {
       console.warn('⚠️ 沒有 Header Tabs 數據')
@@ -208,7 +237,6 @@ onMounted(async () => {
     pageEditorStore.error = '載入頁面失敗，請稍後再試'
   }
 })
-
 // ==================== 工具列事件處理 ====================
 
 const handleLocaleChange = async (newLocale) => {
@@ -225,7 +253,14 @@ const handleLocaleChange = async (newLocale) => {
   try {
     pageEditorStore.currentLocale = newLocale
     locale.value = newLocale
-    console.log('📥 重新載入頁面:', currentSlug, '語言:', newLocale)
+
+    // ✅ 將新語言寫入網址 query
+    syncLocaleToUrl(newLocale)
+
+    // ✅ 重新載入對應語言的 tabs
+    await pageEditorStore.fetchHeaderTabs(templeId, newLocale)
+    pageEditorStore.syncHeaderMenuFromTabs()
+
     await pageEditorStore.reloadCurrentPage(newLocale)
     
     console.log('✓ 語言切換完成')
@@ -269,15 +304,15 @@ const handleUpgrade = () => {
 const handlePreview = () => {
   const templeId = getTempleId()
   const slug = pageEditorStore.currentPageSlug
-  const locale = pageEditorStore.currentLocale  
+  const loc = pageEditorStore.currentLocale  
   
   if (templeId && slug) {
-    const route = router.resolve({
+    const resolved = router.resolve({
       name: 'app.temple.preview',
       params: { templeId },
-      query: { slug, locale }
+      query: { slug, locale: loc }
     })
-    window.open(route.href, '_blank')
+    window.open(resolved.href, '_blank')
   } else {
     alert('請先選擇要預覽的頁面')
   }

@@ -24,18 +24,22 @@ watch(
 // ==================== 頁面操作 ====================
 const handleHeaderPageChange = async (slug) => {
   console.log('📄 從 Header 切換頁面:', slug)
-  
+
   try {
-    await pageEditorStore.switchPage(slug)
-    console.log('✓ 頁面切換完成')
-    
-    // ✅ 切換頁面後重新載入系統框架
+    // ✅ 先把 slug 和 locale 寫入網址
+    router.replace({
+      query: { ...route.query, slug, locale: pageEditorStore.currentLocale }
+    })
+
+    // ✅ 強制帶 locale 切換，避免用舊快取
+    await pageEditorStore.switchPageWithLocale(slug, pageEditorStore.currentLocale)
+
     const templeId = route.params.templeId
     if (templeId && slug) {
       await pageEditorStore.fetchSystemFrames(templeId, slug)
-      console.log('✓ 系統框架已重新載入')
     }
-    
+
+    pageEditorStore.syncHeaderMenuFromTabs()
     setUnsavedChanges(false)
   } catch (error) {
     console.error('❌ 頁面切換失敗:', error)
