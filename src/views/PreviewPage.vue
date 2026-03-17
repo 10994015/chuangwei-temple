@@ -174,7 +174,7 @@ const previewContentStyle = computed(() => {
 })
 
 // ==================== Locale ====================
-const currentLocale = ref(route.query.locale || pageEditorStore?.currentLocale || 'zh-TW')
+const currentLocale = ref(route.query.locale || pageEditorStore?.currentLocale || 'ZH-TW')
 
 if (pageEditorStore) {
   watch(() => pageEditorStore.currentLocale, (newLocale) => {
@@ -188,10 +188,11 @@ if (pageEditorStore) {
 watch(() => route.query.locale, (newLocale) => {
   if (newLocale && newLocale !== currentLocale.value) {
     currentLocale.value = newLocale
+    //  更新 query，保留 slug
+    router.replace({ query: { slug: currentSlug.value, locale: newLocale } })
     loadPreviewData()
   }
 })
-
 // ==================== Data ====================
 const getTempleId = () => route.params.templeId
 const getSlug    = () => route.query.slug || 'home'
@@ -235,7 +236,8 @@ const handleChangePage = async (slug) => {
     if (data && Array.isArray(data)) {
       basemaps.value = data
       currentSlug.value = slug
-      router.replace({ query: { slug } })
+      // ✅ 同時保留 locale
+      router.replace({ query: { slug, locale: currentLocale.value } })
     }
   } catch (err) {
     error.value = '切換頁面失敗'
@@ -243,7 +245,6 @@ const handleChangePage = async (slug) => {
     isLoading.value = false
   }
 }
-
 const handleRefresh = () => loadPreviewData()
 
 const isSystemFrame = (frame) => {

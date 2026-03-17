@@ -63,6 +63,8 @@ import { usePageEditorStore } from '@/stores/pageEditor'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
 import PublishDialog from '@/components/PublishDialog.vue'
 import { useI18n } from 'vue-i18n'
+import { fontGoogleMap, loadGoogleFont } from '@/composables/useGoogleFont'
+
 const { locale } = useI18n()
 
 const router = useRouter()
@@ -79,23 +81,20 @@ const hasUnsavedChanges = ref(false)
 // ✅ 直接從 store 讀取 websiteSettings（reactive，store 更新時自動重算）
 const websiteSettings = computed(() => pageEditorStore.websiteSettings)
 
-// 可用字型清單（按語言分類，與 WebsiteSettings.vue 一致）
+// 可用字型清單（cssFamily 對照）
 const availableFonts = [
-  // 繁體中文
-  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    cssFamily: "'IBM Plex Sans TC', sans-serif" },
-  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', cssFamily: "'LXGW WenKai Mono TC', monospace" },
-  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         cssFamily: "'Noto Sans TC', sans-serif" },
-  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        cssFamily: "'Noto Serif TC', serif" },
-  // 簡體中文
-  { value: 'noto-sans-sc',        label: 'Noto Sans SC',         cssFamily: "'Noto Sans SC', sans-serif" },
-  { value: 'noto-serif-sc',       label: 'Noto Serif SC',        cssFamily: "'Noto Serif SC', serif" },
-  { value: 'ibm-plex-sans-sc',    label: 'IBM Plex Sans SC',     cssFamily: "'IBM Plex Sans SC', sans-serif" },
-  // 英文
-  { value: 'bona-nova',           label: 'Bona Nova',            cssFamily: "'Bona Nova', serif" },
-  { value: 'inter',               label: 'Inter',                cssFamily: "'Inter', sans-serif" },
-  { value: 'cormorant-garamond',  label: 'Cormorant Garamond',   cssFamily: "'Cormorant Garamond', serif" },
-  { value: 'montserrat',          label: 'Montserrat',           cssFamily: "'Montserrat', sans-serif" },
-  { value: 'playfair-display',    label: 'Playfair Display',     cssFamily: "'Playfair Display', serif" },
+  { value: 'ibm-plex-sans-tc',    cssFamily: "'IBM Plex Sans TC', sans-serif" },
+  { value: 'lxgw-wenkai-mono-tc', cssFamily: "'LXGW WenKai Mono TC', monospace" },
+  { value: 'noto-sans-tc',        cssFamily: "'Noto Sans TC', sans-serif" },
+  { value: 'noto-serif-tc',       cssFamily: "'Noto Serif TC', serif" },
+  { value: 'noto-sans-sc',        cssFamily: "'Noto Sans SC', sans-serif" },
+  { value: 'noto-serif-sc',       cssFamily: "'Noto Serif SC', serif" },
+  { value: 'ibm-plex-sans-sc',    cssFamily: "'IBM Plex Sans SC', sans-serif" },
+  { value: 'bona-nova',           cssFamily: "'Bona Nova', serif" },
+  { value: 'inter',               cssFamily: "'Inter', sans-serif" },
+  { value: 'cormorant-garamond',  cssFamily: "'Cormorant Garamond', serif" },
+  { value: 'montserrat',          cssFamily: "'Montserrat', sans-serif" },
+  { value: 'playfair-display',    cssFamily: "'Playfair Display', serif" },
 ]
 
 // 依 locale 取得對應字型欄位值
@@ -104,7 +103,7 @@ const currentFontValue = computed(() => {
   const loc = pageEditorStore.currentLocale
   if (loc === 'ZH-CN') return websiteSettings.value.frontFamilyZhCn
   if (loc === 'EN-US') return websiteSettings.value.frontFamilyEnUs
-  return websiteSettings.value.frontFamilyZhTw  // ZH-TW 及預設
+  return websiteSettings.value.frontFamilyZhTw
 })
 
 // 計算全域字型（套用到畫布）
@@ -114,7 +113,7 @@ const globalFontFamily = computed(() => {
   return font ? font.cssFamily : "'Noto Sans TC', sans-serif"
 })
 
-// ✅ 載入網站設定（只負責呼叫 API，store 內部自動更新 websiteSettings）
+// ✅ 載入網站設定，並動態注入用到的字型
 const loadWebsiteSettings = async () => {
   const templeId = getTempleId()
   if (!templeId) return
@@ -122,11 +121,15 @@ const loadWebsiteSettings = async () => {
   try {
     console.log('📥 載入網站設定（字型）...')
     await pageEditorStore.fetchWebsiteSettings(templeId)
-    console.log('✓ 網站字型已載入:', {
-      zhTw: pageEditorStore.websiteSettings?.frontFamilyZhTw,
-      zhCn: pageEditorStore.websiteSettings?.frontFamilyZhCn,
-      enUs: pageEditorStore.websiteSettings?.frontFamilyEnUs
-    })
+
+    const s = pageEditorStore.websiteSettings
+    if (s) {
+      // ✅ 只載入這個宮廟實際設定的三個字型
+      loadGoogleFont(fontGoogleMap[s.frontFamilyZhTw])
+      loadGoogleFont(fontGoogleMap[s.frontFamilyZhCn])
+      loadGoogleFont(fontGoogleMap[s.frontFamilyEnUs])
+      console.log('✓ 字型已動態載入:', s.frontFamilyZhTw, s.frontFamilyZhCn, s.frontFamilyEnUs)
+    }
   } catch (error) {
     console.error('❌ 載入網站設定失敗:', error)
   }
@@ -160,16 +163,17 @@ const getTempleId = () => {
   return route.params.templeId
 }
 
+// 初始化
 onMounted(async () => {
   console.log('🚀 EditorLayout 初始化')
-  
+
   const templeId = getTempleId()
-  
+
   if (!templeId) {
     pageEditorStore.error = '無法載入頁面：缺少宮廟 ID'
     return
   }
-  
+
   pageEditorStore.resetStore()
   pageEditorStore.setTenantId(templeId)
 
@@ -185,17 +189,17 @@ onMounted(async () => {
   }
 
   try {
-    // 載入網站設定（字型）
+    // ✅ 載入網站設定並動態注入字型
     await loadWebsiteSettings()
-    
+
     // 載入語言清單
     await pageEditorStore.fetchLocales(templeId)
     console.log('✓ 語言清單已載入')
-    
+
     // ✅ 載入頁面選單（帶入當前語言）
     await pageEditorStore.fetchHeaderTabs(templeId, pageEditorStore.currentLocale)
     console.log('✓ Header Tabs 已載入:', pageEditorStore.headerTabs)
-    
+
     if (pageEditorStore.headerTabs.length > 0) {
       // ✅ 從網址 query 讀取上次的 slug，找不到則用第一個 tab
       const slugFromQuery = route.query.slug
@@ -230,39 +234,42 @@ onMounted(async () => {
       console.warn('⚠️ 沒有 Header Tabs 數據')
       pageEditorStore.error = '無法載入頁面列表'
     }
-    
+
     console.log('✓ EditorLayout 初始化完成')
   } catch (error) {
     console.error('❌ EditorLayout 初始化失敗:', error)
     pageEditorStore.error = '載入頁面失敗，請稍後再試'
   }
 })
+
 // ==================== 工具列事件處理 ====================
 
 const handleLocaleChange = async (newLocale) => {
   console.log('🌐 EditorLayout: 切換語言:', newLocale, '| 當前頁面:', pageEditorStore.currentPageSlug)
-  
+
   const templeId = getTempleId()
   const currentSlug = pageEditorStore.currentPageSlug
-  
+
   if (!templeId || !currentSlug) {
     console.error('❌ 缺少必要參數')
     return
   }
-  
+
   try {
     pageEditorStore.currentLocale = newLocale
     locale.value = newLocale
 
-    // ✅ 將新語言寫入網址 query
-    syncLocaleToUrl(newLocale)
+    // ✅ 將新語言寫入網址 query（保留 slug）
+    router.replace({
+      query: { ...route.query, locale: newLocale }
+    })
 
     // ✅ 重新載入對應語言的 tabs
     await pageEditorStore.fetchHeaderTabs(templeId, newLocale)
     pageEditorStore.syncHeaderMenuFromTabs()
 
     await pageEditorStore.reloadCurrentPage(newLocale)
-    
+
     console.log('✓ 語言切換完成')
     hasUnsavedChanges.value = false
   } catch (error) {
@@ -304,8 +311,8 @@ const handleUpgrade = () => {
 const handlePreview = () => {
   const templeId = getTempleId()
   const slug = pageEditorStore.currentPageSlug
-  const loc = pageEditorStore.currentLocale  
-  
+  const loc = pageEditorStore.currentLocale
+
   if (templeId && slug) {
     const resolved = router.resolve({
       name: 'app.temple.preview',
@@ -321,7 +328,7 @@ const handlePreview = () => {
 const handleSave = async () => {
   try {
     const success = await pageEditorStore.saveCurrentPage()
-    
+
     if (success) {
       alert('儲存成功！')
       hasUnsavedChanges.value = false
@@ -336,18 +343,18 @@ const handleSave = async () => {
 const handleDelete = async () => {
   const confirmed = confirm('確定要刪除草稿嗎？')
   if (!confirmed) return
-  
+
   const templeId = getTempleId()
   const currentSlug = pageEditorStore.currentPageSlug
-  
+
   if (!templeId || !currentSlug) {
     alert('無法刪除草稿：缺少必要資訊')
     return
   }
-  
+
   try {
     const success = await pageEditorStore.deleteDraft(currentSlug, templeId)
-    
+
     if (success) {
       hasUnsavedChanges.value = false
     } else {
@@ -370,7 +377,7 @@ const handlePublish = () => {
 
 const handleConfirmPublish = async () => {
   const templeId = getTempleId()
-  
+
   if (!templeId) {
     alert('缺少宮廟 ID')
     if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
@@ -379,29 +386,29 @@ const handleConfirmPublish = async () => {
 
   try {
     console.log('🚀 開始發布流程...')
-    
+
     if (hasUnsavedChanges.value) {
       console.log('💾 檢測到未保存變更，先保存草稿...')
-      
+
       const saveSuccess = await pageEditorStore.saveCurrentPage()
-      
+
       if (!saveSuccess) {
         alert('保存草稿失敗，無法發布')
         if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
         return
       }
-      
+
       console.log('✓ 草稿已保存')
       hasUnsavedChanges.value = false
     }
-    
+
     console.log('🚀 發布網站...')
-    
+
     const publishSuccess = await pageEditorStore.publishWebsite(
       templeId,
       pageEditorStore.currentLocale
     )
-    
+
     if (publishSuccess) {
       console.log('網站發布成功！')
       showPublishDialog.value = false

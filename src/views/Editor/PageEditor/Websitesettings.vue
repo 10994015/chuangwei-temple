@@ -275,6 +275,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePageEditorStore } from '@/stores/pageEditor'
 import { useI18n } from 'vue-i18n'
+import { fontGoogleMap, loadGoogleFont } from '@/composables/useGoogleFont'
 
 const router = useRouter()
 const route = useRoute()
@@ -500,6 +501,9 @@ const handleSaveSeo = async () => {
 // ==================== 變更追蹤 ====================
 
 const markSiteChanged = () => {
+  loadGoogleFont(fontGoogleMap[siteForm.frontFamilyZhTw])
+  loadGoogleFont(fontGoogleMap[siteForm.frontFamilyZhCn])
+  loadGoogleFont(fontGoogleMap[siteForm.frontFamilyEnUs])
   hasChanges.value =
     siteForm.frontFamilyZhTw !== originalSiteForm.frontFamilyZhTw ||
     siteForm.frontFamilyZhCn !== originalSiteForm.frontFamilyZhCn ||
