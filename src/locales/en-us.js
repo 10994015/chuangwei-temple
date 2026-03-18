@@ -366,6 +366,22 @@ export default {
   mapElement: {
     placeholder: 'Set address or coordinates in the right panel',
   },
+  brightLampBasemap: {
+    selectLampType: 'Select Lamp Type',
+    searchByNamePhone: 'Search by Name & Phone',
+    searchByLampNo: 'Search by Lamp No.',
+    labelName: 'Name',
+    placeholderName: 'Enter your name',
+    labelPhone: 'Phone',
+    placeholderPhone: 'Enter your phone number',
+    labelLampNo: 'Lamp No.',
+    placeholderLampNo: 'Enter lamp number',
+    search: 'Search',
+    lampBright: 'Bright Lamp',
+    lampPeace: 'Peace Lamp',
+    lampWealth: 'Wealth Lamp',
+    lampWisdom: 'Wisdom Lamp',
+  },
   websiteSettings: {
     backBtn: 'Back to Editor',
     pageTitle: 'Website Settings',

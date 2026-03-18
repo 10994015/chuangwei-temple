@@ -366,6 +366,22 @@ export default {
   mapElement: {
     placeholder: '请在右侧设置地址或经纬度',
   },
+  brightLampBasemap: {
+    selectLampType: '请选择灯别',
+    searchByNamePhone: '姓名电话搜寻',
+    searchByLampNo: '灯位编号搜寻',
+    labelName: '姓名',
+    placeholderName: '请输入您的姓名',
+    labelPhone: '电话',
+    placeholderPhone: '请输入您的电话',
+    labelLampNo: '灯位编号',
+    placeholderLampNo: '请输入灯位编号',
+    search: '搜寻',
+    lampBright: '光明灯',
+    lampPeace: '平安灯',
+    lampWealth: '财神灯',
+    lampWisdom: '文昌灯',
+  },
   websiteSettings: {
     backBtn: '返回编辑器',
     pageTitle: '网站设置',

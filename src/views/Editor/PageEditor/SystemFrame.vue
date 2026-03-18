@@ -99,8 +99,7 @@
     <DonationProductBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" />
     
     <!-- 光明燈 (BRIGHT_LAMP) -->
-    <AboutBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" />
-    
+    <BrightLampBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" />    
     <!-- 未知類型 -->
     <div v-else class="unknown-frame">
       <p>未知系統框架類型: {{ frameType }}</p>
@@ -125,6 +124,7 @@ import AboutBasemap from './basemap/AboutBasemap.vue'
 import AlbumListBasemap from './basemap/AlbumListBasemap.vue'
 import HeroBannerElement from './elements/HeroBannerElement.vue'
 import DonationProductBasemap from './basemap/DonationProductBasemap.vue'
+import BrightLampBasemap from './basemap/BrightLampBasemap.vue'
 
 const props = defineProps({
   frameType: { type: String, required: true },

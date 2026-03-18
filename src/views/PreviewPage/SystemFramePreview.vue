@@ -10,7 +10,7 @@
       @change-page="handleChangePage"
     />
     
-    <!-- 頁尾 (FOOTER) - 額外傳入顏色 props（存在 frameData 裡） -->
+    <!-- 頁尾 (FOOTER) -->
     <FooterBasemap
       v-else-if="frameType === 'FOOTER'"
       v-bind="frameData"
@@ -33,7 +33,6 @@
     <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" :device="device" />
     <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" :device="device" />
 
-    <!-- 捐款區 (INDEX_DONATION) - 用假的 frame 物件包住 frameData，讓組件能讀到 frame.data -->
     <DonationBasemap
       v-else-if="frameType === 'INDEX_DONATION'"
       v-bind="frameData"
@@ -46,7 +45,19 @@
     <AlbumListBasemap v-else-if="frameType === 'ALBUM_LIST'" v-bind="frameData" :device="device" />
     <EventListBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" :device="device" />
     <DonationProductBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" :device="device" />
-    <AboutBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" :device="device" />
+
+    <!-- 光明燈 (BRIGHT_LAMP) -->
+    <BrightLampBasemap
+      v-else-if="frameType === 'BRIGHT_LAMP'"
+      :bg-img-src="frameData.bgImgSrc"
+      :bg-img-id="frameData.bgImgId"
+      :main-img-src="frameData.mainImgSrc"
+      :main-img-id="frameData.mainImgId"
+      :border-option="frameData.borderOption"
+      :pillar-option="frameData.pillarOption"
+      :lamp-types="frameData.lampTypes"
+      :device="device"
+    />
     
     <div v-else class="unknown-frame">
       <p>未知系統框架類型: {{ frameType }}</p>
@@ -67,9 +78,9 @@ import ProductsBasemap from '../Editor/PageEditor/basemap/ProductsBasemap.vue'
 import ProductListBasemap from '../Editor/PageEditor/basemap/ProductListBasemap.vue'
 import DonationBasemap from '../Editor/PageEditor/basemap/DonationBasemap.vue'
 import DonationProductBasemap from '../Editor/PageEditor/basemap/DonationProductBasemap.vue'
-import AboutBasemap from '../Editor/PageEditor/basemap/AboutBasemap.vue'
 import AlbumListBasemap from '../Editor/PageEditor/basemap/AlbumListBasemap.vue'
 import HeroBannerElement from '../Editor/PageEditor/elements/HeroBannerElement.vue'
+import BrightLampBasemap from '../Editor/PageEditor/basemap/BrightLampBasemap.vue'
 
 const props = defineProps({
   frameType:       { type: String, required: true },
@@ -81,7 +92,7 @@ const props = defineProps({
 const emit = defineEmits(['change-page'])
 const handleChangePage = (slug) => emit('change-page', slug)
 
-// ==================== 文字色主題 CSS 變數（同 SystemFrame）====================
+// ==================== 文字色主題 CSS 變數 ====================
 const THEME_PRESETS = {
   light: {
     '--frame-text-color':     '#333333',
@@ -146,7 +157,6 @@ const frameTextStyle = computed(() => {
 })
 
 // DonationBasemap 讀取 frame.data 而非直接 props
-// 預覽時沒有真正的 frame 物件，用 computed 包一個假的
 const fakeFrame = computed(() => ({ data: props.frameData }))
 </script>
 
