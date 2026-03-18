@@ -2,30 +2,21 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axiosClient from '../axios'
 
-/**
- * PageEditor Store
- * 直接使用 API 返回的數據結構，不做任何轉換
- */
 export const usePageEditorStore = defineStore('pageEditor', () => {
   // ==================== State ====================
-  
+
   const tenantId = ref(null)
   const headerTabs = ref([])
   const isLoading = ref(false)
   const error = ref(null)
   const currentPageSlug = ref(null)
-  
-  // 語言相關
-  const locales = ref([])  // 語言清單
-  const currentLocale = ref('ZH-TW')  // 當前語言
-  
-  // 頁面數據，直接使用 API 格式：{ slug: { data: [...] } }
+
+  const locales = ref([])
+  const currentLocale = ref('ZH-TW')
+
   const pageData = ref({})
-  
-  // ✅ 系統框架列表（按頁面存儲）
-  const systemFrames = ref({})  // { slug: ['FIRST_PICTURE', 'INDEX_NEWS', ...] }
-  
-  // 選擇狀態
+  const systemFrames = ref({})
+
   const selected = ref({
     basemap: null,
     frame: null,
@@ -33,49 +24,37 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     cell: null
   })
 
-  // ✅ 待刪除的檔案 ID 清單
   const pendingDeleteFileIds = ref([])
-
-  // ✅ 網站設定（字型、SEO 等），讓 EditorLayout 可 reactive 讀取
   const websiteSettings = ref(null)
   const pageSeoData = ref({})
 
   // ==================== Computed ====================
-  
-  // 當前頁面的 basemaps（就是 API 返回的 data 陣列）
+
   const currentPageBasemaps = computed(() => {
     return pageData.value[currentPageSlug.value]?.data || []
   })
 
-  // ✅ 當前頁面的系統框架列表
   const currentPageSystemFrames = computed(() => {
     return systemFrames.value[currentPageSlug.value] || []
   })
 
-  // ==================== ✅ 檔案刪除追蹤 ====================
+  // ==================== 檔案刪除追蹤 ====================
 
-  /**
-   * 標記一個檔案 ID 為待刪除
-   * @param {string|null} fileId - 要刪除的檔案 ID
-   */
   const markFileForDeletion = (fileId) => {
     if (!fileId) return
     if (!pendingDeleteFileIds.value.includes(fileId)) {
       pendingDeleteFileIds.value.push(fileId)
-      console.log('🗑️ 標記待刪除 ID:', fileId, '| 目前清單:', pendingDeleteFileIds.value)
+      console.log('標記待刪除 ID:', fileId, '| 目前清單:', pendingDeleteFileIds.value)
     }
   }
 
-  /**
-   * 清空待刪除清單（儲存成功後呼叫）
-   */
   const clearPendingDeleteFileIds = () => {
-    console.log('🧹 清空待刪除清單，共', pendingDeleteFileIds.value.length, '個')
+    console.log('清空待刪除清單，共', pendingDeleteFileIds.value.length, '個')
     pendingDeleteFileIds.value = []
   }
 
-  // ==================== API Functions ====================
-  
+  // ==================== API ====================
+
   /**
    * GET /api/tenant/{tid}/web-site/draft-page/tab
    */
@@ -87,7 +66,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
     try {
       const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/tab`, {
-        params: { locale: locale || currentLocale.value }  // ← 加這個
+        params: { locale: locale || currentLocale.value }
       })
       const result = response.data
 
@@ -98,7 +77,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       }
       throw new Error(result.message || '載入失敗')
     } catch (err) {
-      console.error('❌ Header Tabs 失敗:', err)
+      console.error('Header Tabs 失敗:', err)
       error.value = err.message
       return []
     } finally {
@@ -108,7 +87,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   /**
    * GET /api/tenant/{tid}/web-site/locale
-   * 獲取語言清單
    */
   const fetchLocales = async (tid) => {
     if (!tid) return []
@@ -117,26 +95,21 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      console.log('📥 載入語言清單...')
-      
       const response = await axiosClient.get(`/tenant/${tid}/web-site/locale`)
       const result = response.data
 
       if (result.statusCode === 200 && result.data) {
         locales.value = result.data
-        
-        // 如果有語言清單，預設使用第一個
+
         if (result.data.length > 0 && !currentLocale.value) {
           currentLocale.value = result.data[0].locale
         }
-        
-        console.log('✓ 語言清單:', result.data)
-        console.log('✓ 當前語言:', currentLocale.value)
+
         return result.data
       }
       throw new Error(result.message || '載入語言清單失敗')
     } catch (err) {
-      console.error('❌ 載入語言清單失敗:', err)
+      console.error('載入語言清單失敗:', err)
       error.value = err.message
       return []
     } finally {
@@ -145,75 +118,62 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   }
 
   /**
-   * ✅ GET /api/tenant/{tid}/web-site/draft-page/{slug}/system-frame
-   * 獲取指定頁面可用的系統框架列表
-   * @param {string} tid - 租戶 ID
-   * @param {string} slug - 頁面 slug
-   * @returns {Array} 系統框架類型陣列，例如：['FIRST_PICTURE', 'INDEX_NEWS', 'PRODUCT_LIST']
+   * GET /api/tenant/{tid}/web-site/draft-page/{slug}/system-frame
    */
   const fetchSystemFrames = async (tid, slug) => {
     if (!tid || !slug) {
-      console.warn('⚠️ fetchSystemFrames: 缺少 tid 或 slug')
+      console.warn('fetchSystemFrames: 缺少 tid 或 slug')
       return []
     }
 
-    // 不使用全局 loading，避免影響其他操作
     try {
-      console.log(`📥 載入系統框架列表: ${slug}`)
-      
       const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}/system-frame`)
       const result = response.data
 
       if (result.statusCode === 200 && Array.isArray(result.data)) {
-        // 存儲到 systemFrames
         systemFrames.value[slug] = result.data
-        
-        console.log(`✓ 系統框架列表 (${slug}):`, result.data)
         return result.data
       }
-      
+
       throw new Error(result.message || '載入系統框架失敗')
-      
     } catch (err) {
-      console.error(`❌ 載入系統框架失敗 (${slug}):`, err)
-      // 發生錯誤時返回空陣列，不阻斷其他操作
+      console.error(`載入系統框架失敗 (${slug}):`, err)
       systemFrames.value[slug] = []
       return []
     }
   }
 
   /**
-   * GET /api/tenant/{tid}/web-site/draft-page/{slug}
-   * @param {string} tid - 租戶 ID
-   * @param {string} slug - 頁面 slug
-   * @param {string} locale - 語言代碼（可選，預設使用 currentLocale）
+   * GET /api/tenant/{tid}/web-site/all-draft-page
+   * 一次抓所有頁面的草稿內容
+   * 回傳格式：[{ slug, contentJson: [...basemaps] }, ...]
    */
-  const fetchPageContent = async (tid, slug, locale = null) => {
-    if (!tid || !slug) return null
+  const fetchAllPages = async (tid, locale = null) => {
+    if (!tid) return null
 
-    // 使用傳入的 locale 或當前的 currentLocale
     const targetLocale = locale || currentLocale.value
 
     isLoading.value = true
     error.value = null
 
     try {
-      console.log(`📥 載入 ${slug} (${targetLocale})`)
-      
-      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}`, {
+      console.log(`載入所有頁面 (${targetLocale})`)
+
+      const response = await axiosClient.get(`/tenant/${tid}/web-site/all-draft-page`, {
         params: { locale: targetLocale }
       })
       const result = response.data
 
-      if (result.statusCode === 200 && result.data) {
-        // 直接存儲 API 數據
-        pageData.value[slug] = { data: result.data }
-        console.log('✓ 載入成功:', slug, targetLocale)
+      if (result.statusCode === 200 && Array.isArray(result.data)) {
+        result.data.forEach(page => {
+          pageData.value[page.slug] = { data: page.contentJson }
+        })
+        console.log('所有頁面已載入:', result.data.map(p => p.slug))
         return result.data
       }
       throw new Error(result.message || '載入失敗')
     } catch (err) {
-      console.error('❌ 載入失敗:', err)
+      console.error('載入所有頁面失敗:', err)
       error.value = err.message
       return null
     } finally {
@@ -222,12 +182,12 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   }
 
   /**
-   * 保存頁面內容
-   * PATCH /api/tenant/{tid}/web-site/draft-page
+   * PATCH /api/tenant/{tid}/web-site/all-draft-page
+   * 一次儲存所有頁面的草稿內容
    */
-  const savePageContent = async (tid, slug) => {
-    if (!tid || !slug || !pageData.value[slug]) {
-      console.error('❌ 缺少必要參數')
+  const saveAllPages = async (tid) => {
+    if (!tid) {
+      console.error('缺少必要參數')
       return false
     }
 
@@ -235,127 +195,55 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      console.log(`💾 保存頁面: ${slug}`)
-      
-      // 驗證和修正數據
-      const contentJson = validateAndFixContent(pageData.value[slug].data)
-      
-      // 準備請求 body（符合 API 格式）
+      console.log('儲存所有頁面...')
+
+      const allPageContentJson = Object.entries(pageData.value).map(([slug, val]) => ({
+        slug,
+        contentJson: validateAndFixContent(val.data)
+      }))
+
       const requestBody = {
         locale: currentLocale.value,
-        slug: slug,
-        deleteFileIds: [...pendingDeleteFileIds.value],  // ✅ 帶入待刪除清單（原本是 []）
-        contentJson: contentJson
+        deleteFileIds: [...pendingDeleteFileIds.value],
+        allPageContentJson
       }
-      
-      // 完整輸出送出的 JSON（格式化）
-      console.log('📤 完整請求 JSON:')
-      console.log(JSON.stringify(requestBody, null, 2))
-      console.log('🗑️ 待刪除檔案 IDs:', pendingDeleteFileIds.value)  // ✅ 新增 log
-      
-      // Debug: 檢查數據大小
+
       const jsonString = JSON.stringify(requestBody)
-      const sizeInKB = (jsonString.length / 1024).toFixed(2)
       const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2)
-      
-      console.log('📊 數據大小分析:')
-      console.log('  總大小:', sizeInKB, 'KB (', sizeInMB, 'MB )')
-      console.log('  字元數:', jsonString.length)
-      
-      // Debug: 檢查每個 basemap 的大小
-      contentJson.forEach((basemap, index) => {
-        const basemapString = JSON.stringify(basemap)
-        const basemapSizeKB = (basemapString.length / 1024).toFixed(2)
-        console.log(`  Basemap ${index} (${basemap.bgType}):`, basemapSizeKB, 'KB')
-        
-        // 檢查每個 frame
-        basemap.frames?.forEach((frame, fIndex) => {
-          const frameString = JSON.stringify(frame)
-          const frameSizeKB = (frameString.length / 1024).toFixed(2)
-          console.log(`    Frame ${fIndex} (${frame.type}):`, frameSizeKB, 'KB')
-          
-          // 檢查 frame 中的大型數據
-          if (frame.data) {
-            Object.keys(frame.data).forEach(key => {
-              const value = frame.data[key]
-              if (typeof value === 'string' && value.length > 10000) {
-                console.log(`      ⚠️ ${key}: ${(value.length / 1024).toFixed(2)} KB`)
-              }
-            })
-          }
-        })
-      })
-      
-      // ⚠️ 如果數據太大，警告並停止
+      console.log('資料大小:', sizeInMB, 'MB')
+
       const maxSizeMB = 10
       if (jsonString.length > maxSizeMB * 1024 * 1024) {
-        const errorMsg = `數據量太大 (${sizeInMB} MB)，超過限制 (${maxSizeMB} MB)。請減少圖片數量或壓縮圖片大小。`
-        console.error('❌', errorMsg)
+        const errorMsg = `資料量太大 (${sizeInMB} MB)，超過限制 (${maxSizeMB} MB)。`
+        console.error(errorMsg)
         error.value = errorMsg
         alert(errorMsg)
         return false
       }
-      
-      console.log('📤 發送 PATCH 請求...')
 
-      const response = await axiosClient.patch(`/tenant/${tid}/web-site/draft-page`, requestBody)
-      console.log('📥 回應狀態:', response.status)
+      console.log('發送 PATCH /all-draft-page...')
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/all-draft-page`, requestBody)
       const result = response.data
-      console.log('📥 回應內容:', result)
 
       if (result.statusCode === 200) {
-        console.log('✓ 保存成功！')
-
-        // ✅ 清空待刪除清單
+        console.log('所有頁面儲存成功！')
         clearPendingDeleteFileIds()
-        
-        // ✅ 關鍵修正：用 API 回傳的數據更新編輯器
-        if (result.data && Array.isArray(result.data)) {
-          console.log('🔄 更新編輯器數據...')
-          
-          // 保存前的數據快照（用於對比）
-          const beforeSave = JSON.stringify(pageData.value[slug].data)
-          
-          // 更新 Store 中的數據
-          pageData.value[slug] = { data: result.data }
-          
-          // 保存後的數據快照
-          const afterSave = JSON.stringify(pageData.value[slug].data)
-          
-          // 檢查數據是否有變化
-          if (beforeSave !== afterSave) {
-            console.log('✓ 編輯器數據已更新（API 回傳的數據與送出的不同）')
-            
-            // 詳細對比變化
-            const beforeLength = beforeSave.length
-            const afterLength = afterSave.length
-            const diff = afterLength - beforeLength
-            const diffPercent = ((diff / beforeLength) * 100).toFixed(2)
-            
-            console.log('📊 數據變化:')
-            console.log(`  保存前: ${(beforeLength / 1024).toFixed(2)} KB`)
-            console.log(`  保存後: ${(afterLength / 1024).toFixed(2)} KB`)
-            console.log(`  差異: ${diff > 0 ? '+' : ''}${(diff / 1024).toFixed(2)} KB (${diffPercent}%)`)
-          } else {
-            console.log('✓ 編輯器數據已更新（與送出的數據相同）')
-          }
-          
-          // ✅ 清除選中狀態（避免指向舊的對象引用）
-          clearSelection()
-          
-          console.log('✓ 數據同步完成')
-        } else {
-          console.warn('⚠️ API 沒有返回 contentJson，保留編輯器中的數據')
+
+        if (Array.isArray(result.data)) {
+          result.data.forEach(page => {
+            pageData.value[page.slug] = { data: page.contentJson }
+          })
+          console.log('編輯器資料已用 API 回傳更新')
         }
-        
+
+        clearSelection()
         return true
       }
-      
-      throw new Error(result.message || '保存失敗')
-      
+
+      throw new Error(result.message || '儲存失敗')
     } catch (err) {
-      console.error('❌ 保存失敗:', err)
-      error.value = err.message || '保存失敗，請稍後再試'
+      console.error('儲存失敗:', err)
+      error.value = err.message || '儲存失敗，請稍後再試'
       return false
     } finally {
       isLoading.value = false
@@ -364,96 +252,69 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   /**
    * 驗證和修正內容數據
-   * 確保所有必要的欄位都存在且格式正確
    */
   const validateAndFixContent = (basemaps) => {
     if (!Array.isArray(basemaps)) {
-      console.error('❌ basemaps 不是陣列')
+      console.error('basemaps 不是陣列')
       return []
     }
 
     return basemaps.map((basemap) => {
-      // 確保 frames 是陣列
       if (!Array.isArray(basemap.frames)) {
         basemap.frames = []
       }
 
-      // 修正每個 frame 的數據
       basemap.frames = basemap.frames.map((frame) => {
-        // 確保 data 物件存在
         if (!frame.data) {
           frame.data = {}
         }
 
-        // 修正 CAROUSEL_WALL 的數據結構
         if (frame.type === 'CAROUSEL_WALL') {
           if (!Array.isArray(frame.data.caroiselWallImgs)) {
             frame.data.caroiselWallImgs = []
-            console.log('✓ 修正 CAROUSEL_WALL.caroiselWallImgs 為空陣列')
           }
         }
 
-        // 修正 INDEX_NEWS 的數據結構
         if (frame.type === 'INDEX_NEWS') {
           if (!Array.isArray(frame.data.posts)) {
             frame.data.posts = []
-            console.log('✓ 修正 INDEX_NEWS.posts 為空陣列')
           }
         }
 
-        // 修正 INDEX_EVENT 的數據結構
         if (frame.type === 'INDEX_EVENT') {
           if (!Array.isArray(frame.data.events)) {
             frame.data.events = []
-            console.log('✓ 修正 INDEX_EVENT.events 為空陣列')
           }
         }
 
-        // 修正 INDEX_PRODUCT 的數據結構
         if (frame.type === 'INDEX_PRODUCT') {
           if (!Array.isArray(frame.data.products)) {
             frame.data.products = []
-            console.log('✓ 修正 INDEX_PRODUCT.products 為空陣列')
           }
         }
 
-        // 修正 HEADER 的數據結構
         if (frame.type === 'HEADER') {
           if (!Array.isArray(frame.data.tabs)) {
             frame.data.tabs = []
-            console.log('✓ 修正 HEADER.tab 為空陣列')
           }
         }
 
-        // 確保 elements 是陣列
         if (!Array.isArray(frame.elements)) {
           frame.elements = []
         }
 
-        // 修正每個 element 的數據
         frame.elements = frame.elements.map((element) => {
           if (!element) return null
 
-          // 確保 value 物件存在
           if (!element.value) {
             element.value = {}
           }
 
-          // 修正 CAROUSEL_IMG 元件的數據
           if (element.type === 'CAROUSEL_IMG') {
-            if (!Array.isArray(element.value.imgs)) {
-              element.value.imgs = []
-              console.log('✓ 修正 CAROUSEL_IMG.imgs 為空陣列')
-            }
-            if (typeof element.value.autoPlay !== 'boolean') {
-              element.value.autoPlay = true
-            }
-            if (typeof element.value.interval !== 'number') {
-              element.value.interval = 3000
-            }
-            if (typeof element.value.height !== 'number') {
-              element.value.height = 400
-            }
+            if (!Array.isArray(element.value.imgs)) element.value.imgs = []
+            if (typeof element.value.autoPlay !== 'boolean') element.value.autoPlay = true
+            if (typeof element.value.interval !== 'number') element.value.interval = 3000
+            if (typeof element.value.height !== 'number') element.value.height = 400
           }
 
           return element
@@ -466,69 +327,95 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     })
   }
 
-  // ==================== Page Functions ====================
-  
+  // ==================== 頁面切換 ====================
+
   const setTenantId = (tid) => {
     tenantId.value = tid
   }
 
+  /**
+   * 初始化頁面
+   * 有資料就直接切，沒資料才打 fetchAllPages
+   */
   const initializePage = async (slug, locale = null) => {
     if (!tenantId.value) {
-      console.error('❌ 缺少租戶 ID')
+      console.error('缺少租戶 ID')
       return
     }
 
-    // 如果已經載入過該頁面，直接切換（不重新載入）
-    // 除非指定了 locale，則強制重新載入
-    if (pageData.value[slug] && !locale) {
+    // 有資料且不是語言切換，直接切換 slug
+    if (Object.keys(pageData.value).length > 0 && !locale) {
       currentPageSlug.value = slug
-      
-      // ✅ 即使頁面已載入，也要確保有系統框架
+
       if (!systemFrames.value[slug]) {
         await fetchSystemFrames(tenantId.value, slug)
       }
       return
     }
 
-    const data = await fetchPageContent(tenantId.value, slug, locale)
+    // 首次載入或語言切換：抓全部頁面
+    const data = await fetchAllPages(tenantId.value, locale)
     if (data) {
       currentPageSlug.value = slug
-      
-      // ✅ 載入系統框架列表
       await fetchSystemFrames(tenantId.value, slug)
     }
   }
 
+  /**
+   * 切換頁面（不打 API，直接從已載入的資料切換）
+   */
   const switchPage = async (slug) => {
     clearSelection()
-    await initializePage(slug)
+    currentPageSlug.value = slug
+
+    if (!systemFrames.value[slug]) {
+      await fetchSystemFrames(tenantId.value, slug)
+    }
   }
 
   /**
-   * 重新載入當前頁面（用於語言切換）
+   * 語言切換時重新載入所有頁面
    */
   const reloadCurrentPage = async (newLocale) => {
     if (!currentPageSlug.value) {
-      console.warn('⚠️ 沒有當前頁面')
+      console.warn('沒有當前頁面')
       return
     }
 
-    console.log(`🔄 重新載入頁面 ${currentPageSlug.value} (${newLocale})`)
-    
-    // 更新語言
+    console.log(`重新載入所有頁面 (${newLocale})`)
+
     currentLocale.value = newLocale
-    
-    // 清除選擇
     clearSelection()
-    
-    // 強制重新載入當前頁面
-    await initializePage(currentPageSlug.value, newLocale)
-    
-    // 重新同步 Header Menu
-    syncHeaderMenuFromTabs()
-    
-    console.log('✓ 頁面已重新載入')
+
+    // 清掉舊資料，強制重新抓
+    pageData.value = {}
+
+    const data = await fetchAllPages(tenantId.value, newLocale)
+    if (data) {
+      syncHeaderMenuFromTabs()
+    }
+
+    console.log('所有頁面已重新載入')
   }
+
+  /**
+   * 切換頁面並確保資料已載入
+   */
+  const switchPageWithLocale = async (slug, locale) => {
+    clearSelection()
+    currentPageSlug.value = slug
+
+    // 沒有資料才打 API
+    if (Object.keys(pageData.value).length === 0) {
+      await fetchAllPages(tenantId.value, locale)
+    }
+
+    if (!systemFrames.value[slug]) {
+      await fetchSystemFrames(tenantId.value, slug)
+    }
+  }
+
+  // ==================== 選擇狀態 ====================
 
   const selectBasemap = (basemap) => {
     selected.value = { basemap, frame: null, element: null, cell: null }
@@ -543,44 +430,33 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   }
 
   const selectCell = (cellData) => {
-    selected.value = { 
-      basemap: null, 
-      frame: null, 
-      element: null, 
-      cell: cellData 
-    }
-    console.log('✓ Store: 選中格子', cellData)
+    selected.value = { basemap: null, frame: null, element: null, cell: cellData }
+    console.log('Store: 選中格子', cellData)
   }
 
   const clearSelection = () => {
     selected.value = { basemap: null, frame: null, element: null, cell: null }
   }
 
+  // ==================== Header ====================
+
   const updateHeaderLogo = (logoSrc, logoId) => {
     const basemaps = currentPageBasemaps.value
     const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
-    
+
     if (headerBasemap?.frames?.[0]) {
       if (!headerBasemap.frames[0].data) {
         headerBasemap.frames[0].data = {}
       }
-      
-      // ✅ 更新 logoImgSrc 和 logoImgId
       headerBasemap.frames[0].data.logoImgSrc = logoSrc
       headerBasemap.frames[0].data.logoImgId = logoId
-      
-      console.log('✓ Store: Logo 已更新:', {
-        logoImgSrc: logoSrc,
-        logoImgId: logoId
-      })
     }
   }
-
 
   const syncHeaderMenuFromTabs = () => {
     const basemaps = currentPageBasemaps.value
     const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
-    
+
     if (headerBasemap?.frames?.[0]) {
       if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
       headerBasemap.frames[0].data.tabs = headerTabs.value.map(tab => ({
@@ -590,27 +466,20 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
+  // ==================== 儲存 ====================
+
   const saveCurrentPage = async () => {
-    return await savePageContent(tenantId.value, currentPageSlug.value)
+    return await saveAllPages(tenantId.value)
   }
 
   // ==================== 底圖操作 ====================
-  
-  /**
-   * 新增底圖
-   * @param {number} insertIndex - 在此索引之後插入新底圖
-   */
+
   const addBasemap = (insertIndex) => {
     const basemaps = currentPageBasemaps.value
-    
-    // 在指定位置的下一個位置插入
     const actualIndex = insertIndex + 1
-    
-    // 計算新的 sequence：取現有最大值 +1，確保全域唯一，避免 bgType+bgSequence 重複
     const maxSequence = basemaps.reduce((max, b) => Math.max(max, b.bgSequence || 0), 0)
     const newSequence = maxSequence + 1
-    
-    // 創建新底圖（使用 API 格式）
+
     const newBasemap = {
       bgSequence: newSequence,
       bgPcImgSrc: null,
@@ -625,109 +494,66 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       bgType: 'CONTENT',
       frames: []
     }
-    
-    // 在指定位置插入新底圖
+
     basemaps.splice(actualIndex, 0, newBasemap)
-    
-    console.log(`✓ 在索引 ${insertIndex} 之後新增底圖（實際插入位置：${actualIndex}）`)
+    console.log(`在索引 ${insertIndex} 之後新增底圖`)
   }
 
-  /**
-   * 刪除底圖
-   */
   const deleteBasemap = (index) => {
     const basemaps = currentPageBasemaps.value
-    
+
     if (index < 0 || index >= basemaps.length) {
       console.error('無效的底圖索引')
       return false
     }
-    
+
     const basemap = basemaps[index]
-    
+
     if (!basemap.bgIsDeletable) {
       console.error('此底圖不可刪除')
       return false
     }
 
-    // ✅ 刪除底圖時，標記所有背景圖片 ID 待刪除
     markFileForDeletion(basemap.bgPcImgId)
     markFileForDeletion(basemap.bgTabletImgId)
     markFileForDeletion(basemap.bgPhoneImgId)
-    
+
     basemaps.splice(index, 1)
     clearSelection()
-    console.log('✓ 底圖已刪除')
     return true
   }
 
-  /**
-   * 上移底圖
-   */
   const moveBasemapUp = (index) => {
     const basemaps = currentPageBasemaps.value
-    
-    if (index <= 0 || index >= basemaps.length) {
-      console.error('無法上移')
-      return false
-    }
-    
+
+    if (index <= 0 || index >= basemaps.length) return false
+
     const basemap = basemaps[index]
-    
-    // 不允許移動 HEADER 和 FOOTER
-    if (basemap.bgType === 'HEADER' || basemap.bgType === 'FOOTER') {
-      console.error('無法移動系統底圖')
-      return false
-    }
-    
-    // 不允許移到 HEADER 上方
-    if (basemaps[index - 1].bgType === 'HEADER') {
-      console.error('無法移動到頁首上方')
-      return false
-    }
-    
-    // 交換位置
+    if (basemap.bgType === 'HEADER' || basemap.bgType === 'FOOTER') return false
+    if (basemaps[index - 1].bgType === 'HEADER') return false
+
     const temp = basemaps[index]
     basemaps[index] = basemaps[index - 1]
     basemaps[index - 1] = temp
-    
-    console.log('✓ 底圖已上移')
     return true
   }
 
-  /**
-   * 下移底圖
-   */
   const moveBasemapDown = (index) => {
     const basemaps = currentPageBasemaps.value
-    
-    if (index < 0 || index >= basemaps.length - 1) {
-      console.error('無法下移')
-      return false
-    }
-    
+
+    if (index < 0 || index >= basemaps.length - 1) return false
+
     const basemap = basemaps[index]
-    
-    // 不允許移動 HEADER 和 FOOTER
-    if (basemap.bgType === 'HEADER' || basemap.bgType === 'FOOTER') {
-      console.error('無法移動系統底圖')
-      return false
-    }
-    
-    // 不允許移到 FOOTER 下方
-    if (basemaps[index + 1].bgType === 'FOOTER') {
-      console.error('無法移動到頁尾下方')
-      return false
-    }
-    
-    // 交換位置
+    if (basemap.bgType === 'HEADER' || basemap.bgType === 'FOOTER') return false
+    if (basemaps[index + 1].bgType === 'FOOTER') return false
+
     const temp = basemaps[index]
     basemaps[index] = basemaps[index + 1]
     basemaps[index + 1] = temp
-    
-    console.log('✓ 底圖已下移')
     return true
   }
+
+  // ==================== 重置 ====================
 
   const resetStore = () => {
     tenantId.value = null
@@ -736,20 +562,17 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
     currentPageSlug.value = null
     pageData.value = {}
-    systemFrames.value = {}  // ✅ 重置系統框架
+    systemFrames.value = {}
     locales.value = []
     selected.value = { basemap: null, frame: null, element: null, cell: null }
-    pendingDeleteFileIds.value = []  // ✅ 重置待刪除清單
-    websiteSettings.value = null    // ✅ 重置網站設定
+    pendingDeleteFileIds.value = []
+    websiteSettings.value = null
   }
 
-  /**
-   * 獲取網站設定
-   * GET /api/tenant/{tid}/web-site/
-   */
+  // ==================== 網站設定 ====================
+
   const fetchWebsiteSettings = async (tid) => {
     if (!tid) {
-      console.error('❌ 缺少宮廟 ID (tid)')
       error.value = '缺少宮廟 ID'
       return null
     }
@@ -758,28 +581,18 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      console.log(`📥 載入網站設定... (tid: ${tid})`)
-
       const response = await axiosClient.get(`/tenant/${tid}/web-site/`)
-      console.log(`📥 回應狀態: ${response.status}`)
       const result = response.data
-      
-      console.log('📥 完整回應:', result)
 
       if (result.statusCode === 200 && result.data) {
-        console.log('✓ 網站設定:', result.data)
-        // ✅ 存入 store，讓 EditorLayout reactive 讀取
         websiteSettings.value = result.data
         return result.data
       }
 
       const errorMsg = result.message || '載入設定失敗'
-      console.error(`❌ ${errorMsg}`)
       error.value = errorMsg
       return null
-
     } catch (err) {
-      console.error('❌ 網路錯誤:', err)
       error.value = err.message || '網路連線失敗'
       return null
     } finally {
@@ -787,71 +600,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
-  /**
-   * 保存網站設定
-   * PATCH /api/tenant/{tid}/web-site/
-   */
   const updateWebsiteSettings = async (tid, settingsData) => {
-    if (!tid) {
-      console.error('❌ 缺少宮廟 ID (tid)')
-      error.value = '缺少宮廟 ID'
-      return false
-    }
-
-    if (!settingsData || typeof settingsData !== 'object') {
-      console.error('❌ 無效的設定資料')
-      error.value = '無效的設定資料'
-      return false
-    }
-
-    isLoading.value = true
-    error.value = null
-
-    try {
-      console.log(`💾 保存網站設定... (tid: ${tid})`)
-      console.log('📤 請求資料:', settingsData)
-
-      const response = await axiosClient.patch(`/tenant/${tid}/web-site/`, settingsData)
-      console.log(`📥 回應狀態: ${response.status}`)
-      const result = response.data
-      
-      console.log('📥 完整回應:', result)
-
-      if (result.statusCode === 200) {
-        console.log('✓ 網站設定已保存！')
-        console.log('📊 更新後的資料:', result.data)
-        // ✅ 用 API 回傳的最新資料更新 store，EditorLayout 的字型立即生效
-        if (result.data) {
-          websiteSettings.value = result.data
-          console.log('✓ Store websiteSettings 已更新，字型即時生效')
-        }
-        return true
-      }
-
-      const errorMsg = result.message || '保存設定失敗'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
-      return false
-
-    } catch (err) {
-      console.error('❌ 網路錯誤:', err)
-      error.value = err.message || '網路連線失敗'
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * 發布網站
-   * PATCH /api/tenant/{tid}/web-site/publish
-   * @param {string} tid - 租戶 ID
-   * @param {string} locale - 語言代碼
-   * @returns {boolean} 是否發布成功
-   */
-  const publishWebsite = async (tid, locale) => {
-    if (!tid || !locale) {
-      console.error('❌ 缺少必要參數')
+    if (!tid || !settingsData || typeof settingsData !== 'object') {
       error.value = '缺少必要參數'
       return false
     }
@@ -860,26 +610,19 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      console.log(`🚀 發布網站 (tid: ${tid}, locale: ${locale})`)
-      
-      const response = await axiosClient.patch(`/tenant/${tid}/web-site/publish`, { locale })
-      console.log(`📥 回應狀態: ${response.status}`)
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/`, settingsData)
       const result = response.data
-      
-      console.log('📥 完整回應:', result)
 
       if (result.statusCode === 200) {
-        console.log('✓ 網站發布成功！')
+        if (result.data) {
+          websiteSettings.value = result.data
+        }
         return true
       }
 
-      const errorMsg = result.message || '發布失敗'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
+      error.value = result.message || '保存設定失敗'
       return false
-
     } catch (err) {
-      console.error('❌ 網路錯誤:', err)
       error.value = err.message || '網路連線失敗'
       return false
     } finally {
@@ -887,65 +630,63 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
-  /**
-   * ✅ 上傳圖片檔案
-   * POST /api/tenant/{tid}/web-site/draft-page/file
-   * @param {File} file - 要上傳的圖片檔案
-   * @param {string} tid - 租戶 ID (可選，不提供時使用 store 中的 tenantId)
-   * @returns {Object|null} 上傳成功返回 { id, fileUrl(=publicFileUrl), fileName, size }，失敗返回 null
-   */
+  // ==================== 發布 ====================
+
+  const publishWebsite = async (tid, locale) => {
+    if (!tid || !locale) {
+      error.value = '缺少必要參數'
+      return false
+    }
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await axiosClient.patch(`/tenant/${tid}/web-site/publish`, { locale })
+      const result = response.data
+
+      if (result.statusCode === 200) {
+        return true
+      }
+
+      error.value = result.message || '發布失敗'
+      return false
+    } catch (err) {
+      error.value = err.message || '網路連線失敗'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // ==================== 上傳圖片 ====================
+
   const uploadImage = async (file, tid = null) => {
     const targetTid = tid || tenantId.value
-    
-    if (!targetTid) {
-      console.error('❌ 缺少宮廟 ID')
-      error.value = '缺少宮廟 ID'
+
+    if (!targetTid || !file) {
+      error.value = '缺少必要參數'
       return null
     }
 
-    if (!file) {
-      console.error('❌ 缺少檔案')
-      error.value = '缺少檔案'
-      return null
-    }
-
-    // 檢查檔案大小 (最大 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      const errorMsg = '圖片大小不能超過 10MB'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
+      error.value = '圖片大小不能超過 10MB'
       return null
     }
 
     try {
-      console.log(`📤 開始上傳圖片: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`)
-      
-      // 準備 FormData
       const formData = new FormData()
       formData.append('file', file)
-      
-      // 呼叫 API（FormData 需覆蓋 Content-Type，讓瀏覽器自動附帶 boundary）
+
       const response = await axiosClient.post(
         `/tenant/${targetTid}/web-site/draft-page/file`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       )
-      console.log(`📥 回應狀態: ${response.status}`)
       const result = response.data
-      
-      console.log('📥 上傳回應:', result)
 
-      // 檢查回應格式
       if (result.statusCode === 200 && result.data && result.data.length > 0) {
         const uploadedFile = result.data[0]
-        
-        console.log('✓ 圖片上傳成功:', {
-          id: uploadedFile.id,
-          fileUrl: uploadedFile.publicFileUrl,
-          fileName: uploadedFile.fileName,
-          size: `${(uploadedFile.size / 1024).toFixed(2)} KB`
-        })
-
         return {
           id: uploadedFile.id,
           fileUrl: uploadedFile.publicFileUrl,
@@ -955,191 +696,108 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         }
       }
 
-      const errorMsg = result.message || '上傳失敗'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
+      error.value = result.message || '上傳失敗'
       return null
-
     } catch (err) {
-      console.error('❌ 上傳失敗:', err)
       error.value = err.message || '上傳失敗'
       return null
     }
   }
 
-  /**
-   * ✅ 刪除草稿頁面（回溯到上一個發布版本）
-   * DELETE /api/tenant/{tid}/web-site/draft-page/{slug}
-   * @param {string} slug - 頁面 slug (例如: 'home', 'about-us')
-   * @param {string} tid - 租戶 ID (可選，不提供時使用 store 中的 tenantId)
-   * @returns {boolean} 刪除成功返回 true，失敗返回 false
-   */
+  // ==================== 刪除草稿 ====================
+
   const deleteDraft = async (slug, tid = null) => {
     const targetTid = tid || tenantId.value
-    
-    if (!targetTid) {
-      console.error('❌ 缺少宮廟 ID')
-      error.value = '缺少宮廟 ID'
-      return false
-    }
 
-    if (!slug) {
-      console.error('❌ 缺少頁面 slug')
-      error.value = '缺少頁面 slug'
+    if (!targetTid || !slug) {
+      error.value = '缺少必要參數'
       return false
     }
 
     try {
-      console.log(`🗑️ 開始刪除草稿: ${slug}`)
       isLoading.value = true
       error.value = null
-      
-      // ✅ 呼叫刪除 API
+
       const response = await axiosClient.delete(`/tenant/${targetTid}/web-site/draft-page/${slug}`, {
         data: { locale: currentLocale.value || 'any' }
       })
-      console.log(`📥 刪除回應狀態: ${response.status}`)
       const result = response.data
-      console.log('📥 刪除回應:', result)
 
       if (result.statusCode === 200) {
-        console.log('✓ 草稿已刪除，即將重新載入...')
-        
-        try {
-          console.log('📥 重新載入頁面:', slug)
-          
-          // 方法 1: 使用 reloadCurrentPage（推薦）
-          if (typeof reloadCurrentPage === 'function') {
-            await reloadCurrentPage(currentLocale.value)
-          } 
-          // 方法 2: 使用 initializePage（如果沒有 reloadCurrentPage）
-          else if (typeof initializePage === 'function') {
-            await initializePage(slug, currentLocale.value, targetTid)
-          }
-          
-          console.log('✓ 草稿已重新載入')
-          isLoading.value = false
-          return true
-          
-        } catch (reloadError) {
-          console.error('❌ 重新載入草稿失敗:', reloadError)
-          error.value = '草稿已刪除，但重新載入失敗'
-          isLoading.value = false
-          return false
-        }
+        // 刪除後重新抓所有頁面
+        pageData.value = {}
+        await fetchAllPages(targetTid, currentLocale.value)
+        isLoading.value = false
+        return true
       }
 
-      const errorMsg = result.message || '刪除失敗'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
+      error.value = result.message || '刪除失敗'
       isLoading.value = false
       return false
-
     } catch (err) {
-      console.error('❌ 刪除草稿失敗:', err)
       error.value = err.message || '刪除草稿失敗'
       isLoading.value = false
       return false
     }
   }
-   
-  /**
-   * 查詢指定頁面的 SEO 資料
-   * GET /api/tenant/{tid}/web-site/page/seo/{slug}
-   */
+
+  // ==================== SEO ====================
+
   const fetchPageSeo = async (tid, slug) => {
     if (!tid || !slug) {
-      console.error('❌ 缺少 tid 或 slug')
       error.value = '缺少必要參數'
       return null
     }
-  
+
     try {
-      console.log(`📥 載入頁面 SEO (${slug})...`)
       const response = await axiosClient.get(`/tenant/${tid}/web-site/page/seo/${slug}`)
       const result = response.data
-  
+
       if (result.statusCode === 200 && result.data) {
-        // 存入 pageSeoData，以 slug 為 key
         pageSeoData.value[slug] = result.data
-        console.log(`✓ SEO 已載入 (${slug}):`, result.data)
         return result.data
       }
-  
-      const errorMsg = result.message || '載入 SEO 失敗'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
+
+      error.value = result.message || '載入 SEO 失敗'
       return null
     } catch (err) {
-      console.error('❌ 載入 SEO 失敗:', err)
       error.value = err.message || '網路連線失敗'
       return null
     }
   }
-  
-  /**
-   * 更新指定頁面的 SEO 資料
-   * PATCH /api/tenant/{tid}/web-site/page/seo
-   * body: { slug, seoTitle, seoDescription, seoKeywords }
-   */
+
   const updatePageSeo = async (tid, seoData) => {
-    if (!tid) {
-      console.error('❌ 缺少宮廟 ID (tid)')
-      error.value = '缺少宮廟 ID'
-      return false
-    }
-  
-    if (!seoData || !seoData.slug) {
-      console.error('❌ 缺少 slug 或 SEO 資料')
+    if (!tid || !seoData?.slug) {
       error.value = '缺少必要資料'
       return false
     }
-  
+
     isLoading.value = true
     error.value = null
-  
+
     try {
-      console.log(`💾 保存頁面 SEO (${seoData.slug})...`)
-      console.log('📤 請求資料:', seoData)
-  
       const response = await axiosClient.patch(`/tenant/${tid}/web-site/page/seo`, seoData)
       const result = response.data
-  
-      console.log('📥 完整回應:', result)
-  
+
       if (result.statusCode === 200) {
-        console.log(`✓ SEO 已保存 (${seoData.slug})`)
-        // 更新 store 快取
         if (result.data) {
           pageSeoData.value[seoData.slug] = result.data
         }
         return true
       }
-  
-      const errorMsg = result.message || '保存 SEO 失敗'
-      console.error(`❌ ${errorMsg}`)
-      error.value = errorMsg
+
+      error.value = result.message || '保存 SEO 失敗'
       return false
     } catch (err) {
-      console.error('❌ 保存 SEO 失敗:', err)
       error.value = err.message || '網路連線失敗'
       return false
     } finally {
       isLoading.value = false
     }
   }
-  const switchPageWithLocale = async (slug, locale) => {
-    clearSelection()
-    
-    // ✅ 先把 slug 設好，navbar 繼續用 headerTabs 顯示，不會消失
-    currentPageSlug.value = slug
-    
-    // 背景載入新頁面內容
-    const data = await fetchPageContent(tenantId.value, slug, locale)
-    if (data) {
-      await fetchSystemFrames(tenantId.value, slug)
-    }
-  }
+
+  // ==================== Return ====================
+
   return {
     tenantId,
     headerTabs,
@@ -1149,21 +807,23 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     pageData,
     selected,
     currentPageBasemaps,
-    currentPageSystemFrames,  
+    currentPageSystemFrames,
     locales,
     currentLocale,
-    pendingDeleteFileIds,       
-    websiteSettings,      
-    pageSeoData,      
+    pendingDeleteFileIds,
+    websiteSettings,
+    pageSeoData,
     fetchHeaderTabs,
-    fetchPageContent,
-    fetchSystemFrames,          
-    savePageContent,
     fetchLocales,
+    fetchSystemFrames,
+    fetchAllPages,
+    saveAllPages,
+    saveCurrentPage,
     setTenantId,
     initializePage,
     switchPage,
     reloadCurrentPage,
+    switchPageWithLocale,
     selectBasemap,
     selectFrame,
     selectElement,
@@ -1171,7 +831,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     clearSelection,
     updateHeaderLogo,
     syncHeaderMenuFromTabs,
-    saveCurrentPage,
     addBasemap,
     deleteBasemap,
     moveBasemapUp,
@@ -1182,10 +841,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     publishWebsite,
     uploadImage,
     deleteDraft,
-    markFileForDeletion,        
-    clearPendingDeleteFileIds,  
-    fetchPageSeo,              
+    markFileForDeletion,
+    clearPendingDeleteFileIds,
+    fetchPageSeo,
     updatePageSeo,
-    switchPageWithLocale
   }
 })
