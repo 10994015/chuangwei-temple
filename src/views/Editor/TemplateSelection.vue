@@ -7,18 +7,35 @@ const router = useRouter()
 const route = useRoute()
 const templateStore = useTemplateStore()
 
-// 獲取當前的 templeId
 const currentTempleId = computed(() => route.params.templeId)
 
-// 👇 新增：空白模板的識別ID
 const BLANK_TEMPLATE_ID = 'blank-template'
 
-// 當前步驟：1=選擇類型, 2=選擇風格
 const currentStep = ref(1)
 
-// 從 store 獲取資料
+const handlePreview = (templateId) => {
+  const resolved = router.resolve({
+    name: 'app.temple.preview',
+    params: { templeId: currentTempleId.value },
+    query: { templateId }
+  })
+  window.open(resolved.href, '_blank')
+}
+
+// 按「選擇」直接跳到 page-editor，帶 templateId 讓 EditorLayout 初始化時套用模板
+const handleApplyTemplate = (templateId) => {
+  if (!currentTempleId.value) {
+    alert('無法獲取宮廟資訊')
+    return
+  }
+  router.push({
+    name: 'app.temple.page-editor',
+    params: { templeId: currentTempleId.value },
+    query: { templateId }
+  })
+}
+
 const websiteTypes = computed(() => {
-  // 👇 在 API 返回的類型前面加入「空白模板」選項
   const blankTemplate = {
     id: BLANK_TEMPLATE_ID,
     name: '空白模板',
@@ -30,135 +47,61 @@ const websiteTypes = computed(() => {
 
 const subCategories = computed(() => templateStore.formattedSubCategories)
 const webTemplates = computed(() => templateStore.formattedWebTemplates)
-const isLoading = computed(() => 
-  templateStore.isLoadingL1 || 
-  templateStore.isLoadingDetail || 
+const isLoading = computed(() =>
+  templateStore.isLoadingL1 ||
+  templateStore.isLoadingDetail ||
   templateStore.isLoadingTemplates
 )
 
-// 當前選中的類型和模板
 const selectedType = ref(null)
-const selectedSubCategory = ref(null)
+const selectedCategory = ref(null)
 const selectedTemplate = ref(null)
-const expandedCategory = ref(null)
 
-// 當前顯示的模板列表（根據選中的子分類過濾）
 const currentTemplates = computed(() => {
-  if (!selectedSubCategory.value) return []
+  if (!selectedCategory.value) return []
   return webTemplates.value.filter(
-    template => template.categoryId === selectedSubCategory.value
+    template => template.categoryId === selectedCategory.value
   )
 })
 
-// 模板預覽內容映射
-const templatePreviews = {
-  'gold-red': {
-    name: '金域赤焰',
-    colors: { primary: '#C41E3A', secondary: '#D4AF37', bg: '#FFF8F0' }
-  },
-  'blessing-yellow': {
-    name: '福祉吉黃',
-    colors: { primary: '#F4A900', secondary: '#FFE5B4', bg: '#FFFEF7' }
-  },
-  'tranquil-blue': {
-    name: '靜水慈藍',
-    colors: { primary: '#4A90E2', secondary: '#87CEEB', bg: '#F0F8FF' }
-  },
-  'prosperity-purple': {
-    name: '紫光澤賞',
-    colors: { primary: '#8B4789', secondary: '#DDA0DD', bg: '#FFF5FF' }
-  },
-  'shadow-collect': {
-    name: '陰陽素集',
-    colors: { primary: '#2C3E50', secondary: '#95A5A6', bg: '#FFFFFF' }
-  },
-  'ruicai-life': {
-    name: '瑞氣生青',
-    colors: { primary: '#2E7D32', secondary: '#81C784', bg: '#F1F8F4' }
-  },
-  'divine-light': {
-    name: '神跡曜光',
-    colors: { primary: '#FFD700', secondary: '#FFF8DC', bg: '#FFFAF0' }
+const selectCategory = async (categoryId) => {
+  selectedCategory.value = categoryId
+  selectedTemplate.value = null
+  if (currentTempleId.value) {
+    await templateStore.fetchWebTemplates(currentTempleId.value, categoryId)
   }
 }
 
-// 當前預覽的模板數據
-const currentTemplatePreview = computed(() => {
-  if (!selectedTemplate.value) return null
-  
-  if (templatePreviews[selectedTemplate.value]) {
-    return templatePreviews[selectedTemplate.value]
-  }
-  
-  const template = webTemplates.value.find(t => t.id === selectedTemplate.value)
-  if (template) {
-    return {
-      name: template.name,
-      colors: { primary: '#d97444', secondary: '#f4a900', bg: '#ffffff' }
-    }
-  }
-  
-  return {
-    name: '預設風格',
-    colors: { primary: '#d97444', secondary: '#f4a900', bg: '#ffffff' }
-  }
-})
-
-// 切換分類展開狀態
-const toggleCategory = async (categoryId) => {
-  if (expandedCategory.value === categoryId) {
-    expandedCategory.value = null
-    selectedSubCategory.value = null 
-  } else {
-    expandedCategory.value = categoryId
-    selectedSubCategory.value = categoryId 
-    
-    // 展開時載入該分類的模板
-    if (currentTempleId.value) {
-      await templateStore.fetchWebTemplates(currentTempleId.value, categoryId)
-    }
-  }
-}
-
-// 選擇網站類型
 const selectType = (typeId) => {
   selectedType.value = typeId
-  console.log('選擇類型:', typeId)
 }
 
-// 選擇模板
 const selectTemplate = (templateId) => {
   selectedTemplate.value = templateId
-  console.log('選擇模板:', templateId)
 }
 
-// 返回上一步
 const handlePrevious = () => {
   if (currentStep.value === 2) {
     currentStep.value = 1
-    selectedSubCategory.value = null
+    selectedCategory.value = null
     selectedTemplate.value = null
-    expandedCategory.value = null
   }
 }
 
-// 下一步
 const handleNext = async () => {
   if (currentStep.value === 1) {
     if (!selectedType.value) {
       alert('請先選擇一個網站類型')
       return
     }
-    
-    // 👇 如果選擇的是空白模板，直接跳到子網域設定頁面
+
     if (selectedType.value === BLANK_TEMPLATE_ID) {
-      console.log('選擇空白模板，直接跳轉到子網域設定')
       if (currentTempleId.value) {
-        router.push({ 
+        router.push({
           name: 'app.temple.subdomain-setup',
-          params: { 
-            templeId: currentTempleId.value, 
-            templateId: BLANK_TEMPLATE_ID  // 傳遞空白模板的識別ID
+          params: {
+            templeId: currentTempleId.value,
+            templateId: BLANK_TEMPLATE_ID
           }
         })
       } else {
@@ -166,53 +109,30 @@ const handleNext = async () => {
       }
       return
     }
-    
-    // 進入步驟二前，先載入選中類型的詳細資訊（包含 sub_categories）
+
     if (currentTempleId.value) {
-      console.log('載入類型詳情，類型 ID:', selectedType.value)
       await templateStore.fetchCategoryDetail(currentTempleId.value, selectedType.value)
-      console.log('子分類列表:', subCategories.value)
     }
-    
+
     currentStep.value = 2
   } else if (currentStep.value === 2) {
     if (!selectedTemplate.value) {
       alert('請先選擇一個模板')
       return
     }
-    console.log('使用類型:', selectedType.value)
-    console.log('使用模板:', selectedTemplate.value)
-    
-    // 導航到子網域設定頁面
-    if (currentTempleId.value) {
-      router.push({ 
-        name: 'app.temple.subdomain-setup',
-        params: { 
-          templeId: currentTempleId.value, 
-          templateId: selectedTemplate.value
-        }
-      })
-    } else {
-      alert('無法獲取宮廟資訊')
-    }
+    handleApplyTemplate(selectedTemplate.value)
   }
 }
 
-// 組件掛載時獲取資料
 onMounted(async () => {
   if (currentTempleId.value) {
-    console.log('開始獲取模板分類資料，宮廟 ID:', currentTempleId.value)
     await templateStore.fetchAllCategories(currentTempleId.value)
-    console.log('L1 類別:', websiteTypes.value)
-  } else {
-    console.error('無法獲取宮廟 ID')
   }
 })
 </script>
 
 <template>
   <div class="template-selection-page">
-    <!-- Loading 狀態 -->
     <div v-if="isLoading && currentStep === 1" class="loading-overlay">
       <div class="loading-spinner"></div>
       <p>載入中...</p>
@@ -220,7 +140,6 @@ onMounted(async () => {
 
     <!-- 步驟一：選擇網站類型 -->
     <template v-else-if="currentStep === 1">
-      <!-- 左側選單 -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <h2 class="sidebar-title">選擇網站類型</h2>
@@ -230,12 +149,10 @@ onMounted(async () => {
         </div>
 
         <div class="type-list">
-          <!-- 如果沒有資料，顯示提示 -->
           <div v-if="websiteTypes.length === 0" class="empty-state">
             <p>暫無可用的網站類型</p>
           </div>
-          
-          <!-- 網站類型列表 -->
+
           <button
             v-for="type in websiteTypes"
             :key="type.id"
@@ -255,7 +172,6 @@ onMounted(async () => {
         </div>
       </aside>
 
-      <!-- 右側預覽區 -->
       <main class="preview-area">
         <div v-if="!selectedType" class="preview-placeholder">
           <div class="placeholder-icon">
@@ -281,24 +197,15 @@ onMounted(async () => {
             </div>
 
             <div class="type-preview-mock">
-              <!-- 頂部導航 -->
               <div class="mock-navbar">
                 <div class="mock-logo">LOGO</div>
                 <div class="mock-nav-items">
-                  <div class="mock-nav-item"></div>
-                  <div class="mock-nav-item"></div>
-                  <div class="mock-nav-item"></div>
-                  <div class="mock-nav-item"></div>
-                  <div class="mock-nav-item"></div>
+                  <div class="mock-nav-item" v-for="i in 5" :key="i"></div>
                 </div>
               </div>
-
-              <!-- 輪播橫幅 -->
               <div class="mock-banner">
                 <div class="banner-placeholder"></div>
               </div>
-
-              <!-- 內容區 -->
               <div class="mock-main-content">
                 <div class="content-section">
                   <div class="section-header">
@@ -325,7 +232,6 @@ onMounted(async () => {
 
     <!-- 步驟二：選擇網站風格 -->
     <template v-else-if="currentStep === 2">
-      <!-- 左側選單 -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <h2 class="sidebar-title">選擇網站風格</h2>
@@ -334,93 +240,37 @@ onMounted(async () => {
           </p>
         </div>
 
-        <!-- 載入中狀態 -->
         <div v-if="templateStore.isLoadingDetail" class="loading-state">
           <div class="mini-spinner"></div>
           <p>載入模板分類中...</p>
         </div>
 
-        <div v-else class="template-categories">
-          <!-- 如果沒有資料，顯示提示 -->
+        <div v-else class="category-list">
           <div v-if="subCategories.length === 0" class="empty-state">
             <p>暫無可用的模板分類</p>
           </div>
-          
-          <!-- 子分類列表（可展開/收合）-->
-          <div
+
+          <button
             v-for="category in subCategories"
             :key="category.id"
-            class="category-group"
+            class="category-item"
+            :class="{ selected: selectedCategory === category.id }"
+            @click="selectCategory(category.id)"
           >
-            <button
-              class="category-header"
-              :class="{ expanded: expandedCategory === category.id }"
-              @click="toggleCategory(category.id)"
-            >
-              <span class="category-icon">{{ category.icon }}</span>
-              <span class="category-name">{{ category.name }}</span>
-              <svg
-                class="category-arrow"
-                :class="{ rotated: expandedCategory === category.id }"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-
-            <!-- 展開後顯示該分類下的模板列表 -->
-            <transition name="slide">
-              <div
-                v-if="expandedCategory === category.id"
-                class="template-list"
-              >
-                <!-- 載入中 -->
-                <div v-if="templateStore.isLoadingTemplates" class="template-loading">
-                  <div class="mini-spinner"></div>
-                  <p>載入模板中...</p>
-                </div>
-                
-                <!-- 模板列表 -->
-                <div v-else-if="currentTemplates.length > 0">
-                  <button
-                    v-for="template in currentTemplates"
-                    :key="template.id"
-                    class="template-item"
-                    :class="{ selected: selectedTemplate === template.id }"
-                    @click="selectTemplate(template.id)"
-                  >
-                    <span class="template-icon">{{ template.icon }}</span>
-                    <span class="template-name">{{ template.name }}</span>
-                  </button>
-                </div>
-                
-                <!-- 無模板 -->
-                <div v-else class="no-templates">
-                  <p>此分類暫無可用模板</p>
-                </div>
-              </div>
-            </transition>
-          </div>
+            <span class="category-icon">{{ category.icon }}</span>
+            <span class="category-name">{{ category.name }}</span>
+          </button>
         </div>
 
         <div class="sidebar-footer">
-          <button class="btn-previous" @click="handlePrevious">
-            上一步
-          </button>
-          <button class="btn-next" :disabled="!selectedTemplate" @click="handleNext">
-            下一步
-          </button>
+          <button class="btn-previous" @click="handlePrevious">上一步</button>
+          <button class="btn-next" :disabled="!selectedTemplate" @click="handleNext">下一步</button>
         </div>
       </aside>
 
-      <!-- 右側預覽區 -->
-      <main class="preview-area">
-        <div v-if="!currentTemplatePreview" class="preview-placeholder">
+      <!-- 右側：模板卡片網格 -->
+      <main class="template-grid-area">
+        <div v-if="!selectedCategory" class="preview-placeholder">
           <div class="placeholder-icon">
             <svg viewBox="0 0 200 200" fill="none">
               <rect x="40" y="40" width="120" height="120" rx="8" stroke="currentColor" stroke-width="3" stroke-dasharray="8 8" opacity="0.3"/>
@@ -429,87 +279,45 @@ onMounted(async () => {
               <rect x="70" y="140" width="60" height="8" rx="4" fill="currentColor" opacity="0.15"/>
             </svg>
           </div>
-          <p class="placeholder-text">請從左側選擇一個模板以查看預覽</p>
+          <p class="placeholder-text">請從左側選擇一個模板分類</p>
         </div>
 
-        <div v-else class="preview-content">
-          <!-- 模板預覽框 -->
-          <div 
-            class="preview-frame"
-            :style="{ backgroundColor: currentTemplatePreview.colors.bg }"
+        <div v-else-if="templateStore.isLoadingTemplates" class="grid-loading">
+          <div class="loading-spinner"></div>
+          <p>載入模板中...</p>
+        </div>
+
+        <div v-else-if="currentTemplates.length === 0" class="preview-placeholder">
+          <p class="placeholder-text">此分類暫無可用模板</p>
+        </div>
+
+        <div v-else class="template-cards-grid">
+          <div
+            v-for="template in currentTemplates"
+            :key="template.id"
+            class="template-card"
+            :class="{ selected: selectedTemplate === template.id }"
+            @click="selectTemplate(template.id)"
           >
-            <div class="preview-browser-bar">
-              <div class="browser-dots">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
+            <div class="card-thumbnail">
+              <img
+                :src="template.coverImgUrl || 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=640&h=400&fit=crop'"
+                :alt="template.name"
+                class="card-img"
+              />
+              <div class="card-overlay">
+                <button class="card-btn btn-preview" @click.stop="handlePreview(template.id)">預覽</button>
+                <button class="card-btn btn-select" @click.stop="handleApplyTemplate(template.id)">選擇</button>
               </div>
-              <div class="browser-url">XXXX宮官方網站</div>
+              <div v-if="selectedTemplate === template.id" class="card-selected-badge">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </div>
             </div>
-
-            <div class="preview-mock">
-              <!-- 導航列模擬 -->
-              <div class="mock-navbar" :style="{ borderBottomColor: currentTemplatePreview.colors.secondary }">
-                <div class="mock-logo" :style="{ color: currentTemplatePreview.colors.primary }">LOGO</div>
-                <div class="mock-nav-items">
-                  <div class="mock-nav-item" :style="{ background: currentTemplatePreview.colors.secondary + '40' }"></div>
-                  <div class="mock-nav-item" :style="{ background: currentTemplatePreview.colors.secondary + '40' }"></div>
-                  <div class="mock-nav-item" :style="{ background: currentTemplatePreview.colors.secondary + '40' }"></div>
-                  <div class="mock-nav-item" :style="{ background: currentTemplatePreview.colors.secondary + '40' }"></div>
-                  <div class="mock-nav-item" :style="{ background: currentTemplatePreview.colors.secondary + '40' }"></div>
-                </div>
-              </div>
-
-              <!-- 橫幅模擬 -->
-              <div class="mock-hero" :style="{ 
-                background: `linear-gradient(135deg, ${currentTemplatePreview.colors.primary} 0%, ${currentTemplatePreview.colors.secondary} 100%)`
-              }">
-                <div class="mock-hero-content">
-                  <div class="hero-text-large"></div>
-                  <div class="hero-text-small"></div>
-                </div>
-              </div>
-
-              <!-- 內容區模擬 -->
-              <div class="mock-content">
-                <div class="content-header">
-                  <div class="content-title" :style="{ background: currentTemplatePreview.colors.primary }"></div>
-                  <div class="content-link" :style="{ color: currentTemplatePreview.colors.primary }">
-                    查看所有活動 →
-                  </div>
-                </div>
-
-                <div class="mock-cards">
-                  <div class="mock-card" v-for="i in 3" :key="i">
-                    <div class="mock-card-image" :style="{ backgroundColor: currentTemplatePreview.colors.secondary + '20' }">
-                      <svg class="image-placeholder" viewBox="0 0 100 100" fill="none">
-                        <rect x="20" y="20" width="60" height="60" rx="4" stroke="currentColor" stroke-width="2" opacity="0.3"/>
-                        <circle cx="40" cy="40" r="8" fill="currentColor" opacity="0.3"/>
-                        <path d="M20 70 L40 50 L60 70 L80 50 L80 80 L20 80 Z" fill="currentColor" opacity="0.2"/>
-                      </svg>
-                    </div>
-                    <div class="mock-card-body">
-                      <div class="card-badges">
-                        <span class="badge" :style="{ background: '#ef4444' }">熱門</span>
-                        <span class="badge" :style="{ background: currentTemplatePreview.colors.primary }">推薦</span>
-                      </div>
-                      <div class="card-text-line"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 頁尾模擬 -->
-              <div class="mock-footer" :style="{ backgroundColor: currentTemplatePreview.colors.primary + '10', borderTopColor: currentTemplatePreview.colors.secondary }">
-                <div class="footer-content">
-                  <div class="footer-section" v-for="i in 3" :key="i">
-                    <div class="footer-title" :style="{ background: currentTemplatePreview.colors.primary + '60' }"></div>
-                    <div class="footer-line"></div>
-                    <div class="footer-line"></div>
-                    <div class="footer-line short"></div>
-                  </div>
-                </div>
-              </div>
+            <div class="card-info">
+              <p class="card-name">{{ template.name }}</p>
+              <p class="card-id">{{ template.id }}</p>
             </div>
           </div>
         </div>
@@ -526,25 +334,17 @@ onMounted(async () => {
   font-family: 'Microsoft YaHei', '微軟正黑體', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-// ========== Loading 狀態 ==========
+// ========== Loading ==========
 .loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  
-  p {
-    margin-top: 16px;
-    font-size: 16px;
-    color: #6b7280;
-  }
+  p { margin-top: 16px; font-size: 16px; color: #6b7280; }
 }
 
 .loading-spinner {
@@ -556,41 +356,30 @@ onMounted(async () => {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 .loading-state {
   padding: 40px 20px;
   text-align: center;
   color: #9ca3af;
-  
-  .mini-spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid #f3f4f6;
-    border-top-color: #d97444;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 12px;
-  }
-  
-  p {
-    margin: 0;
-    font-size: 14px;
-  }
+  p { margin: 0; font-size: 14px; }
 }
-// ========== 空狀態 ==========
+
+.mini-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top-color: #d97444;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .empty-state {
   padding: 40px 20px;
   text-align: center;
   color: #9ca3af;
-  
-  p {
-    margin: 0;
-    font-size: 14px;
-  }
+  p { margin: 0; font-size: 14px; }
 }
 
 // ========== 左側選單 ==========
@@ -624,7 +413,7 @@ onMounted(async () => {
   margin: 0;
 }
 
-// ========== 網站類型列表 ==========
+// ========== 類型列表 ==========
 .type-list {
   padding: 12px;
   flex-shrink: 0;
@@ -642,175 +431,40 @@ onMounted(async () => {
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  
-  &:hover {
-    border-color: #d97444;
-    transform: translateY(-1px);
-  }
-  
-  &.selected {
-    border-color: #d97444;
-    background: #fff7f3;
-  }
+
+  &:hover { border-color: #d97444; transform: translateY(-1px); }
+  &.selected { border-color: #d97444; background: #fff7f3; }
 }
 
-.type-icon {
-  font-size: 24px;
-  line-height: 1;
-}
+.type-icon { font-size: 24px; line-height: 1; }
+.type-name { flex: 1; font-size: 16px; font-weight: 500; color: #1f2937; text-align: left; }
 
-.type-name {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 500;
-  color: #1f2937;
-  text-align: left;
-}
-
-// ========== 模板分類（下拉選單）==========
-.template-categories {
-  padding: 8px 0;
+// ========== 分類列表（步驟二，直接點選）==========
+.category-list {
+  padding: 12px;
   flex-shrink: 0;
 }
 
-.category-group {
-  margin-bottom: 4px;
-}
-
-.category-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-  
-  &:hover {
-    background: #f9fafb;
-  }
-  
-  &.expanded {
-    background: #f3f4f6;
-  }
-}
-
-.category-icon {
-  font-size: 18px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.category-name {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-  text-align: left;
-}
-
-.category-arrow {
-  width: 16px;
-  height: 16px;
-  color: #9ca3af;
-  transition: transform 0.2s;
-  flex-shrink: 0;
-  
-  &.rotated {
-    transform: rotate(180deg);
-  }
-}
-
-.template-list {
-  background: #fafafa;
-  padding: 4px 0;
-}
-
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.2s ease;
-  max-height: 500px;
-  overflow: hidden;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.template-item {
+.category-item {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px 12px 40px;
-  background: none;
-  border: none;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  
-  &:hover {
-    background: #f3f4f6;
-  }
-  
-  &.selected {
-    background: #fff7f3;
-    
-    .template-name {
-      color: #d97444;
-      font-weight: 500;
-    }
-  }
-}
-
-.template-icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.template-name {
-  flex: 1;
-  font-size: 14px;
-  color: #4b5563;
   text-align: left;
-  transition: color 0.2s;
+
+  &:hover { border-color: #d97444; transform: translateY(-1px); }
+  &.selected { border-color: #d97444; background: #fff7f3; }
 }
 
-// 模板載入中
-.template-loading {
-  padding: 20px;
-  text-align: center;
-  color: #9ca3af;
-  
-  .mini-spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid #f3f4f6;
-    border-top-color: #d97444;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 8px;
-  }
-  
-  p {
-    margin: 0;
-    font-size: 13px;
-  }
-}
-
-.no-templates {
-  padding: 20px;
-  text-align: center;
-  color: #9ca3af;
-  
-  p {
-    margin: 0;
-    font-size: 13px;
-  }
-}
+.category-icon { font-size: 20px; line-height: 1; flex-shrink: 0; }
+.category-name { flex: 1; font-size: 15px; font-weight: 500; color: #1f2937; }
 
 // ========== 頁尾按鈕 ==========
 .sidebar-footer {
@@ -820,7 +474,6 @@ onMounted(async () => {
   display: flex;
   gap: 12px;
   flex-shrink: 0;
-  margin-top: 16px;
 }
 
 .btn-previous {
@@ -834,11 +487,7 @@ onMounted(async () => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  
-  &:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
-  }
+  &:hover { background: #f9fafb; border-color: #9ca3af; }
 }
 
 .btn-next {
@@ -852,19 +501,11 @@ onMounted(async () => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  
-  &:hover:not(:disabled) {
-    background: #c45e30;
-  }
-  
-  &:disabled {
-    background: #d1d5db;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
+  &:hover:not(:disabled) { background: #c45e30; }
+  &:disabled { background: #d1d5db; cursor: not-allowed; opacity: 0.6; }
 }
 
-// ========== 右側預覽區 ==========
+// ========== 右側預覽（步驟一）==========
 .preview-area {
   flex: 1;
   padding: 32px;
@@ -880,29 +521,19 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   color: #9ca3af;
+  height: 100%;
 }
 
 .placeholder-icon {
   width: 200px;
   height: 200px;
   margin-bottom: 24px;
-  
-  svg {
-    width: 100%;
-    height: 100%;
-    color: currentColor;
-  }
+  svg { width: 100%; height: 100%; color: currentColor; }
 }
 
-.placeholder-text {
-  font-size: 16px;
-  color: #6b7280;
-}
+.placeholder-text { font-size: 16px; color: #6b7280; }
 
-.preview-content {
-  width: 100%;
-  max-width: 1200px;
-}
+.preview-content { width: 100%; max-width: 1200px; }
 
 .preview-frame {
   background: #ffffff;
@@ -911,9 +542,7 @@ onMounted(async () => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.type-preview-frame {
-  background: #ffffff;
-}
+.type-preview-frame { background: #ffffff; }
 
 .preview-browser-bar {
   height: 40px;
@@ -925,16 +554,12 @@ onMounted(async () => {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.browser-dots {
-  display: flex;
-  gap: 6px;
-}
+.browser-dots { display: flex; gap: 6px; }
 
 .dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  
   &.red { background: #ef4444; }
   &.yellow { background: #f59e0b; }
   &.green { background: #10b981; }
@@ -950,11 +575,7 @@ onMounted(async () => {
   text-align: center;
 }
 
-// ========== 類型預覽 Mock ==========
-.type-preview-mock {
-  background: #ffffff;
-  min-height: 600px;
-}
+.type-preview-mock { background: #ffffff; min-height: 600px; }
 
 .mock-navbar {
   display: flex;
@@ -962,7 +583,6 @@ onMounted(async () => {
   justify-content: space-between;
   padding: 16px 32px;
   border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
 }
 
 .mock-logo {
@@ -974,72 +594,19 @@ onMounted(async () => {
   color: #9ca3af;
 }
 
-.mock-nav-items {
-  display: flex;
-  gap: 16px;
-}
+.mock-nav-items { display: flex; gap: 16px; }
+.mock-nav-item { height: 8px; width: 40px; background: #e5e7eb; border-radius: 4px; }
 
-.mock-nav-item {
-  height: 8px;
-  width: 40px;
-  background: #e5e7eb;
-  border-radius: 4px;
-}
+.mock-banner { height: 280px; background: #f3f4f6; padding: 40px; }
+.banner-placeholder { width: 100%; height: 100%; background: #e5e7eb; border-radius: 8px; }
 
-.mock-banner {
-  height: 280px;
-  background: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
+.mock-main-content { padding: 40px 32px; background: #fefbf6; }
+.content-section { margin-bottom: 32px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.section-title { width: 120px; height: 24px; background: #1f2937; border-radius: 4px; }
+.section-link { width: 100px; height: 16px; background: #d97444; border-radius: 4px; }
 
-.banner-placeholder {
-  width: 100%;
-  height: 100%;
-  background: #e5e7eb;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mock-main-content {
-  padding: 40px 32px;
-  background: #fefbf6;
-}
-
-.content-section {
-  margin-bottom: 32px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.section-title {
-  width: 120px;
-  height: 24px;
-  background: #1f2937;
-  border-radius: 4px;
-}
-
-.section-link {
-  width: 100px;
-  height: 16px;
-  background: #d97444;
-  border-radius: 4px;
-}
-
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 
 .card-item {
   background: #ffffff;
@@ -1048,198 +615,157 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.card-image {
-  height: 140px;
+.card-image { height: 140px; background: #f3f4f6; }
+.card-badges { display: flex; gap: 6px; padding: 12px; }
+.badge { height: 18px; width: 36px; border-radius: 3px; &.red { background: #ef4444; } &.blue { background: #3b82f6; } }
+.card-title { height: 14px; background: #d1d5db; border-radius: 3px; margin: 0 12px 12px; }
+
+// ========== 右側模板卡片網格（步驟二）==========
+.template-grid-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  gap: 16px;
+  p { font-size: 14px; margin: 0; }
+}
+
+.template-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+
+  @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.template-card {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  &:hover {
+    border-color: #d97444;
+    box-shadow: 0 4px 16px rgba(217, 116, 68, 0.15);
+    transform: translateY(-2px);
+    .card-overlay { opacity: 1; }
+  }
+
+  &.selected {
+    border-color: #d97444;
+    box-shadow: 0 0 0 3px rgba(217, 116, 68, 0.2);
+  }
+}
+
+.card-thumbnail {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
   background: #f3f4f6;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.card-badges {
-  display: flex;
-  gap: 6px;
-  padding: 12px;
-}
+.card-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
 
-.badge {
-  height: 18px;
-  width: 36px;
-  border-radius: 3px;
-  
-  &.red {
-    background: #ef4444;
+  &.btn-preview {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    &:hover { background: rgba(255, 255, 255, 0.25); }
   }
-  
-  &.blue {
-    background: #3b82f6;
+
+  &.btn-select {
+    background: #d97444;
+    color: #ffffff;
+    &:hover { background: #c45e30; }
   }
 }
 
-.card-title {
-  height: 14px;
-  background: #d1d5db;
-  border-radius: 3px;
-  margin: 0 12px 12px;
-}
-
-// ========== 模板預覽 Mock ==========
-.preview-mock {
-  min-height: 800px;
-  background: #ffffff;
-}
-
-.mock-hero {
-  height: 300px;
+.card-selected-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  background: #d97444;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  position: relative;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.mock-hero-content {
-  text-align: center;
-  z-index: 1;
-}
+.card-info { padding: 12px 14px; }
 
-.hero-text-large {
-  width: 200px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  margin: 0 auto 12px;
-}
-
-.hero-text-small {
-  width: 150px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 4px;
-  margin: 0 auto;
-}
-
-.mock-content {
-  padding: 48px 32px;
-}
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.content-title {
-  width: 100px;
-  height: 24px;
-  border-radius: 4px;
-}
-
-.content-link {
+.card-name {
   font-size: 14px;
   font-weight: 500;
-}
-
-.mock-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.mock-card {
-  background: #ffffff;
-  border-radius: 8px;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  text-overflow: ellipsis;
 }
 
-.mock-card-image {
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.image-placeholder {
-  width: 60px;
-  height: 60px;
+.card-id {
+  font-size: 12px;
   color: #9ca3af;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.mock-card-body {
-  padding: 16px;
-}
-
-.card-text-line {
-  height: 12px;
-  background: #e5e7eb;
-  border-radius: 3px;
-}
-
-.mock-footer {
-  padding: 32px;
-  border-top: 2px solid;
-  margin-top: 40px;
-}
-
-.footer-content {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-}
-
-.footer-section {
-  
-}
-
-.footer-title {
-  height: 16px;
-  width: 80px;
-  border-radius: 3px;
-  margin-bottom: 12px;
-}
-
-.footer-line {
-  height: 10px;
-  background: #d1d5db;
-  border-radius: 3px;
-  margin-bottom: 8px;
-  
-  &.short {
-    width: 70%;
-  }
-}
-
-// ========== 響應式設計 ==========
+// ========== 響應式 ==========
 @media (max-width: 1024px) {
-  .sidebar {
-    width: 240px;
-  }
-  
-  .cards-grid,
-  .mock-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .sidebar { width: 240px; }
+  .cards-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .template-selection-page {
-    flex-direction: column;
-  }
-  
-  .sidebar {
-    width: 100%;
-    max-height: 50vh;
-  }
-  
-  .cards-grid,
-  .mock-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .mock-nav-items {
-    display: none;
-  }
+  .template-selection-page { flex-direction: column; }
+  .sidebar { width: 100%; max-height: 50vh; }
+  .template-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 </style>

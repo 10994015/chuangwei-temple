@@ -131,7 +131,7 @@ const router = createRouter({
           path: ':templeId/template-selection',
           name: 'app.temple.template-selection',
           component: TemplateSelection,
-          meta: { title: '模板選擇', requiresAuth: true, checkWebsite: true, isTempleRoute: true }
+          meta: { title: '模板選擇', requiresAuth: true, isTempleRoute: true }
         },
         {
           path: ':templeId/pricing-plans',

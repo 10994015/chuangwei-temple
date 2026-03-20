@@ -1,8 +1,12 @@
 <template>
   <div class="preview-page">
     <header class="preview-toolbar">
-      <div class="toolbar-left"></div>
-      
+      <div class="toolbar-left">
+        <span v-if="isTemplatePreviewMode" class="template-preview-label">
+          模板預覽
+        </span>
+      </div>
+
       <div class="toolbar-center">
         <div class="device-switcher">
           <button class="device-btn" :class="{ active: currentDevice === 'desktop' }" @click="setDevice('desktop')" title="電腦版 (1280px)">
@@ -20,7 +24,7 @@
         </div>
         <span class="device-width-label">{{ deviceWidthLabel }}</span>
       </div>
-      
+
       <div class="toolbar-right">
         <button class="btn btn-icon" @click="handleRefresh">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -47,17 +51,16 @@
           <div class="notch-bar"></div>
         </div>
 
-        <!-- ✅ ref 綁定捲動容器 -->
         <div ref="screenRef" class="device-screen">
           <div class="website-preview" :style="previewContentStyle">
-            <template v-for="(basemap, index) in basemaps" :key="`basemap-${index}`">
+            <template v-for="(basemap, index) in currentPageBasemaps" :key="`basemap-${index}`">
               <div
                 class="basemap-section"
                 :class="`basemap-${getBasemapType(basemap).toLowerCase()}`"
                 :style="getBasemapStyle(basemap)"
               >
                 <template v-for="(frame, frameIndex) in basemap.frames" :key="`frame-${frameIndex}`">
-                  <SystemFramePreview 
+                  <SystemFramePreview
                     v-if="isSystemFrame(frame)"
                     :frame-type="frame.type"
                     :frame-data="frame.data || {}"
@@ -75,7 +78,6 @@
             </template>
           </div>
 
-          <!-- ✅ Scroll-to-top 按鈕（sticky 在捲動容器內右下角） -->
           <Transition name="scroll-top">
             <button
               v-if="showScrollTop"
@@ -113,8 +115,17 @@ const pageEditorStore = inject('pageEditorStore', null)
 
 const isLoading = ref(false)
 const error = ref(null)
-const basemaps = ref([])
-const currentSlug = ref('home')
+
+const pages = ref([])
+const currentSlug = ref('')
+
+const isTemplatePreviewMode = computed(() => !!route.query.templateId)
+
+const currentPageBasemaps = computed(() => {
+  const page = pages.value.find(p => p.slug === currentSlug.value)
+  return page?.contentJson || []
+})
+
 const currentDevice = ref('desktop')
 
 // ==================== Scroll-to-top ====================
@@ -129,33 +140,20 @@ const scrollToTop = () => {
   screenRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 切換裝置時重置狀態
 watch(currentDevice, () => {
   showScrollTop.value = false
-  // 重新綁定 scroll 監聽（nextTick 確保 DOM 更新後 ref 已就緒）
   screenRef.value?.scrollTo({ top: 0 })
 })
 
-onMounted(() => {
-  // 用事件委派方式，screenRef 本身 mounted 後再 attach
-  // 由於 v-else 條件，screenRef 在 loading/error 時不存在，用 watch 補上
-  attachScrollListener()
-})
-
-onUnmounted(() => {
-  screenRef.value?.removeEventListener('scroll', handleScroll)
-})
+onMounted(() => { attachScrollListener() })
+onUnmounted(() => { screenRef.value?.removeEventListener('scroll', handleScroll) })
 
 const attachScrollListener = () => {
   screenRef.value?.addEventListener('scroll', handleScroll, { passive: true })
 }
 
-// loading 完成後 screenRef 才掛載，需要 watch 補綁
 watch(isLoading, (loading) => {
-  if (!loading) {
-    // DOM 更新後才能取到 ref
-    setTimeout(attachScrollListener, 50)
-  }
+  if (!loading) setTimeout(attachScrollListener, 50)
 })
 
 // ==================== Device ====================
@@ -178,6 +176,7 @@ const currentLocale = ref(route.query.locale || pageEditorStore?.currentLocale |
 
 if (pageEditorStore) {
   watch(() => pageEditorStore.currentLocale, (newLocale) => {
+    if (isTemplatePreviewMode.value) return
     if (newLocale && newLocale !== currentLocale.value) {
       currentLocale.value = newLocale
       loadPreviewData()
@@ -186,40 +185,67 @@ if (pageEditorStore) {
 }
 
 watch(() => route.query.locale, (newLocale) => {
+  if (isTemplatePreviewMode.value) return
   if (newLocale && newLocale !== currentLocale.value) {
     currentLocale.value = newLocale
-    //  更新 query，保留 slug
-    router.replace({ query: { slug: currentSlug.value, locale: newLocale } })
+    router.replace({ query: { ...route.query, locale: newLocale } })
     loadPreviewData()
   }
 })
-// ==================== Data ====================
-const getTempleId = () => route.params.templeId
-const getSlug    = () => route.query.slug || 'home'
 
-const fetchPageContent = async (tid, slug, locale) => {
-  const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}`, {
+// ==================== Data ====================
+const getTempleId   = () => route.params.templeId
+const getSlug       = () => route.query.slug || 'home'
+const getTemplateId = () => route.query.templateId
+
+const fetchAllDraftPages = async (tid, locale) => {
+  const response = await axiosClient.get(`/tenant/${tid}/web-site/all-draft-page`, {
     params: { locale }
   })
   const result = response.data
-  if (result.statusCode === 200 && result.data) return result.data
+  if (result.statusCode === 200 && Array.isArray(result.data)) return result.data
   throw new Error(result.message || '載入失敗')
+}
+
+const fetchTemplatePages = async (tid, templateId) => {
+  const response = await axiosClient.get(`/tenant/${tid}/web-template/${templateId}/all-page`)
+  const result = response.data
+  if (result.statusCode === 200 && result.data) return result.data
+  throw new Error(result.message || '載入模板失敗')
 }
 
 const loadPreviewData = async () => {
   const templeId = getTempleId()
-  const slug = getSlug()
   if (!templeId) { error.value = '缺少宮廟 ID'; return }
+
   isLoading.value = true
   error.value = null
+
   try {
-    const data = await fetchPageContent(templeId, slug, currentLocale.value)
-    if (data && Array.isArray(data)) {
-      basemaps.value = data
-      currentSlug.value = slug
+    let data
+
+    if (isTemplatePreviewMode.value) {
+      data = await fetchTemplatePages(templeId, getTemplateId())
     } else {
-      throw new Error('返回的數據格式不正確')
+      data = await fetchAllDraftPages(templeId, currentLocale.value)
     }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error('資料格式不正確')
+    }
+
+    pages.value = data
+
+    if (isTemplatePreviewMode.value) {
+      // 模板預覽：直接顯示第一頁，不特意找 home
+      currentSlug.value = data[0].slug
+    } else {
+      // 草稿預覽：優先顯示 query 指定的頁面，找不到才用第一頁
+      const targetSlug = getSlug()
+      const matched = data.find(p => p.slug === targetSlug)
+      currentSlug.value = matched ? targetSlug : data[0].slug
+    }
+
   } catch (err) {
     error.value = err.message || '載入失敗，請稍後再試'
   } finally {
@@ -227,24 +253,17 @@ const loadPreviewData = async () => {
   }
 }
 
-const handleChangePage = async (slug) => {
-  const templeId = getTempleId()
-  isLoading.value = true
-  error.value = null
-  try {
-    const data = await fetchPageContent(templeId, slug, currentLocale.value)
-    if (data && Array.isArray(data)) {
-      basemaps.value = data
-      currentSlug.value = slug
-      // ✅ 同時保留 locale
-      router.replace({ query: { slug, locale: currentLocale.value } })
+const handleChangePage = (slug) => {
+  const page = pages.value.find(p => p.slug === slug)
+  if (page) {
+    currentSlug.value = slug
+    screenRef.value?.scrollTo({ top: 0 })
+    if (!isTemplatePreviewMode.value) {
+      router.replace({ query: { ...route.query, slug } })
     }
-  } catch (err) {
-    error.value = '切換頁面失敗'
-  } finally {
-    isLoading.value = false
   }
 }
+
 const handleRefresh = () => loadPreviewData()
 
 const isSystemFrame = (frame) => {
@@ -284,6 +303,8 @@ onMounted(() => loadPreviewData())
 .toolbar-center { display: flex; align-items: center; gap: 16px; flex: 1; justify-content: center; }
 .toolbar-right { justify-content: flex-end; }
 
+.template-preview-label { font-size: 13px; font-weight: 600; color: #d97444; background: #fff7f3; border: 1px solid #f5d0b8; padding: 4px 12px; border-radius: 20px; }
+
 .device-switcher { display: flex; align-items: center; background: #f5f5f5; border-radius: 10px; padding: 4px; gap: 2px; border: 1px solid #e8e8e8; }
 .device-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; border-radius: 7px; background: transparent; color: #888; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s ease; white-space: nowrap; }
 .device-btn:hover { color: #444; background: rgba(255,255,255,0.7); }
@@ -309,17 +330,8 @@ onMounted(() => loadPreviewData())
 .preview-area.device-desktop .device-screen { height: 100%; overflow-y: auto; overflow-x: hidden; border-radius: 0; }
 
 .device-frame { position: relative; background: #1a1a1a; border-radius: 40px; box-shadow: 0 0 0 2px #3a3a3a, 0 30px 80px rgba(0,0,0,0.35), 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; flex-shrink: 0; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-
-.device-frame--mobile {
-  width: 390px; height: 80vh; max-height: 860px;
-  border-radius: 44px; border: 10px solid #2a2a2a;
-  box-sizing: content-box; padding: 0;
-}
-.device-frame--tablet {
-  width: 768px; height: 80vh; max-height: 1080px;
-  border-radius: 20px; border: 12px solid #2a2a2a;
-  box-sizing: content-box; padding: 0;
-}
+.device-frame--mobile { width: 390px; height: 80vh; max-height: 860px; border-radius: 44px; border: 10px solid #2a2a2a; box-sizing: content-box; }
+.device-frame--tablet { width: 768px; height: 80vh; max-height: 1080px; border-radius: 20px; border: 12px solid #2a2a2a; box-sizing: content-box; }
 
 .device-notch { position: relative; display: flex; align-items: center; justify-content: center; height: 0; }
 .notch-bar { display: none; }
@@ -338,69 +350,12 @@ onMounted(() => loadPreviewData())
 .basemap-section :deep(.system-frame-preview),
 .basemap-section :deep(.custom-frame-preview) { background: transparent !important; }
 
-/* ==================== Scroll-to-top ==================== */
-
-.scroll-top-btn {
-  /* sticky 定位在捲動容器內部右下角 */
-  position: sticky;
-  bottom: 32px;
-  /* 靠右：margin-left auto 推到右側 */
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* 不佔 flow 空間 */
-  margin-top: -56px;
-  margin-right: 32px;
-  z-index: 200;
-
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: #E8572A;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(232, 87, 42, 0.45);
-  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-
-/* 手機/平板模式下縮小一點，避免遮到內容 */
-.scroll-top-btn--mobile,
-.scroll-top-btn--tablet {
-  width: 36px;
-  height: 36px;
-  bottom: 20px;
-  margin-right: 12px;
-  margin-top: -50px;
-}
-
-.scroll-top-btn svg {
-  width: 20px;
-  height: 20px;
-  pointer-events: none;
-}
-
-.scroll-top-btn--mobile svg,
-.scroll-top-btn--tablet svg {
-  width: 16px;
-  height: 16px;
-}
-
-.scroll-top-btn:hover {
-  background: #d14a1f;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(232, 87, 42, 0.5);
-}
-
-.scroll-top-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(232, 87, 42, 0.3);
-}
-
-/* 進場 / 離場動畫 */
-.scroll-top-enter-active,
-.scroll-top-leave-active { transition: opacity 0.25s, transform 0.25s; }
-.scroll-top-enter-from,
-.scroll-top-leave-to { opacity: 0; transform: translateY(12px); }
+.scroll-top-btn { position: sticky; bottom: 32px; margin-left: auto; display: flex; align-items: center; justify-content: center; margin-top: -56px; margin-right: 32px; z-index: 200; width: 44px; height: 44px; border-radius: 50%; border: none; background: #E8572A; color: #fff; cursor: pointer; box-shadow: 0 4px 16px rgba(232, 87, 42, 0.45); transition: background 0.2s, transform 0.2s, box-shadow 0.2s; }
+.scroll-top-btn--mobile, .scroll-top-btn--tablet { width: 36px; height: 36px; bottom: 20px; margin-right: 12px; margin-top: -50px; }
+.scroll-top-btn svg { width: 20px; height: 20px; pointer-events: none; }
+.scroll-top-btn--mobile svg, .scroll-top-btn--tablet svg { width: 16px; height: 16px; }
+.scroll-top-btn:hover { background: #d14a1f; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(232, 87, 42, 0.5); }
+.scroll-top-btn:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(232, 87, 42, 0.3); }
+.scroll-top-enter-active, .scroll-top-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.scroll-top-enter-from, .scroll-top-leave-to { opacity: 0; transform: translateY(12px); }
 </style>

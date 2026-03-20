@@ -28,6 +28,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   const websiteSettings = ref(null)
   const pageSeoData = ref({})
 
+  // 是否為模板套用模式（尚未儲存，等待 user 按儲存）
+  const isTemplateMode = ref(false)
+
   // ==================== Computed ====================
 
   const currentPageBasemaps = computed(() => {
@@ -44,46 +47,28 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     if (!fileId) return
     if (!pendingDeleteFileIds.value.includes(fileId)) {
       pendingDeleteFileIds.value.push(fileId)
-      console.log('標記待刪除 ID:', fileId, '| 目前清單:', pendingDeleteFileIds.value)
     }
   }
 
   const clearPendingDeleteFileIds = () => {
-    console.log('清空待刪除清單，共', pendingDeleteFileIds.value.length, '個')
     pendingDeleteFileIds.value = []
   }
 
-  // ==================== API ====================
+  // ==================== 從頁面資料同步 headerTabs ====================
 
-  /**
-   * GET /api/tenant/{tid}/web-site/draft-page/tab
-   */
-  const fetchHeaderTabs = async (tid, locale = null) => {
-    if (!tid) return []
+  const syncHeaderTabsFromPageData = (pages) => {
+    if (!Array.isArray(pages) || pages.length === 0) return
 
-    isLoading.value = true
-    error.value = null
+    const firstPage = pages[0]
+    const headerBasemap = firstPage.contentJson?.find(b => b.bgType === 'HEADER')
+    const headerFrame = headerBasemap?.frames?.[0]
 
-    try {
-      const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/tab`, {
-        params: { locale: locale || currentLocale.value }
-      })
-      const result = response.data
-
-      if (result.statusCode === 200 && result.data) {
-        headerTabs.value = result.data
-        tenantId.value = tid
-        return result.data
-      }
-      throw new Error(result.message || '載入失敗')
-    } catch (err) {
-      console.error('Header Tabs 失敗:', err)
-      error.value = err.message
-      return []
-    } finally {
-      isLoading.value = false
+    if (headerFrame?.data?.tabs && Array.isArray(headerFrame.data.tabs)) {
+      headerTabs.value = headerFrame.data.tabs
     }
   }
+
+  // ==================== API ====================
 
   /**
    * GET /api/tenant/{tid}/web-site/locale
@@ -121,10 +106,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
    * GET /api/tenant/{tid}/web-site/draft-page/{slug}/system-frame
    */
   const fetchSystemFrames = async (tid, slug) => {
-    if (!tid || !slug) {
-      console.warn('fetchSystemFrames: 缺少 tid 或 slug')
-      return []
-    }
+    if (!tid || !slug) return []
 
     try {
       const response = await axiosClient.get(`/tenant/${tid}/web-site/draft-page/${slug}/system-frame`)
@@ -145,8 +127,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   /**
    * GET /api/tenant/{tid}/web-site/all-draft-page
-   * 一次抓所有頁面的草稿內容
-   * 回傳格式：[{ slug, contentJson: [...basemaps] }, ...]
    */
   const fetchAllPages = async (tid, locale = null) => {
     if (!tid) return null
@@ -157,8 +137,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      console.log(`載入所有頁面 (${targetLocale})`)
-
       const response = await axiosClient.get(`/tenant/${tid}/web-site/all-draft-page`, {
         params: { locale: targetLocale }
       })
@@ -168,7 +146,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         result.data.forEach(page => {
           pageData.value[page.slug] = { data: page.contentJson }
         })
-        console.log('所有頁面已載入:', result.data.map(p => p.slug))
+
+        syncHeaderTabsFromPageData(result.data)
+
         return result.data
       }
       throw new Error(result.message || '載入失敗')
@@ -182,8 +162,43 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   }
 
   /**
+   * POST /api/tenant/{tid}/web-site/temp-content
+   * 套用模板到編輯器，回傳所有頁面 JSON，直接塞進 store，不儲存，等 user 按儲存
+   */
+  const loadTemplateAsEditorData = async (tid, webTemplateId) => {
+    if (!tid || !webTemplateId) return false
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await axiosClient.post(`/tenant/${tid}/web-site/temp-content`, {
+        webTemplateId
+      })
+      const result = response.data
+
+      if (result.statusCode !== 200 || !Array.isArray(result.data)) {
+        throw new Error(result.message || '套用模板失敗')
+      }
+
+      result.data.forEach(page => {
+        pageData.value[page.slug] = { data: page.contentJson }
+      })
+
+      syncHeaderTabsFromPageData(result.data)
+      isTemplateMode.value = true
+
+      return result.data
+    } catch (err) {
+      error.value = err.message || '套用模板失敗'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
    * PATCH /api/tenant/{tid}/web-site/all-draft-page
-   * 一次儲存所有頁面的草稿內容
    */
   const saveAllPages = async (tid) => {
     if (!tid) {
@@ -195,8 +210,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     error.value = null
 
     try {
-      console.log('儲存所有頁面...')
-
       const allPageContentJson = Object.entries(pageData.value).map(([slug, val]) => ({
         slug,
         contentJson: validateAndFixContent(val.data)
@@ -210,30 +223,27 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       const jsonString = JSON.stringify(requestBody)
       const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2)
-      console.log('資料大小:', sizeInMB, 'MB')
 
       const maxSizeMB = 10
       if (jsonString.length > maxSizeMB * 1024 * 1024) {
         const errorMsg = `資料量太大 (${sizeInMB} MB)，超過限制 (${maxSizeMB} MB)。`
-        console.error(errorMsg)
         error.value = errorMsg
         alert(errorMsg)
         return false
       }
 
-      console.log('發送 PATCH /all-draft-page...')
       const response = await axiosClient.patch(`/tenant/${tid}/web-site/all-draft-page`, requestBody)
       const result = response.data
 
       if (result.statusCode === 200) {
-        console.log('所有頁面儲存成功！')
         clearPendingDeleteFileIds()
+        isTemplateMode.value = false
 
         if (Array.isArray(result.data)) {
           result.data.forEach(page => {
             pageData.value[page.slug] = { data: page.contentJson }
           })
-          console.log('編輯器資料已用 API 回傳更新')
+          syncHeaderTabsFromPageData(result.data)
         }
 
         clearSelection()
@@ -250,65 +260,36 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
-  /**
-   * 驗證和修正內容數據
-   */
   const validateAndFixContent = (basemaps) => {
-    if (!Array.isArray(basemaps)) {
-      console.error('basemaps 不是陣列')
-      return []
-    }
+    if (!Array.isArray(basemaps)) return []
 
     return basemaps.map((basemap) => {
-      if (!Array.isArray(basemap.frames)) {
-        basemap.frames = []
-      }
+      if (!Array.isArray(basemap.frames)) basemap.frames = []
 
       basemap.frames = basemap.frames.map((frame) => {
-        if (!frame.data) {
-          frame.data = {}
-        }
+        if (!frame.data) frame.data = {}
 
         if (frame.type === 'CAROUSEL_WALL') {
-          if (!Array.isArray(frame.data.caroiselWallImgs)) {
-            frame.data.caroiselWallImgs = []
-          }
+          if (!Array.isArray(frame.data.caroiselWallImgs)) frame.data.caroiselWallImgs = []
         }
-
         if (frame.type === 'INDEX_NEWS') {
-          if (!Array.isArray(frame.data.posts)) {
-            frame.data.posts = []
-          }
+          if (!Array.isArray(frame.data.posts)) frame.data.posts = []
         }
-
         if (frame.type === 'INDEX_EVENT') {
-          if (!Array.isArray(frame.data.events)) {
-            frame.data.events = []
-          }
+          if (!Array.isArray(frame.data.events)) frame.data.events = []
         }
-
         if (frame.type === 'INDEX_PRODUCT') {
-          if (!Array.isArray(frame.data.products)) {
-            frame.data.products = []
-          }
+          if (!Array.isArray(frame.data.products)) frame.data.products = []
         }
-
         if (frame.type === 'HEADER') {
-          if (!Array.isArray(frame.data.tabs)) {
-            frame.data.tabs = []
-          }
+          if (!Array.isArray(frame.data.tabs)) frame.data.tabs = []
         }
 
-        if (!Array.isArray(frame.elements)) {
-          frame.elements = []
-        }
+        if (!Array.isArray(frame.elements)) frame.elements = []
 
         frame.elements = frame.elements.map((element) => {
           if (!element) return null
-
-          if (!element.value) {
-            element.value = {}
-          }
+          if (!element.value) element.value = {}
 
           if (element.type === 'CAROUSEL_IMG') {
             if (!Array.isArray(element.value.imgs)) element.value.imgs = []
@@ -333,27 +314,17 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     tenantId.value = tid
   }
 
-  /**
-   * 初始化頁面
-   * 有資料就直接切，沒資料才打 fetchAllPages
-   */
   const initializePage = async (slug, locale = null) => {
-    if (!tenantId.value) {
-      console.error('缺少租戶 ID')
-      return
-    }
+    if (!tenantId.value) return
 
-    // 有資料且不是語言切換，直接切換 slug
     if (Object.keys(pageData.value).length > 0 && !locale) {
       currentPageSlug.value = slug
-
       if (!systemFrames.value[slug]) {
         await fetchSystemFrames(tenantId.value, slug)
       }
       return
     }
 
-    // 首次載入或語言切換：抓全部頁面
     const data = await fetchAllPages(tenantId.value, locale)
     if (data) {
       currentPageSlug.value = slug
@@ -361,9 +332,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
-  /**
-   * 切換頁面（不打 API，直接從已載入的資料切換）
-   */
   const switchPage = async (slug) => {
     clearSelection()
     currentPageSlug.value = slug
@@ -373,39 +341,20 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
-  /**
-   * 語言切換時重新載入所有頁面
-   */
   const reloadCurrentPage = async (newLocale) => {
-    if (!currentPageSlug.value) {
-      console.warn('沒有當前頁面')
-      return
-    }
-
-    console.log(`重新載入所有頁面 (${newLocale})`)
+    if (!currentPageSlug.value) return
 
     currentLocale.value = newLocale
     clearSelection()
-
-    // 清掉舊資料，強制重新抓
     pageData.value = {}
 
-    const data = await fetchAllPages(tenantId.value, newLocale)
-    if (data) {
-      syncHeaderMenuFromTabs()
-    }
-
-    console.log('所有頁面已重新載入')
+    await fetchAllPages(tenantId.value, newLocale)
   }
 
-  /**
-   * 切換頁面並確保資料已載入
-   */
   const switchPageWithLocale = async (slug, locale) => {
     clearSelection()
     currentPageSlug.value = slug
 
-    // 沒有資料才打 API
     if (Object.keys(pageData.value).length === 0) {
       await fetchAllPages(tenantId.value, locale)
     }
@@ -431,7 +380,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   const selectCell = (cellData) => {
     selected.value = { basemap: null, frame: null, element: null, cell: cellData }
-    console.log('Store: 選中格子', cellData)
   }
 
   const clearSelection = () => {
@@ -445,26 +393,13 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
 
     if (headerBasemap?.frames?.[0]) {
-      if (!headerBasemap.frames[0].data) {
-        headerBasemap.frames[0].data = {}
-      }
+      if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
       headerBasemap.frames[0].data.logoImgSrc = logoSrc
       headerBasemap.frames[0].data.logoImgId = logoId
     }
   }
 
-  const syncHeaderMenuFromTabs = () => {
-    const basemaps = currentPageBasemaps.value
-    const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
-
-    if (headerBasemap?.frames?.[0]) {
-      if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
-      headerBasemap.frames[0].data.tabs = headerTabs.value.map(tab => ({
-        name: tab.name,
-        slug: tab.slug
-      }))
-    }
-  }
+  const syncHeaderMenuFromTabs = () => {}
 
   // ==================== 儲存 ====================
 
@@ -478,10 +413,9 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     const basemaps = currentPageBasemaps.value
     const actualIndex = insertIndex + 1
     const maxSequence = basemaps.reduce((max, b) => Math.max(max, b.bgSequence || 0), 0)
-    const newSequence = maxSequence + 1
 
     const newBasemap = {
-      bgSequence: newSequence,
+      bgSequence: maxSequence + 1,
       bgPcImgSrc: null,
       bgPcImgId: null,
       bgTabletImgSrc: null,
@@ -496,23 +430,15 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
 
     basemaps.splice(actualIndex, 0, newBasemap)
-    console.log(`在索引 ${insertIndex} 之後新增底圖`)
   }
 
   const deleteBasemap = (index) => {
     const basemaps = currentPageBasemaps.value
 
-    if (index < 0 || index >= basemaps.length) {
-      console.error('無效的底圖索引')
-      return false
-    }
+    if (index < 0 || index >= basemaps.length) return false
 
     const basemap = basemaps[index]
-
-    if (!basemap.bgIsDeletable) {
-      console.error('此底圖不可刪除')
-      return false
-    }
+    if (!basemap.bgIsDeletable) return false
 
     markFileForDeletion(basemap.bgPcImgId)
     markFileForDeletion(basemap.bgTabletImgId)
@@ -525,7 +451,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   const moveBasemapUp = (index) => {
     const basemaps = currentPageBasemaps.value
-
     if (index <= 0 || index >= basemaps.length) return false
 
     const basemap = basemaps[index]
@@ -540,7 +465,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   const moveBasemapDown = (index) => {
     const basemaps = currentPageBasemaps.value
-
     if (index < 0 || index >= basemaps.length - 1) return false
 
     const basemap = basemaps[index]
@@ -567,6 +491,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     selected.value = { basemap: null, frame: null, element: null, cell: null }
     pendingDeleteFileIds.value = []
     websiteSettings.value = null
+    isTemplateMode.value = false
   }
 
   // ==================== 網站設定 ====================
@@ -589,8 +514,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         return result.data
       }
 
-      const errorMsg = result.message || '載入設定失敗'
-      error.value = errorMsg
+      error.value = result.message || '載入設定失敗'
       return null
     } catch (err) {
       error.value = err.message || '網路連線失敗'
@@ -614,9 +538,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const result = response.data
 
       if (result.statusCode === 200) {
-        if (result.data) {
-          websiteSettings.value = result.data
-        }
+        if (result.data) websiteSettings.value = result.data
         return true
       }
 
@@ -645,9 +567,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const response = await axiosClient.patch(`/tenant/${tid}/web-site/publish`, { locale })
       const result = response.data
 
-      if (result.statusCode === 200) {
-        return true
-      }
+      if (result.statusCode === 200) return true
 
       error.value = result.message || '發布失敗'
       return false
@@ -724,7 +644,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const result = response.data
 
       if (result.statusCode === 200) {
-        // 刪除後重新抓所有頁面
         pageData.value = {}
         await fetchAllPages(targetTid, currentLocale.value)
         isLoading.value = false
@@ -780,9 +699,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const result = response.data
 
       if (result.statusCode === 200) {
-        if (result.data) {
-          pageSeoData.value[seoData.slug] = result.data
-        }
+        if (result.data) pageSeoData.value[seoData.slug] = result.data
         return true
       }
 
@@ -813,7 +730,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     pendingDeleteFileIds,
     websiteSettings,
     pageSeoData,
-    fetchHeaderTabs,
+    isTemplateMode,
     fetchLocales,
     fetchSystemFrames,
     fetchAllPages,
@@ -845,5 +762,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     clearPendingDeleteFileIds,
     fetchPageSeo,
     updatePageSeo,
+    loadTemplateAsEditorData,
   }
 })

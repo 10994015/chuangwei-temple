@@ -19,7 +19,8 @@
           :title="t('navbarBasemap.deleteLogo')"
         >✕</button>
       </div>
-      <!--  桌機導航：device === 'desktop' 才顯示 -->
+
+      <!-- 桌機導航：device === 'desktop' 才顯示 -->
       <nav v-if="isDesktop" class="nav-menu">
         <a 
           v-for="tab in tabs" :key="tab.slug"
@@ -29,13 +30,13 @@
         >{{ tab.name }}</a>
       </nav>
 
-      <!--  桌機右側操作：device === 'desktop' 才顯示 -->
+      <!-- 桌機右側操作：device === 'desktop' 才顯示 -->
       <div v-if="isDesktop" class="nav-actions">
         <button class="cart-btn" :class="{ disabled: isEditMode }">🛒</button>
         <button class="login-btn" :class="{ disabled: isEditMode }">{{ t('navbarBasemap.login') }}</button>
       </div>
 
-      <!--  漢堡按鈕：非桌機才顯示 -->
+      <!-- 漢堡按鈕：非桌機才顯示 -->
       <button 
         v-if="!isDesktop"
         class="hamburger-btn"
@@ -49,7 +50,7 @@
       </button>
     </div>
 
-    <!--  行動版下拉選單：非桌機才掛載 -->
+    <!-- 行動版下拉選單：非桌機才掛載 -->
     <template v-if="!isDesktop">
       <transition name="mobile-menu">
         <div v-if="mobileMenuOpen" class="mobile-menu" @click.stop>
@@ -85,8 +86,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePageEditorStore } from '@/stores/pageEditor'
-const pageEditorStore = usePageEditorStore()
 
 const { t } = useI18n()
 
@@ -96,7 +95,6 @@ const props = defineProps({
   isLogoSelected:  { type: Boolean, default: false },
   currentPageSlug: { type: String,  default: null },
   frame:           { type: Object,  default: null },
-  //  接收裝置類型：'desktop' | 'tablet' | 'mobile'
   device:          { type: String,  default: 'desktop' }
 })
 
@@ -108,27 +106,22 @@ const isDesktop = computed(() => props.device === 'desktop')
 // ==================== 行動選單狀態 ====================
 const mobileMenuOpen = ref(false)
 
-const toggleMobileMenu  = () => { mobileMenuOpen.value = !mobileMenuOpen.value }
-const closeMobileMenu   = () => { mobileMenuOpen.value = false }
+const toggleMobileMenu = () => { mobileMenuOpen.value = !mobileMenuOpen.value }
+const closeMobileMenu  = () => { mobileMenuOpen.value = false }
 
 // ==================== Computed ====================
-//  兼容 logoImgUrl（編輯器存的）和 logoImgSrc（API 回傳的）
 const logoSrc = computed(() =>
-  props.frameData.logoImgSrc || props.frameData.logoImgSrc || null
+  props.frameData.logoImgSrc || null
 )
 
-//  兼容 temple_name（編輯器存的舊格式）和 tenantName（API 回傳）
 const tenantName = computed(() =>
   props.frameData.tenantName || props.frameData.temple_name || 'LOGO'
 )
 
-//  兼容 tab（編輯器存的）和 tabs（API 回傳的）
+// tabs 直接從頁面 JSON 的 frameData 取，不依賴 store 也不打 API
 const tabs = computed(() =>
-  pageEditorStore.headerTabs.length > 0
-    ? pageEditorStore.headerTabs.map(t => ({ name: t.name, slug: t.slug }))
-    : (props.frameData.tabs || props.frameData.tab || [])
+  props.frameData.tabs || props.frameData.tab || []
 )
-console.log('tabs:', props.frameData.tab, props.frameData.tabs)
 
 // ==================== 事件處理 ====================
 const handleSelectLogo = () => {
@@ -182,8 +175,8 @@ const handleMobileTabClick = (tab) => {
     transition: all 0.2s;
     padding: 4px;
     flex-shrink: 0;
-     &:not(.clickable) {
-      cursor: pointer;  // 預覽模式也可點
+    &:not(.clickable) {
+      cursor: pointer;
     }
     &.clickable {
       cursor: pointer;

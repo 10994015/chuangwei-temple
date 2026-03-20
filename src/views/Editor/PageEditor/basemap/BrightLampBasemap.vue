@@ -8,10 +8,14 @@
     <div class="scene">
       <img class="scene__bg" :src="bgSrc" alt="" aria-hidden="true" />
 
-      <!-- 左柱 -->
-      <img class="scene__pillar scene__pillar--left"  :src="pillarSrc" alt="" aria-hidden="true" />
-      <!-- 右柱 -->
-      <img class="scene__pillar scene__pillar--right" :src="pillarSrc" alt="" aria-hidden="true" />
+      <!-- 左後柱 -->
+      <img class="scene__pillar scene__pillar--left-back"  :src="pillarSrc" alt="" aria-hidden="true" />
+      <!-- 右後柱 -->
+      <img class="scene__pillar scene__pillar--right-back" :src="pillarSrc" alt="" aria-hidden="true" />
+      <!-- 左前柱 -->
+      <img class="scene__pillar scene__pillar--left-front"  :src="pillarSrc" alt="" aria-hidden="true" />
+      <!-- 右前柱 -->
+      <img class="scene__pillar scene__pillar--right-front" :src="pillarSrc" alt="" aria-hidden="true" />
 
       <!-- 主神像 -->
       <img class="scene__main" :src="mainSrc" alt="主神像" />
@@ -140,19 +144,13 @@ const displayLampTypes = computed(() =>
   ]
 )
 
-const bgSrc     = computed(() => props.bgImgSrc   || '/images/bright-light/bg.png')
-const mainSrc   = computed(() => props.mainImgSrc || '/images/bright-light/main.jpg')
+const bgSrc   = computed(() => props.bgImgSrc   || '/images/bright-light/bg.png')
+const mainSrc = computed(() => props.mainImgSrc || '/images/bright-light/main.jpg')
 
-// 邊框：後端目前只有 border，之後可擴充
-const BORDER_OPTIONS = {
-  border: '/images/bright-light/border.png',
-}
+const BORDER_OPTIONS = { border: '/images/bright-light/border.png' }
 const borderSrc = computed(() => BORDER_OPTIONS[props.borderOption] ?? BORDER_OPTIONS.border)
 
-// 柱子：後端目前只有 pillar，之後可擴充
-const PILLAR_OPTIONS = {
-  pillar: '/images/bright-light/pillar.png',
-}
+const PILLAR_OPTIONS = { pillar: '/images/bright-light/pillar.png' }
 const pillarSrc = computed(() => PILLAR_OPTIONS[props.pillarOption] ?? PILLAR_OPTIONS.pillar)
 
 const emit = defineEmits([])
@@ -163,7 +161,6 @@ const searchName       = ref('')
 const searchPhone      = ref('')
 const searchLampNo     = ref('')
 
-// 頁面切換狀態
 const showDetail = ref(false)
 
 const selectedLampTypeLabel = computed(() => {
@@ -175,19 +172,15 @@ const handleSearch = () => {
   showDetail.value = true
 }
 
-const handleDetailSearch = () => {
-  // 預覽模式，不打 API，保持假資料顯示
-}
+const handleDetailSearch = () => {}
 </script>
 
 <style lang="scss" scoped>
 
-/* ==================== 外層包裝 ==================== */
 .bright-lamp-wrapper {
   width: 100%;
 }
 
-/* ==================== 整體區塊 ==================== */
 .bright-lamp-section {
   position: relative;
   width: 100%;
@@ -216,22 +209,48 @@ const handleDetailSearch = () => {
   display: block;
 }
 
-/* 燈柱：絕對定位，左右對稱，與主神像並排 */
+/* ==================== 燈柱共用基礎 ==================== */
 .scene__pillar {
   position: absolute;
   top: 0;
-  height: 100%;
   width: auto;
-  max-width: 12%;
   object-fit: contain;
   object-position: bottom;
-  filter: drop-shadow(0 0 24px rgba(255, 180, 0, 0.4));
-
-  &--left  { left: 22%; }
-  &--right { right: 22%; transform: scaleX(-1); }
 }
 
-/* 主神像：置中，從頂部向下延伸 */
+/*
+  後方兩根：較小、較暗、輕微模糊，製造景深感
+  z-index 低於前方柱子，但高於背景
+*/
+.scene__pillar--left-back,
+.scene__pillar--right-back {
+  height: 88%;
+  max-width: 9%;
+  opacity: 0.75;
+  filter: brightness(0.7) blur(1px) drop-shadow(0 0 12px rgba(255, 160, 0, 0.25));
+  z-index: 1;
+}
+
+.scene__pillar--left-back  { left: 16%; }
+.scene__pillar--right-back { right: 16%; transform: scaleX(-1); }
+
+/*
+  前方兩根：較大、正常亮度清晰，帶明顯光暈
+  z-index 高於後方柱子
+*/
+.scene__pillar--left-front,
+.scene__pillar--right-front {
+  height: 100%;
+  max-width: 11%;
+  opacity: 1;
+  filter: drop-shadow(0 0 28px rgba(255, 180, 0, 0.5));
+  z-index: 2;
+}
+
+.scene__pillar--left-front  { left: 6%; }
+.scene__pillar--right-front { right: 6%; transform: scaleX(-1); }
+
+/* 主神像：z-index 介於前後柱之間，讓前方柱子在神像前面 */
 .scene__main {
   position: absolute;
   top: 0;
@@ -243,6 +262,7 @@ const handleDetailSearch = () => {
   object-fit: contain;
   object-position: top center;
   display: block;
+  z-index: 1;
 }
 
 /* ==================== 搜尋面板 ==================== */
@@ -259,12 +279,8 @@ const handleDetailSearch = () => {
   z-index: 10;
 }
 
-.panel {
-  position: relative;
-  width: 100%;
-}
+.panel { position: relative; width: 100%; }
 
-/* border.png 當裝飾框，完全覆蓋面板區域 */
 .panel__border {
   position: absolute;
   inset: -10px -16px;
@@ -287,15 +303,9 @@ const handleDetailSearch = () => {
 }
 
 /* ==================== 下拉列 ==================== */
-.panel__selects {
-  display: flex;
-  gap: 12px;
-}
+.panel__selects { display: flex; gap: 12px; }
 
-.select-wrapper {
-  position: relative;
-  flex: 1;
-}
+.select-wrapper { position: relative; flex: 1; }
 
 .panel__select {
   width: 100%;
@@ -324,29 +334,13 @@ const handleDetailSearch = () => {
 }
 
 /* ==================== 欄位切換容器 ==================== */
-.panel__fields-wrap {
-  min-height: 148px; /* 姓名 + 電話兩欄的高度：兩個 field-group(各約 64px) + gap 16px + label 高度 */
-}
+.panel__fields-wrap { min-height: 148px; }
 
-.panel__fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+.panel__fields { display: flex; flex-direction: column; gap: 16px; }
 
-/* ==================== 欄位 ==================== */
+.field-group { display: flex; flex-direction: column; gap: 6px; }
 
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #555;
-}
+.field-label { font-size: 13px; font-weight: 500; color: #555; }
 
 .panel__input {
   width: 100%;
@@ -364,11 +358,9 @@ const handleDetailSearch = () => {
   &::placeholder { color: #bbb; }
 }
 
-/* 電話欄位：input + 搜尋按鈕並排 */
 .input-with-btn {
   display: flex;
   gap: 8px;
-
   .panel__input { flex: 1; }
 }
 
@@ -384,7 +376,7 @@ const handleDetailSearch = () => {
   white-space: nowrap;
   transition: background 0.2s;
 
-  &:hover { background: #5e4525; }
+  &:hover  { background: #5e4525; }
   &:active { background: #4a3318; }
 }
 
@@ -394,19 +386,23 @@ const handleDetailSearch = () => {
 
   .scene { min-height: 560px; }
 
-  .scene__pillar {
+  .scene__pillar--left-back,
+  .scene__pillar--right-back {
+    max-width: 7%;
+  }
+  .scene__pillar--left-back   { left: 12%; }
+  .scene__pillar--right-back  { right: 12%; }
+
+  .scene__pillar--left-front,
+  .scene__pillar--right-front {
     max-width: 9%;
-    &--left  { left: 12%; }
-    &--right { right: 12%; }
   }
+  .scene__pillar--left-front  { left: 3%; }
+  .scene__pillar--right-front { right: 3%; }
 
-  .scene__main {
-    max-width: 42%;
-    height: 78%;
-  }
+  .scene__main { max-width: 42%; height: 78%; }
 
-  .panel-wrap { max-width: 460px; }
-
+  .panel-wrap  { max-width: 460px; }
   .panel__body { padding: 20px 24px 24px; }
 }
 
@@ -421,9 +417,19 @@ const handleDetailSearch = () => {
     flex-shrink: 0;
   }
 
-  .scene__pillar {
+  /* 手機版空間有限，只顯示前方兩根柱子，後方隱藏 */
+  .scene__pillar--left-back,
+  .scene__pillar--right-back {
     display: none;
   }
+
+  .scene__pillar--left-front,
+  .scene__pillar--right-front {
+    max-width: 14%;
+    height: 90%;
+  }
+  .scene__pillar--left-front  { left: 0%; }
+  .scene__pillar--right-front { right: 0%; }
 
   .scene__main {
     height: 100%;
@@ -441,9 +447,7 @@ const handleDetailSearch = () => {
     width: 100%;
   }
 
-  .panel__border {
-    display: none;
-  }
+  .panel__border { display: none; }
 
   .panel__body {
     padding: 20px 16px 24px;
