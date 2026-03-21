@@ -9,44 +9,48 @@
       }
     </component>
 
-    <EditorToolbar
-      :current-locale="pageEditorStore.currentLocale"
-      :locales="pageEditorStore.locales"
-      :has-unsaved-changes="hasUnsavedChanges"
-      @locale-change="handleLocaleChange"
-      @settings="handleSettings"
-      @select-template="handleSelectTemplate"
-      @upgrade="handleUpgrade"
-      @preview="handlePreview"
-      @save="handleSave"
-      @delete="handleDelete"
-      @go-to-website="handleGoToWebsite"
-      @publish="handlePublish"
-    />
+    <template v-if="!isPreviewRoute">
+      <EditorToolbar
+        :current-locale="pageEditorStore.currentLocale"
+        :locales="pageEditorStore.locales"
+        :has-unsaved-changes="hasUnsavedChanges"
+        @locale-change="handleLocaleChange"
+        @settings="handleSettings"
+        @select-template="handleSelectTemplate"
+        @upgrade="handleUpgrade"
+        @preview="handlePreview"
+        @save="handleSave"
+        @delete="handleDelete"
+        @go-to-website="handleGoToWebsite"
+        @publish="handlePublish"
+      />
 
-    <div v-if="pageEditorStore.isLoading" class="loading-overlay">
-      <div class="loading-spinner">載入中...</div>
-    </div>
+      <div v-if="pageEditorStore.isLoading" class="loading-overlay">
+        <div class="loading-spinner">載入中...</div>
+      </div>
 
-    <div v-if="pageEditorStore.error" class="error-banner">
-      <span>⚠️ {{ pageEditorStore.error }}</span>
-      <button @click="pageEditorStore.error = null" class="close-btn">✕</button>
-    </div>
+      <div v-if="pageEditorStore.error" class="error-banner">
+        <span>⚠️ {{ pageEditorStore.error }}</span>
+        <button @click="pageEditorStore.error = null" class="close-btn">✕</button>
+      </div>
+    </template>
 
     <div class="page-content">
       <router-view />
     </div>
 
-    <PublishDialog
-      ref="publishDialogRef"
-      :is-visible="showPublishDialog"
-      :current-locale="pageEditorStore.currentLocale"
-      :current-page-slug="pageEditorStore.currentPageSlug"
-      :locales="pageEditorStore.locales"
-      :has-unsaved-changes="hasUnsavedChanges"
-      @confirm="handleConfirmPublish"
-      @cancel="handleCancelPublish"
-    />
+    <template v-if="!isPreviewRoute">
+      <PublishDialog
+        ref="publishDialogRef"
+        :is-visible="showPublishDialog"
+        :current-locale="pageEditorStore.currentLocale"
+        :current-page-slug="pageEditorStore.currentPageSlug"
+        :locales="pageEditorStore.locales"
+        :has-unsaved-changes="hasUnsavedChanges"
+        @confirm="handleConfirmPublish"
+        @cancel="handleCancelPublish"
+      />
+    </template>
   </div>
 </template>
 
@@ -68,6 +72,8 @@ const pageEditorStore = usePageEditorStore()
 const showPublishDialog = ref(false)
 const publishDialogRef = ref(null)
 const hasUnsavedChanges = ref(false)
+
+const isPreviewRoute = computed(() => route.name === 'app.temple.preview')
 
 const isTemplatePreviewMode = computed(() =>
   route.name === 'app.temple.preview' && !!route.query.templateId
@@ -137,6 +143,7 @@ provide('pageEditorStore', pageEditorStore)
 watch(
   () => pageEditorStore.currentPageBasemaps,
   () => {
+    if (isPreviewRoute.value) return
     if (isTemplatePreviewMode.value) return
     hasUnsavedChanges.value = true
   },
@@ -146,7 +153,7 @@ watch(
 const getTempleId = () => route.params.templeId
 
 onMounted(async () => {
-  if (isTemplatePreviewMode.value) return
+  if (isPreviewRoute.value) return
 
   const templeId = getTempleId()
 
@@ -172,8 +179,9 @@ onMounted(async () => {
     await pageEditorStore.fetchLocales(templeId)
 
     const templateId = route.query.templateId
+    const BLANK_TEMPLATE_ID = 'blank-template'
 
-    if (templateId) {
+    if (templateId && templateId !== BLANK_TEMPLATE_ID) {
       // 從模板選擇頁過來：打 POST temp-content 取得模板 JSON，塞進 store
       const data = await pageEditorStore.loadTemplateAsEditorData(templeId, templateId)
 
@@ -273,7 +281,7 @@ const handlePreview = () => {
     const resolved = router.resolve({
       name: 'app.temple.preview',
       params: { templeId },
-      query: { slug, locale: loc }
+      query: { slug, locale: loc, source: 'cms' }
     })
     window.open(resolved.href, '_blank')
   } else {

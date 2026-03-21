@@ -1,34 +1,31 @@
 <template>
   <div class="preview-page">
+
+    <!-- 統一深色 toolbar，CMS 預覽無「選擇樣式」按鈕，模板選擇預覽有 -->
     <header class="preview-toolbar">
       <div class="toolbar-left">
-        <span v-if="isTemplatePreviewMode" class="template-preview-label">
-          模板預覽
-        </span>
+        <button class="btn-close" @click="handleClose">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          返回
+        </button>
       </div>
-
       <div class="toolbar-center">
         <div class="device-switcher">
           <button class="device-btn" :class="{ active: currentDevice === 'desktop' }" @click="setDevice('desktop')" title="電腦版 (1280px)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <span>電腦版</span>
           </button>
           <button class="device-btn" :class="{ active: currentDevice === 'tablet' }" @click="setDevice('tablet')" title="平板 (768px)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-            <span>平板</span>
           </button>
           <button class="device-btn" :class="{ active: currentDevice === 'mobile' }" @click="setDevice('mobile')" title="手機版 (390px)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-            <span>手機版</span>
           </button>
         </div>
-        <span class="device-width-label">{{ deviceWidthLabel }}</span>
       </div>
-
       <div class="toolbar-right">
-        <button class="btn btn-icon" @click="handleRefresh">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          重新載入
+        <button v-if="isTemplateSelectionPreview" class="btn-select-style" @click="handleSelectStyle" :disabled="isApplying">
+          <span v-if="isApplying">套用中...</span>
+          <span v-else>選擇樣式 →</span>
         </button>
       </div>
     </header>
@@ -115,11 +112,19 @@ const pageEditorStore = inject('pageEditorStore', null)
 
 const isLoading = ref(false)
 const error = ref(null)
+const isApplying = ref(false)
 
 const pages = ref([])
 const currentSlug = ref('')
 
-const isTemplatePreviewMode = computed(() => !!route.query.templateId)
+// ==================== 來源判斷 ====================
+const source = computed(() => route.query.source)
+const templateId = computed(() => route.query.templateId)
+
+const isTemplateSelectionPreview = computed(() => source.value === 'template-selection' && !!templateId.value)
+
+// 保留原本的 isTemplatePreviewMode，供 locale watch 使用
+const isTemplatePreviewMode = computed(() => !!templateId.value)
 
 const currentPageBasemaps = computed(() => {
   const page = pages.value.find(p => p.slug === currentSlug.value)
@@ -163,7 +168,6 @@ const deviceConfig = {
   mobile:  { width: 390,  label: '390px'  }
 }
 
-const deviceWidthLabel = computed(() => deviceConfig[currentDevice.value].label)
 const setDevice = (device) => { currentDevice.value = device }
 
 const previewContentStyle = computed(() => {
@@ -207,8 +211,8 @@ const fetchAllDraftPages = async (tid, locale) => {
   throw new Error(result.message || '載入失敗')
 }
 
-const fetchTemplatePages = async (tid, templateId) => {
-  const response = await axiosClient.get(`/tenant/${tid}/web-template/${templateId}/all-page`)
+const fetchTemplatePages = async (tid, tplId) => {
+  const response = await axiosClient.get(`/tenant/${tid}/web-template/${tplId}/all-page`)
   const result = response.data
   if (result.statusCode === 200 && result.data) return result.data
   throw new Error(result.message || '載入模板失敗')
@@ -253,6 +257,61 @@ const loadPreviewData = async () => {
   }
 }
 
+// ==================== 關閉視窗 ====================
+const handleClose = () => {
+  window.close()
+}
+
+// ==================== 選擇樣式 ====================
+const handleSelectStyle = async () => {
+  const tid = getTempleId()
+  const tplId = getTemplateId()
+
+  if (!tid || !tplId) return
+
+  isApplying.value = true
+
+  try {
+    const existRes = await axiosClient.get(`/tenant/${tid}/web-site/exist`)
+    const existResult = existRes.data
+
+    const websiteExists = existResult.statusCode === 200 && existResult.data?.result === true
+
+    if (!websiteExists) {
+      // 尚未建立網站，跳到子網域設定頁
+      const resolved = router.resolve({
+        name: 'app.temple.subdomain-setup',
+        params: { templeId: tid, templateId: tplId }
+      })
+      window.location.href = resolved.href
+      return
+    }
+
+    // 已建立網站，打 POST 套用模板後跳編輯器
+    const applyRes = await axiosClient.post(`/tenant/${tid}/web-site/temp-content`, {
+      webTemplateId: tplId
+    })
+    const applyResult = applyRes.data
+
+    if (applyResult.statusCode !== 200) {
+      throw new Error(applyResult.message || '套用模板失敗')
+    }
+
+    // 用 window.location.href 強制整頁跳轉，確保 EditorLayout 重新初始化
+    const resolved = router.resolve({
+      name: 'app.temple.page-editor',
+      params: { templeId: tid },
+      query: { templateId: tplId }
+    })
+    window.location.href = resolved.href
+  } catch (err) {
+    console.error('選擇樣式失敗:', err)
+    alert('操作失敗，請稍後再試')
+  } finally {
+    isApplying.value = false
+  }
+}
+
 const handleChangePage = (slug) => {
   const page = pages.value.find(p => p.slug === slug)
   if (page) {
@@ -263,8 +322,6 @@ const handleChangePage = (slug) => {
     }
   }
 }
-
-const handleRefresh = () => loadPreviewData()
 
 const isSystemFrame = (frame) => {
   if (!frame || !frame.type) return false
@@ -298,24 +355,62 @@ onMounted(() => loadPreviewData())
 <style scoped>
 .preview-page { display: flex; flex-direction: column; height: 100vh; max-width:1920px; margin:0 auto; width: 100vw; background: #f0f0f0; overflow: hidden; }
 
-.preview-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 0 24px; height: 60px; background: #fff; border-bottom: 1px solid #e5e5e5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 100; flex-shrink: 0; }
+/* ==================== 深色 toolbar ==================== */
+.preview-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 52px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #2e2e2e;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
 .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 12px; flex: 1; }
 .toolbar-center { display: flex; align-items: center; gap: 16px; flex: 1; justify-content: center; }
 .toolbar-right { justify-content: flex-end; }
 
-.template-preview-label { font-size: 13px; font-weight: 600; color: #d97444; background: #fff7f3; border: 1px solid #f5d0b8; padding: 4px 12px; border-radius: 20px; }
+.btn-close {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-close:hover { background: #2a2a2a; border-color: #555; color: #fff; }
 
-.device-switcher { display: flex; align-items: center; background: #f5f5f5; border-radius: 10px; padding: 4px; gap: 2px; border: 1px solid #e8e8e8; }
-.device-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; border-radius: 7px; background: transparent; color: #888; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s ease; white-space: nowrap; }
-.device-btn:hover { color: #444; background: rgba(255,255,255,0.7); }
-.device-btn.active { background: #fff; color: #E8572A; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-.device-btn.active svg { stroke: #E8572A; }
+.device-switcher { display: flex; align-items: center; background: #2a2a2a; border-radius: 10px; padding: 4px; gap: 2px; border: 1px solid #3a3a3a; }
+.device-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border: none; border-radius: 7px; background: transparent; color: #888; cursor: pointer; transition: all 0.18s ease; }
+.device-btn:hover { color: #ccc; background: rgba(255,255,255,0.08); }
+.device-btn.active { background: #3a3a3a; color: #4ade80; box-shadow: none; }
+.device-btn.active svg { stroke: #4ade80; }
 .device-btn svg { flex-shrink: 0; transition: stroke 0.18s; }
-.device-width-label { font-size: 12px; color: #aaa; font-variant-numeric: tabular-nums; min-width: 48px; }
 
-.btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s; color: #555; }
-.btn:hover { background: #f5f5f5; border-color: #bbb; color: #333; }
+.btn-select-style {
+  padding: 8px 20px;
+  background: #4ade80;
+  color: #111;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-select-style:hover:not(:disabled) { background: #22c55e; }
+.btn-select-style:disabled { background: #2a2a2a; color: #666; cursor: not-allowed; }
 
+/* ==================== Loading / Error ==================== */
 .loading-overlay, .error-container { flex: 1; display: flex; align-items: center; justify-content: center; background: #f0f0f0; }
 .loading-spinner { background: #fff; padding: 24px 48px; border-radius: 8px; font-size: 16px; font-weight: 500; color: #333; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .error-message { text-align: center; padding: 40px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; }
@@ -324,6 +419,7 @@ onMounted(() => loadPreviewData())
 .btn-retry { padding: 10px 24px; background: #E8572A; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
 .btn-retry:hover { background: #d14a1f; }
 
+/* ==================== Preview Area ==================== */
 .preview-area { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px 24px 40px; background: #e8e8e8; background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px); background-size: 20px 20px; }
 .preview-area.device-desktop { align-items: stretch; padding: 0; background: #fff; background-image: none; }
 .preview-area.device-desktop .device-frame { width: 100%; height: 100%; border-radius: 0; box-shadow: none; border: none; background: #fff; }
@@ -350,6 +446,7 @@ onMounted(() => loadPreviewData())
 .basemap-section :deep(.system-frame-preview),
 .basemap-section :deep(.custom-frame-preview) { background: transparent !important; }
 
+/* ==================== Scroll to top ==================== */
 .scroll-top-btn { position: sticky; bottom: 32px; margin-left: auto; display: flex; align-items: center; justify-content: center; margin-top: -56px; margin-right: 32px; z-index: 200; width: 44px; height: 44px; border-radius: 50%; border: none; background: #E8572A; color: #fff; cursor: pointer; box-shadow: 0 4px 16px rgba(232, 87, 42, 0.45); transition: background 0.2s, transform 0.2s, box-shadow 0.2s; }
 .scroll-top-btn--mobile, .scroll-top-btn--tablet { width: 36px; height: 36px; bottom: 20px; margin-right: 12px; margin-top: -50px; }
 .scroll-top-btn svg { width: 20px; height: 20px; pointer-events: none; }

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTemplateStore } from '@/stores/template'
+import axiosClient from '@/axios'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,22 +18,40 @@ const handlePreview = (templateId) => {
   const resolved = router.resolve({
     name: 'app.temple.preview',
     params: { templeId: currentTempleId.value },
-    query: { templateId }
+    query: { templateId, source: 'template-selection' }
   })
   window.open(resolved.href, '_blank')
 }
 
 // 按「選擇」直接跳到 page-editor，帶 templateId 讓 EditorLayout 初始化時套用模板
-const handleApplyTemplate = (templateId) => {
+const handleApplyTemplate = async (templateId) => {
   if (!currentTempleId.value) {
     alert('無法獲取宮廟資訊')
     return
   }
-  router.push({
-    name: 'app.temple.page-editor',
-    params: { templeId: currentTempleId.value },
-    query: { templateId }
-  })
+
+  try {
+    const res = await axiosClient.get(`/tenant/${currentTempleId.value}/web-site/exist`)
+    const websiteExists = res.data?.statusCode === 200 && res.data?.data?.result === true
+
+    if (!websiteExists) {
+      // 尚未建立網站，先設定子網域
+      router.push({
+        name: 'app.temple.subdomain-setup',
+        params: { templeId: currentTempleId.value, templateId }
+      })
+    } else {
+      // 已建立網站，直接進編輯器套用模板
+      router.push({
+        name: 'app.temple.page-editor',
+        params: { templeId: currentTempleId.value },
+        query: { templateId }
+      })
+    }
+  } catch (err) {
+    console.error('檢查網站狀態失敗:', err)
+    alert('操作失敗，請稍後再試')
+  }
 }
 
 const websiteTypes = computed(() => {
@@ -115,6 +134,12 @@ const handleNext = async () => {
     }
 
     currentStep.value = 2
+
+    // 預設選取第一個分類
+    const firstCategory = templateStore.formattedSubCategories?.[0]
+    if (firstCategory) {
+      await selectCategory(firstCategory.id)
+    }
   } else if (currentStep.value === 2) {
     if (!selectedTemplate.value) {
       alert('請先選擇一個模板')
@@ -141,6 +166,12 @@ onMounted(async () => {
     <!-- 步驟一：選擇網站類型 -->
     <template v-else-if="currentStep === 1">
       <aside class="sidebar">
+        <div class="sidebar-back">
+          <button class="btn-back" @click="router.back()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            返回
+          </button>
+        </div>
         <div class="sidebar-header">
           <h2 class="sidebar-title">選擇網站類型</h2>
           <p class="sidebar-subtitle">
@@ -233,6 +264,12 @@ onMounted(async () => {
     <!-- 步驟二：選擇網站風格 -->
     <template v-else-if="currentStep === 2">
       <aside class="sidebar">
+        <div class="sidebar-back">
+          <button class="btn-back" @click="router.back()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            返回
+          </button>
+        </div>
         <div class="sidebar-header">
           <h2 class="sidebar-title">選擇網站風格</h2>
           <p class="sidebar-subtitle">
@@ -380,6 +417,33 @@ onMounted(async () => {
   text-align: center;
   color: #9ca3af;
   p { margin: 0; font-size: 14px; }
+}
+
+// ========== 返回按鈕 ==========
+.sidebar-back {
+  padding: 16px 16px 0;
+  flex-shrink: 0;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #374151;
+  }
 }
 
 // ========== 左側選單 ==========
