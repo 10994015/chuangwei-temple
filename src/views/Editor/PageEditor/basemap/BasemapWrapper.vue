@@ -324,16 +324,6 @@ const uploadImage = (type) => {
       return
     }
 
-    // 標記舊圖片 ID 待刪除
-    if (props.basemap) {
-      const oldIdMap = {
-        desktop: props.basemap.bgPcImgId,
-        tablet:  props.basemap.bgTabletImgId,
-        mobile:  props.basemap.bgPhoneImgId,
-      }
-      pageEditorStore.markFileForDeletion(oldIdMap[type])
-    }
-
     uploadingState.value[type] = true
 
     try {
@@ -348,8 +338,6 @@ const uploadImage = (type) => {
 
       // ✅ 核心規則：上傳平板或手機時，若桌機目前是空的，自動同步到桌機
       if (type !== 'desktop' && !backgrounds.value.desktop) {
-        // 同一個檔案已上傳，直接把相同的 url/id 也寫入桌機，不需重複上傳
-        pageEditorStore.markFileForDeletion(null) // 桌機本來就空，不需標記刪除
         applyUploadToBasemap('desktop', uploadedFile)
         console.log(`✓ 桌機版自動同步為 ${type} 版圖片`)
       }
@@ -380,19 +368,16 @@ const clearBackground = (type) => {
 
   switch (type) {
     case 'desktop':
-      pageEditorStore.markFileForDeletion(props.basemap.bgPcImgId)
       props.basemap.bgPcImgSrc = null
       props.basemap.bgPcImgId  = null
       backgrounds.value.desktop = null
       break
     case 'tablet':
-      pageEditorStore.markFileForDeletion(props.basemap.bgTabletImgId)
       props.basemap.bgTabletImgSrc = null
       props.basemap.bgTabletImgId  = null
       backgrounds.value.tablet = null
       break
     case 'mobile':
-      pageEditorStore.markFileForDeletion(props.basemap.bgPhoneImgId)
       props.basemap.bgPhoneImgSrc = null
       props.basemap.bgPhoneImgId  = null
       backgrounds.value.mobile = null

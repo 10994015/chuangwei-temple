@@ -24,7 +24,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     cell: null
   })
 
-  const pendingDeleteFileIds = ref([])
   const websiteSettings = ref(null)
   const pageSeoData = ref({})
 
@@ -40,19 +39,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   const currentPageSystemFrames = computed(() => {
     return systemFrames.value[currentPageSlug.value] || []
   })
-
-  // ==================== 檔案刪除追蹤 ====================
-
-  const markFileForDeletion = (fileId) => {
-    if (!fileId) return
-    if (!pendingDeleteFileIds.value.includes(fileId)) {
-      pendingDeleteFileIds.value.push(fileId)
-    }
-  }
-
-  const clearPendingDeleteFileIds = () => {
-    pendingDeleteFileIds.value = []
-  }
 
   // ==================== 從頁面資料同步 headerTabs ====================
 
@@ -217,7 +203,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       const requestBody = {
         locale: currentLocale.value,
-        deleteFileIds: [...pendingDeleteFileIds.value],
         allPageContentJson
       }
 
@@ -236,7 +221,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const result = response.data
 
       if (result.statusCode === 200) {
-        clearPendingDeleteFileIds()
         isTemplateMode.value = false
 
         if (Array.isArray(result.data)) {
@@ -440,10 +424,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     const basemap = basemaps[index]
     if (!basemap.bgIsDeletable) return false
 
-    markFileForDeletion(basemap.bgPcImgId)
-    markFileForDeletion(basemap.bgTabletImgId)
-    markFileForDeletion(basemap.bgPhoneImgId)
-
     basemaps.splice(index, 1)
     clearSelection()
     return true
@@ -489,7 +469,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     systemFrames.value = {}
     locales.value = []
     selected.value = { basemap: null, frame: null, element: null, cell: null }
-    pendingDeleteFileIds.value = []
     websiteSettings.value = null
     isTemplateMode.value = false
   }
@@ -727,7 +706,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     currentPageSystemFrames,
     locales,
     currentLocale,
-    pendingDeleteFileIds,
     websiteSettings,
     pageSeoData,
     isTemplateMode,
@@ -758,8 +736,6 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     publishWebsite,
     uploadImage,
     deleteDraft,
-    markFileForDeletion,
-    clearPendingDeleteFileIds,
     fetchPageSeo,
     updatePageSeo,
     loadTemplateAsEditorData,

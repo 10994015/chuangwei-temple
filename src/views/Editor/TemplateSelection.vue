@@ -1,8 +1,7 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTemplateStore } from '@/stores/template'
-import axiosClient from '@/axios'
 
 const router = useRouter()
 const route = useRoute()
@@ -31,17 +30,14 @@ const handleApplyTemplate = async (templateId) => {
   }
 
   try {
-    const res = await axiosClient.get(`/tenant/${currentTempleId.value}/web-site/exist`)
-    const websiteExists = res.data?.statusCode === 200 && res.data?.data?.result === true
+    const websiteExists = await templateStore.checkWebsiteExists(currentTempleId.value)
 
     if (!websiteExists) {
-      // 尚未建立網站，先設定子網域
       router.push({
         name: 'app.temple.subdomain-setup',
         params: { templeId: currentTempleId.value, templateId }
       })
     } else {
-      // 已建立網站，直接進編輯器套用模板
       router.push({
         name: 'app.temple.page-editor',
         params: { templeId: currentTempleId.value },
@@ -82,6 +78,10 @@ const currentTemplates = computed(() => {
     template => template.categoryId === selectedCategory.value
   )
 })
+
+watch(currentTemplates, (templates) => {
+  console.log('currentTemplates 更新:', templates)
+}, { immediate: true })
 
 const selectCategory = async (categoryId) => {
   selectedCategory.value = categoryId
@@ -351,9 +351,15 @@ onMounted(async () => {
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                 </svg>
               </div>
+               <div v-if="template.level === 'PLUS'" class="card-level-badge card-level-badge--plus">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z"/></svg>
+              </div>
+              <div v-else-if="template.level === 'PRO'" class="card-level-badge card-level-badge--pro">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z"/></svg>
+              </div>
             </div>
             <div class="card-info">
-              <p class="card-name">{{ template.name }}</p>
+              <p class="card-name">{{ template.createdByName }}</p>
               <p class="card-id">{{ template.id }}</p>
             </div>
           </div>
@@ -782,6 +788,29 @@ onMounted(async () => {
     background: #d97444;
     color: #ffffff;
     &:hover { background: #c45e30; }
+  }
+}
+
+.card-level-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+
+  &--plus {
+    background: linear-gradient(135deg, #9e9e9e, #d4d4d4);
+    color: #fff;
+  }
+
+  &--pro {
+    background: linear-gradient(135deg, #c8860a, #f5c842);
+    color: #fff;
   }
 }
 

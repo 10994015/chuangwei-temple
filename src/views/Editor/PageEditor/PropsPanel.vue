@@ -1356,7 +1356,6 @@ const handleUploadLogo = async () => {
     if (!file) return
     try {
       isUploadingLogo.value = true
-      pageEditorStore.markFileForDeletion(props.selectedElement?.frame?.data?.logoImgId)
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('Logo 上傳失敗，請稍後再試'); return }
       localLogoSrc.value = uploadedFile.fileUrl
@@ -1386,7 +1385,6 @@ const handleUploadImage = async () => {
     if (!file) return
     try {
       isUploadingImage.value = true
-      pageEditorStore.markFileForDeletion(props.selectedElement?.element?.value?.id)
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('圖片上傳失敗，請稍後再試'); return }
       if (props.selectedElement?.element?.value) {
@@ -1436,7 +1434,6 @@ const removeCarouselImage = (index) => {
   const imgs = props.selectedElement?.element?.value?.imgs
   if (!imgs) return
   const removedImg = imgs[index]
-  if (removedImg?.id) pageEditorStore.markFileForDeletion(removedImg.id)
   imgs.splice(index, 1)
   carouselImages.value = [...imgs]
 }
@@ -1483,7 +1480,6 @@ const handleUploadHeroBackground = async () => {
     if (!file) return
     try {
       isUploadingHeroBackground.value = true
-      pageEditorStore.markFileForDeletion(props.selectedFrame?.data?.heroBgImgId)
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('首圖背景上傳失敗，請稍後再試'); return }
       if (props.selectedFrame?.data) {
@@ -1509,7 +1505,6 @@ const handleUploadBrightLampBg = async () => {
     if (!file) return
     try {
       isUploadingBrightLampBg.value = true
-      pageEditorStore.markFileForDeletion(props.selectedFrame?.data?.bgImgId)
       const uploaded = await pageEditorStore.uploadImage(file)
       if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
       if (props.selectedFrame?.data) {
@@ -1535,7 +1530,6 @@ const handleUploadBrightLampMain = async () => {
     if (!file) return
     try {
       isUploadingBrightLampMain.value = true
-      pageEditorStore.markFileForDeletion(props.selectedFrame?.data?.mainImgId)
       const uploaded = await pageEditorStore.uploadImage(file)
       if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
       if (props.selectedFrame?.data) {
@@ -1604,7 +1598,6 @@ const removeCarouselWallImage = (index) => {
   const imgs = props.selectedFrame?.data?.caroiselWallImgs
   if (!imgs) return
   const removedImg = imgs[index]
-  if (removedImg?.id) pageEditorStore.markFileForDeletion(removedImg.id)
   imgs.splice(index, 1)
 }
 

@@ -182,10 +182,25 @@
           </button>
         </div>
 
-        <!-- SEO 載入中 -->
-        <div v-if="isSeoLoading" class="seo-loading">
-          <div class="spinner spinner-sm"></div>
-          <span>載入 SEO 資料中...</span>
+        <!-- SEO 骨架屏（loading 中） -->
+        <div v-if="isSeoLoading" class="seo-skeleton">
+          <div class="skeleton-group">
+            <div class="skeleton skeleton-label"></div>
+            <div class="skeleton skeleton-input"></div>
+            <div class="skeleton skeleton-hint"></div>
+          </div>
+          <div class="skeleton-group">
+            <div class="skeleton skeleton-label"></div>
+            <div class="skeleton skeleton-textarea"></div>
+            <div class="skeleton skeleton-hint"></div>
+          </div>
+          <div class="skeleton-group">
+            <div class="skeleton skeleton-label"></div>
+            <div class="skeleton skeleton-input"></div>
+          </div>
+          <div class="skeleton-save-row">
+            <div class="skeleton skeleton-btn"></div>
+          </div>
         </div>
 
         <!-- SEO 表單 -->
@@ -316,19 +331,16 @@ const getFontFamily = (fontValue) => {
 
 const templeId = computed(() => route.params.templeId)
 
-// 全域載入 / 錯誤（字型 + 追蹤）
 const isLoading = ref(true)
 const isSaving  = ref(false)
 const error     = ref(null)
 const hasChanges = ref(false)
 
-// SEO 獨立狀態
 const isSeoLoading  = ref(false)
 const isSeoSaving   = ref(false)
 const hasSeoChanges = ref(false)
 const activeSeoSlug = ref(null)
 
-// ===== 網站基本設定表單（字型 + 追蹤）=====
 const siteForm = reactive({
   frontFamilyZhTw: '',
   frontFamilyZhCn: '',
@@ -345,7 +357,6 @@ const originalSiteForm = reactive({
   googleGtm: '',
 })
 
-// ===== SEO 表單（單一頁面）=====
 const seoForm = reactive({
   seoTitle: '',
   seoDescription: '',
@@ -378,19 +389,17 @@ const loadSettings = async () => {
       hasChanges.value = false
     }
 
-    // 載入頁面 Tab 清單（如果還沒載入）
     if (pageEditorStore.headerTabs.length === 0) {
       await pageEditorStore.fetchHeaderTabs(templeId.value)
     }
 
-    // 預設載入第一個頁面的 SEO
     if (pageEditorStore.headerTabs.length > 0) {
       const firstSlug = pageEditorStore.headerTabs[0].slug
       await switchSeoTab(firstSlug)
     }
 
   } catch (err) {
-    console.error('❌ 載入設定失敗:', err)
+    console.error('載入設定失敗:', err)
     error.value = pageEditorStore.error || t('websiteSettings.errorLoad')
   } finally {
     isLoading.value = false
@@ -410,7 +419,8 @@ const switchSeoTab = async (slug) => {
 
   try {
     const data = await pageEditorStore.fetchPageSeo(templeId.value, slug)
-
+    console.log(data);
+    
     if (data) {
       seoForm.seoTitle       = data.seoTitle       || ''
       seoForm.seoDescription = data.seoDescription || ''
@@ -423,13 +433,13 @@ const switchSeoTab = async (slug) => {
 
     Object.assign(originalSeoForm, seoForm)
   } catch (err) {
-    console.error('❌ 載入 SEO 失敗:', err)
+    console.error('載入 SEO 失敗:', err)
   } finally {
     isSeoLoading.value = false
   }
 }
 
-// ==================== 儲存網站基本設定（字型 + 追蹤）====================
+// ==================== 儲存網站基本設定 ====================
 
 const handleSave = async () => {
   if (!siteForm.frontFamilyZhTw || !siteForm.frontFamilyZhCn || !siteForm.frontFamilyEnUs) {
@@ -810,15 +820,55 @@ onMounted(() => { loadSettings() })
   font-weight: 600;
 }
 
-.seo-loading {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem 0;
-  color: #999;
-  font-size: 0.9rem;
+/* ===== SEO 骨架屏 ===== */
+@keyframes shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
 }
 
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.skeleton-group { margin-bottom: 1.5rem; }
+
+.skeleton-label {
+  height: 16px;
+  width: 120px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-input {
+  height: 44px;
+  width: 100%;
+}
+
+.skeleton-textarea {
+  height: 100px;
+  width: 100%;
+}
+
+.skeleton-hint {
+  height: 12px;
+  width: 80px;
+  margin-top: 0.5rem;
+}
+
+.skeleton-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.skeleton-btn {
+  height: 36px;
+  width: 140px;
+}
+
+/* ===== SEO 儲存列 ===== */
 .seo-save-row {
   display: flex;
   justify-content: flex-end;

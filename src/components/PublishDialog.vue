@@ -9,9 +9,22 @@
           </div>
 
           <div class="dialog-body">
+            <!-- 有未儲存變更 -->
             <div class="has-changes-notice" v-if="hasUnsavedChanges">
               <div class="notice-icon">💾</div>
               <p>檢測到未保存的變更，發布前將自動保存草稿</p>
+            </div>
+
+            <!-- 無未儲存變更：準備就緒 -->
+            <div v-else class="ready-state">
+              <div class="ready-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="32" cy="32" r="30" fill="#f0faf4" stroke="#4caf82" stroke-width="2"/>
+                  <polyline points="18,33 27,43 46,22" stroke="#4caf82" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <p class="ready-title">準備就緒</p>
+              <p class="ready-desc">所有變更已儲存，確認後將立即發布網站</p>
             </div>
           </div>
 
@@ -241,6 +254,34 @@ defineExpose({
   font-size: 13px;
   color: #0c5460;
   line-height: 1.5;
+}
+
+.ready-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 4px;
+  gap: 10px;
+}
+
+.ready-icon svg {
+  width: 64px;
+  height: 64px;
+}
+
+.ready-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #2d7a55;
+}
+
+.ready-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .dialog-footer {

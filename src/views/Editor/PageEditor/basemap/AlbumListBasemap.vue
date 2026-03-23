@@ -71,7 +71,7 @@ const props = defineProps({
   albumCategories: { type: Array, default: () => [] },
   categoryList:    { type: Array, default: () => [] },
   device:          { type: String, default: 'desktop' },
-  perPage:         { type: Number, default: 3 },
+  perPage:         { type: Number, default: 9 },
 })
 
 const safeAlbumList = computed(() => {

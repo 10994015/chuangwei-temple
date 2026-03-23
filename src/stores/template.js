@@ -48,7 +48,8 @@ export const useTemplateStore = defineStore('template', () => {
       level: template.level,
       coverImgUrl: template.coverImgUrl,
       createdAt: template.createdAt,
-      updatedAt: template.updatedAt
+      updatedAt: template.updatedAt,
+      createdByName: template.createdByName,
     }))
   })
 

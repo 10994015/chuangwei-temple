@@ -194,9 +194,6 @@ const handleMoveBasemapDown = (index) => {
 const handleDeleteElement = (data) => {
   if (data.type === 'logo') {
     if (confirm('確定要刪除 Logo 嗎？')) {
-      // ✅ 標記舊 Logo ID 待刪除
-      pageEditorStore.markFileForDeletion(data.frame?.data?.logoImgId)
-
       if (data.frame && data.frame.data) {
         data.frame.data.logoImgSrc = null
         data.frame.data.logoImgId = null
@@ -209,12 +206,6 @@ const handleDeleteElement = (data) => {
   if (data.frame && data.elementIndex !== undefined) {
     if (confirm('確定要刪除此元件嗎？')) {
       if (data.frame.elements && data.frame.elements[data.elementIndex]) {
-        // ✅ 如果是 IMG 元件，標記圖片 ID 待刪除
-        const element = data.frame.elements[data.elementIndex]
-        if (element.type === 'IMG' && element.value?.id) {
-          pageEditorStore.markFileForDeletion(element.value.id)
-        }
-
         data.frame.elements[data.elementIndex] = null
         pageEditorStore.clearSelection()
         console.log('✓ 元件已刪除（索引保留）')
@@ -239,21 +230,6 @@ const handleDeleteFrame = (data) => {
   if (frameIndex === -1) {
     console.error('❌ 找不到要刪除的框架')
     return
-  }
-
-  // ✅ 標記框架內所有圖片 ID 待刪除
-  if (frame.elements && Array.isArray(frame.elements)) {
-    frame.elements.forEach(element => {
-      if (!element) return
-      // IMG 元件圖片
-      if (element.type === 'IMG' && element.value?.id) {
-        pageEditorStore.markFileForDeletion(element.value.id)
-      }
-    })
-  }
-  // ✅ 標記首圖背景 ID 待刪除
-  if (frame.type === 'FIRST_PICTURE' && frame.data?.heroBgImgId) {
-    pageEditorStore.markFileForDeletion(frame.data.heroBgImgId)
   }
 
   console.log(`✓ 找到框架索引: ${frameIndex}`)

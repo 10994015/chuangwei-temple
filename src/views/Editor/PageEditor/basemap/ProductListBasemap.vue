@@ -34,13 +34,11 @@
         <button class="batch-select-btn">{{ t('productListBasemap.batchSelect') }}</button>
       </div>
 
-      <!-- 精選推薦 -->
+      <!-- 精選推薦：有 rank 的，一列 3 欄 -->
       <h2 class="section-title">{{ t('productListBasemap.sectionTitle') }}</h2>
-
-      <!-- 商品 Grid -->
-      <div class="products-grid">
+      <div class="products-grid products-grid--featured">
         <div
-          v-for="product in productsList"
+          v-for="product in featuredProducts"
           :key="product.id"
           class="product-card"
         >
@@ -57,15 +55,51 @@
               <span>{{ t('productListBasemap.imagePlaceholder') }}</span>
             </div>
           </div>
-
           <div class="product-info">
             <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
               {{ product.badge }}
             </span>
             <div v-else class="badge-placeholder"></div>
-
             <h3 class="product-title">{{ product.title }}</h3>
+            <div class="product-footer">
+              <span class="product-price">{{ product.price }}</span>
+              <button class="add-to-cart-btn" @click.stop="addToCart(product)">
+                <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- 其餘商品：無 rank 的，一列 4 欄 -->
+      <div v-if="restProducts.length > 0" class="products-grid products-grid--rest">
+        <div
+          v-for="product in restProducts"
+          :key="product.id"
+          class="product-card"
+        >
+          <div class="product-image">
+            <img
+              v-if="product.image && !product.imageFailed"
+              :src="product.image"
+              :alt="product.title"
+              class="image"
+              @error="product.imageFailed = true"
+            />
+            <div v-else class="image-placeholder">
+              <span>{{ t('productListBasemap.imagePlaceholder') }}</span>
+            </div>
+          </div>
+          <div class="product-info">
+            <span v-if="product.badge" class="product-badge" :class="product.badgeClass">
+              {{ product.badge }}
+            </span>
+            <div v-else class="badge-placeholder"></div>
+            <h3 class="product-title">{{ product.title }}</h3>
             <div class="product-footer">
               <span class="product-price">{{ product.price }}</span>
               <button class="add-to-cart-btn" @click.stop="addToCart(product)">
@@ -85,7 +119,7 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
@@ -106,6 +140,9 @@ const props = defineProps({
   },
   device: { type: String, default: 'desktop' }
 })
+
+const featuredProducts = computed(() => props.productsList.filter(p => p.rank))
+const restProducts     = computed(() => props.productsList.filter(p => !p.rank))
 
 const emit = defineEmits(['add-to-cart'])
 const addToCart = (product) => emit('add-to-cart', product)
@@ -239,9 +276,16 @@ const addToCart = (product) => emit('add-to-cart', product)
 /* ==================== 商品 Grid ==================== */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  border: 1px solid var(--frame-border-color, #ddd);
+  margin-bottom: 10px;
+}
+
+.products-grid--featured {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.products-grid--rest {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 /* ==================== 商品卡片 ==================== */
@@ -368,52 +412,56 @@ const addToCart = (product) => emit('add-to-cart', product)
 
 /* ==================== device prop RWD ==================== */
 .product-list-section.device-tablet {
-  .container     { padding: 0 1.25rem; }
-  .filter-bar    { justify-content: flex-start; padding: 1rem; }
-  .products-grid { grid-template-columns: repeat(2, 1fr); }
-  .product-title { font-size: 15px; }
-  .product-price { font-size: 17px; }
+  .container               { padding: 0 1.25rem; }
+  .filter-bar              { justify-content: flex-start; padding: 1rem; }
+  .products-grid--featured { grid-template-columns: repeat(3, 1fr); }
+  .products-grid--rest     { grid-template-columns: repeat(2, 1fr); }
+  .product-title           { font-size: 15px; }
+  .product-price           { font-size: 17px; }
 }
 
 .product-list-section.device-mobile {
   padding: 1rem 0 2rem;
-  .container     { padding: 0 0.75rem; }
-  .filter-bar    { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
-  .filter-select { width: 100%; }
-  .search-group  { min-width: auto; max-width: 100%; }
-  .products-grid { grid-template-columns: 1fr; }
-  .product-info  { padding: 10px 12px 14px; }
-  .product-title { font-size: 13px; margin-bottom: 12px; }
-  .product-price { font-size: 15px; }
-  .add-to-cart-btn { width: 32px; height: 32px; }
-  .cart-icon     { width: 14px; height: 14px; }
-  .rank-badge    { font-size: 11px; padding: 4px 10px; }
-  .section-title { font-size: 18px; margin-bottom: 1rem; }
-  .batch-actions { margin-bottom: 1rem; }
+  .container               { padding: 0 0.75rem; }
+  .filter-bar              { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
+  .filter-select           { width: 100%; }
+  .search-group            { min-width: auto; max-width: 100%; }
+  .products-grid--featured { grid-template-columns: 1fr; }
+  .products-grid--rest     { grid-template-columns: repeat(2, 1fr); }
+  .product-info            { padding: 10px 12px 14px; }
+  .product-title           { font-size: 13px; margin-bottom: 12px; }
+  .product-price           { font-size: 15px; }
+  .add-to-cart-btn         { width: 32px; height: 32px; }
+  .cart-icon               { width: 14px; height: 14px; }
+  .rank-badge              { font-size: 11px; padding: 4px 10px; }
+  .section-title           { font-size: 18px; margin-bottom: 1rem; }
+  .batch-actions           { margin-bottom: 1rem; }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .product-list-section .container     { padding: 0 1.25rem; }
-  .product-list-section .filter-bar    { justify-content: flex-start; padding: 1rem; }
-  .product-list-section .products-grid { grid-template-columns: repeat(2, 1fr); }
-  .product-list-section .product-title { font-size: 15px; }
-  .product-list-section .product-price { font-size: 17px; }
+  .product-list-section .container               { padding: 0 1.25rem; }
+  .product-list-section .filter-bar              { justify-content: flex-start; padding: 1rem; }
+  .product-list-section .products-grid--featured { grid-template-columns: repeat(3, 1fr); }
+  .product-list-section .products-grid--rest     { grid-template-columns: repeat(2, 1fr); }
+  .product-list-section .product-title           { font-size: 15px; }
+  .product-list-section .product-price           { font-size: 17px; }
 }
 
 @media (max-width: 768px) {
-  .product-list-section                { padding: 1rem 0 2rem; }
-  .product-list-section .container     { padding: 0 0.75rem; }
-  .product-list-section .filter-bar    { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
-  .product-list-section .filter-select { width: 100%; }
-  .product-list-section .search-group  { min-width: auto; max-width: 100%; }
-  .product-list-section .products-grid { grid-template-columns: 1fr; }
-  .product-list-section .product-info  { padding: 10px 12px 14px; }
-  .product-list-section .product-title { font-size: 13px; margin-bottom: 12px; }
-  .product-list-section .product-price { font-size: 15px; }
-  .product-list-section .add-to-cart-btn { width: 32px; height: 32px; }
-  .product-list-section .cart-icon     { width: 14px; height: 14px; }
-  .product-list-section .rank-badge    { font-size: 11px; padding: 4px 10px; }
-  .product-list-section .section-title { font-size: 18px; margin-bottom: 1rem; }
-  .product-list-section .batch-actions { margin-bottom: 1rem; }
+  .product-list-section                          { padding: 1rem 0 2rem; }
+  .product-list-section .container               { padding: 0 0.75rem; }
+  .product-list-section .filter-bar              { flex-direction: column; align-items: stretch; padding: 0.75rem; gap: 0.75rem; justify-content: flex-start; }
+  .product-list-section .filter-select           { width: 100%; }
+  .product-list-section .search-group            { min-width: auto; max-width: 100%; }
+  .product-list-section .products-grid--featured { grid-template-columns: 1fr; }
+  .product-list-section .products-grid--rest     { grid-template-columns: repeat(2, 1fr); }
+  .product-list-section .product-info            { padding: 10px 12px 14px; }
+  .product-list-section .product-title           { font-size: 13px; margin-bottom: 12px; }
+  .product-list-section .product-price           { font-size: 15px; }
+  .product-list-section .add-to-cart-btn         { width: 32px; height: 32px; }
+  .product-list-section .cart-icon               { width: 14px; height: 14px; }
+  .product-list-section .rank-badge              { font-size: 11px; padding: 4px 10px; }
+  .product-list-section .section-title           { font-size: 18px; margin-bottom: 1rem; }
+  .product-list-section .batch-actions           { margin-bottom: 1rem; }
 }
 </style>
