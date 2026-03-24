@@ -466,6 +466,9 @@
                 <template v-if="isUploadingLogo">{{ t('propsPanel.uploading') }}</template>
                 <template v-else>{{ localLogoSrc ? t('propsPanel.changeLogo') : t('propsPanel.uploadLogo') }}</template>
               </button>
+              <button v-if="localLogoSrc" @click="handleDeleteLogoFromPanel" class="delete-logo-btn">
+                {{ t('propsPanel.deleteLogo') }}
+              </button>
             </div>
           </div>
         </template>
@@ -917,7 +920,7 @@ const props = defineProps({
   selectedCell: { type: Object, default: null }
 })
 
-const emit = defineEmits(['update-logo', 'update-cell-padding'])
+const emit = defineEmits(['update-logo', 'delete-logo', 'update-cell-padding'])
 
 const isCollapsed = ref(false)
 
@@ -1374,6 +1377,11 @@ const handleUploadLogo = async () => {
 const handleLogoImageError = (e) => {
   console.error('Logo 圖片載入失敗:', e.target.src)
   alert('Logo 圖片載入失敗，請重新上傳')
+}
+
+const handleDeleteLogoFromPanel = () => {
+  localLogoSrc.value = null
+  emit('delete-logo')
 }
 
 const handleUploadImage = async () => {
@@ -2028,6 +2036,18 @@ const setMapZoom = (zoom) => {
   transition: background 0.2s;
   &:hover:not(:disabled) { background: #d14a1f; }
   &:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
+}
+
+.delete-logo-btn {
+  padding: 8px 16px;
+  background: #fff;
+  color: #e53935;
+  border: 1px solid #e53935;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background: #ffeaea; }
 }
 
 .checkbox-label {

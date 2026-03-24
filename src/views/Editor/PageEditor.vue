@@ -193,13 +193,8 @@ const handleMoveBasemapDown = (index) => {
 // ==================== 元件操作 ====================
 const handleDeleteElement = (data) => {
   if (data.type === 'logo') {
-    if (confirm('確定要刪除 Logo 嗎？')) {
-      if (data.frame && data.frame.data) {
-        data.frame.data.logoImgSrc = null
-        data.frame.data.logoImgId = null
-      }
-      pageEditorStore.clearSelection()
-    }
+    pageEditorStore.clearHeaderLogo()
+    pageEditorStore.clearSelection()
     return
   }
   
@@ -354,6 +349,7 @@ const handleUpdateLogo = (logoData) => {
       @upload-image="handleUploadImage"
       @upload-carousel="handleUploadCarousel"
       @update-logo="handleUpdateLogo"
+      @delete-logo="() => { pageEditorStore.clearHeaderLogo(); pageEditorStore.clearSelection() }"
       @update-cell-padding="handleUpdateCellPadding"
     />
   </div>

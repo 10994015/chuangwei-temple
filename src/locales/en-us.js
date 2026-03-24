@@ -278,6 +278,7 @@ export default {
     noLogo: 'No Logo uploaded',
     changeLogo: 'Change Logo',
     uploadLogo: 'Upload Logo',
+    deleteLogo: 'Delete Logo',
     textSettings: 'Text Settings',
     textContent: 'Text Content',
     titleInputPlaceholder: 'Enter title',

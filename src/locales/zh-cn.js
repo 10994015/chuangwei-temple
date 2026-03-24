@@ -278,6 +278,7 @@ export default {
     noLogo: '尚未上传 Logo',
     changeLogo: '更换 Logo',
     uploadLogo: '上传 Logo',
+    deleteLogo: '删除 Logo',
     textSettings: '文字设置',
     textContent: '文字内容',
     titleInputPlaceholder: '输入标题',

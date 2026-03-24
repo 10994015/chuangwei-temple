@@ -248,7 +248,7 @@ const handleChangePage = (slug) => {
 }
 
 const handleSelectLogo = (data) => {
-  emit('select-element', { type: 'logo', frameType: props.frameType, data: data.data })
+  emit('select-element', { type: 'logo', frameType: props.frameType, data: data.data, frame: data.frame })
 }
 
 const handleSelectElement = (data) => {
@@ -259,8 +259,8 @@ const handleUpdateLogo = (newData) => {
   emit('update-element', { type: 'logo', frameType: props.frameType, data: newData })
 }
 
-const handleDeleteLogo = () => {
-  emit('delete-element', { type: 'logo', frameType: props.frameType })
+const handleDeleteLogo = (data) => {
+  emit('delete-element', { type: 'logo', frameType: props.frameType, frame: data?.frame })
 }
 
 console.log('ALBUM_LIST frameData:', props.frameData)

@@ -342,6 +342,14 @@ const uploadImage = (type) => {
         console.log(`✓ 桌機版自動同步為 ${type} 版圖片`)
       }
 
+      // ✅ Header 底圖同步到所有頁面
+      if (props.isHeader) {
+        pageEditorStore.syncAllHeaderBackground(type, uploadedFile.fileUrl, uploadedFile.id)
+        if (type !== 'desktop' && !backgrounds.value.desktop) {
+          pageEditorStore.syncAllHeaderBackground('desktop', uploadedFile.fileUrl, uploadedFile.id)
+        }
+      }
+
       emit('update-background', {
         basemapId: props.basemapId,
         basemap: props.basemap,
@@ -382,6 +390,11 @@ const clearBackground = (type) => {
       props.basemap.bgPhoneImgId  = null
       backgrounds.value.mobile = null
       break
+  }
+
+  // ✅ Header 底圖清除同步到所有頁面
+  if (props.isHeader) {
+    pageEditorStore.syncAllHeaderBackground(type, null, null)
   }
 }
 </script>

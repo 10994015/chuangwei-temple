@@ -208,6 +208,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
       const jsonString = JSON.stringify(requestBody)
       const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2)
+      console.log('[saveAllPages] 發送 JSON:', JSON.parse(jsonString))
 
       const maxSizeMB = 10
       if (jsonString.length > maxSizeMB * 1024 * 1024) {
@@ -372,15 +373,56 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   // ==================== Header ====================
 
-  const updateHeaderLogo = (logoSrc, logoId) => {
-    const basemaps = currentPageBasemaps.value
-    const headerBasemap = basemaps.find(b => b.bgType === 'HEADER')
+  // 遍歷所有頁面的 HEADER frame 並執行 callback
+  const forEachHeaderFrame = (callback) => {
+    Object.values(pageData.value).forEach(page => {
+      const headerBasemap = (page.data || []).find(b => b.bgType === 'HEADER')
+      if (headerBasemap?.frames?.[0]) {
+        if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
+        callback(headerBasemap, headerBasemap.frames[0])
+      }
+    })
+  }
 
-    if (headerBasemap?.frames?.[0]) {
-      if (!headerBasemap.frames[0].data) headerBasemap.frames[0].data = {}
-      headerBasemap.frames[0].data.logoImgSrc = logoSrc
-      headerBasemap.frames[0].data.logoImgId = logoId
-    }
+  // 同步 logo 到所有頁面的 HEADER
+  const updateHeaderLogo = (logoSrc, logoId) => {
+    let count = 0
+    forEachHeaderFrame((_basemap, frame) => {
+      frame.data.logoImgSrc = logoSrc
+      frame.data.logoImgId = logoId
+      count++
+    })
+    console.log(`[updateHeaderLogo] 同步到 ${count} 個頁面，logoId=${logoId}, logoSrc=${logoSrc}`)
+  }
+
+  // 清除所有頁面 HEADER 的 logo
+  const clearHeaderLogo = () => {
+    forEachHeaderFrame((_basemap, frame) => {
+      frame.data.logoImgSrc = null
+      frame.data.logoImgId = null
+    })
+  }
+
+  // 同步 header 底圖到所有頁面的 HEADER basemap
+  const syncAllHeaderBackground = (type, src, id) => {
+    Object.values(pageData.value).forEach(page => {
+      const headerBasemap = (page.data || []).find(b => b.bgType === 'HEADER')
+      if (!headerBasemap) return
+      switch (type) {
+        case 'desktop':
+          headerBasemap.bgPcImgSrc = src
+          headerBasemap.bgPcImgId  = id
+          break
+        case 'tablet':
+          headerBasemap.bgTabletImgSrc = src
+          headerBasemap.bgTabletImgId  = id
+          break
+        case 'mobile':
+          headerBasemap.bgPhoneImgSrc = src
+          headerBasemap.bgPhoneImgId  = id
+          break
+      }
+    })
   }
 
   const syncHeaderMenuFromTabs = () => {}
@@ -725,6 +767,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     selectCell,
     clearSelection,
     updateHeaderLogo,
+    clearHeaderLogo,
+    syncAllHeaderBackground,
     syncHeaderMenuFromTabs,
     addBasemap,
     deleteBasemap,
