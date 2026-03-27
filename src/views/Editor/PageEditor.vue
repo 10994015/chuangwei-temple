@@ -236,8 +236,7 @@ const handleDeleteFrame = (data) => {
 // ==================== 上傳處理 ====================
 
 // BasemapWrapper 上傳背景後直接 mutate props.basemap（store reactive 物件），
-// store 已自動同步，此 handler 只需接收事件即可，無需再次 find-and-update，
-// 否則若多個底圖的 bgType+bgSequence 相同時會污染到其他底圖。
+// store 已自動同步，此 handler 只需接收事件即可，無需再次 find-and-update。
 const handleUpdateBackground = (data) => {
   console.log('PageEditor 收到背景更新 (store 已由 BasemapWrapper 直接更新):', data)
 }

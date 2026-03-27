@@ -441,10 +441,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   const addBasemap = (insertIndex) => {
     const basemaps = currentPageBasemaps.value
     const actualIndex = insertIndex + 1
-    const maxSequence = basemaps.reduce((max, b) => Math.max(max, b.bgSequence || 0), 0)
-
     const newBasemap = {
-      bgSequence: maxSequence + 1,
       bgPcImgSrc: null,
       bgPcImgId: null,
       bgTabletImgSrc: null,

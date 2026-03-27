@@ -657,7 +657,7 @@
               <option
                 v-for="page in internalPageOptions"
                 :key="page.slug"
-                :value="page.value"
+                :value="page.slug"
               >
                 {{ page.label }}
               </option>
@@ -1087,24 +1087,25 @@ const internalPageOptions = computed(() => {
   const tabs = pageEditorStore.headerTabs || []
   return tabs.map(tab => ({
     label: tab.name || tab.slug,
-    value: `/site/${pageEditorStore.tenantId}/${tab.slug}`,
     slug: tab.slug,
   }))
 })
 
-// 判斷目前 url 是內頁連結還是自訂
+// 判斷目前連結類型：'__custom__' 或 internalSlug 值
 const buttonLinkType = computed({
   get() {
-    const url = props.selectedElement?.element?.value?.url || ''
-    const matched = internalPageOptions.value.find(p => p.value === url)
-    return matched ? url : '__custom__'
+    const slug = props.selectedElement?.element?.value?.internalSlug
+    if (slug && internalPageOptions.value.some(p => p.slug === slug)) return slug
+    return '__custom__'
   },
   set(val) {
-    if (!props.selectedElement?.element?.value) return
+    const elementValue = props.selectedElement?.element?.value
+    if (!elementValue) return
     if (val === '__custom__') {
-      props.selectedElement.element.value.url = ''
+      elementValue.internalSlug = ''
     } else {
-      props.selectedElement.element.value.url = val
+      elementValue.internalSlug = val
+      elementValue.url = ''
     }
   }
 })

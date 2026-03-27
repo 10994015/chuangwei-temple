@@ -99,11 +99,11 @@ const handleUpdateBackground = (data) => {
 }
 
 // ==================== 拖曳事件 ====================
-const handleDragOver = (event, basemap) => {
+const handleDragOver = (event, index) => {
   event.preventDefault()
   event.stopPropagation()
   event.dataTransfer.dropEffect = 'copy'
-  dragOverBasemap.value = `${basemap.bgType}-${basemap.bgSequence}`
+  dragOverBasemap.value = `basemap-${index}`
 }
 
 const handleDragLeave = (event) => {
@@ -160,7 +160,7 @@ const isSystemFrame = (frame) => {
 }
 
 const getBasemapKey = (basemap, index) => {
-  return `${basemap.bgType}-${basemap.bgSequence}-${index}`
+  return `${basemap.bgType}-${index}`
 }
 </script>
 
@@ -185,12 +185,12 @@ const getBasemapKey = (basemap, index) => {
           <div 
             class="basemap-with-frames"
             :class="{ 
-              'drag-over': dragOverBasemap === `${basemap.bgType}-${basemap.bgSequence}`,
+              'drag-over': dragOverBasemap === `basemap-${index}`,
               'has-frame': basemap.frames && basemap.frames.length > 0,
               'is-selected': isBasemapSelected(basemap)
             }"
             :style="{ backgroundImage: basemap.bgPcImgSrc ? `url(${basemap.bgPcImgSrc})` : 'none' }"
-            @dragover="handleDragOver($event, basemap)"
+            @dragover="handleDragOver($event, index)"
             @dragleave="handleDragLeave"
             @drop="handleDrop($event, basemap, index)"
           >
@@ -205,7 +205,7 @@ const getBasemapKey = (basemap, index) => {
               v-if="!basemap.frames || basemap.frames.length === 0" 
               class="blank-basemap"
               :class="{ 
-                'drag-over': dragOverBasemap === `${basemap.bgType}-${basemap.bgSequence}`,
+                'drag-over': dragOverBasemap === `basemap-${index}`,
                 'is-selected': isBasemapSelected(basemap),
                 'has-bg': !!basemap.bgPcImgSrc
               }"

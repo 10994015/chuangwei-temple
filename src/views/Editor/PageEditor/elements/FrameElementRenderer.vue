@@ -34,7 +34,7 @@
         :href="element.value?.url || '#'"
         class="button-link"
         :style="getButtonStyle(element)"
-        @click="isEditMode ? $event.preventDefault() : handleButtonClick($event, element.value?.url)"
+        @click="isEditMode ? $event.preventDefault() : handleButtonClick($event, element)"
       >
         {{ element.value?.text || (isEditMode ? t('customFrame.buttonText') : '按鈕') }}
       </a>
@@ -126,24 +126,22 @@ import EventCard from './EventCard.vue'
 const { t } = useI18n()
 
 const previewNavigate = inject('previewNavigate', null)
-const previewContext  = inject('previewContext',  null)
 
-const handleButtonClick = (e, url) => {
-  if (!url || url === '#') { e.preventDefault(); return }
-
-  // 判斷是否為內頁連結格式：/site/{tenantId}/{slug}
-  if (previewNavigate && previewContext) {
-    const prefix = `/site/${previewContext.tenantId}/`
-    if (url.startsWith(prefix)) {
-      e.preventDefault()
-      const slug = url.slice(prefix.length)
-      previewNavigate(slug)
-      return
-    }
-  }
-  // 外部連結：在新分頁開啟
+const handleButtonClick = (e, element) => {
   e.preventDefault()
-  window.open(url, '_blank')
+  const internalSlug = element?.value?.internalSlug
+  const url = element?.value?.url
+
+  // 內頁連結：直接用 slug 導頁
+  if (internalSlug && previewNavigate) {
+    previewNavigate(internalSlug)
+    return
+  }
+
+  // 自訂外部連結：開新分頁
+  if (url && url !== '#') {
+    window.open(url, '_blank')
+  }
 }
 
 const props = defineProps({
