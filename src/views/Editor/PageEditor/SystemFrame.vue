@@ -66,13 +66,13 @@
       
       <!-- 首頁-最新消息 (INDEX_NEWS) -->
       <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
-      
+
       <!-- 消息列表 (NEWS_LIST) -->
       <NewsListBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
-      
+
       <!-- 首頁-商品標幅 (INDEX_PRODUCT) -->
       <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" />
-      
+
       <!-- 首頁-活動橫幅 (INDEX_EVENT) -->
       <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" />
       

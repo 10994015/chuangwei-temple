@@ -1,12 +1,12 @@
 <template>
-  <div 
+  <div
     class="button-element"
     :style="{ textAlign: content.align || 'center' }"
   >
     <a
-      :href="content.link || '#'"
+      :href="resolvedHref"
       class="element-button"
-      target="_blank"
+      :target="isInternalSlug(content.link || element?.value?.url) ? '_self' : '_blank'"
       :style="{
         color: content.textColor || '#fff',
         backgroundColor: content.bgColor || '#E8572A',
@@ -20,21 +20,35 @@
 </template>
 
 <script setup>
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
 
 const props = defineProps({
-  content: {
-    type: Object,
-    required: true
-  },
-  element: {
-    type: Object,
-    required: true
-  }
+  content: { type: Object, required: true },
+  element: { type: Object, required: true }
 })
 
-// ✅ 確保數值自動加上 px 單位
+const previewContext = inject('previewContext', null)
+
+const isInternalSlug = (url) => {
+  if (!url || url === '#') return false
+  return !url.includes('://') && !url.startsWith('/') && !url.startsWith('#')
+}
+
+const resolvedHref = computed(() => {
+  const url = props.content.link || props.element?.value?.url || ''
+  if (!url || url === '#') return '#'
+
+  if (isInternalSlug(url) && previewContext) {
+    const { tenantId, locale, source } = previewContext
+    return `/editor/${tenantId}/preview?slug=${url}&locale=${locale}&source=${source}`
+  }
+
+  return url
+})
+
 const ensureUnit = (value, defaultValue) => {
   if (!value) return defaultValue
   if (typeof value === 'number') return value + 'px'

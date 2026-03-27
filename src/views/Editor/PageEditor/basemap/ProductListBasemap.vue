@@ -119,30 +119,30 @@
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
 
 const props = defineProps({
-  productsList: {
-    type: Array,
-    default: () => reactive([
-      { id: 1, rank: 1, title: '個人光明燈', price: 'NT$600',   image: null },
-      { id: 2, rank: 2, title: '平安符',     price: 'NT$200',   image: null, badge: '熱門', badgeClass: 'hot' },
-      { id: 3, rank: 3, title: '全家光明燈', price: 'NT$1,200', image: null, badge: '推薦', badgeClass: 'recommended' },
-      { id: 4,          title: '平安香',     price: 'NT$150',   image: null },
-      { id: 5,          title: '祈福金紙組', price: 'NT$300',   image: null },
-      { id: 6,          title: '問事服務',   price: 'NT$500',   image: null },
-      { id: 7,          title: '文昌燈',     price: 'NT$600',   image: null },
-      { id: 8,          title: '太歲燈',     price: 'NT$800',   image: null, badge: '熱門', badgeClass: 'hot' },
-      { id: 9,          title: '財神燈',     price: 'NT$800',   image: null },
-    ])
-  },
-  device: { type: String, default: 'desktop' }
+  // 後端 frame.data 直接傳入的欄位
+  featuredProduct: { type: Array,  default: () => [] },           // 精選商品（有 no 排名）
+  productList:     { type: Object, default: () => ({ data: [], total: 0, totalPages: 1 }) },
+  device:          { type: String, default: 'desktop' }
 })
 
-const featuredProducts = computed(() => props.productsList.filter(p => p.rank))
-const restProducts     = computed(() => props.productsList.filter(p => !p.rank))
+const mapProduct = (p) => ({
+  id:        p.id,
+  rank:      p.no ?? null,
+  title:     p.name || '',
+  price:     p.price != null ? `NT$${Number(p.price).toLocaleString()}` : '',
+  image:     p.imgSrc || null,
+  badge:     Array.isArray(p.labels) && p.labels.length ? p.labels[0] : null,
+  badgeClass: 'hot',
+})
+
+const featuredProducts = computed(() => props.featuredProduct.map(mapProduct))
+const restProducts     = computed(() => (props.productList?.data || []).map(mapProduct))
 
 const emit = defineEmits(['add-to-cart'])
 const addToCart = (product) => emit('add-to-cart', product)

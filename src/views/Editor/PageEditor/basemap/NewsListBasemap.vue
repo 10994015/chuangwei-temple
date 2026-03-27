@@ -19,8 +19,8 @@
 
       <!-- 消息列表 -->
       <div class="news-list">
-        <div 
-          v-for="news in newsList" 
+        <div
+          v-for="news in pagedNews"
           :key="news.id"
           class="news-item"
           @click="viewNewsDetail(news)"
@@ -67,40 +67,52 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
 
 const props = defineProps({
-  newsList: {
-    type: Array,
-    default: () => [
-      { id: 1, tag: '法會通知', tagClass: 'notice', title: '冬季祈福法會圓滿結束', description: '感謝眾信眾參與本次冬季祈福法會。法會已圓滿結束，祈願眾信眾身體健康、闔家平安。本次法會共有百餘位信眾參與，場面莊嚴隆…', date: '2024-12-08' },
-      { id: 2, tag: '節日慶典', tagClass: 'festival', title: '新年平安燈開放點燈登記', description: '申辰年平安燈現已開放登記，歡迎信眾前來點燈祈福，祈求新年平安順遂。點燈期間自農曆正月初一至十二月三十日，功德無量。', date: '2024-12-05' },
-      { id: 3, tag: '活動公告', tagClass: 'announcement', title: '歲末感恩祈福活動開始報名', description: '歲末年終，本宮將舉辦感恩祈福活動，感謝神明庇佑、信眾護持。活動內容包含祈福儀式、平安餐會及結緣品發放，名額有限，請及…', date: '2024-12-03' },
-      { id: 4, tag: '節日慶典', tagClass: 'festival', title: '中秋祭祖大典圓滿落幕', description: '農曆八月十五中秋祭祖大典已圓滿結束，感謝眾信眾熱情參與。當日月圓人團圓，祭祀儀式莊嚴隆重，祈願闔家平安、萬事如意。', date: '2024-11-28' },
-      { id: 5, tag: '法會通知', tagClass: 'notice', title: '每月初一十五誦經祈福', description: '本宮每月農曆初一、十五定期舉行誦經祈福法會，歡迎信眾參與共修。法會時間為上午九時至十一時，現場備有茶點供應,功德回向十…', date: '2024-12-01' },
-      { id: 6, tag: '活動公告', tagClass: 'announcement', title: '春季祈福法會通知', description: '春季祈福法會將於下月舉行，歡迎信眾報名參加。法會將為信眾祈求身體健康、事業順利、闔家平安。報名請洽櫃台或電話預約。', date: '2024-11-25' },
-      { id: 7, tag: '節日慶典', tagClass: 'festival', title: '端午節祈福活動圓滿', description: '端午節祈福活動已圓滿結束，感謝眾信眾參與。活動當日進行祈福儀式、發放平安符及艾草，祈願眾信眾平安健康、諸事順遂。', date: '2024-11-20' },
-      { id: 8, tag: '法會通知', tagClass: 'notice', title: '農曆七月普渡法會', description: '農曆七月將舉行普渡法會，超渡孤魂、祈求平安。法會時間為農曆七月十五日，歡迎信眾參與共修，功德無量。', date: '2024-11-15' },
-      { id: 9, tag: '活動公告', tagClass: 'announcement', title: '廟宇整修工程通知', description: '本宮將進行外牆整修工程，預計施工期間為三個月。施工期間正常開放參拜，但請信眾注意安全，不便之處敬請見諒。', date: '2024-11-10' },
-      { id: 10, tag: '節日慶典', tagClass: 'festival', title: '清明祭祖大典通知', description: '清明節將至，本宮將舉辦祭祖大典。歡迎信眾攜家帶眷前來參拜，緬懷先祖恩德，祈求祖先庇佑後代子孫平安順遂。', date: '2024-11-05' }
-    ]
-  },
-  pageSize: { type: Number, default: 5 },
-  device: { type: String, default: 'desktop' }
+  // 後端 frame.data 直接傳入的欄位
+  postCategories: { type: Array,  default: () => [] },           // ["法會公告","活動消息","宮務公告"]
+  postList:       { type: Object, default: () => ({ data: [], total: 0, totalPages: 1 }) },
+  pageSize:       { type: Number, default: 5 },
+  device:         { type: String, default: 'desktop' }
 })
 
 const emit = defineEmits(['view-detail'])
 
+// 分類按鈕：從 API 拿到字串陣列，轉成 { id, name }
 const categories = computed(() => [
-  { id: 'all',          name: t('newsListBasemap.catAll') },
-  { id: 'festival',     name: t('newsListBasemap.catFestival') },
-  { id: 'notice',       name: t('newsListBasemap.catNotice') },
-  { id: 'announcement', name: t('newsListBasemap.catAnnouncement') },
+  { id: 'all', name: t('newsListBasemap.catAll') },
+  ...props.postCategories.map(c => ({ id: c, name: c })),
 ])
+
+// 把 API 欄位對應成元件格式
+const mappedNews = computed(() =>
+  (props.postList?.data || []).map(n => ({
+    id:          n.id,
+    tag:         n.type || '',
+    tagClass:    'notice',
+    title:       n.title || '',
+    description: n.content || '',
+    date:        n.createdAt ? n.createdAt.slice(0, 10) : '',
+  }))
+)
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)
-const totalPages = ref(2)
+
+const filteredNews = computed(() =>
+  selectedCategory.value === 'all'
+    ? mappedNews.value
+    : mappedNews.value.filter(n => n.tag === selectedCategory.value)
+)
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredNews.value.length / props.pageSize)))
+
+const pagedNews = computed(() => {
+  const start = (currentPage.value - 1) * props.pageSize
+  return filteredNews.value.slice(start, start + props.pageSize)
+})
 
 const goToPage = (page) => { if (page < 1 || page > totalPages.value) return; currentPage.value = page }
 const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }

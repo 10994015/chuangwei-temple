@@ -30,6 +30,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   // 是否為模板套用模式（尚未儲存，等待 user 按儲存）
   const isTemplateMode = ref(false)
 
+
   // ==================== Computed ====================
 
   const currentPageBasemaps = computed(() => {
@@ -127,11 +128,13 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         params: { locale: targetLocale }
       })
       const result = response.data
+      console.log('[fetchAllPages] API 回傳資料:', JSON.parse(JSON.stringify(result)))
 
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         result.data.forEach(page => {
           pageData.value[page.slug] = { data: page.contentJson }
         })
+
 
         syncHeaderTabsFromPageData(result.data)
 

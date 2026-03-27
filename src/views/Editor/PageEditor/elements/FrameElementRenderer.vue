@@ -34,7 +34,7 @@
         :href="element.value?.url || '#'"
         class="button-link"
         :style="getButtonStyle(element)"
-        @click.prevent
+        @click="isEditMode ? $event.preventDefault() : handleButtonClick($event, element.value?.url)"
       >
         {{ element.value?.text || (isEditMode ? t('customFrame.buttonText') : '按鈕') }}
       </a>
@@ -114,6 +114,7 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CarouselElement from './CarouselElement.vue'
 import MapElement from './MapElement.vue'
@@ -123,6 +124,27 @@ import ServiceCard from './ServiceCard.vue'
 import EventCard from './EventCard.vue'
 
 const { t } = useI18n()
+
+const previewNavigate = inject('previewNavigate', null)
+const previewContext  = inject('previewContext',  null)
+
+const handleButtonClick = (e, url) => {
+  if (!url || url === '#') { e.preventDefault(); return }
+
+  // 判斷是否為內頁連結格式：/site/{tenantId}/{slug}
+  if (previewNavigate && previewContext) {
+    const prefix = `/site/${previewContext.tenantId}/`
+    if (url.startsWith(prefix)) {
+      e.preventDefault()
+      const slug = url.slice(prefix.length)
+      previewNavigate(slug)
+      return
+    }
+  }
+  // 外部連結：在新分頁開啟
+  e.preventDefault()
+  window.open(url, '_blank')
+}
 
 const props = defineProps({
   element:    { type: Object,  default: null },
@@ -258,7 +280,7 @@ const getButtonStyle = (element) => {
   font-weight: 500;
   font-size: 16px;
   transition: background 0.2s;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 .button-link:hover { background: #d14a1f; }
 

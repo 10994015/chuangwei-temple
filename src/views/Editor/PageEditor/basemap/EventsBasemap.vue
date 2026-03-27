@@ -92,22 +92,23 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const props = defineProps({
-  eventsList: {
-    type: Array,
-    default: () => [
-      { id: 1, title: '農曆九月初九 天公聖誕慶典', date: '2024年12月10日', time: '上午8:00 - 下午5:00', location: '本宮大殿',  tags: ['熱門', '推薦'], image: null },
-      { id: 2, title: '冬至祭祖法會',               date: '2024年12月21日', time: '上午9:00 - 下午3:00', location: '本宮後殿',  tags: [],              image: null },
-      { id: 3, title: '新春開廟門迎春',             date: '2025年1月29日',  time: '凌晨12:00',           location: '本宮',       tags: ['熱門'],        image: null },
-      { id: 4, title: '元宵燈會活動',               date: '2025年2月12日',  time: '下午6:00 - 晚上10:00',location: '本宮廣場',  tags: [],              image: null },
-      { id: 5, title: '清明祭祖大典',               date: '2025年4月4日',   time: '上午8:00 - 下午4:00', location: '本宮大殿',  tags: [],              image: null },
-      { id: 6, title: '端午祈福慶典',               date: '2025年5月31日',  time: '上午9:00 - 下午5:00', location: '本宮',       tags: [],              image: null },
-    ]
-  },
+  events: { type: Array, default: () => [] },  // frame.data.events
   device: { type: String, default: 'desktop' }
 })
 
 const emit = defineEmits(['view-detail', 'view-all'])
-const displayEvents = computed(() => props.eventsList.slice(0, 3))
+
+const displayEvents = computed(() =>
+  props.events.slice(0, 3).map(e => ({
+    id:       e.id,
+    title:    e.name || '',
+    date:     e.startAt ? e.startAt.slice(0, 10) : '',
+    time:     e.startAt ? e.startAt.slice(11, 16) : '',
+    location: e.location || '',
+    tags:     Array.isArray(e.labels) ? e.labels : [],
+    image:    e.imgSrc || null,
+  }))
+)
 
 const getTagClass = (tag) => {
   if (tag === t('eventsBasemap.tagHot')) return 'hot'

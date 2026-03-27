@@ -650,7 +650,27 @@
         <template v-else-if="selectedElement.element?.type === 'BUTTON'">
           <h4 class="section-title">{{ t('propsPanel.btnSettings') }}</h4>
           <div class="prop-group"><label>{{ t('propsPanel.btnText') }}</label><input v-model="selectedElement.element.value.text" type="text" class="prop-input" :placeholder="t('propsPanel.btnTextPlaceholder')" /></div>
-          <div class="prop-group"><label>{{ t('propsPanel.linkUrl') }}</label><input v-model="selectedElement.element.value.url" type="text" class="prop-input" :placeholder="t('propsPanel.linkUrlPlaceholder')" /></div>
+          <div class="prop-group">
+            <label>{{ t('propsPanel.linkUrl') }}</label>
+            <select v-model="buttonLinkType" class="prop-select internal-link-select">
+              <option value="__custom__">自訂網址</option>
+              <option
+                v-for="page in internalPageOptions"
+                :key="page.slug"
+                :value="page.value"
+              >
+                {{ page.label }}
+              </option>
+            </select>
+            <input
+              v-if="isCustomButtonLink"
+              v-model="selectedElement.element.value.url"
+              type="text"
+              class="prop-input"
+              style="margin-top: 8px;"
+              :placeholder="t('propsPanel.linkUrlPlaceholder')"
+            />
+          </div>
           <div class="metadata-section">
             <h5 class="subsection-title">{{ t('propsPanel.styleSettings') }}</h5>
             <div class="prop-group">
@@ -1063,7 +1083,33 @@ const updateSystemFrameTheme = () => {
     props.selectedFrame.data.textColor = systemFrameTextColor.value
   }
 }
+const internalPageOptions = computed(() => {
+  const tabs = pageEditorStore.headerTabs || []
+  return tabs.map(tab => ({
+    label: tab.name || tab.slug,
+    value: `/site/${pageEditorStore.tenantId}/${tab.slug}`,
+    slug: tab.slug,
+  }))
+})
 
+// 判斷目前 url 是內頁連結還是自訂
+const buttonLinkType = computed({
+  get() {
+    const url = props.selectedElement?.element?.value?.url || ''
+    const matched = internalPageOptions.value.find(p => p.value === url)
+    return matched ? url : '__custom__'
+  },
+  set(val) {
+    if (!props.selectedElement?.element?.value) return
+    if (val === '__custom__') {
+      props.selectedElement.element.value.url = ''
+    } else {
+      props.selectedElement.element.value.url = val
+    }
+  }
+})
+
+const isCustomButtonLink = computed(() => buttonLinkType.value === '__custom__')
 const mapAddress = ref('')
 const mapLat = ref(25.033)
 const mapLng = ref(121.565)
@@ -2370,5 +2416,12 @@ const setMapZoom = (zoom) => {
   width: 32px;
   height: 64px;
   object-fit: contain;
+}
+.internal-link-select {
+  font-size: 13px;
+  color: #555;
+  background: #fafafa;
+  border-color: #ddd;
+  cursor: pointer;
 }
 </style>

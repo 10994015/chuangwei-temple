@@ -103,33 +103,36 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const props = defineProps({
-  eventsList: {
-    type: Array,
-    default: () => [
-      { id: 1, title: '農曆九月初九 天公聖誕慶典', date: '2024-12-10',              time: '上午8:00 - 下午5:00',  location: '本宮大殿', tags: ['熱門', '推薦'], image: null },
-      { id: 2, title: '冬至祭祖法會',               date: '2024-12-21',              time: '上午9:00 - 下午3:00',  location: '本宮後殿', tags: [],              image: null },
-      { id: 3, title: '新春開廟門迎春',             date: '2025-01-29 - 2025-02-02', time: '凌晨12:00',            location: '本宮',     tags: ['熱門'],        image: null },
-      { id: 4, title: '元宵燈會活動',               date: '2025-02-12',              time: '下午6:00 - 晚上10:00', location: '本宮廣場', tags: [],              image: null },
-      { id: 5, title: '清明祭祖大典',               date: '2025-04-04',              time: '上午8:00 - 下午4:00',  location: '本宮大殿', tags: [],              image: null },
-      { id: 6, title: '端午祈福慶典',               date: '2025-05-31',              time: '上午9:00 - 下午5:00',  location: '本宮',     tags: [],              image: null },
-      { id: 7, title: '中元普渡法會',               date: '2025-08-22',              time: '上午8:00 - 下午6:00',  location: '本宮大殿', tags: ['推薦'],        image: null },
-      { id: 8, title: '中秋賞月活動',               date: '2025-09-15',              time: '下午7:00 - 晚上11:00', location: '本宮廣場', tags: ['熱門'],        image: null },
-      { id: 9, title: '重陽敬老活動',               date: '2025-10-11',              time: '上午9:00 - 下午3:00',  location: '本宮',     tags: [],              image: null },
-    ]
-  },
-  perPage: { type: Number, default: 3 },
-  device:  { type: String,  default: 'desktop' }
+  // 後端 frame.data 直接傳入的欄位
+  eventCategories: { type: Array,  default: () => [] },          // ["全部","遶境","法會","公益"]
+  eventList:       { type: Object, default: () => ({ data: [], total: 0, totalPages: 1 }) },
+  perPage:         { type: Number, default: 9 },
+  device:          { type: String, default: 'desktop' }
 })
 
 const emit = defineEmits(['view-detail'])
 
-const categories = computed(() => [
-  { id: 'all',       name: t('eventListBasemap.catAll') },
-  { id: 'ceremony',  name: t('eventListBasemap.catCeremony') },
-  { id: 'prayer',    name: t('eventListBasemap.catPrayer') },
-  { id: 'culture',   name: t('eventListBasemap.catCulture') },
-  { id: 'volunteer', name: t('eventListBasemap.catVolunteer') },
-])
+// 分類按鈕：從 API 拿到字串陣列，轉成 { id, name }
+const categories = computed(() => {
+  const apiCats = props.eventCategories.filter(c => c !== '全部')
+  return [
+    { id: 'all', name: t('eventListBasemap.catAll') },
+    ...apiCats.map(c => ({ id: c, name: c })),
+  ]
+})
+
+// 把 API 原始欄位對應成元件用的格式
+const mappedEvents = computed(() =>
+  (props.eventList?.data || []).map(e => ({
+    id:       e.id,
+    title:    e.name || '',
+    date:     e.startAt ? e.startAt.slice(0, 10) : '',
+    time:     e.startAt ? e.startAt.slice(11, 16) : '',
+    location: e.location || '',
+    tags:     Array.isArray(e.labels) ? e.labels : [],
+    image:    e.imgSrc || null,
+  }))
+)
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)
@@ -137,10 +140,12 @@ const currentPage = ref(1)
 const onCategoryClick = (id) => { selectedCategory.value = id; currentPage.value = 1 }
 
 const filteredEvents = computed(() =>
-  selectedCategory.value === 'all' ? props.eventsList : props.eventsList.filter(e => e.category === selectedCategory.value)
+  selectedCategory.value === 'all'
+    ? mappedEvents.value
+    : mappedEvents.value.filter(e => e.tags.includes(selectedCategory.value))
 )
 
-const totalPages = computed(() => Math.ceil(filteredEvents.value.length / props.perPage))
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredEvents.value.length / props.perPage)))
 const pagedEvents = computed(() => {
   const start = (currentPage.value - 1) * props.perPage
   return filteredEvents.value.slice(start, start + props.perPage)

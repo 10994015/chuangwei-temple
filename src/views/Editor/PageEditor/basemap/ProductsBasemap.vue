@@ -67,22 +67,24 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const props = defineProps({
-  productsList: {
-    type: Array,
-    default: () => [
-      { id: 1, rank: 1, title: '平安符',     price: 'NT$200',   image: null, badge: '熱門', badgeClass: 'hot' },
-      { id: 2, rank: 2, title: '個人光明燈', price: 'NT$600',   image: null, badge: '推薦', badgeClass: 'recommended' },
-      { id: 3, rank: 3, title: '全家光明燈', price: 'NT$1,200', image: null },
-      { id: 4,          title: '平安米',     price: 'NT$150',   image: null, badge: '新品', badgeClass: 'new' },
-      { id: 5,          title: '香油錢',     price: 'NT$500',   image: null },
-      { id: 6,          title: '祈福手環',   price: 'NT$350',   image: null, badge: '熱門', badgeClass: 'hot' },
-    ]
-  },
-  device: { type: String, default: 'desktop' }
+  products: { type: Array, default: () => [] },  // frame.data.products
+  device:   { type: String, default: 'desktop' }
 })
 
 const emit = defineEmits(['add-to-cart', 'view-all'])
-const displayProducts = computed(() => props.productsList.slice(0, 3))
+
+const displayProducts = computed(() =>
+  props.products.slice(0, 3).map((p, i) => ({
+    id:        p.id,
+    rank:      i + 1,
+    title:     p.name || '',
+    price:     p.price != null ? `NT$${Number(p.price).toLocaleString()}` : '',
+    image:     p.imgSrc || null,
+    badge:     Array.isArray(p.labels) && p.labels.length ? p.labels[0] : null,
+    badgeClass: 'hot',
+  }))
+)
+
 const addToCart = (product) => emit('add-to-cart', product)
 </script>
 

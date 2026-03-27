@@ -100,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch, provide  } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import SystemFramePreview from './PreviewPage/SystemFramePreview.vue'
 import CustomFramePreview from './PreviewPage/CustomFramePreview.vue'
@@ -199,6 +199,11 @@ watch(() => route.query.locale, (newLocale) => {
 
 // ==================== Data ====================
 const getTempleId   = () => route.params.templeId
+provide('previewContext', {
+  get tenantId() { return route.params.templeId || '' },
+  get locale()   { return currentLocale.value || 'ZH-TW' },
+  get source()   { return route.query.source   || 'cms' },
+})
 const getSlug       = () => route.query.slug || 'home'
 const getTemplateId = () => route.query.templateId
 
@@ -322,6 +327,8 @@ const handleChangePage = (slug) => {
     }
   }
 }
+
+provide('previewNavigate', handleChangePage)
 
 const isSystemFrame = (frame) => {
   if (!frame || !frame.type) return false
