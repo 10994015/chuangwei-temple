@@ -492,7 +492,7 @@
             <div class="prop-group">
               <label>{{ t('propsPanel.elementTextColor') }}</label>
               <div class="color-input-group">
-                <input v-model="elementMetadata.color" type="color" class="prop-color" @input="updateMetadata" />
+                <input :value="elementMetadata.color || '#000000'" type="color" class="prop-color" @input="elementMetadata.color = $event.target.value; updateMetadata()" />
                 <input v-model="elementMetadata.color" type="text" class="prop-input color-text" placeholder="#000000" @input="updateMetadata" />
                 <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
@@ -526,7 +526,7 @@
             <div class="prop-group">
               <label>{{ t('propsPanel.backgroundColor') }}</label>
               <div class="color-input-group">
-                <input v-model="elementMetadata.backgroundColor" type="color" class="prop-color" @input="updateMetadata" />
+                <input :value="elementMetadata.backgroundColor || '#ffffff'" type="color" class="prop-color" @input="elementMetadata.backgroundColor = $event.target.value; updateMetadata()" />
                 <input v-model="elementMetadata.backgroundColor" type="text" class="prop-input color-text" placeholder="transparent" @input="updateMetadata" />
                 <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
@@ -676,7 +676,7 @@
             <div class="prop-group">
               <label>{{ t('propsPanel.elementTextColor') }}</label>
               <div class="color-input-group">
-                <input v-model="elementMetadata.color" type="color" class="prop-color" @input="updateMetadata" />
+                <input :value="elementMetadata.color || '#000000'" type="color" class="prop-color" @input="elementMetadata.color = $event.target.value; updateMetadata()" />
                 <input v-model="elementMetadata.color" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateMetadata" />
                 <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
@@ -684,7 +684,7 @@
             <div class="prop-group">
               <label>{{ t('propsPanel.backgroundColor') }}</label>
               <div class="color-input-group">
-                <input v-model="elementMetadata.backgroundColor" type="color" class="prop-color" @input="updateMetadata" />
+                <input :value="elementMetadata.backgroundColor || '#ffffff'" type="color" class="prop-color" @input="elementMetadata.backgroundColor = $event.target.value; updateMetadata()" />
                 <input v-model="elementMetadata.backgroundColor" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updateMetadata" />
                 <button @click="elementMetadata.backgroundColor = null; updateMetadata()" class="clear-btn" :title="t('propsPanel.clearBtn')">✕</button>
               </div>
@@ -736,7 +736,7 @@
 
         <template v-else-if="selectedElement.element?.type === 'HORIZON_LINE'">
           <h4 class="section-title">{{ t('propsPanel.hlineSettings') }}</h4>
-          <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
+          <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input :value="selectedElement.element.value.color || '#000000'" type="color" class="prop-color" @input="selectedElement.element.value.color = $event.target.value" /></div>
           <div class="prop-group"><label>{{ t('propsPanel.thickness') }}</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" /></div>
           <div class="padding-section">
             <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
@@ -767,7 +767,7 @@
 
         <template v-else-if="selectedElement.element?.type === 'VERTICAL_LINE'">
           <h4 class="section-title">{{ t('propsPanel.vlineSettings') }}</h4>
-          <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input v-model="selectedElement.element.value.color" type="color" class="prop-color" /></div>
+          <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input :value="selectedElement.element.value.color || '#000000'" type="color" class="prop-color" @input="selectedElement.element.value.color = $event.target.value" /></div>
           <div class="prop-group"><label>{{ t('propsPanel.thickness') }}</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" /></div>
           <div class="padding-section">
             <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
