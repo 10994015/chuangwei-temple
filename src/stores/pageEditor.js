@@ -46,12 +46,15 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   const syncHeaderTabsFromPageData = (pages) => {
     if (!Array.isArray(pages) || pages.length === 0) return
 
-    const firstPage = pages[0]
-    const headerBasemap = firstPage.contentJson?.find(b => b.bgType === 'HEADER')
-    const headerFrame = headerBasemap?.frames?.[0]
-
-    if (headerFrame?.data?.tabs && Array.isArray(headerFrame.data.tabs)) {
-      headerTabs.value = headerFrame.data.tabs
+    for (const page of pages) {
+      const headerBasemap = page.contentJson?.find(
+        b => b.bgType === 'HEADER' || b.bgType === 'PV_HEADER'
+      )
+      const headerFrame = headerBasemap?.frames?.[0]
+      if (headerFrame?.data?.tabs && Array.isArray(headerFrame.data.tabs) && headerFrame.data.tabs.length > 0) {
+        headerTabs.value = headerFrame.data.tabs
+        return
+      }
     }
   }
 
@@ -272,7 +275,12 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         if (frame.type === 'HEADER') {
           if (!Array.isArray(frame.data.tabs)) frame.data.tabs = []
         }
-
+        if (frame.type === 'PV_FIRST_PICTURE') {
+          if (!Array.isArray(frame.data.buttons)) frame.data.buttons = []
+          if (frame.data.heroTitle == null) frame.data.heroTitle = '在宮掌櫃，\n遇見你的神明'
+          if (frame.data.brandName == null) frame.data.brandName = ''
+          frame.data.bgColor = 'transparent'
+        }
         if (!Array.isArray(frame.elements)) frame.elements = []
 
         frame.elements = frame.elements.map((element) => {

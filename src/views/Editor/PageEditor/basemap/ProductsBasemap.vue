@@ -73,8 +73,15 @@ const props = defineProps({
 
 const emit = defineEmits(['add-to-cart', 'view-all'])
 
-const displayProducts = computed(() =>
-  props.products.slice(0, 3).map((p, i) => ({
+const DEFAULT_PRODUCTS = [
+  { id: 1, name: '平安符結緣品', price: 150, imgSrc: null, labels: ['熱門'] },
+  { id: 2, name: '開運香火袋',   price: 200, imgSrc: null, labels: ['推薦'] },
+  { id: 3, name: '祈福金紙禮盒', price: 380, imgSrc: null, labels: [] },
+]
+
+const displayProducts = computed(() => {
+  const source = props.products.length > 0 ? props.products : DEFAULT_PRODUCTS
+  return source.slice(0, 3).map((p, i) => ({
     id:        p.id,
     rank:      i + 1,
     title:     p.name || '',
@@ -83,7 +90,7 @@ const displayProducts = computed(() =>
     badge:     Array.isArray(p.labels) && p.labels.length ? p.labels[0] : null,
     badgeClass: 'hot',
   }))
-)
+})
 
 const addToCart = (product) => emit('add-to-cart', product)
 </script>

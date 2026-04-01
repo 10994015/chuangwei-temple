@@ -74,6 +74,15 @@ const props = defineProps({
   perPage:         { type: Number, default: 9 },
 })
 
+const DEFAULT_ALBUMS = [
+  { id: 1, title: '春節祈福法會活動紀錄',   category: '法會活動', createdAt: '2025-02-01', imgSrc: null, description: '記錄春節期間宮廟祈福法會的莊嚴儀式與信眾參與盛況。' },
+  { id: 2, title: '媽祖聖誕遶境花絮',       category: '遶境活動', createdAt: '2025-03-15', imgSrc: null, description: '媽祖聖誕千秋遶境活動精彩花絮，凝聚信眾虔誠心意。' },
+  { id: 3, title: '元宵燈謎晚會精彩回顧',   category: '文化活動', createdAt: '2025-02-12', imgSrc: null, description: '元宵節燈謎晚會歡樂現場，老少咸宜共享佳節氣氛。' },
+  { id: 4, title: '觀音菩薩聖誕祈福典禮',   category: '法會活動', createdAt: '2025-04-10', imgSrc: null, description: '觀音菩薩聖誕祈福典禮，信眾齊聚祈求平安吉祥。' },
+  { id: 5, title: '宮廟文物特展開幕花絮',   category: '文化活動', createdAt: '2025-05-01', imgSrc: null, description: '珍貴宮廟文物特展正式開幕，展示百年歷史與文化傳承。' },
+  { id: 6, title: '中元普渡超薦法會紀錄',   category: '法會活動', createdAt: '2025-08-10', imgSrc: null, description: '中元普渡超薦法會隆重舉行，廣度孤魂同沾法益。' },
+]
+
 const safeAlbumList = computed(() => {
   const raw = props.albumList
   if (raw && typeof raw === 'object' && Array.isArray(raw.data)) return raw.data
@@ -81,15 +90,16 @@ const safeAlbumList = computed(() => {
   return []
 })
 
-const normalizedAlbums = computed(() =>
-  safeAlbumList.value.map(a => ({
+const normalizedAlbums = computed(() => {
+  const source = safeAlbumList.value.length > 0 ? safeAlbumList.value : DEFAULT_ALBUMS
+  return source.map(a => ({
     ...a,
     coverImage: a.imgSrc ?? a.coverImage ?? null,
     tag:        a.category ?? a.tag ?? null,
     date:       a.createdAt ? a.createdAt.slice(0, 10) : (a.date ?? null),
     title:      a.title ?? '',
   }))
-)
+})
 
 const categories = computed(() => {
   const base = [{ label: t('albumListBasemap.all'), value: 'all' }]

@@ -406,7 +406,250 @@
             </div>
           </div>
         </template>
+        <template v-else-if="selectedFrame.type === 'PV_FIRST_PICTURE'">
+          <h4 class="section-title">品牌首頁設定</h4>
 
+          <!-- 未選取子區塊時顯示提示 -->
+          <template v-if="!pvSubSection">
+            <div class="pv-fp-section-hint">
+              <p>點擊畫面上的區塊進行編輯</p>
+              <div class="pv-fp-section-btns">
+                <button class="pv-fp-section-btn" @click="pvSubSection = 'logo'">Logo 區塊</button>
+                <button class="pv-fp-section-btn" @click="pvSubSection = 'hero'">主標題區塊</button>
+                <button class="pv-fp-section-btn" @click="pvSubSection = 'buttons'">按鈕區塊</button>
+              </div>
+            </div>
+            <div class="metadata-section">
+              <h5 class="subsection-title">Copyright 文字</h5>
+              <div class="prop-group">
+                <input v-model="pvFpCopyright" type="text" class="prop-input" placeholder="Copyright © 2025 ..." @input="updatePvFpData" />
+              </div>
+            </div>
+          </template>
+
+          <!-- Logo 區塊 -->
+          <template v-else-if="pvSubSection === 'logo'">
+            <button class="pv-fp-back-btn" @click="pvSubSection = null">← 返回</button>
+            <h5 class="subsection-title" style="margin-top: 12px;">Logo 圖片</h5>
+            <div class="prop-group">
+              <div class="image-upload">
+                <div v-if="isUploadingPvFpLogo" class="uploading-state">
+                  <div class="spinner"></div>
+                  <span>上傳中...</span>
+                </div>
+                <img v-else-if="selectedFrame.data?.logoImgSrc" :src="selectedFrame.data.logoImgSrc" alt="Logo 預覽" class="preview-image logo-preview" />
+                <div v-else class="no-image"><span>尚未上傳 Logo</span></div>
+                <button @click="handleUploadPvFpLogo" class="upload-btn" :disabled="isUploadingPvFpLogo">
+                  {{ isUploadingPvFpLogo ? '上傳中...' : (selectedFrame.data?.logoImgSrc ? '更換 Logo' : '上傳 Logo') }}
+                </button>
+                <button v-if="selectedFrame.data?.logoImgSrc" @click="removePvFpLogo" class="delete-logo-btn">移除 Logo</button>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>寬度（px，留空自動）</label>
+              <div class="input-with-suffix">
+                <input v-model="pvFpLogoWidth" type="number" class="prop-input" placeholder="自動" min="1" @input="updatePvFpData" />
+                <span class="input-suffix">px</span>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>高度（px，留空自動）</label>
+              <div class="input-with-suffix">
+                <input v-model="pvFpLogoHeight" type="number" class="prop-input" placeholder="自動" min="1" @input="updatePvFpData" />
+                <span class="input-suffix">px</span>
+              </div>
+            </div>
+            <div class="metadata-section">
+              <h5 class="subsection-title">品牌名稱</h5>
+              <div class="prop-group">
+                <label>文字（留空不顯示）</label>
+                <input v-model="pvFpBrandName" type="text" class="prop-input" placeholder="宮掌櫃" @input="updatePvFpData" />
+              </div>
+              <div class="prop-group">
+                <label>顏色</label>
+                <div class="color-input-group">
+                  <input :value="pvFpBrandColor" type="color" class="prop-color" @input="pvFpBrandColor = $event.target.value; updatePvFpData()" />
+                  <input v-model="pvFpBrandColor" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updatePvFpData" />
+                </div>
+              </div>
+            </div>
+            <div class="padding-section">
+              <h5 class="subsection-title">區塊間距</h5>
+              <div class="padding-controls">
+                <div class="padding-visual"><div class="padding-box">
+                  <div class="padding-input-group top"><label>上</label><input v-model.number="pvFpLogoPadding.top" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('logo')" /></div>
+                  <div class="padding-sides">
+                    <div class="padding-input-group left"><label>左</label><input v-model.number="pvFpLogoPadding.left" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('logo')" /></div>
+                    <div class="content-preview">Logo</div>
+                    <div class="padding-input-group right"><label>右</label><input v-model.number="pvFpLogoPadding.right" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('logo')" /></div>
+                  </div>
+                  <div class="padding-input-group bottom"><label>下</label><input v-model.number="pvFpLogoPadding.bottom" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('logo')" /></div>
+                </div></div>
+                <div class="padding-presets">
+                  <button @click="setPvFpPadding('logo', 0)" class="preset-btn">無</button>
+                  <button @click="setPvFpPadding('logo', 16)" class="preset-btn">小</button>
+                  <button @click="setPvFpPadding('logo', 32)" class="preset-btn">中</button>
+                  <button @click="setPvFpPadding('logo', 56)" class="preset-btn">大</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- 主標題區塊 -->
+          <template v-else-if="pvSubSection === 'hero'">
+            <button class="pv-fp-back-btn" @click="pvSubSection = null">← 返回</button>
+            <h5 class="subsection-title" style="margin-top: 12px;">標題圖片（圖在文字上方）</h5>
+            <div class="prop-group">
+              <div class="image-upload">
+                <div v-if="isUploadingPvFpHeroImg" class="uploading-state">
+                  <div class="spinner"></div>
+                  <span>上傳中...</span>
+                </div>
+                <img v-else-if="selectedFrame.data?.heroImgSrc" :src="selectedFrame.data.heroImgSrc" alt="標題圖預覽" class="preview-image" />
+                <div v-else class="no-image"><span>尚未上傳標題圖</span></div>
+                <button @click="handleUploadPvFpHeroImg" class="upload-btn" :disabled="isUploadingPvFpHeroImg">
+                  {{ isUploadingPvFpHeroImg ? '上傳中...' : (selectedFrame.data?.heroImgSrc ? '更換標題圖' : '上傳標題圖') }}
+                </button>
+                <button v-if="selectedFrame.data?.heroImgSrc" @click="removePvFpHeroImg" class="delete-logo-btn">移除標題圖</button>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>圖片寬度（px，留空 100%）</label>
+              <div class="input-with-suffix">
+                <input v-model="pvFpHeroImgWidth" type="number" class="prop-input" placeholder="100%" min="1" @input="updatePvFpData" />
+                <span class="input-suffix">px</span>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>圖片高度（px，留空自動）</label>
+              <div class="input-with-suffix">
+                <input v-model="pvFpHeroImgHeight" type="number" class="prop-input" placeholder="自動" min="1" @input="updatePvFpData" />
+                <span class="input-suffix">px</span>
+              </div>
+            </div>
+            <div class="metadata-section">
+              <h5 class="subsection-title">標題文字</h5>
+              <div class="prop-group">
+                <label>文字（留空不顯示，可用 \n 換行）</label>
+                <textarea v-model="pvFpTitle" class="prop-textarea" rows="3" placeholder="在宮掌櫃，&#10;遇見你的神明" @input="updatePvFpData"></textarea>
+              </div>
+              <div class="prop-group">
+                <label>文字大小（px，留空預設 64px）</label>
+                <div class="input-with-suffix">
+                  <input v-model="pvFpTitleFontSize" type="number" class="prop-input" placeholder="64" min="12" @input="updatePvFpData" />
+                  <span class="input-suffix">px</span>
+                </div>
+              </div>
+              <div class="prop-group">
+                <label>文字顏色</label>
+                <div class="color-input-group">
+                  <input :value="pvFpTitleColor" type="color" class="prop-color" @input="pvFpTitleColor = $event.target.value; updatePvFpData()" />
+                  <input v-model="pvFpTitleColor" type="text" class="prop-input color-text" placeholder="#1a1a1a" @input="updatePvFpData" />
+                </div>
+              </div>
+            </div>
+            <div class="padding-section">
+              <h5 class="subsection-title">區塊間距</h5>
+              <div class="padding-controls">
+                <div class="padding-visual"><div class="padding-box">
+                  <div class="padding-input-group top"><label>上</label><input v-model.number="pvFpHeroPadding.top" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('hero')" /></div>
+                  <div class="padding-sides">
+                    <div class="padding-input-group left"><label>左</label><input v-model.number="pvFpHeroPadding.left" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('hero')" /></div>
+                    <div class="content-preview">主標題</div>
+                    <div class="padding-input-group right"><label>右</label><input v-model.number="pvFpHeroPadding.right" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('hero')" /></div>
+                  </div>
+                  <div class="padding-input-group bottom"><label>下</label><input v-model.number="pvFpHeroPadding.bottom" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('hero')" /></div>
+                </div></div>
+                <div class="padding-presets">
+                  <button @click="setPvFpPadding('hero', 0)" class="preset-btn">無</button>
+                  <button @click="setPvFpPadding('hero', 16)" class="preset-btn">小</button>
+                  <button @click="setPvFpPadding('hero', 32)" class="preset-btn">中</button>
+                  <button @click="setPvFpPadding('hero', 56)" class="preset-btn">大</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- 按鈕區塊 -->
+          <template v-else-if="pvSubSection === 'buttons'">
+            <button class="pv-fp-back-btn" @click="pvSubSection = null">← 返回</button>
+            <h5 class="subsection-title" style="margin-top: 12px;">按鈕列表</h5>
+            <div v-for="(btn, i) in pvFpButtons" :key="i" class="pv-fp-btn-editor">
+              <div class="pv-fp-btn-header">
+                <span class="pv-fp-btn-label">按鈕 {{ i + 1 }}</span>
+                <button class="pv-fp-btn-remove" @click="removePvFpButton(i)">✕</button>
+              </div>
+              <div class="prop-group">
+                <label>文字</label>
+                <input v-model="btn.text" type="text" class="prop-input" placeholder="按鈕文字" @input="updatePvFpData" />
+              </div>
+              <div class="prop-group">
+                <label>連結</label>
+                <select
+                  v-model="pvFpBtnLinkTypes[i]"
+                  class="prop-select internal-link-select"
+                  @change="onPvFpBtnLinkTypeChange(i, $event.target.value)"
+                >
+                  <option value="__custom__">自訂網址</option>
+                  <option
+                    v-for="page in internalPageOptions"
+                    :key="page.slug"
+                    :value="page.slug"
+                  >{{ page.label }}</option>
+                </select>
+                <input
+                  v-if="pvFpBtnLinkTypes[i] === '__custom__'"
+                  v-model="btn.url"
+                  type="text"
+                  class="prop-input"
+                  style="margin-top: 8px;"
+                  placeholder="https://..."
+                  @input="updatePvFpData"
+                />
+              </div>
+              <div class="prop-group">
+                <label>顏色（留空套用全域色）</label>
+                <div class="color-input-group">
+                  <input :value="btn.color || pvFpBtnColor" type="color" class="prop-color" @input="btn.color = $event.target.value; updatePvFpData()" />
+                  <input v-model="btn.color" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updatePvFpData" />
+                  <button @click="btn.color = null; updatePvFpData()" class="clear-btn" title="使用全域顏色">✕</button>
+                </div>
+              </div>
+            </div>
+            <button class="upload-btn" style="margin-top: 8px;" @click="addPvFpButton">+ 新增按鈕</button>
+            <div class="metadata-section">
+              <h5 class="subsection-title">全域按鈕顏色</h5>
+              <div class="prop-group">
+                <div class="color-input-group">
+                  <input :value="pvFpBtnColor" type="color" class="prop-color" @input="pvFpBtnColor = $event.target.value; updatePvFpData()" />
+                  <input v-model="pvFpBtnColor" type="text" class="prop-input color-text" placeholder="#E8572A" @input="updatePvFpData" />
+                </div>
+                <span class="unit-hint">未設定個別顏色的按鈕將套用此顏色</span>
+              </div>
+            </div>
+            <div class="padding-section">
+              <h5 class="subsection-title">區塊間距</h5>
+              <div class="padding-controls">
+                <div class="padding-visual"><div class="padding-box">
+                  <div class="padding-input-group top"><label>上</label><input v-model.number="pvFpButtonsPadding.top" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('buttons')" /></div>
+                  <div class="padding-sides">
+                    <div class="padding-input-group left"><label>左</label><input v-model.number="pvFpButtonsPadding.left" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('buttons')" /></div>
+                    <div class="content-preview">按鈕</div>
+                    <div class="padding-input-group right"><label>右</label><input v-model.number="pvFpButtonsPadding.right" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('buttons')" /></div>
+                  </div>
+                  <div class="padding-input-group bottom"><label>下</label><input v-model.number="pvFpButtonsPadding.bottom" type="number" min="0" max="200" step="4" class="padding-input" @input="updatePvFpPadding('buttons')" /></div>
+                </div></div>
+                <div class="padding-presets">
+                  <button @click="setPvFpPadding('buttons', 0)" class="preset-btn">無</button>
+                  <button @click="setPvFpPadding('buttons', 16)" class="preset-btn">小</button>
+                  <button @click="setPvFpPadding('buttons', 32)" class="preset-btn">中</button>
+                  <button @click="setPvFpPadding('buttons', 56)" class="preset-btn">大</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+        </template>
         <template v-else>
           <h4 class="section-title">{{ t('propsPanel.frameSettings') }}</h4>
           <div class="prop-group">
@@ -861,7 +1104,147 @@
             <div class="width-presets"><button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button><button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button><button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button></div>
           </div>
         </template>
+        <template v-else-if="selectedElement.element?.type === 'ACCORDION'">
+          <h4 class="section-title">手風琴設定</h4>
 
+          <div class="metadata-section">
+            <h5 class="subsection-title">標題樣式</h5>
+            <div class="prop-group">
+              <label>標題顏色</label>
+              <div class="color-input-group">
+                <input :value="elementMetadata.color || '#333333'" type="color" class="prop-color"
+                  @input="elementMetadata.color = $event.target.value; updateMetadata()" />
+                <input v-model="elementMetadata.color" type="text" class="prop-input color-text"
+                  placeholder="#333333" @input="updateMetadata" />
+                <button @click="elementMetadata.color = null; updateMetadata()" class="clear-btn">✕</button>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>標題大小（px）</label>
+              <div class="input-with-suffix">
+                <input v-model="accordionTitleFontSize" type="number" class="prop-input"
+                  placeholder="16" min="10" @input="updateAccordionStyle" />
+                <span class="input-suffix">px</span>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>內容顏色</label>
+              <div class="color-input-group">
+                <input :value="accordionContentColor" type="color" class="prop-color"
+                  @input="accordionContentColor = $event.target.value; updateAccordionStyle()" />
+                <input v-model="accordionContentColor" type="text" class="prop-input color-text"
+                  placeholder="#555555" @input="updateAccordionStyle" />
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>內容大小（px）</label>
+              <div class="input-with-suffix">
+                <input v-model="accordionContentFontSize" type="number" class="prop-input"
+                  placeholder="15" min="10" @input="updateAccordionStyle" />
+                <span class="input-suffix">px</span>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label class="checkbox-label">
+                <input v-model="accordionDefaultOpen" type="checkbox" @change="updateAccordionStyle" />
+                <span>預設展開第一項</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="metadata-section">
+            <h5 class="subsection-title">項目列表</h5>
+            <div
+              v-for="(item, i) in accordionItems"
+              :key="i"
+              class="pv-fp-btn-editor"
+              :class="{ 'drag-over': accordionDragOver === i }"
+              draggable="true"
+              @dragstart="accordionDragIndex = i"
+              @dragover.prevent="accordionDragOver = i"
+              @dragleave="accordionDragOver = null"
+              @drop.prevent="onAccordionDrop(i)"
+              @dragend="accordionDragIndex = null; accordionDragOver = null"
+            >
+              <div
+                class="pv-fp-btn-header accordion-item-header"
+                @click="toggleAccordionItem(i)"
+              >
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="drag-handle-text" @click.stop>⠿</span>
+                  <span class="pv-fp-btn-label">
+                    {{ item.title || `項目 ${i + 1}` }}
+                  </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg
+                    class="accordion-item-chevron"
+                    :class="{ 'is-open': expandedAccordionItems.includes(i) }"
+                    width="14" height="14" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                  <button class="pv-fp-btn-remove" @click.stop="removeAccordionItem(i)">✕</button>
+                </div>
+              </div>
+
+              <template v-if="expandedAccordionItems.includes(i)">
+                <div class="prop-group" style="padding: 0 12px 0; margin-top: 12px;">
+                  <label>標題</label>
+                  <input v-model="item.title" type="text" class="prop-input"
+                    placeholder="輸入標題" @input="updateAccordionItems" />
+                </div>
+                <div class="prop-group" style="padding: 0 12px 12px;">
+                  <label>內容</label>
+                  <RichTextEditor v-model="item.content" @update:modelValue="updateAccordionItems" />
+                </div>
+              </template>
+            </div>
+
+            <button class="upload-btn" style="margin-top: 8px;" @click="addAccordionItem">
+              + 新增項目
+            </button>
+          </div>
+
+          <div class="padding-section">
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <div class="padding-controls">
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left"><label>{{ t('propsPanel.paddingLeft') }}</label><input v-model.number="elementPadding.left" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                  <div class="content-preview">{{ t('propsPanel.contentArea') }}</div>
+                  <div class="padding-input-group right"><label>{{ t('propsPanel.paddingRight') }}</label><input v-model.number="elementPadding.right" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+                </div>
+                <div class="padding-input-group bottom"><label>{{ t('propsPanel.paddingBottom') }}</label><input v-model.number="elementPadding.bottom" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
+              </div></div>
+              <div class="padding-presets">
+                <button @click="setElementPadding(0)" class="preset-btn">{{ t('propsPanel.paddingNone') }}</button>
+                <button @click="setElementPadding(10)" class="preset-btn">{{ t('propsPanel.sizeSmall') }}</button>
+                <button @click="setElementPadding(20)" class="preset-btn">{{ t('propsPanel.sizeMedium') }}</button>
+                <button @click="setElementPadding(40)" class="preset-btn">{{ t('propsPanel.sizeLarge') }}</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="width-section">
+            <h5 class="subsection-title">{{ t('propsPanel.elementWidth') }}</h5>
+            <div class="prop-group">
+              <label>{{ t('propsPanel.maxWidth') }}</label>
+              <div class="input-with-suffix">
+                <input v-model="elementWidth" type="number" class="prop-input" placeholder="100" min="1" max="100" @input="updateElementWidthDebounced" />
+                <span class="input-suffix">%</span>
+              </div>
+            </div>
+            <div class="width-presets">
+              <button @click="setElementWidth('50')" class="preset-btn">{{ t('propsPanel.halfWidth') }}</button>
+              <button @click="setElementWidth('80')" class="preset-btn">{{ t('propsPanel.presetNarrow') }}</button>
+              <button @click="setElementWidth('100')" class="preset-btn">{{ t('propsPanel.presetFull') }}</button>
+            </div>
+          </div>
+        </template>
         <template v-else-if="selectedElement.element?.type === 'GOOGLE_MAP'">
           <h4 class="section-title">{{ t('propsPanel.mapSettings') }}</h4>
           <div class="prop-group"><label>{{ t('propsPanel.mapAddress') }}</label><input v-model="mapAddress" type="text" class="prop-input" :placeholder="t('propsPanel.mapAddressPlaceholder')" @input="updateMapData" /></div>
@@ -935,9 +1318,9 @@ const { t } = useI18n()
 
 const props = defineProps({
   selectedBasemap: { type: Object, default: null },
-  selectedFrame: { type: Object, default: null },
+  selectedFrame:   { type: Object, default: null },
   selectedElement: { type: Object, default: null },
-  selectedCell: { type: Object, default: null }
+  selectedCell:    { type: Object, default: null }
 })
 
 const emit = defineEmits(['update-logo', 'delete-logo', 'update-cell-padding'])
@@ -991,6 +1374,36 @@ const isUploadingHeroBackground = ref(false)
 const isUploadingCarousel = ref(false)
 const isUploadingBrightLampBg = ref(false)
 const isUploadingBrightLampMain = ref(false)
+
+const isUploadingPvFpLogo = ref(false)
+const isUploadingPvFpHeroImg = ref(false)
+const pvFpBrandName    = ref('')
+const pvFpBrandColor   = ref('#E8572A')
+const pvFpLogoWidth    = ref('')
+const pvFpLogoHeight   = ref('')
+const pvFpTitle        = ref('')
+const pvFpTitleColor   = ref('#1a1a1a')
+const pvFpHeroImgWidth  = ref('')
+const pvFpHeroImgHeight = ref('')
+const pvFpBgColor      = ref('#ffffff')
+const pvFpBtnColor     = ref('#E8572A')
+const pvFpCopyright    = ref('')
+const pvFpButtons      = ref([])
+const pvFpTitleFontSize = ref('')
+const pvSubSection      = ref(null)
+const pvFpLogoPadding    = ref({ top: 0, right: 0, bottom: 0, left: 0 })
+const pvFpHeroPadding    = ref({ top: 0, right: 0, bottom: 0, left: 0 })
+const pvFpButtonsPadding = ref({ top: 0, right: 0, bottom: 0, left: 0 })
+const pvFpBtnLinkTypes   = ref([])
+
+const accordionItems           = ref([])
+const accordionTitleFontSize   = ref('')
+const accordionContentColor    = ref('#555555')
+const accordionContentFontSize = ref('')
+const accordionDefaultOpen     = ref(false)
+const accordionDragIndex = ref(null)
+const accordionDragOver  = ref(null)
+const expandedAccordionItems = ref([0])
 
 const carouselWallImages = computed(() =>
   Array.isArray(props.selectedFrame?.data?.caroiselWallImgs)
@@ -1064,9 +1477,9 @@ const systemFrameTextTheme = ref('light')
 const systemFrameTextColor = ref('#333333')
 
 const textThemeOptions = computed(() => [
-  { value: 'light',  label: t('propsPanel.themeLight'), bg: '#f8f8f8',                                fg: '#333333', labelColor: '#444' },
-  { value: 'dark',   label: t('propsPanel.themeDark'),  bg: '#1a1a2e',                                fg: '#f0f0f0', labelColor: '#444' },
-  { value: 'sepia',  label: t('propsPanel.themeSepia'), bg: '#fdf0dc',                                fg: '#4a3728', labelColor: '#7a5830' },
+  { value: 'light',  label: t('propsPanel.themeLight'), bg: '#f8f8f8',                                 fg: '#333333', labelColor: '#444' },
+  { value: 'dark',   label: t('propsPanel.themeDark'),  bg: '#1a1a2e',                                 fg: '#f0f0f0', labelColor: '#444' },
+  { value: 'sepia',  label: t('propsPanel.themeSepia'), bg: '#fdf0dc',                                 fg: '#4a3728', labelColor: '#7a5830' },
   { value: 'custom', label: t('propsPanel.themeCustom'),bg: 'linear-gradient(135deg,#ffe0d0,#ffd0f0)', fg: '#c04060', labelColor: '#c04060' },
 ])
 
@@ -1083,15 +1496,12 @@ const updateSystemFrameTheme = () => {
     props.selectedFrame.data.textColor = systemFrameTextColor.value
   }
 }
+
 const internalPageOptions = computed(() => {
   const tabs = pageEditorStore.headerTabs || []
-  return tabs.map(tab => ({
-    label: tab.name || tab.slug,
-    slug: tab.slug,
-  }))
+  return tabs.map(tab => ({ label: tab.name || tab.slug, slug: tab.slug }))
 })
 
-// 判斷目前連結類型：'__custom__' 或 internalSlug 值
 const buttonLinkType = computed({
   get() {
     const slug = props.selectedElement?.element?.value?.internalSlug
@@ -1111,6 +1521,7 @@ const buttonLinkType = computed({
 })
 
 const isCustomButtonLink = computed(() => buttonLinkType.value === '__custom__')
+
 const mapAddress = ref('')
 const mapLat = ref(25.033)
 const mapLng = ref(121.565)
@@ -1125,16 +1536,16 @@ const heightPresets = computed(() => [
 
 watch(() => props.selectedElement, (newVal) => {
   if (newVal?.type === 'logo' && newVal.data) {
-    logoAlt.value = newVal.data.alt || 'Logo'
-    logoWidth.value = newVal.data.width || '120px'
+    logoAlt.value    = newVal.data.alt    || 'Logo'
+    logoWidth.value  = newVal.data.width  || '120px'
     logoHeight.value = newVal.data.height || 'auto'
   }
   if (newVal?.element?.type === 'CAROUSEL_IMG') {
     const value = newVal.element.value || {}
-    carouselImages.value = value.imgs || []
+    carouselImages.value  = value.imgs     || []
     carouselAutoPlay.value = value.autoPlay !== false
     carouselInterval.value = value.interval || 3000
-    carouselHeight.value = value.height || 400
+    carouselHeight.value   = value.height   || 400
   }
   if (newVal?.element?.type === 'GOOGLE_MAP') {
     const value = newVal.element.value || {}
@@ -1143,24 +1554,33 @@ watch(() => props.selectedElement, (newVal) => {
     mapLng.value = value.lng !== undefined ? value.lng : 121.565
     mapZoom.value = value.zoom !== undefined ? value.zoom : 15
   }
+  if (newVal?.element?.type === 'ACCORDION') {
+    const value   = newVal.element.value   || {}
+    const content = newVal.element.content || {}
+    accordionItems.value         = Array.isArray(value.items) ? value.items.map(i => ({ ...i })) : [{ title: '', content: '' }]
+    accordionTitleFontSize.value   = content.titleFontSize   ? String(content.titleFontSize)   : ''
+    accordionContentColor.value    = content.contentColor    || '#555555'
+    accordionContentFontSize.value = content.contentFontSize ? String(content.contentFontSize) : ''
+    accordionDefaultOpen.value     = content.defaultOpen     ?? false
+  }
   if (newVal?.element?.type === 'IMG') {
-    imageAlt.value = newVal.element.value?.alt || ''
-    imgWidth.value = stripPx(newVal.element.metadata?.width || '')
+    imageAlt.value  = newVal.element.value?.alt || ''
+    imgWidth.value  = stripPx(newVal.element.metadata?.width  || '')
     imgHeight.value = stripPx(newVal.element.metadata?.height || '')
   } else {
-    imageAlt.value = ''
-    imgWidth.value = ''
+    imageAlt.value  = ''
+    imgWidth.value  = ''
     imgHeight.value = ''
   }
   if (newVal?.element?.metadata) {
     const m = newVal.element.metadata
     elementMetadata.value = {
-      color: m.color || null,
-      fontSize: stripPx(m.fontSize || m.font_size) || null,
-      fontWeight: normalizeFontWeight(m.fontWeight || m.font_weight),
-      textAlign: m.textAlign || m.text_align || null,
-      width: m.width || null,
-      height: m.height || null,
+      color:           m.color           || null,
+      fontSize:        stripPx(m.fontSize || m.font_size) || null,
+      fontWeight:      normalizeFontWeight(m.fontWeight || m.font_weight),
+      textAlign:       m.textAlign || m.text_align || null,
+      width:           m.width           || null,
+      height:          m.height          || null,
       backgroundColor: m.backgroundColor || m.background_color || null
     }
   } else {
@@ -1172,18 +1592,10 @@ watch(() => props.selectedElement, (newVal) => {
   elementWidth.value = stripPercent(newVal?.element?.width || '100%')
 }, { immediate: true, deep: true })
 
-watch(() => props.selectedElement?.data, (newData) => {
-  if (props.selectedElement?.type === 'logo' && newData) {
-    console.log('Logo data 變化檢測:', newData)
-  }
-}, { deep: true })
-
 watch(
   () => props.selectedElement?.frame?.data?.logoImgSrc,
   (newSrc) => {
-    if (props.selectedElement?.type === 'logo') {
-      localLogoSrc.value = newSrc || null
-    }
+    if (props.selectedElement?.type === 'logo') localLogoSrc.value = newSrc || null
   },
   { immediate: true }
 )
@@ -1191,9 +1603,7 @@ watch(
 watch(
   () => props.selectedElement?.type,
   (newType) => {
-    if (newType === 'logo') {
-      localLogoSrc.value = props.selectedElement?.frame?.data?.logoImgSrc || null
-    }
+    if (newType === 'logo') localLogoSrc.value = props.selectedElement?.frame?.data?.logoImgSrc || null
   },
   { immediate: true }
 )
@@ -1209,29 +1619,68 @@ watch(() => props.selectedFrame, (newVal) => {
     frameWidth.value = stripPx(newVal.metadata?.frameWidth || '1200px')
   }
   if (newVal?.type === 'FIRST_PICTURE' && newVal.data) {
-    heroTitle.value = newVal.data.heroTitle || ''
-    heroSubtitle.value = newVal.data.heroSubtitle || ''
-    heroHeight.value = stripPx(newVal.data.heroHeight || '600px')
-    overlayOpacity.value = newVal.data.overlayOpacity !== undefined ? newVal.data.overlayOpacity : 40
-    overlayColor.value = newVal.data.overlayColor || '#000000'
+    heroTitle.value           = newVal.data.heroTitle    || ''
+    heroSubtitle.value        = newVal.data.heroSubtitle || ''
+    heroHeight.value          = stripPx(newVal.data.heroHeight          || '600px')
+    overlayOpacity.value      = newVal.data.overlayOpacity !== undefined ? newVal.data.overlayOpacity : 40
+    overlayColor.value        = newVal.data.overlayColor        || '#000000'
     textBoxBorderRadius.value = stripPx(newVal.data.textBoxBorderRadius || '12px')
-    titleColor.value = newVal.data.titleColor || '#333333'
-    titleFontSize.value = stripPx(newVal.data.titleFontSize || '48px')
-    subtitleColor.value = newVal.data.subtitleColor || '#666666'
-    subtitleFontSize.value = stripPx(newVal.data.subtitleFontSize || '20px')
+    titleColor.value          = newVal.data.titleColor          || '#333333'
+    titleFontSize.value       = stripPx(newVal.data.titleFontSize       || '48px')
+    subtitleColor.value       = newVal.data.subtitleColor       || '#666666'
+    subtitleFontSize.value    = stripPx(newVal.data.subtitleFontSize    || '20px')
+  }
+  if (newVal?.type === 'PV_FIRST_PICTURE') {
+    const d = newVal.data || {}
+    pvFpBrandName.value    = d.brandName != null ? d.brandName : (d.tenantName ?? '')
+    pvFpBrandColor.value   = d.brandColor   || '#E8572A'
+    pvFpLogoWidth.value    = d.logoWidth    ? String(d.logoWidth)    : ''
+    pvFpLogoHeight.value   = d.logoHeight   ? String(d.logoHeight)   : ''
+    pvFpTitle.value        = d.heroTitle    || ''
+    pvFpTitleColor.value   = d.titleColor   || '#1a1a1a'
+    pvFpTitleFontSize.value = d.titleFontSize ? String(d.titleFontSize) : ''
+    pvFpHeroImgWidth.value  = d.heroImgWidth  ? String(d.heroImgWidth)  : ''
+    pvFpHeroImgHeight.value = d.heroImgHeight ? String(d.heroImgHeight) : ''
+    pvFpBgColor.value      = d.bgColor      || '#ffffff'
+    pvFpBtnColor.value     = d.btnColor     || '#E8572A'
+    pvFpCopyright.value    = d.copyright    || ''
+    if (Array.isArray(d.buttons) && d.buttons.length > 0) {
+      pvFpButtons.value = d.buttons.map(b => ({ ...b }))
+    } else {
+      pvFpButtons.value = [
+        { text: '靈籤司',  url: '#', color: null },
+        { text: '宮廟地圖', url: '#', color: null },
+        { text: '進入首頁', url: '#', color: null },
+      ]
+      d.buttons = pvFpButtons.value.map(b => ({ ...b }))
+    }
+    const lp = d.logoPadding    || {}
+    const hp = d.heroPadding    || {}
+    const bp = d.buttonsPadding || {}
+    pvFpLogoPadding.value    = { top: lp.top ?? 0, right: lp.right ?? 0, bottom: lp.bottom ?? 0, left: lp.left ?? 0 }
+    pvFpHeroPadding.value    = { top: hp.top ?? 0, right: hp.right ?? 0, bottom: hp.bottom ?? 0, left: hp.left ?? 0 }
+    pvFpButtonsPadding.value = { top: bp.top ?? 0, right: bp.right ?? 0, bottom: bp.bottom ?? 0, left: bp.left ?? 0 }
+    pvFpBtnLinkTypes.value = pvFpButtons.value.map(b => {
+      if (b.internalSlug && internalPageOptions.value.some(p => p.slug === b.internalSlug)) {
+        return b.internalSlug
+      }
+      return '__custom__'
+    })
+    pvSubSection.value = newVal.pvSubSection ?? null
   }
   if (newVal && !newVal.type?.startsWith('FRAME') &&
-      newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'CAROUSEL_WALL' && newVal.type !== 'BRIGHT_LAMP') {
+      newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'PV_FIRST_PICTURE' &&
+      newVal.type !== 'CAROUSEL_WALL'  && newVal.type !== 'BRIGHT_LAMP') {
     systemFrameTextTheme.value = newVal.data?.textTheme || 'light'
     systemFrameTextColor.value = newVal.data?.textColor || '#333333'
   }
   if (newVal?.type === 'CAROUSEL_WALL') {
-    carouselWallHeight.value = newVal.data?.carouselWallHeight ?? 600
+    carouselWallHeight.value   = newVal.data?.carouselWallHeight   ?? 600
     carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
     carouselWallInterval.value = newVal.data?.carouselWallInterval ?? 5000
   }
   if (newVal?.type === 'FOOTER') {
-    footerBgColor.value = newVal.data?.footerBgColor || '#2d2d2d'
+    footerBgColor.value   = newVal.data?.footerBgColor   || '#2d2d2d'
     footerTextColor.value = newVal.data?.footerTextColor || '#ffffff'
   }
   if (newVal?.type === 'INDEX_DONATION') {
@@ -1270,23 +1719,16 @@ const updateMetadata = () => {
     props.selectedElement.element.metadata = {
       ...elementMetadata.value,
       fontSize: ensureUnit(elementMetadata.value.fontSize, null),
-      width: ensureUnit(elementMetadata.value.width, null),
-      height: ensureUnit(elementMetadata.value.height, null),
+      width:    ensureUnit(elementMetadata.value.width,    null),
+      height:   ensureUnit(elementMetadata.value.height,   null),
     }
-  }
-}
-
-const updateImageAlt = () => {
-  if (props.selectedElement?.element?.type === 'IMG') {
-    if (!props.selectedElement.element.value) props.selectedElement.element.value = {}
-    props.selectedElement.element.value.alt = imageAlt.value
   }
 }
 
 const updateImgSize = () => {
   if (props.selectedElement?.element?.type !== 'IMG') return
   if (!props.selectedElement.element.metadata) props.selectedElement.element.metadata = {}
-  props.selectedElement.element.metadata.width = imgWidth.value ? imgWidth.value + 'px' : null
+  props.selectedElement.element.metadata.width  = imgWidth.value  ? imgWidth.value  + 'px' : null
   props.selectedElement.element.metadata.height = imgHeight.value ? imgHeight.value + 'px' : null
 }
 
@@ -1295,9 +1737,9 @@ const updateElementPadding = () => {
     if (!props.selectedElement.element.padding) props.selectedElement.element.padding = {}
     props.selectedElement.element.padding = { ...elementPadding.value }
     emit('update-cell-padding', {
-      frame: props.selectedElement.frame,
+      frame:     props.selectedElement.frame,
       cellIndex: props.selectedElement.cellIndex,
-      padding: { ...elementPadding.value }
+      padding:   { ...elementPadding.value }
     })
   }
 }
@@ -1344,18 +1786,18 @@ const adjustSiblingCellsWidth = () => {
   const currentWidth = parseFloat(elementWidth.value)
   if (isNaN(currentWidth) || currentWidth <= 0 || currentWidth >= 100) return
   const compositeMap = {
-    'A': { leftCells: [0], rightCells: [1, 2] },
+    'A': { leftCells: [0],    rightCells: [1, 2] },
     'B': { leftCells: [0, 1], rightCells: [2] },
-    'C': { leftCells: [0], rightCells: [1, 2, 3] },
+    'C': { leftCells: [0],    rightCells: [1, 2, 3] },
     'D': { leftCells: [0, 1, 2], rightCells: [3] },
   }
   if (compositeMap[layout]) {
     const { leftCells, rightCells } = compositeMap[layout]
     const isLeft = leftCells.includes(cellIndex)
-    const sameSideCells = isLeft ? leftCells : rightCells
+    const sameSideCells  = isLeft ? leftCells  : rightCells
     const otherSideCells = isLeft ? rightCells : leftCells
     const otherWidth = (100 - currentWidth).toFixed(1) + '%'
-    const newWidth = currentWidth.toFixed(1) + '%'
+    const newWidth   = currentWidth.toFixed(1) + '%'
     sameSideCells.forEach(idx => {
       if (idx !== cellIndex && frame.elements[idx]?.type) frame.elements[idx].width = newWidth
     })
@@ -1367,7 +1809,7 @@ const adjustSiblingCellsWidth = () => {
   const rowCells = getRowCells(layout, cellIndex)
   if (rowCells.length <= 1) return
   const remainingWidth = 100 - currentWidth
-  const widthPerCell = remainingWidth / (rowCells.length - 1)
+  const widthPerCell   = remainingWidth / (rowCells.length - 1)
   rowCells.forEach(index => {
     if (index !== cellIndex && frame.elements[index]?.type) {
       frame.elements[index].width = widthPerCell.toFixed(1) + '%'
@@ -1388,7 +1830,7 @@ const getRowCells = (layout, currentIndex) => {
     case 'B': return currentIndex === 2 ? [2] : [0, 1]
     case 'C': return currentIndex === 0 ? [0] : [1, 2, 3]
     case 'D': return currentIndex === 3 ? [3] : [0, 1, 2]
-    default: return [currentIndex]
+    default:   return [currentIndex]
   }
 }
 
@@ -1412,7 +1854,6 @@ const handleUploadLogo = async () => {
       emit('update-logo', { id: uploadedFile.id, src: uploadedFile.fileUrl })
       await new Promise(resolve => setTimeout(resolve, 100))
     } catch (error) {
-      console.error('Logo 上傳失敗:', error)
       alert('Logo 上傳失敗: ' + error.message)
     } finally {
       isUploadingLogo.value = false
@@ -1421,8 +1862,7 @@ const handleUploadLogo = async () => {
   input.click()
 }
 
-const handleLogoImageError = (e) => {
-  console.error('Logo 圖片載入失敗:', e.target.src)
+const handleLogoImageError = () => {
   alert('Logo 圖片載入失敗，請重新上傳')
 }
 
@@ -1443,11 +1883,10 @@ const handleUploadImage = async () => {
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('圖片上傳失敗，請稍後再試'); return }
       if (props.selectedElement?.element?.value) {
-        props.selectedElement.element.value.id = uploadedFile.id
+        props.selectedElement.element.value.id  = uploadedFile.id
         props.selectedElement.element.value.src = uploadedFile.fileUrl
       }
     } catch (error) {
-      console.error('圖片上傳失敗:', error)
       alert('圖片上傳失敗: ' + error.message)
     } finally {
       isUploadingImage.value = false
@@ -1475,7 +1914,6 @@ const addCarouselImage = async () => {
       }
       carouselImages.value = [...props.selectedElement.element.value.imgs]
     } catch (error) {
-      console.error('輪播圖片上傳失敗:', error)
       alert('輪播圖片上傳失敗: ' + error.message)
     } finally {
       isUploadingCarousel.value = false
@@ -1488,7 +1926,6 @@ const removeCarouselImage = (index) => {
   if (!confirm('確定要刪除這張圖片嗎？')) return
   const imgs = props.selectedElement?.element?.value?.imgs
   if (!imgs) return
-  const removedImg = imgs[index]
   imgs.splice(index, 1)
   carouselImages.value = [...imgs]
 }
@@ -1497,7 +1934,7 @@ const updateCarouselSettings = () => {
   if (props.selectedElement?.element?.value) {
     props.selectedElement.element.value.autoPlay = carouselAutoPlay.value
     props.selectedElement.element.value.interval = carouselInterval.value
-    props.selectedElement.element.value.height = carouselHeight.value
+    props.selectedElement.element.value.height   = carouselHeight.value
   }
 }
 
@@ -1508,16 +1945,16 @@ const setCarouselHeight = (height) => {
 
 const updateHeroData = () => {
   if (props.selectedFrame?.data) {
-    props.selectedFrame.data.heroTitle = heroTitle.value
-    props.selectedFrame.data.heroSubtitle = heroSubtitle.value
-    props.selectedFrame.data.heroHeight = ensureUnit(heroHeight.value, '600px')
-    props.selectedFrame.data.overlayOpacity = overlayOpacity.value
-    props.selectedFrame.data.overlayColor = overlayColor.value
+    props.selectedFrame.data.heroTitle           = heroTitle.value
+    props.selectedFrame.data.heroSubtitle        = heroSubtitle.value
+    props.selectedFrame.data.heroHeight          = ensureUnit(heroHeight.value, '600px')
+    props.selectedFrame.data.overlayOpacity      = overlayOpacity.value
+    props.selectedFrame.data.overlayColor        = overlayColor.value
     props.selectedFrame.data.textBoxBorderRadius = ensureUnit(textBoxBorderRadius.value, '12px')
-    props.selectedFrame.data.titleColor = titleColor.value
-    props.selectedFrame.data.titleFontSize = ensureUnit(titleFontSize.value, '48px')
-    props.selectedFrame.data.subtitleColor = subtitleColor.value
-    props.selectedFrame.data.subtitleFontSize = ensureUnit(subtitleFontSize.value, '20px')
+    props.selectedFrame.data.titleColor          = titleColor.value
+    props.selectedFrame.data.titleFontSize       = ensureUnit(titleFontSize.value, '48px')
+    props.selectedFrame.data.subtitleColor       = subtitleColor.value
+    props.selectedFrame.data.subtitleFontSize    = ensureUnit(subtitleFontSize.value, '20px')
   }
 }
 
@@ -1538,11 +1975,10 @@ const handleUploadHeroBackground = async () => {
       const uploadedFile = await pageEditorStore.uploadImage(file)
       if (!uploadedFile) { alert('首圖背景上傳失敗，請稍後再試'); return }
       if (props.selectedFrame?.data) {
-        props.selectedFrame.data.heroBgImgId = uploadedFile.id
+        props.selectedFrame.data.heroBgImgId  = uploadedFile.id
         props.selectedFrame.data.heroBgImgSrc = uploadedFile.fileUrl
       }
     } catch (error) {
-      console.error('首圖背景上傳失敗:', error)
       alert('首圖背景上傳失敗: ' + error.message)
     } finally {
       isUploadingHeroBackground.value = false
@@ -1567,7 +2003,6 @@ const handleUploadBrightLampBg = async () => {
         props.selectedFrame.data.bgImgSrc = uploaded.fileUrl
       }
     } catch (err) {
-      console.error('背景圖上傳失敗:', err)
       alert('上傳失敗：' + err.message)
     } finally {
       isUploadingBrightLampBg.value = false
@@ -1592,7 +2027,6 @@ const handleUploadBrightLampMain = async () => {
         props.selectedFrame.data.mainImgSrc = uploaded.fileUrl
       }
     } catch (err) {
-      console.error('主神像上傳失敗:', err)
       alert('上傳失敗：' + err.message)
     } finally {
       isUploadingBrightLampMain.value = false
@@ -1608,7 +2042,7 @@ const setBrightLampOption = (field, value) => {
 
 const updateCarouselWallSettings = () => {
   if (props.selectedFrame?.data) {
-    props.selectedFrame.data.carouselWallHeight = carouselWallHeight.value
+    props.selectedFrame.data.carouselWallHeight   = carouselWallHeight.value
     props.selectedFrame.data.carouselWallAutoPlay = carouselWallAutoPlay.value
     props.selectedFrame.data.carouselWallInterval = carouselWallInterval.value
   }
@@ -1639,7 +2073,6 @@ const handleUploadCarouselWall = async () => {
         props.selectedFrame.data.caroiselWallImgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl })
       }
     } catch (error) {
-      console.error('輪播牆圖片上傳失敗:', error)
       alert('輪播牆圖片上傳失敗: ' + error.message)
     } finally {
       isUploadingCarouselWall.value = false
@@ -1652,7 +2085,6 @@ const removeCarouselWallImage = (index) => {
   if (!confirm('確定要刪除這張圖片嗎？')) return
   const imgs = props.selectedFrame?.data?.caroiselWallImgs
   if (!imgs) return
-  const removedImg = imgs[index]
   imgs.splice(index, 1)
 }
 
@@ -1681,7 +2113,7 @@ const onCarouselWallDrop = (toIndex) => {
   const moved = imgs.splice(fromIndex, 1)[0]
   imgs.splice(toIndex, 0, moved)
   carouselWallDragIndex.value = null
-  carouselWallDragOver.value = null
+  carouselWallDragOver.value  = null
 }
 
 const carouselDragOver = ref(null)
@@ -1696,17 +2128,17 @@ const onCarouselDrop = (toIndex) => {
   if (!imgs) return
   const moved = imgs.splice(fromIndex, 1)[0]
   imgs.splice(toIndex, 0, moved)
-  carouselImages.value = [...imgs]
+  carouselImages.value    = [...imgs]
   carouselDragIndex.value = null
-  carouselDragOver.value = null
+  carouselDragOver.value  = null
 }
 
 const updateMapData = () => {
   if (props.selectedElement?.element?.value) {
     props.selectedElement.element.value.address = mapAddress.value
-    props.selectedElement.element.value.lat = mapLat.value
-    props.selectedElement.element.value.lng = mapLng.value
-    props.selectedElement.element.value.zoom = mapZoom.value
+    props.selectedElement.element.value.lat     = mapLat.value
+    props.selectedElement.element.value.lng     = mapLng.value
+    props.selectedElement.element.value.zoom    = mapZoom.value
   }
 }
 
@@ -1714,8 +2146,165 @@ const setMapZoom = (zoom) => {
   mapZoom.value = zoom
   updateMapData()
 }
-</script>
 
+const updateAccordionStyle = () => {
+  if (!props.selectedElement?.element) return
+  if (!props.selectedElement.element.content) props.selectedElement.element.content = {}
+  const c = props.selectedElement.element.content
+  c.titleColor      = elementMetadata.value.color || null
+  c.titleFontSize   = accordionTitleFontSize.value   ? Number(accordionTitleFontSize.value)   : null
+  c.contentColor    = accordionContentColor.value
+  c.contentFontSize = accordionContentFontSize.value ? Number(accordionContentFontSize.value) : null
+  c.defaultOpen     = accordionDefaultOpen.value
+}
+
+const updateAccordionItems = () => {
+  if (!props.selectedElement?.element) return
+  if (!props.selectedElement.element.value) props.selectedElement.element.value = {}
+  props.selectedElement.element.value.items = accordionItems.value.map(i => ({ ...i }))
+}
+
+const addAccordionItem = () => {
+  accordionItems.value.push({ title: '', content: '' })
+  expandedAccordionItems.value.push(accordionItems.value.length - 1)
+  updateAccordionItems()
+}
+const toggleAccordionItem = (index) => {
+  const pos = expandedAccordionItems.value.indexOf(index)
+  if (pos === -1) expandedAccordionItems.value.push(index)
+  else expandedAccordionItems.value.splice(pos, 1)
+}
+const removeAccordionItem = (index) => {
+  accordionItems.value.splice(index, 1)
+  updateAccordionItems()
+}
+const onAccordionDrop = (toIndex) => {
+  const fromIndex = accordionDragIndex.value
+  if (fromIndex === null || fromIndex === toIndex) return
+  const items = [...accordionItems.value]
+  const moved = items.splice(fromIndex, 1)[0]
+  items.splice(toIndex, 0, moved)
+  accordionItems.value = items
+  updateAccordionItems()
+  accordionDragIndex.value = null
+  accordionDragOver.value  = null
+}
+const updatePvFpData = () => {
+  if (!props.selectedFrame?.data) return
+  const d = props.selectedFrame.data
+  d.brandName     = pvFpBrandName.value
+  d.brandColor    = pvFpBrandColor.value
+  d.logoWidth     = pvFpLogoWidth.value    ? Number(pvFpLogoWidth.value)    : null
+  d.logoHeight    = pvFpLogoHeight.value   ? Number(pvFpLogoHeight.value)   : null
+  d.heroTitle     = pvFpTitle.value
+  d.titleColor    = pvFpTitleColor.value
+  d.titleFontSize = pvFpTitleFontSize.value ? Number(pvFpTitleFontSize.value) : null
+  d.heroImgWidth  = pvFpHeroImgWidth.value  ? Number(pvFpHeroImgWidth.value)  : null
+  d.heroImgHeight = pvFpHeroImgHeight.value ? Number(pvFpHeroImgHeight.value) : null
+  d.bgColor       = pvFpBgColor.value
+  d.btnColor      = pvFpBtnColor.value
+  d.copyright     = pvFpCopyright.value
+  d.buttons       = pvFpButtons.value.map(b => ({ ...b }))
+}
+
+const addPvFpButton = () => {
+  pvFpButtons.value.push({ text: '新按鈕', url: '#', color: null, internalSlug: '' })
+  pvFpBtnLinkTypes.value.push('__custom__')
+  updatePvFpData()
+}
+
+const removePvFpButton = (index) => {
+  pvFpButtons.value.splice(index, 1)
+  pvFpBtnLinkTypes.value.splice(index, 1)
+  updatePvFpData()
+}
+
+const handleUploadPvFpLogo = async () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      isUploadingPvFpLogo.value = true
+      const uploaded = await pageEditorStore.uploadImage(file)
+      if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
+      if (props.selectedFrame?.data) {
+        props.selectedFrame.data.logoImgId  = uploaded.id
+        props.selectedFrame.data.logoImgSrc = uploaded.fileUrl
+      }
+    } catch (err) {
+      alert('上傳失敗：' + err.message)
+    } finally {
+      isUploadingPvFpLogo.value = false
+    }
+  }
+  input.click()
+}
+
+const removePvFpLogo = () => {
+  if (!props.selectedFrame?.data) return
+  props.selectedFrame.data.logoImgId  = null
+  props.selectedFrame.data.logoImgSrc = null
+}
+
+const handleUploadPvFpHeroImg = async () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      isUploadingPvFpHeroImg.value = true
+      const uploaded = await pageEditorStore.uploadImage(file)
+      if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
+      if (props.selectedFrame?.data) {
+        props.selectedFrame.data.heroImgId  = uploaded.id
+        props.selectedFrame.data.heroImgSrc = uploaded.fileUrl
+      }
+    } catch (err) {
+      alert('上傳失敗：' + err.message)
+    } finally {
+      isUploadingPvFpHeroImg.value = false
+    }
+  }
+  input.click()
+}
+
+const removePvFpHeroImg = () => {
+  if (!props.selectedFrame?.data) return
+  props.selectedFrame.data.heroImgId  = null
+  props.selectedFrame.data.heroImgSrc = null
+}
+
+const onPvFpBtnLinkTypeChange = (i, val) => {
+  const btn = pvFpButtons.value[i]
+  if (!btn) return
+  pvFpBtnLinkTypes.value[i] = val
+  if (val === '__custom__') {
+    btn.internalSlug = ''
+  } else {
+    btn.internalSlug = val
+    btn.url = ''
+  }
+  updatePvFpData()
+}
+
+const updatePvFpPadding = (section) => {
+  if (!props.selectedFrame?.data) return
+  const refMap = { logo: pvFpLogoPadding, hero: pvFpHeroPadding, buttons: pvFpButtonsPadding }
+  const keyMap = { logo: 'logoPadding', hero: 'heroPadding', buttons: 'buttonsPadding' }
+  props.selectedFrame.data[keyMap[section]] = { ...refMap[section].value }
+}
+
+const setPvFpPadding = (section, value) => {
+  const refMap = { logo: pvFpLogoPadding, hero: pvFpHeroPadding, buttons: pvFpButtonsPadding }
+  refMap[section].value = { top: value, right: value, bottom: value, left: value }
+  updatePvFpPadding(section)
+}
+</script>
 <style lang="scss" scoped>
 .props-panel {
   width: 320px;
@@ -2424,5 +3013,129 @@ const setMapZoom = (zoom) => {
   background: #fafafa;
   border-color: #ddd;
   cursor: pointer;
+}
+.pv-fp-btn-editor {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.pv-fp-btn-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.pv-fp-btn-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.pv-fp-btn-remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  &:hover { background: #fee2e2; color: #dc3545; }
+}
+
+.pv-fp-section-hint {
+  padding: 16px;
+  background: #fafafa;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 20px;
+ 
+  p {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #888;
+  }
+}
+ 
+.pv-fp-section-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+ 
+.pv-fp-section-btn {
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #E8572A;
+  border-radius: 20px;
+  color: #E8572A;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+ 
+  &:hover {
+    background: #E8572A;
+    color: #fff;
+  }
+}
+ 
+.pv-fp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+ 
+  &:hover {
+    background: #e8e8e8;
+    color: #333;
+  }
+}
+.drag-handle-text {
+  font-size: 16px;
+  color: #bbb;
+  cursor: grab;
+  user-select: none;
+  &:active { cursor: grabbing; }
+}
+
+.pv-fp-btn-editor.drag-over {
+  border-color: #E8572A;
+  border-style: dashed;
+  opacity: 0.7;
+}
+.accordion-item-header {
+  cursor: pointer;
+  user-select: none;
+  &:hover {
+    background: #f5f5f5;
+    border-radius: 6px;
+  }
+}
+
+.accordion-item-chevron {
+  color: #aaa;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  &.is-open {
+    transform: rotate(180deg);
+    color: #E8572A;
+  }
 }
 </style>

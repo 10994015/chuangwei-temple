@@ -112,9 +112,22 @@ const props = defineProps({
 
 const emit = defineEmits(['view-detail'])
 
+const DEFAULT_EVENTS = [
+  { id: 1, name: '春節祈福法會',           startAt: '2025-02-01T09:00', location: '宮廟正殿',   imgSrc: null, labels: ['熱門'] },
+  { id: 2, name: '媽祖聖誕慶典遶境活動',   startAt: '2025-03-15T08:00', location: '廟前廣場',   imgSrc: null, labels: ['推薦'] },
+  { id: 3, name: '元宵燈謎晚會暨祈福儀式', startAt: '2025-02-12T18:00', location: '廟埕廣場',   imgSrc: null, labels: [] },
+  { id: 4, name: '觀音菩薩聖誕祈福法會',   startAt: '2025-04-10T09:00', location: '宮廟後殿',   imgSrc: null, labels: ['法會'] },
+  { id: 5, name: '中元普渡超薦法會',       startAt: '2025-08-10T10:00', location: '宮廟廣場',   imgSrc: null, labels: [] },
+  { id: 6, name: '歲末感恩祭典文化活動',   startAt: '2025-12-20T14:00', location: '文化展覽館', imgSrc: null, labels: ['公益'] },
+]
+
+const DEFAULT_CATEGORIES = ['遶境', '法會', '公益']
+
 // 分類按鈕：從 API 拿到字串陣列，轉成 { id, name }
 const categories = computed(() => {
-  const apiCats = props.eventCategories.filter(c => c !== '全部')
+  const apiCats = props.eventCategories.length > 0
+    ? props.eventCategories.filter(c => c !== '全部')
+    : DEFAULT_CATEGORIES
   return [
     { id: 'all', name: t('eventListBasemap.catAll') },
     ...apiCats.map(c => ({ id: c, name: c })),
@@ -122,8 +135,10 @@ const categories = computed(() => {
 })
 
 // 把 API 原始欄位對應成元件用的格式
-const mappedEvents = computed(() =>
-  (props.eventList?.data || []).map(e => ({
+const mappedEvents = computed(() => {
+  const data = props.eventList?.data
+  const source = (Array.isArray(data) && data.length > 0) ? data : DEFAULT_EVENTS
+  return source.map(e => ({
     id:       e.id,
     title:    e.name || '',
     date:     e.startAt ? e.startAt.slice(0, 10) : '',
@@ -132,7 +147,7 @@ const mappedEvents = computed(() =>
     tags:     Array.isArray(e.labels) ? e.labels : [],
     image:    e.imgSrc || null,
   }))
-)
+})
 
 const selectedCategory = ref('all')
 const currentPage = ref(1)

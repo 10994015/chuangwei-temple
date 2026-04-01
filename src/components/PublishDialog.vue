@@ -4,7 +4,7 @@
       <div v-if="isVisible" class="dialog-overlay" @click.self="handleCancel">
         <div class="dialog-container">
           <div class="dialog-header">
-            <h3>發布網站</h3>
+            <h3>{{ t('publishDialog.title') }}</h3>
             <button class="close-btn" @click="handleCancel">✕</button>
           </div>
 
@@ -12,7 +12,7 @@
             <!-- 有未儲存變更 -->
             <div class="has-changes-notice" v-if="hasUnsavedChanges">
               <div class="notice-icon">💾</div>
-              <p>檢測到未保存的變更，發布前將自動保存草稿</p>
+              <p>{{ t('publishDialog.unsavedNotice') }}</p>
             </div>
 
             <!-- 無未儲存變更：準備就緒 -->
@@ -23,18 +23,18 @@
                   <polyline points="18,33 27,43 46,22" stroke="#4caf82" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <p class="ready-title">準備就緒</p>
-              <p class="ready-desc">所有變更已儲存，確認後將立即發布網站</p>
+              <p class="ready-title">{{ t('publishDialog.readyTitle') }}</p>
+              <p class="ready-desc">{{ t('publishDialog.readyDesc') }}</p>
             </div>
           </div>
 
           <div class="dialog-footer">
             <button class="btn btn-cancel" @click="handleCancel" :disabled="isPublishing">
-              取消
+              {{ t('publishDialog.cancel') }}
             </button>
             <button class="btn btn-publish" @click="handleConfirm" :disabled="isPublishing">
               <span v-if="isPublishing" class="loading-spinner">⏳</span>
-              <span v-else>確認發布</span>
+              <span v-else>{{ t('publishDialog.confirm') }}</span>
             </button>
           </div>
         </div>
@@ -45,6 +45,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   isVisible: {

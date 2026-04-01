@@ -35,8 +35,17 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-const mappedPosts = computed(() =>
-  props.posts.map(n => ({
+const DEFAULT_POSTS = [
+  { id: 1, type: '祈福活動', title: '2025年春節祈福法會活動公告', content: '誠邀信眾參與春節祈福法會，共同祈求新年平安順遂。', createdAt: '2025-01-15' },
+  { id: 2, type: '廟會文化', title: '媽祖遶境文化節活動報名開始', content: '一年一度媽祖遶境文化節即將登場，歡迎各地信眾踴躍參與。', createdAt: '2025-01-10' },
+  { id: 3, type: '宮廟公告', title: '元宵節燈謎晚會暨祈福儀式',   content: '元宵節當晚舉辦燈謎晚會，並進行傳統祈福儀式，敬請蒞臨。', createdAt: '2025-01-05' },
+  { id: 4, type: '祈福活動', title: '求籤解籤服務時間調整公告',   content: '因應農曆年假，求籤解籤服務時間略有調整，詳情請見公告。', createdAt: '2024-12-28' },
+  { id: 5, type: '廟會文化', title: '歲末感恩祭典暨文化展覽活動', content: '歲末感恩祭典將舉行傳統文化展覽，展示宮廟珍貴文物與歷史。', createdAt: '2024-12-20' },
+]
+
+const mappedPosts = computed(() => {
+  const source = props.posts.length > 0 ? props.posts : DEFAULT_POSTS
+  return source.map(n => ({
     id:          n.id,
     tag:         n.type || '',
     tagClass:    'notice',
@@ -44,7 +53,7 @@ const mappedPosts = computed(() =>
     description: n.content || '',
     date:        n.createdAt ? n.createdAt.slice(0, 10) : '',
   }))
-)
+})
 </script>
 
 <style lang="scss" scoped>

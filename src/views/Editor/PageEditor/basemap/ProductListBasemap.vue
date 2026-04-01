@@ -141,8 +141,27 @@ const mapProduct = (p) => ({
   badgeClass: 'hot',
 })
 
-const featuredProducts = computed(() => props.featuredProduct.map(mapProduct))
-const restProducts     = computed(() => (props.productList?.data || []).map(mapProduct))
+const DEFAULT_FEATURED = [
+  { id: 1, name: '平安符結緣品', no: 1, price: 150, imgSrc: null, labels: ['熱門'] },
+  { id: 2, name: '開運香火袋',   no: 2, price: 200, imgSrc: null, labels: ['推薦'] },
+  { id: 3, name: '祈福金紙禮盒', no: 3, price: 380, imgSrc: null, labels: [] },
+]
+
+const DEFAULT_REST = [
+  { id: 4, name: '媽祖御守項鍊',   price: 580, imgSrc: null, labels: [] },
+  { id: 5, name: '五路財神金幣',   price: 120, imgSrc: null, labels: ['熱門'] },
+  { id: 6, name: '太歲符令護身符', price: 250, imgSrc: null, labels: [] },
+  { id: 7, name: '招財進寶擺飾',   price: 450, imgSrc: null, labels: ['推薦'] },
+  { id: 8, name: '開光玉佩吊墜',   price: 320, imgSrc: null, labels: [] },
+]
+
+const featuredProducts = computed(() =>
+  props.featuredProduct.length > 0 ? props.featuredProduct.map(mapProduct) : DEFAULT_FEATURED.map(mapProduct)
+)
+const restProducts = computed(() => {
+  const data = props.productList?.data
+  return (Array.isArray(data) && data.length > 0) ? data.map(mapProduct) : DEFAULT_REST.map(mapProduct)
+})
 
 const emit = defineEmits(['add-to-cart'])
 const addToCart = (product) => emit('add-to-cart', product)

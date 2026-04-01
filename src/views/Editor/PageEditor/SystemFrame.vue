@@ -1,11 +1,9 @@
 <template>
-
-  <div 
-    class="system-frame-wrapper" 
+  <div
+    class="system-frame-wrapper"
     :class="{ 'is-selected': isFrameSelected }"
     :data-frame-type="frameType"
   >
-    <!-- ✅ 刪除系統框架按鈕（只在框架可刪除且被選中時顯示） -->
     <button
       v-if="isFrameSelected && frame?.isDeletable"
       class="delete-system-frame-btn"
@@ -15,8 +13,6 @@
       ✕
     </button>
 
-    <!-- ✅ system-frame-container 注入 CSS 文字色變數，讓所有 basemap 子組件可直接使用 -->
-    <!-- ✅ 統一點擊選取：除了已有自己點擊邏輯的類型，其他框架點擊此層就能選取 -->
     <div
       class="system-frame-container"
       :data-frame-type="frameType"
@@ -24,9 +20,9 @@
       :class="{ 'is-clickable': isClickableFrame }"
       @click="handleContainerClick"
     >
-      <!-- 頁首 (HEADER) - 可編輯版本 -->
-      <NavbarBasemap 
-        v-if="frameType === 'HEADER'" 
+      <!-- 頁首 (HEADER) -->
+      <NavbarBasemap
+        v-if="frameType === 'HEADER'"
         :frame-data="frameData"
         :is-edit-mode="true"
         :is-logo-selected="isLogoSelected"
@@ -37,7 +33,24 @@
         @delete-logo="handleDeleteLogo"
         @change-page="handleChangePage"
       />
-      
+
+      <!-- 頁首 v2 (PV_HEADER) -->
+      <PvNavbarBasemap
+        v-else-if="frameType === 'PV_HEADER'"
+        :frame-data="frameData"
+        :frame="frame"
+        :is-edit-mode="true"
+        :is-logo-selected="isLogoSelected"
+        :current-page-slug="currentPageSlug"
+        :locales="locales"
+        :current-locale="currentLocale"
+        @select-logo="handleSelectLogo"
+        @update-logo="handleUpdateLogo"
+        @delete-logo="handleDeleteLogo"
+        @change-page="handleChangePage"
+        @locale-change="emit('locale-change', $event)"
+      />
+
       <!-- 頁尾 (FOOTER) -->
       <FooterBasemap
         v-else-if="frameType === 'FOOTER'"
@@ -45,8 +58,16 @@
         :footer-bg-color="frame?.data?.footerBgColor"
         :footer-text-color="frame?.data?.footerTextColor"
       />
-      
-      <!-- ✅ 輪播牆 (CAROUSEL_WALL) - 加上點擊選取事件 -->
+
+      <!-- 頁尾 v2 (PV_FOOTER) -->
+      <PvFooterBasemap
+        v-else-if="frameType === 'PV_FOOTER'"
+        v-bind="frameData"
+        :footer-bg-color="frame?.data?.footerBgColor"
+        :footer-text-color="frame?.data?.footerTextColor"
+      />
+
+      <!-- 輪播牆 (CAROUSEL_WALL) -->
       <div
         v-else-if="frameType === 'CAROUSEL_WALL'"
         class="carousel-wall-clickable"
@@ -54,56 +75,92 @@
       >
         <HeroBasemap v-bind="frameData" />
       </div>
-      
-      <!-- ✅ 首圖 (FIRST_PICTURE) - 使用新的 HeroBannerElement -->
-      <HeroBannerElement 
-        v-else-if="frameType === 'FIRST_PICTURE'" 
+
+      <!-- 輪播牆 v2 (PV_CAROUSEL_WALL) -->
+      <div
+        v-else-if="frameType === 'PV_CAROUSEL_WALL'"
+        class="carousel-wall-clickable"
+        @click.stop="handleSelectFrame(frame)"
+      >
+        <PvHeroBasemap v-bind="frameData" />
+      </div>
+
+      <!-- 首圖 (FIRST_PICTURE) -->
+      <HeroBannerElement
+        v-else-if="frameType === 'FIRST_PICTURE'"
         :frame-data="frameData"
         :frame="frame"
         :is-selected="isFrameSelected"
         @select-frame="handleSelectFrame"
       />
-      
+
+      <!-- 首圖 v2 (PV_FIRST_PICTURE) -->
+      <PvFirstPictureBasemap
+        v-else-if="frameType === 'PV_FIRST_PICTURE'"
+        :frame-data="frameData"
+        :frame="frame"
+        :is-selected="isFrameSelected"
+        :selected-sub-section="frame?.pvSubSection || null"
+        @select-frame="handleSelectFrame"
+        @select-sub-section="handleSelectSubSection"
+      />
+
       <!-- 首頁-最新消息 (INDEX_NEWS) -->
       <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
+
+      <!-- 首頁-最新消息 v2 (PV_INDEX_NEWS) -->
+      <PvNewsBasemap v-else-if="frameType === 'PV_INDEX_NEWS'" v-bind="frameData" />
 
       <!-- 消息列表 (NEWS_LIST) -->
       <NewsListBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
 
+      <!-- 消息列表 v2 (PV_NEWS_LIST) -->
+      <PvNewsListBasemap v-else-if="frameType === 'PV_NEWS_LIST'" v-bind="frameData" />
+
       <!-- 首頁-商品標幅 (INDEX_PRODUCT) -->
       <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" />
 
+      <!-- 首頁-商品標幅 v2 (PV_INDEX_PRODUCT) -->
+      <PvProductsBasemap v-else-if="frameType === 'PV_INDEX_PRODUCT'" v-bind="frameData" />
+
       <!-- 首頁-活動橫幅 (INDEX_EVENT) -->
       <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" />
-      
-      <!-- 首頁-捐獻區 (INDEX_DONATION) - 可編輯版本 -->
-      <DonationBasemap 
-        v-else-if="frameType === 'INDEX_DONATION'" 
+
+      <!-- 首頁-服務 v2 (PV_INDEX_SERVICE) -->
+      <PvServicesBasemap v-else-if="frameType === 'PV_INDEX_SERVICE'" v-bind="frameData" />
+
+      <!-- 首頁-捐獻區 (INDEX_DONATION) -->
+      <DonationBasemap
+        v-else-if="frameType === 'INDEX_DONATION'"
         v-bind="frameData"
         :is-edit-mode="true"
         :frame="frame"
         :selected-element="selectedElement"
         @select-element="handleSelectElement"
       />
-    
-    <!-- 商品列表 (PRODUCT_LIST) -->
-    <ProductListBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" />
-    
-    <!-- 相簿列表 (ALBUM_LIST) -->
-    <AlbumListBasemap v-else-if="frameType === 'ALBUM_LIST'" v-bind="frameData" />
-    
-    <!-- 活動列表 (EVENT_LIST) -->
-    <EventListBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" />
-    
-    <!-- 捐款商品 (DONATION_PRODUCT) -->
-    <DonationProductBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" />
-    
-    <!-- 光明燈 (BRIGHT_LAMP) -->
-    <BrightLampBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" />    
-    <!-- 未知類型 -->
-    <div v-else class="unknown-frame">
-      <p>未知系統框架類型: {{ frameType }}</p>
-    </div>
+
+      <!-- 商品列表 (PRODUCT_LIST) -->
+      <ProductListBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" />
+
+      <!-- 商品列表 v2 (PV_PRODUCT_LIST) -->
+      <PvProductListBasemap v-else-if="frameType === 'PV_PRODUCT_LIST'" v-bind="frameData" />
+
+      <!-- 相簿列表 (ALBUM_LIST) -->
+      <AlbumListBasemap v-else-if="frameType === 'ALBUM_LIST'" v-bind="frameData" />
+
+      <!-- 活動列表 (EVENT_LIST) -->
+      <EventListBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" />
+
+      <!-- 捐款商品 (DONATION_PRODUCT) -->
+      <DonationProductBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" />
+
+      <!-- 光明燈 (BRIGHT_LAMP) -->
+      <BrightLampBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" />
+
+      <!-- 未知類型 -->
+      <div v-else class="unknown-frame">
+        <p>未知系統框架類型: {{ frameType }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -111,6 +168,15 @@
 <script setup>
 import { computed } from 'vue'
 import NavbarBasemap from './basemap/NavbarBasemap.vue'
+import PvNavbarBasemap from './basemap/PvNavbarBasemap.vue'
+import PvHeroBasemap from './basemap/PvHeroBasemap.vue'
+import PvFirstPictureBasemap from './basemap/PvFirstPictureBasemap.vue'
+import PvNewsBasemap from './basemap/PvNewsBasemap.vue'
+import PvNewsListBasemap from './basemap/PvNewsListBasemap.vue'
+import PvProductsBasemap from './basemap/PvProductsBasemap.vue'
+import PvProductListBasemap from './basemap/PvProductListBasemap.vue'
+import PvServicesBasemap from './basemap/PvServicesBasemap.vue'
+import PvFooterBasemap from './basemap/PvFooterBasemap.vue'
 import FooterBasemap from './basemap/FooterBasemap.vue'
 import HeroBasemap from './basemap/HeroBasemap.vue'
 import NewsBasemap from './basemap/NewsBasemap.vue'
@@ -127,26 +193,28 @@ import DonationProductBasemap from './basemap/DonationProductBasemap.vue'
 import BrightLampBasemap from './basemap/BrightLampBasemap.vue'
 
 const props = defineProps({
-  frameType: { type: String, required: true },
-  frameData: { type: Object, default: () => ({}) },
-  frame: { type: Object, default: null },
+  frameType:       { type: String, required: true },
+  frameData:       { type: Object, default: () => ({}) },
+  frame:           { type: Object, default: null },
   selectedElement: { type: Object, default: null },
-  selectedFrame: { type: Object, default: null },
-  currentPageSlug: { type: String, default: null }
+  selectedFrame:   { type: Object, default: null },
+  currentPageSlug: { type: String, default: null },
+  locales:         { type: Array,  default: () => [] },
+  currentLocale:   { type: String, default: 'ZH-TW' },
 })
 
 const emit = defineEmits([
-  'select-element', 
-  'update-element', 
-  'delete-element', 
-  'change-page', 
+  'select-element',
+  'update-element',
+  'delete-element',
+  'change-page',
   'select-frame',
-  'delete-frame'
+  'delete-frame',
+  'locale-change',
+  'select-sub-section',
 ])
 
-// ==================== 文字色主題 CSS 變數 ====================
-// 讓所有 basemap 子組件可用 var(--frame-text-color) 等變數調整文字色
-
+// 文字色主題 CSS 變數
 const THEME_PRESETS = {
   light: {
     '--frame-text-color':     '#333333',
@@ -188,13 +256,11 @@ const frameTextStyle = computed(() => {
   if (theme === 'dark') return THEME_PRESETS.dark
   if (theme === 'sepia') return THEME_PRESETS.sepia
 
-  // custom：主色自訂，其餘自動推導
   if (theme === 'custom' && customColor) {
-    // 簡單亮度判斷：決定 secondary/muted 的透明度方向
     const hex = customColor.replace('#', '')
-    const r = parseInt(hex.slice(0,2),16)
-    const g = parseInt(hex.slice(2,4),16)
-    const b = parseInt(hex.slice(4,6),16)
+    const r = parseInt(hex.slice(0, 2), 16)
+    const g = parseInt(hex.slice(2, 4), 16)
+    const b = parseInt(hex.slice(4, 6), 16)
     const lum = (r * 299 + g * 587 + b * 114) / 1000
     const isDark = lum < 128
     return {
@@ -212,33 +278,31 @@ const frameTextStyle = computed(() => {
   return THEME_PRESETS.light
 })
 
-// ==================== 既有邏輯（不變）====================
-
-const isLogoSelected = computed(() => props.selectedElement?.type === 'logo')
+const isLogoSelected  = computed(() => props.selectedElement?.type === 'logo')
 const isFrameSelected = computed(() => props.selectedFrame === props.frame)
 
-// CAROUSEL_WALL 和 FIRST_PICTURE 已有自己的點擊邏輯，其他系統框架統一由容器層處理
-const SELF_HANDLED_TYPES = ['CAROUSEL_WALL', 'FIRST_PICTURE', 'HEADER']
+// PV_HEADER 跟 HEADER 一樣有自己的點擊邏輯，不需要容器層攔截
+const SELF_HANDLED_TYPES = ['CAROUSEL_WALL', 'PV_CAROUSEL_WALL', 'FIRST_PICTURE', 'PV_FIRST_PICTURE', 'HEADER', 'PV_HEADER']
 const isClickableFrame = computed(() =>
   !SELF_HANDLED_TYPES.includes(props.frameType)
 )
 
-const handleContainerClick = (event) => {
-  // clickable 框架：任何點擊都觸發 select-frame
-  // DonationBasemap 的子元素點擊已用 @click.stop 阻止冒泡，不會到這裡
+const handleContainerClick = () => {
   if (isClickableFrame.value) {
     emit('select-frame', props.frame)
   }
 }
 
 const handleSelectFrame = (frame) => {
-  console.log('SystemFrame: 選擇框架', frame?.type)
   emit('select-frame', frame)
+}
+
+const handleSelectSubSection = (sub) => {
+  emit('select-sub-section', sub)
 }
 
 const handleDeleteFrame = () => {
   if (confirm('確定要刪除此系統框架嗎？')) {
-    console.log('SystemFrame: 刪除框架', props.frameType)
     emit('delete-frame', { frame: props.frame, frameType: props.frameType })
   }
 }
@@ -262,19 +326,20 @@ const handleUpdateLogo = (newData) => {
 const handleDeleteLogo = (data) => {
   emit('delete-element', { type: 'logo', frameType: props.frameType, frame: data?.frame })
 }
-
-console.log('ALBUM_LIST frameData:', props.frameData)
 </script>
 
 <style scoped>
 .system-frame-wrapper {
   position: relative;
-  
-  &.is-selected {
-    outline: 3px solid rgba(232, 87, 42, 0.5);
-    outline-offset: -3px;
-    .delete-system-frame-btn { opacity: 1; }
-  }
+}
+
+.system-frame-wrapper.is-selected {
+  outline: 3px solid rgba(232, 87, 42, 0.5);
+  outline-offset: -3px;
+}
+
+.system-frame-wrapper.is-selected .delete-system-frame-btn {
+  opacity: 1;
 }
 
 .delete-system-frame-btn {
@@ -294,34 +359,37 @@ console.log('ALBUM_LIST frameData:', props.frameData)
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 100;
-  &:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
+}
+
+.delete-system-frame-btn:hover {
+  background: #dc3545;
+  color: #fff;
+  transform: scale(1.1);
 }
 
 .system-frame-container {
   position: relative;
 }
 
-/* ✅ 可點擊的系統框架：hover 邊框提示 + 選取狀態 */
 .system-frame-container.is-clickable {
   cursor: pointer;
   position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border: 3px solid transparent;
-    transition: border-color 0.2s;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  &:hover::after {
-    border-color: rgba(232, 87, 42, 0.4);
-  }
 }
 
-/* 選取時外框（配合 is-selected 的 wrapper outline） */
+.system-frame-container.is-clickable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  transition: border-color 0.2s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.system-frame-container.is-clickable:hover::after {
+  border-color: rgba(232, 87, 42, 0.4);
+}
+
 .system-frame-wrapper.is-selected .system-frame-container.is-clickable::after {
   border-color: rgba(232, 87, 42, 0.6);
 }
@@ -329,16 +397,20 @@ console.log('ALBUM_LIST frameData:', props.frameData)
 .carousel-wall-clickable {
   cursor: pointer;
   position: relative;
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border: 3px solid transparent;
-    transition: border-color 0.2s;
-    pointer-events: none;
-    z-index: 10;
-  }
-  &:hover::after { border-color: rgba(232, 87, 42, 0.5); }
+}
+
+.carousel-wall-clickable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  transition: border-color 0.2s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.carousel-wall-clickable:hover::after {
+  border-color: rgba(232, 87, 42, 0.5);
 }
 
 .unknown-frame {

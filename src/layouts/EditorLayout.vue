@@ -14,7 +14,9 @@
         :current-locale="pageEditorStore.currentLocale"
         :locales="pageEditorStore.locales"
         :has-unsaved-changes="hasUnsavedChanges"
+        :current-page-slug="pageEditorStore.currentPageSlug"
         @locale-change="handleLocaleChange"
+        @change-page="handlePageChange"
         @settings="handleSettings"
         @select-template="handleSelectTemplate"
         @upgrade="handleUpgrade"
@@ -26,7 +28,7 @@
       />
 
       <div v-if="pageEditorStore.isLoading" class="loading-overlay">
-        <div class="loading-spinner">載入中...</div>
+        <div class="loading-spinner">{{ t('editorLayout.loading') }}</div>
       </div>
 
       <div v-if="pageEditorStore.error" class="error-banner">
@@ -63,7 +65,7 @@ import PublishDialog from '@/components/PublishDialog.vue'
 import { useI18n } from 'vue-i18n'
 import { fontGoogleMap, loadGoogleFont } from '@/composables/useGoogleFont'
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const router = useRouter()
 const route = useRoute()
@@ -158,7 +160,7 @@ onMounted(async () => {
   const templeId = getTempleId()
 
   if (!templeId) {
-    pageEditorStore.error = '無法載入頁面：缺少宮廟 ID'
+    pageEditorStore.error = t('editorLayout.errorMissingTempleId')
     return
   }
 
@@ -186,7 +188,7 @@ onMounted(async () => {
       const data = await pageEditorStore.loadTemplateAsEditorData(templeId, templateId)
 
       if (!data) {
-        pageEditorStore.error = '套用模板失敗，請稍後再試'
+        pageEditorStore.error = t('editorLayout.errorApplyTemplate')
         return
       }
 
@@ -224,11 +226,19 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('EditorLayout 初始化失敗:', error)
-    pageEditorStore.error = '載入頁面失敗，請稍後再試'
+    pageEditorStore.error = t('editorLayout.errorLoadPage')
   }
 })
 
 // ==================== 工具列事件處理 ====================
+
+const handlePageChange = async (slug) => {
+  const templeId = getTempleId()
+  if (!templeId || !slug) return
+  router.replace({ query: { ...route.query, slug, locale: pageEditorStore.currentLocale } })
+  await pageEditorStore.switchPageWithLocale(slug, pageEditorStore.currentLocale)
+  hasUnsavedChanges.value = false
+}
 
 const handleLocaleChange = async (newLocale) => {
   const templeId = getTempleId()
@@ -247,7 +257,7 @@ const handleLocaleChange = async (newLocale) => {
     hasUnsavedChanges.value = false
   } catch (error) {
     console.error('語言切換失敗:', error)
-    pageEditorStore.error = '語言切換失敗：' + error.message
+    pageEditorStore.error = t('editorLayout.errorLocaleSwitch') + error.message
   }
 }
 
@@ -285,7 +295,7 @@ const handlePreview = () => {
     })
     window.open(resolved.href, '_blank')
   } else {
-    alert('請先選擇要預覽的頁面')
+    alert(t('editorLayout.alertSelectPage'))
   }
 }
 
@@ -293,25 +303,25 @@ const handleSave = async () => {
   try {
     const success = await pageEditorStore.saveCurrentPage()
     if (success) {
-      alert('儲存成功！')
+      alert(t('editorLayout.alertSaveSuccess'))
       hasUnsavedChanges.value = false
     } else {
-      alert('儲存失敗，請稍後再試')
+      alert(t('editorLayout.alertSaveFail'))
     }
   } catch (error) {
-    alert('儲存失敗：' + error.message)
+    alert(t('editorLayout.alertSaveError') + error.message)
   }
 }
 
 const handleDelete = async () => {
-  const confirmed = confirm('確定要刪除草稿嗎？')
+  const confirmed = confirm(t('editorLayout.confirmDelete'))
   if (!confirmed) return
 
   const templeId = getTempleId()
   const currentSlug = pageEditorStore.currentPageSlug
 
   if (!templeId || !currentSlug) {
-    alert('無法刪除草稿：缺少必要資訊')
+    alert(t('editorLayout.alertDeleteMissingInfo'))
     return
   }
 
@@ -320,10 +330,10 @@ const handleDelete = async () => {
     if (success) {
       hasUnsavedChanges.value = false
     } else {
-      alert('刪除失敗：' + (pageEditorStore.error || '未知錯誤'))
+      alert(t('editorLayout.alertDeleteFail') + (pageEditorStore.error || t('editorLayout.unknownError')))
     }
   } catch (error) {
-    alert('刪除失敗：' + error.message)
+    alert(t('editorLayout.alertDeleteError') + error.message)
   }
 }
 
@@ -337,7 +347,7 @@ const handleConfirmPublish = async () => {
   const templeId = getTempleId()
 
   if (!templeId) {
-    alert('缺少宮廟 ID')
+    alert(t('editorLayout.alertMissingTempleId'))
     if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
     return
   }
@@ -346,7 +356,7 @@ const handleConfirmPublish = async () => {
     if (hasUnsavedChanges.value) {
       const saveSuccess = await pageEditorStore.saveCurrentPage()
       if (!saveSuccess) {
-        alert('保存草稿失敗，無法發布')
+        alert(t('editorLayout.alertPublishSaveFail'))
         if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
         return
       }
@@ -360,13 +370,13 @@ const handleConfirmPublish = async () => {
 
     if (publishSuccess) {
       showPublishDialog.value = false
-      alert('網站發布成功！')
+      alert(t('editorLayout.alertPublishSuccess'))
       hasUnsavedChanges.value = false
     } else {
-      alert('發布失敗：' + (pageEditorStore.error || '未知錯誤'))
+      alert(t('editorLayout.alertPublishFail') + (pageEditorStore.error || t('editorLayout.unknownError')))
     }
   } catch (error) {
-    alert('發布失敗：' + error.message)
+    alert(t('editorLayout.alertPublishError') + error.message)
   } finally {
     if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
   }

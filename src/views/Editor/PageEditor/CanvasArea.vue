@@ -4,25 +4,26 @@ import BasemapWrapper from './basemap/BasemapWrapper.vue'
 import SystemFrame from './SystemFrame.vue'
 import CustomFrame from './CustomFrame.vue'
 
-// Props
 const props = defineProps({
-  basemaps: { type: Array, default: () => [] },
+  basemaps:        { type: Array,  default: () => [] },
   selectedBasemap: { type: Object, default: null },
-  selectedFrame: { type: Object, default: null },
+  selectedFrame:   { type: Object, default: null },
   selectedElement: { type: Object, default: null },
-  selectedCell: { type: Object, default: null },
-  currentPageSlug: { type: String, default: null }
+  selectedCell:    { type: Object, default: null },
+  currentPageSlug: { type: String, default: null },
+  locales:         { type: Array,  default: () => [] },
+  currentLocale:   { type: String, default: 'ZH-TW' },
 })
 
-// Emits
 const emit = defineEmits([
   'select-basemap', 'select-frame', 'select-element', 'select-cell',
   'drop-to-basemap', 'drop-to-cell', 'delete-basemap', 'delete-element',
   'delete-frame', 'update-element', 'update-background', 'update-cell-padding',
-  'add-basemap', 'move-basemap-up', 'move-basemap-down', 'change-page'
+  'add-basemap', 'move-basemap-up', 'move-basemap-down', 'change-page',
+  'locale-change', 'select-sub-section',
 ])
 
-// ==================== Scroll-to-top ====================
+// Scroll-to-top
 const canvasRef = ref(null)
 const showScrollTop = ref(false)
 
@@ -42,7 +43,7 @@ onUnmounted(() => {
   canvasRef.value?.removeEventListener('scroll', handleScroll)
 })
 
-// ==================== 拖曳狀態 ====================
+// 拖曳狀態
 const dragOverBasemap = ref(null)
 const isDragging = ref(false)
 
@@ -52,23 +53,33 @@ if (typeof window !== 'undefined') {
   window.addEventListener('drop', () => { isDragging.value = false; dragOverBasemap.value = null })
 }
 
-// ==================== 頁面切換 ====================
+// 頁面切換
 const handleChangePage = (slug) => {
-  console.log('CanvasArea: 切換頁面', slug)
   emit('change-page', slug)
 }
 
-// ==================== 選擇事件 ====================
+// 語言切換
+const handleLocaleChange = (locale) => {
+  emit('locale-change', locale)
+}
+
+// 選擇事件
 const isBasemapSelected = (basemap) => props.selectedBasemap === basemap
 
 const handleBasemapClick = (basemap) => {
-  console.log('點擊底圖:', basemap.bgType)
   emit('select-basemap', basemap)
 }
 
 const handleSelectFrame = (frame) => {
-  console.log('CanvasArea: 選擇框架', frame?.type)
   emit('select-frame', frame)
+}
+
+const handleSelectSubSection = (sub) => {
+  const frame = props.selectedFrame
+  if (frame) {
+    frame.pvSubSection = sub
+  }
+  emit('select-sub-section', sub)
 }
 
 const handleSelectElement = (data) => { emit('select-element', data) }
@@ -76,29 +87,25 @@ const handleUpdateElement = (data) => { emit('update-element', data) }
 const handleSelectCell = (data) => { emit('select-cell', data) }
 const handleUpdateCellPadding = (data) => { emit('update-cell-padding', data) }
 
-// ==================== 底圖操作 ====================
+// 底圖操作
 const handleAddBasemap = (currentIndex) => {
-  console.log('在索引', currentIndex, '後新增空白底圖')
   emit('add-basemap', currentIndex)
 }
 
 const handleDeleteBasemap = (index) => {
-  console.log('刪除底圖，索引:', index)
   emit('delete-basemap', index)
 }
 
 const handleMoveBasemap = ({ fromIndex, direction }) => {
-  console.log('移動底圖:', direction)
   if (direction === 'up') emit('move-basemap-up', fromIndex)
   else if (direction === 'down') emit('move-basemap-down', fromIndex)
 }
 
 const handleUpdateBackground = (data) => {
-  console.log('CanvasArea 收到背景更新事件:', data)
   emit('update-background', data)
 }
 
-// ==================== 拖曳事件 ====================
+// 拖曳事件
 const handleDragOver = (event, index) => {
   event.preventDefault()
   event.stopPropagation()
@@ -122,10 +129,8 @@ const handleDrop = (event, basemap, basemapIndex) => {
     const data = event.dataTransfer.getData('application/json')
     if (!data) return
     const dragData = JSON.parse(data)
-    console.log('📦 放置到底圖:', dragData)
 
     if (dragData.dragType === 'element') {
-      console.log('元件不能直接放到底圖')
       return
     }
 
@@ -144,16 +149,15 @@ const handleDrop = (event, basemap, basemapIndex) => {
   }
 }
 
-// ==================== 元件操作 ====================
+// 元件操作
 const handleDropToCell = (data) => { emit('drop-to-cell', data) }
 const handleDeleteElement = (data) => { emit('delete-element', data) }
 
 const handleDeleteFrame = (data, basemap, basemapIndex) => {
-  console.log('CanvasArea: 刪除框架', data)
   emit('delete-frame', { ...data, basemap, basemapIndex })
 }
 
-// ==================== 輔助函數 ====================
+// 輔助函數
 const isSystemFrame = (frame) => {
   if (!frame || !frame.type) return false
   return !frame.type.startsWith('FRAME')
@@ -167,9 +171,8 @@ const getBasemapKey = (basemap, index) => {
 <template>
   <div ref="canvasRef" class="canvas-area" :class="{ 'is-dragging': isDragging }">
     <div class="temple-website">
-      <!-- 動態渲染底圖 -->
       <template v-for="(basemap, index) in basemaps" :key="getBasemapKey(basemap, index)">
-        <BasemapWrapper 
+        <BasemapWrapper
           :index="index"
           :basemap-id="`basemap-${index}`"
           :basemap="basemap"
@@ -182,9 +185,9 @@ const getBasemapKey = (basemap, index) => {
           @move-basemap="handleMoveBasemap"
           @update-background="handleUpdateBackground"
         >
-          <div 
+          <div
             class="basemap-with-frames"
-            :class="{ 
+            :class="{
               'drag-over': dragOverBasemap === `basemap-${index}`,
               'has-frame': basemap.frames && basemap.frames.length > 0,
               'is-selected': isBasemapSelected(basemap)
@@ -194,17 +197,17 @@ const getBasemapKey = (basemap, index) => {
             @dragleave="handleDragLeave"
             @drop="handleDrop($event, basemap, index)"
           >
-            <div 
+            <div
               class="basemap-overlay"
               :class="{ 'show': isBasemapSelected(basemap) }"
               @click.stop="handleBasemapClick(basemap)"
               title="點擊選擇底圖以編輯背景"
             ></div>
 
-            <div 
-              v-if="!basemap.frames || basemap.frames.length === 0" 
+            <div
+              v-if="!basemap.frames || basemap.frames.length === 0"
               class="blank-basemap"
-              :class="{ 
+              :class="{
                 'drag-over': dragOverBasemap === `basemap-${index}`,
                 'is-selected': isBasemapSelected(basemap),
                 'has-bg': !!basemap.bgPcImgSrc
@@ -219,9 +222,9 @@ const getBasemapKey = (basemap, index) => {
                 <p class="blank-note" v-else>此底圖可以有多個框架</p>
               </div>
             </div>
-            
+
             <template v-for="(frame, frameIndex) in basemap.frames" :key="`frame-${frameIndex}`">
-              <SystemFrame 
+              <SystemFrame
                 v-if="isSystemFrame(frame)"
                 :frame-type="frame.type"
                 :frame-data="frame.data"
@@ -229,6 +232,8 @@ const getBasemapKey = (basemap, index) => {
                 :selected-element="selectedElement"
                 :selected-frame="selectedFrame"
                 :current-page-slug="currentPageSlug"
+                :locales="locales"
+                :current-locale="currentLocale"
                 class="relative-frame"
                 @select-element="handleSelectElement"
                 @update-element="handleUpdateElement"
@@ -236,8 +241,10 @@ const getBasemapKey = (basemap, index) => {
                 @change-page="handleChangePage"
                 @select-frame="handleSelectFrame"
                 @delete-frame="(data) => handleDeleteFrame(data, basemap, index)"
+                @locale-change="handleLocaleChange"
+                @select-sub-section="handleSelectSubSection"
               />
-              
+
               <CustomFrame
                 v-else
                 :frame="frame"
@@ -260,7 +267,6 @@ const getBasemapKey = (basemap, index) => {
       </template>
     </div>
 
-    <!-- Scroll-to-top 按鈕 -->
     <Transition name="scroll-top">
       <button
         v-if="showScrollTop"
@@ -299,16 +305,12 @@ const getBasemapKey = (basemap, index) => {
   background: #fff;
 }
 
-// ==================== Scroll-to-top ====================
-
 .scroll-top-btn {
   position: sticky;
   bottom: 32px;
-  // 靠右下，margin-left: auto 推到右側，再配合自身寬度偏移
   align-self: flex-end;
   margin-right: 32px;
-  // 讓它浮在內容上方，不佔 flow 空間
-  margin-top: -56px; // 負 margin 讓它不推擠下方內容
+  margin-top: -56px;
   z-index: 100;
   width: 44px;
   min-height: 44px;
@@ -342,7 +344,6 @@ const getBasemapKey = (basemap, index) => {
   }
 }
 
-// 進場/離場動畫
 .scroll-top-enter-active,
 .scroll-top-leave-active {
   transition: opacity 0.25s, transform 0.25s;
@@ -353,8 +354,6 @@ const getBasemapKey = (basemap, index) => {
   opacity: 0;
   transform: translateY(12px);
 }
-
-// ==================== 以下與原版相同 ====================
 
 .blank-basemap {
   min-height: 300px;
@@ -408,14 +407,14 @@ const getBasemapKey = (basemap, index) => {
       .blank-text, .blank-hint { color: #fff; opacity: 1; }
     }
   }
-  
+
   &:hover {
     background: #fafafa;
     border-color: #ddd;
     .blank-icon { opacity: 0.3; }
     .blank-text, .blank-hint { opacity: 1; }
   }
-  
+
   &.is-selected {
     background: #fafafa;
     border-color: #E8572A;
@@ -424,7 +423,7 @@ const getBasemapKey = (basemap, index) => {
     .blank-icon { opacity: 0.3; }
     .blank-text, .blank-hint { opacity: 1; }
   }
-  
+
   &.drag-over {
     background: #fff5f2;
     border-color: #E8572A;
@@ -487,7 +486,7 @@ const getBasemapKey = (basemap, index) => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  
+
   &.is-selected {
     outline: 3px solid #E8572A;
     outline-offset: -3px;
@@ -505,7 +504,7 @@ const getBasemapKey = (basemap, index) => {
   cursor: pointer;
   z-index: 1;
   pointer-events: none;
-  
+
   &:hover { opacity: 1; background: rgba(232, 87, 42, 0.08); }
   &.show { opacity: 1; pointer-events: auto; }
 }

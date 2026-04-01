@@ -2,15 +2,27 @@
   <header class="toolbar">
     <div class="toolbar-left">
       <!-- 返回管理後台按鈕 -->
-      <button class="btn btn-icon btn-back" @click="handleBackToDashboard" title="返回管理後台">
-        ← 返回後台
+      <button class="btn btn-icon btn-back" @click="handleBackToDashboard" :title="t('editorToolbar.backTitle')">
+        {{ t('editorToolbar.backBtn') }}
       </button>
       
       <div class="toolbar-divider"></div>
       
+      <!-- 頁面切換 -->
+      <select
+        v-if="pageTabs.length > 0"
+        :value="currentPageSlug"
+        @change="handlePageChange"
+        class="locale-select"
+      >
+        <option v-for="tab in pageTabs" :key="tab.slug" :value="tab.slug">
+          {{ tab.name || tab.slug }}
+        </option>
+      </select>
+
       <!-- 語言選擇器 -->
-      <select 
-        :value="currentLocale" 
+      <select
+        :value="currentLocale"
         @change="handleLocaleChange"
         class="locale-select"
       >
@@ -20,29 +32,29 @@
       </select>
       
       <!-- 未保存提示 -->
-      <span v-if="hasUnsavedChanges" class="unsaved-indicator" title="有未保存的變更">
-        ● 未保存
+      <span v-if="hasUnsavedChanges" class="unsaved-indicator" :title="t('editorToolbar.unsavedTitle')">
+        {{ t('editorToolbar.unsavedLabel') }}
       </span>
     </div>
     
     <div class="toolbar-right">
-      <button class="btn btn-icon" @click="handleSettings">設定</button>
-      <button class="btn btn-icon" @click="handleSelectTemplate">選擇模板</button>
-      <button class="btn btn-icon" @click="handleUpgrade">升級方案</button>
+      <button class="btn btn-icon" @click="handleSettings">{{ t('editorToolbar.settings') }}</button>
+      <button class="btn btn-icon" @click="handleSelectTemplate">{{ t('editorToolbar.selectTemplate') }}</button>
+      <button class="btn btn-icon" @click="handleUpgrade">{{ t('editorToolbar.upgrade') }}</button>
       <div class="toolbar-divider"></div>
-      <button class="btn btn-icon" @click="handlePreview">預覽</button>
-      <button class="btn btn-icon" @click="handleSave">儲存草稿</button>
-      <button class="btn btn-icon btn-danger" @click="handleDelete">刪除草稿</button>
+      <button class="btn btn-icon" @click="handlePreview">{{ t('editorToolbar.preview') }}</button>
+      <button class="btn btn-icon" @click="handleSave">{{ t('editorToolbar.saveDraft') }}</button>
+      <button class="btn btn-icon btn-danger" @click="handleDelete">{{ t('editorToolbar.deleteDraft') }}</button>
       <div class="toolbar-divider"></div>
       <button
         class="btn btn-icon btn-secondary"
         @click="handleGoToWebsite"
         :disabled="!domainName"
-        :title="domainName || '尚未設定網站網址'"
+        :title="domainName || t('editorToolbar.noWebsiteUrl')"
       >
-        前往網站
+        {{ t('editorToolbar.goToWebsite') }}
       </button>
-      <button class="btn btn-primary" @click="handlePublish">發布網站</button>
+      <button class="btn btn-primary" @click="handlePublish">{{ t('editorToolbar.publish') }}</button>
     </div>
   </header>
 </template>
@@ -50,8 +62,10 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { usePageEditorStore } from '@/stores/pageEditor'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const store = usePageEditorStore()
@@ -68,11 +82,16 @@ const props = defineProps({
   hasUnsavedChanges: {
     type: Boolean,
     default: false
+  },
+  currentPageSlug: {
+    type: String,
+    default: null
   }
 })
 
 const emit = defineEmits([
   'locale-change',
+  'change-page',
   'settings',
   'select-template',
   'upgrade',
@@ -85,6 +104,9 @@ const emit = defineEmits([
 
 // 從 store 取得 domainName
 const domainName = computed(() => store.websiteSettings?.domainName || null)
+
+// 頁面 tabs（過濾掉 portal）
+const pageTabs = computed(() => store.headerTabs || [])
 
 // 獲取 templeId
 const getTempleId = () => route.params.templeId
@@ -99,6 +121,9 @@ const handleBackToDashboard = () => {
     })
   }
 }
+
+// 頁面切換
+const handlePageChange = (event) => emit('change-page', event.target.value)
 
 // 語言切換
 const handleLocaleChange = (event) => emit('locale-change', event.target.value)

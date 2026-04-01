@@ -92,6 +92,14 @@
       />
     </div>
 
+    <div v-else-if="element.type === 'ACCORDION'" class="element-accordion">
+      <AccordionElement
+        :content="element.content || {}"
+        :element="element"
+        :key="`accordion-${cellKey}`"
+      />
+    </div>
+
     <div v-else class="element-unknown">
       <span>{{ isEditMode ? t('customFrame.unknownElement') : '未知元件：' }}{{ element.type }}</span>
     </div>
@@ -122,6 +130,7 @@ import AlbumCard from './AlbumCard.vue'
 import ProductCard from './ProductCard.vue'
 import ServiceCard from './ServiceCard.vue'
 import EventCard from './EventCard.vue'
+import AccordionElement from './AccordionElement.vue'
 
 const { t } = useI18n()
 
@@ -132,13 +141,11 @@ const handleButtonClick = (e, element) => {
   const internalSlug = element?.value?.internalSlug
   const url = element?.value?.url
 
-  // 內頁連結：直接用 slug 導頁
   if (internalSlug && previewNavigate) {
     previewNavigate(internalSlug)
     return
   }
 
-  // 自訂外部連結：開新分頁
   if (url && url !== '#') {
     window.open(url, '_blank')
   }
@@ -296,7 +303,8 @@ const getButtonStyle = (element) => {
 
 .element-carousel,
 .element-map,
-.element-card-wrapper { width: 100%; }
+.element-card-wrapper,
+.element-accordion { width: 100%; }
 
 .element-unknown {
   display: flex;

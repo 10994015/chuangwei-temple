@@ -1,16 +1,23 @@
 <template>
   <div class="system-frame-preview" :data-frame-type="frameType" :style="frameTextStyle">
-    <!-- 頁首 (HEADER) -->
-    <NavbarBasemap 
-      v-if="frameType === 'HEADER'" 
+    <NavbarBasemap
+      v-if="frameType === 'HEADER'"
       :frame-data="frameData"
       :is-edit-mode="false"
       :current-page-slug="currentPageSlug"
       :device="device"
       @change-page="handleChangePage"
     />
-    
-    <!-- 頁尾 (FOOTER) -->
+
+    <PvNavbarBasemap
+      v-else-if="frameType === 'PV_HEADER'"
+      :frame-data="frameData"
+      :is-edit-mode="false"
+      :current-page-slug="currentPageSlug"
+      :device="device"
+      @change-page="handleChangePage"
+    />
+
     <FooterBasemap
       v-else-if="frameType === 'FOOTER'"
       v-bind="frameData"
@@ -19,7 +26,23 @@
       :device="device"
     />
 
-    <HeroBasemap v-else-if="frameType === 'CAROUSEL_WALL'" v-bind="frameData" />
+    <PvFooterBasemap
+      v-else-if="frameType === 'PV_FOOTER'"
+      v-bind="frameData"
+      :footer-bg-color="frameData.footerBgColor"
+      :footer-text-color="frameData.footerTextColor"
+      :device="device"
+    />
+
+    <HeroBasemap
+      v-else-if="frameType === 'CAROUSEL_WALL'"
+      v-bind="frameData"
+    />
+
+    <PvHeroBasemap
+      v-else-if="frameType === 'PV_CAROUSEL_WALL'"
+      v-bind="frameData"
+    />
 
     <HeroBannerElement
       v-else-if="frameType === 'FIRST_PICTURE'"
@@ -28,10 +51,54 @@
       :is-edit-mode="false"
     />
 
-    <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" :device="device" />
-    <NewsListBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" :device="device" />
-    <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" :device="device" />
-    <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" :device="device" />
+    <PvFirstPictureBasemap
+      v-else-if="frameType === 'PV_FIRST_PICTURE'"
+      :frame-data="frameData"
+      :is-selected="false"
+      :is-edit-mode="false"
+    />
+
+    <NewsBasemap
+      v-else-if="frameType === 'INDEX_NEWS'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <PvNewsBasemap
+      v-else-if="frameType === 'PV_INDEX_NEWS'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <NewsListBasemap
+      v-else-if="frameType === 'NEWS_LIST'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <PvNewsListBasemap
+      v-else-if="frameType === 'PV_NEWS_LIST'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <ProductsBasemap
+      v-else-if="frameType === 'INDEX_PRODUCT'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <PvProductsBasemap
+      v-else-if="frameType === 'PV_INDEX_PRODUCT'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <EventsBasemap
+      v-else-if="frameType === 'INDEX_EVENT'"
+      v-bind="frameData"
+      :device="device"
+    />
 
     <DonationBasemap
       v-else-if="frameType === 'INDEX_DONATION'"
@@ -41,12 +108,36 @@
       :frame="fakeFrame"
     />
 
-    <ProductListBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" :device="device" />
-    <AlbumListBasemap v-else-if="frameType === 'ALBUM_LIST'" v-bind="frameData" :device="device" />
-    <EventListBasemap v-else-if="frameType === 'EVENT_LIST'" v-bind="frameData" :device="device" />
-    <DonationProductBasemap v-else-if="frameType === 'DONATION_PRODUCT'" v-bind="frameData" :device="device" />
+    <ProductListBasemap
+      v-else-if="frameType === 'PRODUCT_LIST'"
+      v-bind="frameData"
+      :device="device"
+    />
 
-    <!-- 光明燈 (BRIGHT_LAMP) -->
+    <PvProductListBasemap
+      v-else-if="frameType === 'PV_PRODUCT_LIST'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <AlbumListBasemap
+      v-else-if="frameType === 'ALBUM_LIST'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <EventListBasemap
+      v-else-if="frameType === 'EVENT_LIST'"
+      v-bind="frameData"
+      :device="device"
+    />
+
+    <DonationProductBasemap
+      v-else-if="frameType === 'DONATION_PRODUCT'"
+      v-bind="frameData"
+      :device="device"
+    />
+
     <BrightLampBasemap
       v-else-if="frameType === 'BRIGHT_LAMP'"
       :bg-img-src="frameData.bgImgSrc"
@@ -58,7 +149,13 @@
       :lamp-types="frameData.lampTypes"
       :device="device"
     />
-    
+
+    <PvServicesBasemap
+      v-else-if="frameType === 'PV_INDEX_SERVICE'"
+      v-bind="frameData"
+      :device="device"
+    />
+
     <div v-else class="unknown-frame">
       <p>未知系統框架類型: {{ frameType }}</p>
     </div>
@@ -68,19 +165,28 @@
 <script setup>
 import { computed } from 'vue'
 import NavbarBasemap from '../Editor/PageEditor/basemap/NavbarBasemap.vue'
+import PvNavbarBasemap from '../Editor/PageEditor/basemap/PvNavbarBasemap.vue'
 import FooterBasemap from '../Editor/PageEditor/basemap/FooterBasemap.vue'
+import PvFooterBasemap from '../Editor/PageEditor/basemap/PvFooterBasemap.vue'
 import HeroBasemap from '../Editor/PageEditor/basemap/HeroBasemap.vue'
+import PvHeroBasemap from '../Editor/PageEditor/basemap/PvHeroBasemap.vue'
+import HeroBannerElement from '../Editor/PageEditor/elements/HeroBannerElement.vue'
+import PvFirstPictureBasemap from '../Editor/PageEditor/basemap/PvFirstPictureBasemap.vue'
 import NewsBasemap from '../Editor/PageEditor/basemap/NewsBasemap.vue'
+import PvNewsBasemap from '../Editor/PageEditor/basemap/PvNewsBasemap.vue'
 import NewsListBasemap from '../Editor/PageEditor/basemap/NewsListBasemap.vue'
+import PvNewsListBasemap from '../Editor/PageEditor/basemap/PvNewsListBasemap.vue'
+import ProductsBasemap from '../Editor/PageEditor/basemap/ProductsBasemap.vue'
+import PvProductsBasemap from '../Editor/PageEditor/basemap/PvProductsBasemap.vue'
 import EventsBasemap from '../Editor/PageEditor/basemap/EventsBasemap.vue'
 import EventListBasemap from '../Editor/PageEditor/basemap/EventListBasemap.vue'
-import ProductsBasemap from '../Editor/PageEditor/basemap/ProductsBasemap.vue'
-import ProductListBasemap from '../Editor/PageEditor/basemap/ProductListBasemap.vue'
 import DonationBasemap from '../Editor/PageEditor/basemap/DonationBasemap.vue'
 import DonationProductBasemap from '../Editor/PageEditor/basemap/DonationProductBasemap.vue'
+import ProductListBasemap from '../Editor/PageEditor/basemap/ProductListBasemap.vue'
+import PvProductListBasemap from '../Editor/PageEditor/basemap/PvProductListBasemap.vue'
 import AlbumListBasemap from '../Editor/PageEditor/basemap/AlbumListBasemap.vue'
-import HeroBannerElement from '../Editor/PageEditor/elements/HeroBannerElement.vue'
 import BrightLampBasemap from '../Editor/PageEditor/basemap/BrightLampBasemap.vue'
+import PvServicesBasemap from '../Editor/PageEditor/basemap/PvServicesBasemap.vue'
 
 const props = defineProps({
   frameType:       { type: String, required: true },
@@ -92,7 +198,6 @@ const props = defineProps({
 const emit = defineEmits(['change-page'])
 const handleChangePage = (slug) => emit('change-page', slug)
 
-// ==================== 文字色主題 CSS 變數 ====================
 const THEME_PRESETS = {
   light: {
     '--frame-text-color':     '#333333',
@@ -156,7 +261,6 @@ const frameTextStyle = computed(() => {
   return THEME_PRESETS.light
 })
 
-// DonationBasemap 讀取 frame.data 而非直接 props
 const fakeFrame = computed(() => ({ data: props.frameData }))
 </script>
 

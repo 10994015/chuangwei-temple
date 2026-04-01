@@ -336,7 +336,8 @@ const createElementFromDrag = (dragData, index) => {
     'text': 'TEXT', 'image': 'IMG', 'button': 'BUTTON',
     'h-line': 'HORIZON_LINE', 'v-line': 'VERTICAL_LINE',
     'carousel': 'CAROUSEL_IMG', 'map': 'GOOGLE_MAP',
-    'product-card': 'PRODUCT_CARD', 'service-card': 'SERVICE_CARD', 'event-card': 'EVENT_CARD'
+    'product-card': 'PRODUCT_CARD', 'service-card': 'SERVICE_CARD', 'event-card': 'EVENT_CARD',
+    'accordion': 'ACCORDION',
   }
   const apiType = typeMap[dragData.type] || dragData.type.toUpperCase()
   let value = {}
@@ -352,6 +353,14 @@ const createElementFromDrag = (dragData, index) => {
     case 'product-card': value = { image: null, tag: '法會活動', title: '商品標題', date: '2024-08-22' }; break
     case 'service-card': value = { image: null, tag: '祈福服務', title: '服務標題', date: '2024-08-22' }; break
     case 'event-card':   value = { image: null, tag: '法會活動', title: '中元普渡法會', description: '2024年中元普渡法會活動紀錄' }; break
+    case 'accordion':    value = {
+      items: [
+            { title: '如何開始使用本服務？', content: '您可以點擊右上角的「立即註冊」按鈕，填寫基本資料後即可開始使用。' },
+            { title: '如何聯繫客服？', content: '您可以透過頁面下方的聯絡表單，或直接來信至官方信箱，我們將在一個工作天內回覆。' },
+            { title: '服務費用如何計算？', content: '基本服務完全免費。如需進階功能，請參考我們的方案頁面，選擇最適合您的服務內容。' },
+          ]
+        }
+      break
   }
   return {
     type: apiType, value,

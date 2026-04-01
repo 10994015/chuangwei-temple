@@ -98,8 +98,15 @@ const props = defineProps({
 
 const emit = defineEmits(['view-detail', 'view-all'])
 
-const displayEvents = computed(() =>
-  props.events.slice(0, 3).map(e => ({
+const DEFAULT_EVENTS = [
+  { id: 1, name: '春節祈福法會',         startAt: '2025-02-01T09:00', location: '宮廟正殿', imgSrc: null, labels: ['熱門'] },
+  { id: 2, name: '媽祖聖誕慶典遶境活動', startAt: '2025-03-15T08:00', location: '廟前廣場', imgSrc: null, labels: ['推薦'] },
+  { id: 3, name: '元宵燈謎晚會暨祈福儀式', startAt: '2025-02-12T18:00', location: '廟埕廣場', imgSrc: null, labels: [] },
+]
+
+const displayEvents = computed(() => {
+  const source = props.events.length > 0 ? props.events : DEFAULT_EVENTS
+  return source.slice(0, 3).map(e => ({
     id:       e.id,
     title:    e.name || '',
     date:     e.startAt ? e.startAt.slice(0, 10) : '',
@@ -108,7 +115,7 @@ const displayEvents = computed(() =>
     tags:     Array.isArray(e.labels) ? e.labels : [],
     image:    e.imgSrc || null,
   }))
-)
+})
 
 const getTagClass = (tag) => {
   if (tag === t('eventsBasemap.tagHot')) return 'hot'

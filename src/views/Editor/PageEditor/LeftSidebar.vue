@@ -241,18 +241,28 @@ watch(
 
 // ✅ 獲取框架顯示名稱
 const frameDisplayKeyMap = {
-  'CAROUSEL_WALL':    'leftSidebar.frameCarouselWall',
-  'FIRST_PICTURE':    'leftSidebar.frameFirstPicture',
-  'INDEX_NEWS':       'leftSidebar.frameIndexNews',
-  'INDEX_PRODUCT':    'leftSidebar.frameIndexProduct',
-  'INDEX_EVENT':      'leftSidebar.frameIndexEvent',
-  'INDEX_DONATION':   'leftSidebar.frameIndexDonation',
-  'PRODUCT_LIST':     'leftSidebar.frameProductList',
-  'NEWS_LIST':        'leftSidebar.frameNewsList',
-  'ALBUM_LIST':       'leftSidebar.frameAlbumList',
-  'EVENT_LIST':       'leftSidebar.frameEventList',
-  'DONATION_PRODUCT': 'leftSidebar.frameDonationProduct',
-  'BRIGHT_LAMP':      'leftSidebar.frameBrightLamp',
+  'CAROUSEL_WALL':      'leftSidebar.frameCarouselWall',
+  'FIRST_PICTURE':      'leftSidebar.frameFirstPicture',
+  'INDEX_NEWS':         'leftSidebar.frameIndexNews',
+  'INDEX_PRODUCT':      'leftSidebar.frameIndexProduct',
+  'INDEX_EVENT':        'leftSidebar.frameIndexEvent',
+  'INDEX_DONATION':     'leftSidebar.frameIndexDonation',
+  'PRODUCT_LIST':       'leftSidebar.frameProductList',
+  'NEWS_LIST':          'leftSidebar.frameNewsList',
+  'ALBUM_LIST':         'leftSidebar.frameAlbumList',
+  'EVENT_LIST':         'leftSidebar.frameEventList',
+  'DONATION_PRODUCT':   'leftSidebar.frameDonationProduct',
+  'BRIGHT_LAMP':        'leftSidebar.frameBrightLamp',
+  // v2 (Pv)
+  'PV_HEADER':          'leftSidebar.pvHeader',
+  'PV_FOOTER':          'leftSidebar.pvFooter',
+  'PV_CAROUSEL_WALL':   'leftSidebar.pvCarouselWall',
+  'PV_FIRST_PICTURE':   'leftSidebar.pvFirstPicture',
+  'PV_INDEX_NEWS':      'leftSidebar.pvIndexNews',
+  'PV_NEWS_LIST':       'leftSidebar.pvNewsList',
+  'PV_INDEX_PRODUCT':   'leftSidebar.pvIndexProduct',
+  'PV_INDEX_SERVICE':   'leftSidebar.pvIndexService',
+  'PV_PRODUCT_LIST':    'leftSidebar.pvProductList',
 }
 const getFrameDisplayName = (frameType) => {
   return frameDisplayKeyMap[frameType] ? t(frameDisplayKeyMap[frameType]) : frameType
@@ -327,6 +337,7 @@ const elements = computed(() => [
   { id: 'product-card', name: t('leftSidebar.elemProductCard'), icon: '🛍️', color: '#f97316', type: 'product-card', dragType: 'element' },
   { id: 'service-card', name: t('leftSidebar.elemServiceCard'), icon: '🙏', color: '#14b8a6', type: 'service-card', dragType: 'element' },
   { id: 'event-card',   name: t('leftSidebar.elemEventCard'),   icon: '🎉', color: '#a855f7', type: 'event-card',   dragType: 'element' },
+  { id: 'accordion', name: '手風琴', icon: '☰', color: '#6366f1', type: 'accordion', dragType: 'element' },
 ])
 
 // ==================== 方法 ====================
