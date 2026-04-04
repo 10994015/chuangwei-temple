@@ -16,7 +16,6 @@
               <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
             </svg>
           </span>
-          <span class="pv-logo-name">{{ tenantName }}</span>
         </div>
 
         <button
@@ -198,10 +197,6 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 // Computed
 const logoSrc = computed(() => props.frameData.logoImgSrc || null)
 
-const tenantName = computed(() =>
-  props.frameData.tenantName || props.frameData.temple_name || 'LOGO'
-)
-
 const tabs = computed(() =>
   (props.frameData.tabs || props.frameData.tab || []).filter(t => t.slug !== 'portal')
 )
@@ -295,13 +290,6 @@ const handleMobileTabClick = (tab) => { closeMobileMenu(); emit('change-page', t
   align-items: center;
 }
 
-.pv-logo-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: #222;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-}
 
 .pv-delete-logo-btn {
   position: absolute;
@@ -545,37 +533,11 @@ const handleMobileTabClick = (tab) => { closeMobileMenu(); emit('change-page', t
 .mobile-menu-enter-from   { opacity: 0; transform: translateY(-12px); }
 .mobile-menu-leave-to     { opacity: 0; transform: translateY(-8px); }
 
-.overlay-fade-enter-active, .overlay-fade-leave-active { transition: opacity 0.2s; }
-.overlay-fade-enter-from, .overlay-fade-leave-to { opacity: 0; }
-</style>
-
-<style>
-.pv-locale-dropdown {
-  min-width: 100px;
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.pv-locale-option {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
-  background: transparent;
-  border: none;
-  text-align: left;
-  font-size: 13px;
-  color: #444;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.pv-locale-option:hover { background: #fff5f2; color: #E8572A; }
-.pv-locale-option.active { color: #E8572A; font-weight: 600; background: #fff5f2; }
-
 .locale-dropdown-enter-active { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 .locale-dropdown-leave-active { transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
 .locale-dropdown-enter-from   { opacity: 0; transform: translateY(-6px); }
 .locale-dropdown-leave-to     { opacity: 0; transform: translateY(-4px); }
+
+.overlay-fade-enter-active, .overlay-fade-leave-active { transition: opacity 0.2s; }
+.overlay-fade-enter-from, .overlay-fade-leave-to { opacity: 0; }
 </style>

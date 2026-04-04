@@ -104,10 +104,11 @@ const slideWidth = computed(() => {
   return viewportWidth.value - sidePx.value * 2
 })
 
-// offset 從 index+1 開始，因為第 0 位是 clone
+// 單張時沒有 clone，offset 直接為 0；多張時第 0 位是 clone，從 index+1 開始
 const trackStyle = computed(() => {
   if (!slideWidth.value) return {}
-  const offset = (currentIndex.value + 1) * slideWidth.value
+  const isSingle = displayImages.value.length <= 1
+  const offset = isSingle ? 0 : (currentIndex.value + 1) * slideWidth.value
   return { transform: `translateX(-${offset}px)` }
 })
 

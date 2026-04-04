@@ -255,6 +255,117 @@
           </div>
         </template>
 
+        <template v-else-if="selectedFrame.type === 'PV_CAROUSEL_WALL'">
+          <h4 class="section-title">{{ t('propsPanel.carouselWallSettings') }}</h4>
+          <div class="prop-group">
+            <label>{{ t('propsPanel.carouselHeight') }}</label>
+            <div class="height-selector">
+              <input v-model.number="carouselWallHeight" type="number" class="prop-input" min="200" max="1000" step="50" @input="updateCarouselWallSettings" />
+              <span class="unit">px</span>
+            </div>
+            <div class="height-presets">
+              <button @click="setCarouselWallHeight(400)" class="preset-btn" :class="{ active: carouselWallHeight === 400 }">{{ t('propsPanel.sizeSmall') }}</button>
+              <button @click="setCarouselWallHeight(600)" class="preset-btn" :class="{ active: carouselWallHeight === 600 }">{{ t('propsPanel.sizeMedium') }}</button>
+              <button @click="setCarouselWallHeight(800)" class="preset-btn" :class="{ active: carouselWallHeight === 800 }">{{ t('propsPanel.sizeLarge') }}</button>
+              <button @click="setCarouselWallHeight(1000)" class="preset-btn" :class="{ active: carouselWallHeight === 1000 }">{{ t('propsPanel.sizeXL') }}</button>
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="checkbox-label">
+              <input v-model="carouselWallAutoPlay" type="checkbox" @change="updateCarouselWallSettings" />
+              <span>{{ t('propsPanel.autoPlay') }}</span>
+            </label>
+          </div>
+          <div class="prop-group" v-if="carouselWallAutoPlay">
+            <label>{{ t('propsPanel.playInterval') }}</label>
+            <input v-model.number="carouselWallInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselWallSettings" />
+            <span class="unit-hint">{{ t('propsPanel.intervalHint') }}</span>
+          </div>
+          <div class="prop-group" style="margin-top: 24px;">
+            <label>{{ t('propsPanel.carouselWallImgCount', { n: carouselWallImages.length }) }}</label>
+            <div v-if="carouselWallImages.length > 0" class="carousel-images-list-vertical">
+              <div
+                v-for="(img, index) in carouselWallImages"
+                :key="img.id || index"
+                class="carousel-image-card"
+                :class="{ 'drag-over': carouselWallDragOver === index }"
+                draggable="true"
+                @dragstart="onCarouselWallDragStart(index)"
+                @dragover.prevent="carouselWallDragOver = index"
+                @dragleave="carouselWallDragOver = null"
+                @drop.prevent="onCarouselWallDrop(index)"
+                @dragend="carouselWallDragOver = null"
+              >
+                <div class="card-image-row">
+                  <div class="drag-handle card-drag">⠿</div>
+                  <img :src="img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
+                  <span class="card-index">{{ t('propsPanel.imgIndex', { n: index + 1 }) }}</span>
+                  <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" :title="t('propsPanel.deleteImg')">✕</button>
+                </div>
+                <div class="card-field">
+                  <label class="card-label">{{ t('propsPanel.cardTitle') }}</label>
+                  <input :value="img.title || ''" type="text" class="prop-input card-input" :placeholder="t('propsPanel.cardTitlePlaceholder')" @input="updateCarouselWallImageField(index, 'title', $event.target.value)" />
+                </div>
+                <div class="card-field">
+                  <label class="card-label">{{ t('propsPanel.cardSubtitle') }}</label>
+                  <textarea :value="img.subtitle || ''" class="prop-textarea card-textarea" rows="2" :placeholder="t('propsPanel.cardSubtitlePlaceholder')" @input="updateCarouselWallImageField(index, 'subtitle', $event.target.value)"></textarea>
+                </div>
+                <div class="card-field card-style-toggle" @click="toggleCardStyle(index)">
+                  <span class="card-label">{{ t('propsPanel.cardStyle') }}</span>
+                  <span class="card-toggle-icon">{{ expandedCardStyles.includes(index) ? '▲' : '▼' }}</span>
+                </div>
+                <template v-if="expandedCardStyles.includes(index)">
+                  <div class="card-field">
+                    <label class="card-label">{{ t('propsPanel.overlayOpacityLabel', { n: img.overlayOpacity ?? 40 }) }}</label>
+                    <input :value="img.overlayOpacity ?? 40" type="range" min="0" max="100" class="prop-slider card-slider" @input="updateCarouselWallImageField(index, 'overlayOpacity', Number($event.target.value))" />
+                    <div class="slider-labels"><span>{{ t('propsPanel.transparent') }}</span><span>{{ t('propsPanel.opaque') }}</span></div>
+                  </div>
+                  <div class="card-field">
+                    <label class="card-label">{{ t('propsPanel.overlayColor') }}</label>
+                    <div class="color-input-group">
+                      <input :value="img.overlayColor || '#000000'" type="color" class="prop-color" @input="updateCarouselWallImageField(index, 'overlayColor', $event.target.value)" />
+                      <input :value="img.overlayColor || '#000000'" type="text" class="prop-input color-text" placeholder="#000000" @input="updateCarouselWallImageField(index, 'overlayColor', $event.target.value)" />
+                    </div>
+                  </div>
+                  <div class="card-field">
+                    <label class="card-label">{{ t('propsPanel.titleColor') }}</label>
+                    <div class="color-input-group">
+                      <input :value="img.titleColor || '#ffffff'" type="color" class="prop-color" @input="updateCarouselWallImageField(index, 'titleColor', $event.target.value)" />
+                      <input :value="img.titleColor || '#ffffff'" type="text" class="prop-input color-text" placeholder="#ffffff" @input="updateCarouselWallImageField(index, 'titleColor', $event.target.value)" />
+                    </div>
+                  </div>
+                  <div class="card-field">
+                    <label class="card-label">{{ t('propsPanel.titleFontSize') }}</label>
+                    <div class="input-with-suffix">
+                      <input :value="img.titleFontSize ?? 48" type="number" class="prop-input" placeholder="48" min="12" @input="updateCarouselWallImageField(index, 'titleFontSize', Number($event.target.value))" />
+                      <span class="input-suffix">px</span>
+                    </div>
+                  </div>
+                  <div class="card-field">
+                    <label class="card-label">{{ t('propsPanel.subtitleColor') }}</label>
+                    <div class="color-input-group">
+                      <input :value="img.subtitleColor || '#eeeeee'" type="color" class="prop-color" @input="updateCarouselWallImageField(index, 'subtitleColor', $event.target.value)" />
+                      <input :value="img.subtitleColor || '#eeeeee'" type="text" class="prop-input color-text" placeholder="#eeeeee" @input="updateCarouselWallImageField(index, 'subtitleColor', $event.target.value)" />
+                    </div>
+                  </div>
+                  <div class="card-field">
+                    <label class="card-label">{{ t('propsPanel.subtitleFontSize') }}</label>
+                    <div class="input-with-suffix">
+                      <input :value="img.subtitleFontSize ?? 20" type="number" class="prop-input" placeholder="20" min="10" @input="updateCarouselWallImageField(index, 'subtitleFontSize', Number($event.target.value))" />
+                      <span class="input-suffix">px</span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div v-else class="no-image"><span>{{ t('propsPanel.noImage') }}</span></div>
+            <button @click="handleUploadCarouselWall" class="upload-btn" :disabled="isUploadingCarouselWall">
+              <template v-if="isUploadingCarouselWall"><span class="btn-spinner"></span>{{ t('propsPanel.uploading') }}</template>
+              <template v-else>{{ t('propsPanel.addImage') }}</template>
+            </button>
+          </div>
+        </template>
+
         <template v-else-if="selectedFrame.type === 'FOOTER'">
           <h4 class="section-title">{{ t('propsPanel.footerSettings') }}</h4>
           <div class="metadata-section">
@@ -1670,11 +1781,11 @@ watch(() => props.selectedFrame, (newVal) => {
   }
   if (newVal && !newVal.type?.startsWith('FRAME') &&
       newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'PV_FIRST_PICTURE' &&
-      newVal.type !== 'CAROUSEL_WALL'  && newVal.type !== 'BRIGHT_LAMP') {
+      newVal.type !== 'CAROUSEL_WALL'  && newVal.type !== 'PV_CAROUSEL_WALL' && newVal.type !== 'BRIGHT_LAMP') {
     systemFrameTextTheme.value = newVal.data?.textTheme || 'light'
     systemFrameTextColor.value = newVal.data?.textColor || '#333333'
   }
-  if (newVal?.type === 'CAROUSEL_WALL') {
+  if (newVal?.type === 'CAROUSEL_WALL' || newVal?.type === 'PV_CAROUSEL_WALL') {
     carouselWallHeight.value   = newVal.data?.carouselWallHeight   ?? 600
     carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
     carouselWallInterval.value = newVal.data?.carouselWallInterval ?? 5000
