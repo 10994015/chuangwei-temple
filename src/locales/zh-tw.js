@@ -168,7 +168,7 @@ export default {
     tagRecommended: '推薦',
     tagImportant: '重要',
     tagCeremony: '法會',
-    serviceTitle: '精選服務',
+    serviceTitle: '精選結緣品',
     serviceSubtitle: '線上預約宮廟服務，虔誠祈福更便利',
   },
   basemapWrapper: {

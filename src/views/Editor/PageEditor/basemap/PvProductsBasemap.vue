@@ -45,14 +45,14 @@
               <span>{{ t('productsBasemap.imagePlaceholder') }}</span>
             </div>
 
-            <!-- badge 右下角 -->
-            <span v-if="product.badge" class="pv-badge" :class="product.badgeClass">
-              {{ product.badge }}
-            </span>
-          </div>
+            </div>
 
           <!-- 文字資訊 -->
           <div class="pv-product-info">
+            <!-- badge 文字區右上角 -->
+            <span v-if="product.badge" class="pv-badge" :class="product.badgeClass">
+              {{ product.badge }}
+            </span>
             <p class="pv-product-source">{{ product.source }}</p>
             <h3 class="pv-product-title">{{ product.title }}</h3>
             <div class="pv-product-footer">
@@ -280,11 +280,11 @@ const addToCart = (product) => emit('add-to-cart', product)
   }
 }
 
-// badge 右下角
+// badge 文字區右上角
 .pv-badge {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  top: 14px;
+  right: 16px;
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 12px;
@@ -295,10 +295,12 @@ const addToCart = (product) => emit('add-to-cart', product)
   &.hot         { background: #dc3545; }
   &.recommended { background: #1a73e8; }
   &.new         { background: #2ecc71; }
+  &.default     { background: #E8572A; }
 }
 
 // 文字資訊
 .pv-product-info {
+  position: relative;
   padding: 14px 16px 16px;
 }
 

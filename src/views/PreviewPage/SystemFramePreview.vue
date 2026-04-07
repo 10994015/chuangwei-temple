@@ -52,7 +52,7 @@
     />
 
     <PvFirstPictureBasemap
-      v-else-if="frameType === 'PV_FIRST_PICTURE'"
+      v-else-if="frameType === 'PV_PORTAL_PICTURE'"
       :frame-data="frameData"
       :is-selected="false"
       :is-edit-mode="false"

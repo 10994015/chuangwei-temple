@@ -168,7 +168,7 @@ export default {
     tagRecommended: '推荐',
     tagImportant: '重要',
     tagCeremony: '法会',
-    serviceTitle: '精选服务',
+    serviceTitle: '精选结缘品',
     serviceSubtitle: '线上预约宫庙服务，虔诚祈福更便利',
   },
   basemapWrapper: {

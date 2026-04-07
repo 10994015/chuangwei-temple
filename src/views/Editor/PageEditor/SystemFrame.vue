@@ -94,9 +94,9 @@
         @select-frame="handleSelectFrame"
       />
 
-      <!-- 首圖 v2 (PV_FIRST_PICTURE) -->
+      <!-- 首圖 Pv (PV_PORTAL_PICTURE) -->
       <PvFirstPictureBasemap
-        v-else-if="frameType === 'PV_FIRST_PICTURE'"
+        v-else-if="frameType === 'PV_PORTAL_PICTURE'"
         :frame-data="frameData"
         :frame="frame"
         :is-selected="isFrameSelected"
@@ -282,7 +282,7 @@ const isLogoSelected  = computed(() => props.selectedElement?.type === 'logo')
 const isFrameSelected = computed(() => props.selectedFrame === props.frame)
 
 // PV_HEADER 跟 HEADER 一樣有自己的點擊邏輯，不需要容器層攔截
-const SELF_HANDLED_TYPES = ['CAROUSEL_WALL', 'PV_CAROUSEL_WALL', 'FIRST_PICTURE', 'PV_FIRST_PICTURE', 'HEADER', 'PV_HEADER']
+const SELF_HANDLED_TYPES = ['CAROUSEL_WALL', 'PV_CAROUSEL_WALL', 'FIRST_PICTURE', 'PV_PORTAL_PICTURE', 'HEADER', 'PV_HEADER']
 const isClickableFrame = computed(() =>
   !SELF_HANDLED_TYPES.includes(props.frameType)
 )

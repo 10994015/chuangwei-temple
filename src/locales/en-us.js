@@ -168,7 +168,7 @@ export default {
     tagRecommended: 'Featured',
     tagImportant: 'Important',
     tagCeremony: 'Ceremony',
-    serviceTitle: 'Featured Services',
+    serviceTitle: 'Spiritual Gifts',
     serviceSubtitle: 'Book temple services online for a more convenient blessing experience',
   },
   basemapWrapper: {

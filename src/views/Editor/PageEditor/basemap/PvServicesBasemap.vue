@@ -5,7 +5,7 @@
       <!-- 標題列 -->
       <div class="pv-section-header">
         <div class="pv-header-left">
-          <h2 class="pv-section-title">{{ t('eventsBasemap.serviceTitle') || '精選服務' }}</h2>
+          <h2 class="pv-section-title">{{ t('eventsBasemap.serviceTitle') || '精選結緣品' }}</h2>
           <p class="pv-section-subtitle">{{ t('eventsBasemap.serviceSubtitle') || '線上預約宮廟服務，虔誠祈福更便利' }}</p>
         </div>
         <div class="pv-header-right">
@@ -46,14 +46,14 @@
               <span>暫無圖片</span>
             </div>
 
-            <!-- badge 右下角 -->
-            <span v-if="item.badge" class="pv-badge" :class="item.badgeClass">
-              {{ item.badge }}
-            </span>
           </div>
 
           <!-- 文字資訊 -->
           <div class="pv-service-info">
+            <!-- badge 文字區右上角 -->
+            <span v-if="item.badge" class="pv-badge" :class="item.badgeClass">
+              {{ item.badge }}
+            </span>
             <p class="pv-service-source">{{ item.source }}</p>
             <h3 class="pv-service-title">{{ item.title }}</h3>
             <div class="pv-service-footer">
@@ -280,11 +280,11 @@ const displayServices = computed(() => {
   }
 }
 
-// badge 右下角
+// badge 文字區右上角
 .pv-badge {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  top: 14px;
+  right: 16px;
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 12px;
@@ -295,10 +295,12 @@ const displayServices = computed(() => {
   &.hot         { background: #dc3545; }
   &.recommended { background: #1a73e8; }
   &.new         { background: #2ecc71; }
+  &.default     { background: #E8572A; }
 }
 
 // 文字資訊
 .pv-service-info {
+  position: relative;
   padding: 14px 16px 16px;
 }
 

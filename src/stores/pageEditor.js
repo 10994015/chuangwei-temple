@@ -275,7 +275,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         if (frame.type === 'HEADER') {
           if (!Array.isArray(frame.data.tabs)) frame.data.tabs = []
         }
-        if (frame.type === 'PV_FIRST_PICTURE') {
+        if (frame.type === 'PV_PORTAL_PICTURE') {
           if (!Array.isArray(frame.data.buttons)) frame.data.buttons = []
           if (frame.data.heroTitle == null) frame.data.heroTitle = '在宮掌櫃，\n遇見你的神明'
           if (frame.data.brandName == null) frame.data.brandName = ''

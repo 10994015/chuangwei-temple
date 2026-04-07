@@ -257,7 +257,7 @@ const frameDisplayKeyMap = {
   'PV_HEADER':          'leftSidebar.pvHeader',
   'PV_FOOTER':          'leftSidebar.pvFooter',
   'PV_CAROUSEL_WALL':   'leftSidebar.pvCarouselWall',
-  'PV_FIRST_PICTURE':   'leftSidebar.pvFirstPicture',
+  'PV_PORTAL_PICTURE':  'leftSidebar.pvFirstPicture',
   'PV_INDEX_NEWS':      'leftSidebar.pvIndexNews',
   'PV_NEWS_LIST':       'leftSidebar.pvNewsList',
   'PV_INDEX_PRODUCT':   'leftSidebar.pvIndexProduct',

@@ -71,7 +71,6 @@
               @error="product.imageFailed = true"
             />
             <div v-else class="pv-image-placeholder"><span>暫無圖片</span></div>
-            <span v-if="product.badge" class="pv-badge" :class="product.badgeClass">{{ product.badge }}</span>
             <div v-if="batchMode" class="pv-check" :class="{ checked: selectedIds.includes(product.id) }">
               <svg v-if="selectedIds.includes(product.id)" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"/>
@@ -79,6 +78,7 @@
             </div>
           </div>
           <div class="pv-product-info">
+            <span v-if="product.badge" class="pv-badge" :class="product.badgeClass">{{ product.badge }}</span>
             <p class="pv-product-source">{{ product.source }}</p>
             <h3 class="pv-product-title">{{ product.title }}</h3>
             <div class="pv-product-footer">
@@ -112,7 +112,6 @@
               @error="product.imageFailed = true"
             />
             <div v-else class="pv-image-placeholder"><span>暫無圖片</span></div>
-            <span v-if="product.badge" class="pv-badge" :class="product.badgeClass">{{ product.badge }}</span>
             <div v-if="batchMode" class="pv-check" :class="{ checked: selectedIds.includes(product.id) }">
               <svg v-if="selectedIds.includes(product.id)" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"/>
@@ -120,6 +119,7 @@
             </div>
           </div>
           <div class="pv-product-info">
+            <span v-if="product.badge" class="pv-badge" :class="product.badgeClass">{{ product.badge }}</span>
             <p class="pv-product-source">{{ product.source }}</p>
             <h3 class="pv-product-title">{{ product.title }}</h3>
             <div class="pv-product-footer">
@@ -204,7 +204,7 @@ const mapProduct = (p) => ({
     const l = p.labels?.[0] || ''
     if (l === '熱門' || l === 'hot')         return 'hot'
     if (l === '推薦' || l === 'recommended') return 'recommended'
-    return 'hot'
+    return 'default'
   })(),
 })
 
@@ -459,12 +459,14 @@ const handleCardClick = (product) => {
 
 .pv-badge {
   position: absolute;
-  bottom: 10px; right: 10px;
+  top: 12px; right: 14px;
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 12px; font-weight: 600; color: #fff;
   &.hot         { background: #dc3545; }
   &.recommended { background: #1a73e8; }
+  &.new         { background: #2ecc71; }
+  &.default     { background: #E8572A; }
 }
 
 .pv-check {
@@ -481,7 +483,7 @@ const handleCardClick = (product) => {
   svg { width: 14px; height: 14px; }
 }
 
-.pv-product-info { padding: 12px 14px 14px; }
+.pv-product-info { position: relative; padding: 12px 14px 14px; }
 
 .pv-product-source {
   font-size: 12px;

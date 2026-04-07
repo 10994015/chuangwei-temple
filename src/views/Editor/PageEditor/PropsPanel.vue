@@ -517,7 +517,7 @@
             </div>
           </div>
         </template>
-        <template v-else-if="selectedFrame.type === 'PV_FIRST_PICTURE'">
+        <template v-else-if="selectedFrame.type === 'PV_PORTAL_PICTURE'">
           <h4 class="section-title">品牌首頁設定</h4>
 
           <!-- 未選取子區塊時顯示提示 -->
@@ -1741,7 +1741,7 @@ watch(() => props.selectedFrame, (newVal) => {
     subtitleColor.value       = newVal.data.subtitleColor       || '#666666'
     subtitleFontSize.value    = stripPx(newVal.data.subtitleFontSize    || '20px')
   }
-  if (newVal?.type === 'PV_FIRST_PICTURE') {
+  if (newVal?.type === 'PV_PORTAL_PICTURE') {
     const d = newVal.data || {}
     pvFpBrandName.value    = d.brandName != null ? d.brandName : (d.tenantName ?? '')
     pvFpBrandColor.value   = d.brandColor   || '#E8572A'
@@ -1780,7 +1780,7 @@ watch(() => props.selectedFrame, (newVal) => {
     pvSubSection.value = newVal.pvSubSection ?? null
   }
   if (newVal && !newVal.type?.startsWith('FRAME') &&
-      newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'PV_FIRST_PICTURE' &&
+      newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'PV_PORTAL_PICTURE' &&
       newVal.type !== 'CAROUSEL_WALL'  && newVal.type !== 'PV_CAROUSEL_WALL' && newVal.type !== 'BRIGHT_LAMP') {
     systemFrameTextTheme.value = newVal.data?.textTheme || 'light'
     systemFrameTextColor.value = newVal.data?.textColor || '#333333'
