@@ -275,6 +275,16 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         if (frame.type === 'HEADER') {
           if (!Array.isArray(frame.data.tabs)) frame.data.tabs = []
         }
+        if (frame.type === 'PV_CUSTOM_FRAME1') {
+          if (!Array.isArray(frame.data.items)) {
+            frame.data.items = [
+              { title: '宮廟地圖',     description: '', image: null, imageId: null },
+              { title: '靈籤司',       description: '', image: null, imageId: null },
+              { title: '主平台服務',   description: '', image: null, imageId: null },
+              { title: '宮廟網站建置', description: '', image: null, imageId: null },
+            ]
+          }
+        }
         if (frame.type === 'PV_PORTAL_PICTURE') {
           if (!Array.isArray(frame.data.buttons)) frame.data.buttons = []
           if (frame.data.heroTitle == null) frame.data.heroTitle = '在宮掌櫃，\n遇見你的神明'
@@ -292,6 +302,20 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
             if (typeof element.value.autoPlay !== 'boolean') element.value.autoPlay = true
             if (typeof element.value.interval !== 'number') element.value.interval = 3000
             if (typeof element.value.height !== 'number') element.value.height = 400
+          }
+
+          // 將舊版扁平 padding { top,right,bottom,left } 升級為巢狀結構 { pc, tablet, phone }
+          if (element.padding && element.padding.pc === undefined) {
+            const flat = element.padding
+            const sides = { top: flat.top ?? 20, right: flat.right ?? 20, bottom: flat.bottom ?? 20, left: flat.left ?? 20 }
+            element.padding = { pc: { ...sides }, tablet: { ...sides }, phone: { ...sides } }
+          }
+          if (!element.padding) {
+            element.padding = {
+              pc:     { top: 20, right: 20, bottom: 20, left: 20 },
+              tablet: { top: 20, right: 20, bottom: 20, left: 20 },
+              phone:  { top: 20, right: 20, bottom: 20, left: 20 },
+            }
           }
 
           return element

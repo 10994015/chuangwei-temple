@@ -101,6 +101,7 @@ export default {
     pvIndexProduct:  'Home - Products Pv',
     pvIndexService:  'Home - Services Pv',
     pvProductList:   'Product List Pv',
+    pvCustomFrame1:  'Digital Ecosystem',
     single11: 'Single 1-1',
     single12: 'Single 1-2',
     single13: 'Single 1-3',
@@ -301,6 +302,7 @@ export default {
     fontSize: 'Font Size',
     fontWeight: 'Font Weight',
     fontWeightDefault: 'Default',
+    borderRadius: 'Border Radius (px)',
     textAlign: 'Text Align',
     alignLeft: 'Left',
     alignCenter: 'Center',
@@ -456,6 +458,7 @@ export default {
     alertPublishFail:      'Publish failed: ',
     alertPublishError:     'Publish failed: ',
     unknownError:          'Unknown error',
+    confirmLeaveUnsaved:   'You have unsaved changes. Are you sure you want to leave?',
   },
   publishDialog: {
     title:         'Publish Website',

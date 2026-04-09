@@ -438,85 +438,6 @@
         </template>
 
         <!-- 光明燈 (BRIGHT_LAMP) -->
-        <template v-else-if="selectedFrame.type === 'BRIGHT_LAMP'">
-          <h4 class="section-title">光明燈設定</h4>
-
-          <div class="metadata-section">
-            <h5 class="subsection-title">背景圖片</h5>
-            <div class="prop-group">
-              <div class="image-upload">
-                <div v-if="isUploadingBrightLampBg" class="uploading-state">
-                  <div class="spinner"></div>
-                  <span>上傳中...</span>
-                </div>
-                <img
-                  v-else-if="selectedFrame.data?.bgImgSrc"
-                  :src="selectedFrame.data.bgImgSrc"
-                  alt="背景預覽"
-                  class="preview-image"
-                />
-                <div v-else class="no-image"><span>尚未上傳背景圖</span></div>
-                <button @click="handleUploadBrightLampBg" class="upload-btn" :disabled="isUploadingBrightLampBg">
-                  {{ isUploadingBrightLampBg ? '上傳中...' : (selectedFrame.data?.bgImgSrc ? '更換背景圖' : '上傳背景圖') }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="metadata-section">
-            <h5 class="subsection-title">主神像</h5>
-            <div class="prop-group">
-              <div class="image-upload">
-                <div v-if="isUploadingBrightLampMain" class="uploading-state">
-                  <div class="spinner"></div>
-                  <span>上傳中...</span>
-                </div>
-                <img
-                  v-else-if="selectedFrame.data?.mainImgSrc"
-                  :src="selectedFrame.data.mainImgSrc"
-                  alt="主神像預覽"
-                  class="preview-image"
-                />
-                <div v-else class="no-image"><span>尚未上傳主神像</span></div>
-                <button @click="handleUploadBrightLampMain" class="upload-btn" :disabled="isUploadingBrightLampMain">
-                  {{ isUploadingBrightLampMain ? '上傳中...' : (selectedFrame.data?.mainImgSrc ? '更換主神像' : '上傳主神像') }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="metadata-section">
-            <h5 class="subsection-title">面板邊框</h5>
-            <div class="prop-group">
-              <div class="border-options">
-                <div
-                  class="border-option"
-                  :class="{ active: (selectedFrame.data?.borderOption ?? 'border') === 'border' }"
-                  @click="setBrightLampOption('borderOption', 'border')"
-                >
-                  <img src="/images/bright-light/border.png" alt="邊框" class="option-preview" />
-                  <span>預設邊框</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="metadata-section">
-            <h5 class="subsection-title">燈柱</h5>
-            <div class="prop-group">
-              <div class="border-options">
-                <div
-                  class="border-option"
-                  :class="{ active: (selectedFrame.data?.pillarOption ?? 'pillar') === 'pillar' }"
-                  @click="setBrightLampOption('pillarOption', 'pillar')"
-                >
-                  <img src="/images/bright-light/pillar.png" alt="燈柱" class="option-preview option-preview--pillar" />
-                  <span>預設燈柱</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
         <template v-else-if="selectedFrame.type === 'PV_PORTAL_PICTURE'">
           <h4 class="section-title">品牌首頁設定</h4>
 
@@ -761,6 +682,15 @@
           </template>
 
         </template>
+
+        <!-- PV_CUSTOM_FRAME1：點擊卡片後才顯示編輯 -->
+        <template v-else-if="selectedFrame.type === 'PV_CUSTOM_FRAME1'">
+          <h4 class="section-title">數位生態系統框架</h4>
+          <div class="cf1-hint">
+            <p>點擊畫布上的卡片以編輯其內容</p>
+          </div>
+        </template>
+
         <template v-else>
           <h4 class="section-title">{{ t('propsPanel.frameSettings') }}</h4>
           <div class="prop-group">
@@ -808,7 +738,163 @@
       </div>
 
       <div v-else-if="selectedElement" class="props-section">
-        <template v-if="selectedElement.type === 'logo'">
+
+        <!-- PV_CUSTOM_FRAME1 卡片編輯 -->
+        <template v-if="selectedElement.element?.type === 'CF1_ITEM'">
+          <h4 class="section-title">
+            {{ ['宮廟地圖 (大卡)', '靈籤司 (右欄)', '主平台服務 (左下)', '宮廟網站建置 (右下)'][selectedElement.element.itemIndex] }}
+          </h4>
+
+          <div class="prop-group">
+            <label>標題</label>
+            <RichTextEditor
+              :model-value="cf1Items[selectedElement.element.itemIndex]?.title"
+              @update:modelValue="cf1Items[selectedElement.element.itemIndex].title = $event; updateCf1()"
+            />
+          </div>
+
+          <div class="prop-group">
+            <label>說明文字</label>
+            <RichTextEditor
+              :model-value="cf1Items[selectedElement.element.itemIndex]?.description"
+              @update:modelValue="cf1Items[selectedElement.element.itemIndex].description = $event; updateCf1()"
+            />
+          </div>
+
+          <template v-if="selectedElement.element.itemIndex === 0 || selectedElement.element.itemIndex === 1">
+            <div class="prop-group">
+              <label>圖片</label>
+              <div v-if="cf1Items[selectedElement.element.itemIndex]?.image" class="cf1-image-preview">
+                <img :src="cf1Items[selectedElement.element.itemIndex].image" class="cf1-preview-img" />
+                <button class="remove-img-btn" @click="removeCf1Image(selectedElement.element.itemIndex)">移除</button>
+              </div>
+              <button v-else class="upload-btn" :disabled="cf1Uploading[selectedElement.element.itemIndex]" @click="handleUploadCf1Image(selectedElement.element.itemIndex)">
+                <template v-if="cf1Uploading[selectedElement.element.itemIndex]"><span class="btn-spinner"></span>上傳中...</template>
+                <template v-else>上傳圖片</template>
+              </button>
+            </div>
+            <div class="prop-group">
+              <label>圖片尺寸</label>
+              <div class="cf1-size-row">
+                <div class="cf1-size-field">
+                  <span class="cf1-size-label">寬</span>
+                  <input
+                    type="number"
+                    class="prop-input cf1-size-input"
+                    placeholder="自動"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.imageWidth"
+                    @input="cf1Items[selectedElement.element.itemIndex].imageWidth = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                  />
+                  <span class="cf1-size-unit">px</span>
+                </div>
+                <div class="cf1-size-field">
+                  <span class="cf1-size-label">高</span>
+                  <input
+                    type="number"
+                    class="prop-input cf1-size-input"
+                    placeholder="自動"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.imageHeight"
+                    @input="cf1Items[selectedElement.element.itemIndex].imageHeight = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                  />
+                  <span class="cf1-size-unit">px</span>
+                </div>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>圓角</label>
+              <div class="cf1-size-field">
+                <input
+                  type="number"
+                  class="prop-input cf1-size-input"
+                  placeholder="0"
+                  :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderRadius"
+                  @input="cf1Items[selectedElement.element.itemIndex].imageBorderRadius = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                />
+                <span class="cf1-size-unit">px</span>
+              </div>
+            </div>
+            <div class="prop-group">
+              <label>邊框</label>
+              <div class="cf1-size-row">
+                <div class="cf1-size-field">
+                  <span class="cf1-size-label">粗細</span>
+                  <input
+                    type="number"
+                    class="prop-input cf1-size-input"
+                    placeholder="0"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderWidth"
+                    @input="cf1Items[selectedElement.element.itemIndex].imageBorderWidth = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                  />
+                  <span class="cf1-size-unit">px</span>
+                </div>
+                <div class="cf1-size-field">
+                  <span class="cf1-size-label">顏色</span>
+                  <div class="color-input-group" style="flex:1">
+                    <input
+                      type="color"
+                      class="prop-color"
+                      :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderColor || '#000000'"
+                      @input="cf1Items[selectedElement.element.itemIndex].imageBorderColor = $event.target.value; updateCf1()"
+                    />
+                    <input
+                      type="text"
+                      class="prop-input color-text"
+                      placeholder="#000000"
+                      :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderColor"
+                      @input="cf1Items[selectedElement.element.itemIndex].imageBorderColor = $event.target.value; updateCf1()"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="padding-section">
+            <h5 class="subsection-title">區塊內距 <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
+            <div class="padding-controls">
+              <div class="padding-visual"><div class="padding-box">
+                <div class="padding-input-group top">
+                  <label>上</label>
+                  <input type="number" min="0" max="200" step="4" class="padding-input"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.padding?.[paddingDeviceKey]?.top ?? 0"
+                    @input="setCf1Padding(selectedElement.element.itemIndex, 'top', $event.target.value)"
+                  />
+                </div>
+                <div class="padding-sides">
+                  <div class="padding-input-group left">
+                    <label>左</label>
+                    <input type="number" min="0" max="200" step="4" class="padding-input"
+                      :value="cf1Items[selectedElement.element.itemIndex]?.padding?.[paddingDeviceKey]?.left ?? 0"
+                      @input="setCf1Padding(selectedElement.element.itemIndex, 'left', $event.target.value)"
+                    />
+                  </div>
+                  <div class="content-preview">卡片</div>
+                  <div class="padding-input-group right">
+                    <label>右</label>
+                    <input type="number" min="0" max="200" step="4" class="padding-input"
+                      :value="cf1Items[selectedElement.element.itemIndex]?.padding?.[paddingDeviceKey]?.right ?? 0"
+                      @input="setCf1Padding(selectedElement.element.itemIndex, 'right', $event.target.value)"
+                    />
+                  </div>
+                </div>
+                <div class="padding-input-group bottom">
+                  <label>下</label>
+                  <input type="number" min="0" max="200" step="4" class="padding-input"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.padding?.[paddingDeviceKey]?.bottom ?? 0"
+                    @input="setCf1Padding(selectedElement.element.itemIndex, 'bottom', $event.target.value)"
+                  />
+                </div>
+              </div></div>
+              <div class="padding-presets">
+                <button class="preset-btn" @click="['top','right','bottom','left'].forEach(f => setCf1Padding(selectedElement.element.itemIndex, f, 0))">無</button>
+                <button class="preset-btn" @click="['top','right','bottom','left'].forEach(f => setCf1Padding(selectedElement.element.itemIndex, f, 8))">小</button>
+                <button class="preset-btn" @click="['top','right','bottom','left'].forEach(f => setCf1Padding(selectedElement.element.itemIndex, f, 16))">中</button>
+                <button class="preset-btn" @click="['top','right','bottom','left'].forEach(f => setCf1Padding(selectedElement.element.itemIndex, f, 32))">大</button>
+              </div>
+            </div>
+          </div>
+          </template>
+        </template>
+
+        <template v-else-if="selectedElement.type === 'logo'">
           <h4 class="section-title">{{ t('propsPanel.logoSettings') }}</h4>
           <div class="prop-group">
             <label>{{ t('propsPanel.logoImg') }}</label>
@@ -887,7 +973,7 @@
             </div>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -965,7 +1051,7 @@
             </div>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1060,9 +1146,21 @@
               <input v-model.number="elementMetadata.fontWeight" type="range" min="300" max="900" step="100" class="prop-slider" @input="updateMetadata" />
               <div class="font-weight-labels"><span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span></div>
             </div>
+            <div class="prop-group">
+              <label>{{ t('propsPanel.borderRadius') }}</label>
+              <div class="font-size-row">
+                <input v-model="elementMetadata.borderRadius" type="number" min="0" max="999" class="prop-input font-size-input" placeholder="6" @input="updateMetadata" />
+                <div class="font-size-presets">
+                  <button @click="elementMetadata.borderRadius = '0';   updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.borderRadius === '0'   }">直角</button>
+                  <button @click="elementMetadata.borderRadius = '6';   updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.borderRadius === '6'   }">小</button>
+                  <button @click="elementMetadata.borderRadius = '20';  updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.borderRadius === '20'  }">中</button>
+                  <button @click="elementMetadata.borderRadius = '999'; updateMetadata()" class="preset-btn" :class="{ active: elementMetadata.borderRadius === '999' }">圓</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1093,7 +1191,7 @@
           <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input :value="selectedElement.element.value.color || '#000000'" type="color" class="prop-color" @input="selectedElement.element.value.color = $event.target.value" /></div>
           <div class="prop-group"><label>{{ t('propsPanel.thickness') }}</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="" /></div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1124,7 +1222,7 @@
           <div class="prop-group"><label>{{ t('propsPanel.color') }}</label><input :value="selectedElement.element.value.color || '#000000'" type="color" class="prop-color" @input="selectedElement.element.value.color = $event.target.value" /></div>
           <div class="prop-group"><label>{{ t('propsPanel.thickness') }}</label><input v-model="selectedElement.element.value.thickness" type="text" class="prop-input" placeholder="2（）" /></div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1190,7 +1288,7 @@
           <div class="prop-group"><label class="checkbox-label"><input v-model="carouselAutoPlay" type="checkbox" @change="updateCarouselSettings" /><span>{{ t('propsPanel.autoPlay') }}</span></label></div>
           <div class="prop-group" v-if="carouselAutoPlay"><label>{{ t('propsPanel.playInterval') }}</label><input v-model.number="carouselInterval" type="number" class="prop-input" min="1000" step="500" @input="updateCarouselSettings" /></div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1320,7 +1418,7 @@
           </div>
 
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1372,7 +1470,7 @@
             <button @click="setMapZoom(17)" class="preset-btn" :class="{ active: mapZoom === 17 }">{{ t('propsPanel.zoomBuilding') }}</button>
           </div>
           <div class="padding-section">
-            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }}</h5>
+            <h5 class="subsection-title">{{ t('propsPanel.elementSpacing') }} <span class="padding-device-badge">{{ paddingDeviceLabel }}</span></h5>
             <div class="padding-controls">
               <div class="padding-visual"><div class="padding-box">
                 <div class="padding-input-group top"><label>{{ t('propsPanel.paddingTop') }}</label><input v-model.number="elementPadding.top" type="number" min="0" max="200" step="5" class="padding-input" @input="updateElementPadding" /></div>
@@ -1424,6 +1522,24 @@ import { useI18n } from 'vue-i18n'
 import RichTextEditor from './elements/RichTextEditor.vue'
 
 const pageEditorStore = inject('pageEditorStore')
+const currentDevice   = inject('currentDevice', ref('desktop'))
+
+// 裝置對應後端欄位名稱
+const DEVICE_KEY_MAP = { desktop: 'pc', tablet: 'tablet', mobile: 'phone' }
+const paddingDeviceKey   = computed(() => DEVICE_KEY_MAP[currentDevice.value] || 'pc')
+const paddingDeviceLabel = computed(() => ({ desktop: '電腦版', tablet: '平板版', mobile: '手機版' }[currentDevice.value] || '電腦版'))
+
+// 從 padding 物件取出指定裝置的值（相容舊版扁平結構）
+const getDevicePadding = (padding, key) => {
+  if (!padding) return { top: 20, right: 20, bottom: 20, left: 20 }
+  // 新版巢狀結構
+  if (padding.pc !== undefined || padding.tablet !== undefined || padding.phone !== undefined) {
+    const sub = padding[key]
+    return sub ? { ...sub } : { top: 20, right: 20, bottom: 20, left: 20 }
+  }
+  // 舊版扁平結構
+  return { top: padding.top ?? 20, right: padding.right ?? 20, bottom: padding.bottom ?? 20, left: padding.left ?? 20 }
+}
 const route = useRoute()
 const { t } = useI18n()
 
@@ -1483,8 +1599,6 @@ const localLogoSrc = ref(null)
 const isUploadingImage = ref(false)
 const isUploadingHeroBackground = ref(false)
 const isUploadingCarousel = ref(false)
-const isUploadingBrightLampBg = ref(false)
-const isUploadingBrightLampMain = ref(false)
 
 const isUploadingPvFpLogo = ref(false)
 const isUploadingPvFpHeroImg = ref(false)
@@ -1506,6 +1620,15 @@ const pvFpLogoPadding    = ref({ top: 0, right: 0, bottom: 0, left: 0 })
 const pvFpHeroPadding    = ref({ top: 0, right: 0, bottom: 0, left: 0 })
 const pvFpButtonsPadding = ref({ top: 0, right: 0, bottom: 0, left: 0 })
 const pvFpBtnLinkTypes   = ref([])
+
+// PV_CUSTOM_FRAME1
+const cf1Items           = ref([
+  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+])
+const cf1Uploading = ref([false, false, false, false])
 
 const accordionItems           = ref([])
 const accordionTitleFontSize   = ref('')
@@ -1692,16 +1815,20 @@ watch(() => props.selectedElement, (newVal) => {
       textAlign:       m.textAlign || m.text_align || null,
       width:           m.width           || null,
       height:          m.height          || null,
-      backgroundColor: m.backgroundColor || m.background_color || null
+      backgroundColor: m.backgroundColor || m.background_color || null,
+      borderRadius:    stripPx(m.borderRadius) || null,
     }
   } else {
-    elementMetadata.value = { color: null, fontSize: null, fontWeight: 400, textAlign: null, width: null, height: null, backgroundColor: null }
+    elementMetadata.value = { color: null, fontSize: null, fontWeight: 400, textAlign: null, width: null, height: null, backgroundColor: null, borderRadius: null }
   }
-  elementPadding.value = newVal?.element?.padding
-    ? { ...newVal.element.padding }
-    : { top: 20, right: 20, bottom: 20, left: 20 }
+  elementPadding.value = getDevicePadding(newVal?.element?.padding, paddingDeviceKey.value)
   elementWidth.value = stripPercent(newVal?.element?.width || '100%')
 }, { immediate: true, deep: true })
+
+// 切換裝置預覽時，自動更新顯示該裝置對應的 padding 數值
+watch(paddingDeviceKey, (key) => {
+  elementPadding.value = getDevicePadding(props.selectedElement?.element?.padding, key)
+})
 
 watch(
   () => props.selectedElement?.frame?.data?.logoImgSrc,
@@ -1777,7 +1904,6 @@ watch(() => props.selectedFrame, (newVal) => {
       }
       return '__custom__'
     })
-    pvSubSection.value = newVal.pvSubSection ?? null
   }
   if (newVal && !newVal.type?.startsWith('FRAME') &&
       newVal.type !== 'FIRST_PICTURE' && newVal.type !== 'PV_PORTAL_PICTURE' &&
@@ -1806,11 +1932,36 @@ watch(() => props.selectedFrame, (newVal) => {
     }
     donationTextColor.value = newVal.data?.donationTextColor || '#ffffff'
   }
+  if (newVal?.type === 'PV_CUSTOM_FRAME1') {
+    const DEFAULT = [
+      { title: '宮廟地圖',     description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '靈籤司',       description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '主平台服務',   description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+    ]
+    const src = newVal.data?.items || []
+    cf1Items.value = DEFAULT.map((def, i) => ({ ...def, ...(src[i] || {}) }))
+  }
 }, { immediate: true, deep: true })
 
 watch(() => props.selectedFrame, () => {
   expandedCardStyles.value = []
 })
+
+// 點擊 CF1 卡片後，selectedElement 帶有 frame 資料，從中載入 cf1Items
+watch(() => props.selectedElement, (newVal) => {
+  if (newVal?.element?.type === 'CF1_ITEM') {
+    const frame = newVal.frame
+    const DEFAULT = [
+      { title: '宮廟地圖',     description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '靈籤司',       description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '主平台服務',   description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+    ]
+    const src = frame?.data?.items || []
+    cf1Items.value = DEFAULT.map((def, i) => ({ ...def, ...(src[i] || {}) }))
+  }
+}, { immediate: true })
 
 const updateFrameWidth = () => {
   if (props.selectedFrame) {
@@ -1829,9 +1980,10 @@ const updateMetadata = () => {
     if (!props.selectedElement.element.metadata) props.selectedElement.element.metadata = {}
     props.selectedElement.element.metadata = {
       ...elementMetadata.value,
-      fontSize: ensureUnit(elementMetadata.value.fontSize, null),
-      width:    ensureUnit(elementMetadata.value.width,    null),
-      height:   ensureUnit(elementMetadata.value.height,   null),
+      fontSize:     ensureUnit(elementMetadata.value.fontSize,     null),
+      width:        ensureUnit(elementMetadata.value.width,        null),
+      height:       ensureUnit(elementMetadata.value.height,       null),
+      borderRadius: ensureUnit(elementMetadata.value.borderRadius, null),
     }
   }
 }
@@ -1845,12 +1997,22 @@ const updateImgSize = () => {
 
 const updateElementPadding = () => {
   if (props.selectedElement?.element) {
-    if (!props.selectedElement.element.padding) props.selectedElement.element.padding = {}
-    props.selectedElement.element.padding = { ...elementPadding.value }
+    const el  = props.selectedElement.element
+    const key = paddingDeviceKey.value
+    // 確保 padding 是巢狀結構
+    if (!el.padding || el.padding.pc === undefined) {
+      const flat = el.padding || {}
+      el.padding = {
+        pc:     { top: flat.top ?? 20, right: flat.right ?? 20, bottom: flat.bottom ?? 20, left: flat.left ?? 20 },
+        tablet: { top: flat.top ?? 20, right: flat.right ?? 20, bottom: flat.bottom ?? 20, left: flat.left ?? 20 },
+        phone:  { top: flat.top ?? 20, right: flat.right ?? 20, bottom: flat.bottom ?? 20, left: flat.left ?? 20 },
+      }
+    }
+    el.padding[key] = { ...elementPadding.value }
     emit('update-cell-padding', {
       frame:     props.selectedElement.frame,
       cellIndex: props.selectedElement.cellIndex,
-      padding:   { ...elementPadding.value }
+      padding:   { ...el.padding }
     })
   }
 }
@@ -2098,58 +2260,6 @@ const handleUploadHeroBackground = async () => {
   input.click()
 }
 
-const handleUploadBrightLampBg = async () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.onchange = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    try {
-      isUploadingBrightLampBg.value = true
-      const uploaded = await pageEditorStore.uploadImage(file)
-      if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
-      if (props.selectedFrame?.data) {
-        props.selectedFrame.data.bgImgId  = uploaded.id
-        props.selectedFrame.data.bgImgSrc = uploaded.fileUrl
-      }
-    } catch (err) {
-      alert('上傳失敗：' + err.message)
-    } finally {
-      isUploadingBrightLampBg.value = false
-    }
-  }
-  input.click()
-}
-
-const handleUploadBrightLampMain = async () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.onchange = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    try {
-      isUploadingBrightLampMain.value = true
-      const uploaded = await pageEditorStore.uploadImage(file)
-      if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
-      if (props.selectedFrame?.data) {
-        props.selectedFrame.data.mainImgId  = uploaded.id
-        props.selectedFrame.data.mainImgSrc = uploaded.fileUrl
-      }
-    } catch (err) {
-      alert('上傳失敗：' + err.message)
-    } finally {
-      isUploadingBrightLampMain.value = false
-    }
-  }
-  input.click()
-}
-
-const setBrightLampOption = (field, value) => {
-  if (!props.selectedFrame?.data) return
-  props.selectedFrame.data[field] = value
-}
 
 const updateCarouselWallSettings = () => {
   if (props.selectedFrame?.data) {
@@ -2162,6 +2272,53 @@ const updateCarouselWallSettings = () => {
 const setCarouselWallHeight = (height) => {
   carouselWallHeight.value = height
   updateCarouselWallSettings()
+}
+
+// PV_CUSTOM_FRAME1 helpers
+const getCf1Frame = () => props.selectedFrame ?? props.selectedElement?.frame ?? null
+
+const updateCf1 = () => {
+  const frame = getCf1Frame()
+  if (!frame) return
+  if (!frame.data) frame.data = {}
+  frame.data.items = cf1Items.value.map(item => ({ ...item }))
+}
+
+const handleUploadCf1Image = async (index) => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      cf1Uploading.value[index] = true
+      const uploaded = await pageEditorStore.uploadImage(file)
+      if (!uploaded) return
+      cf1Items.value[index] = { ...cf1Items.value[index], image: uploaded.fileUrl, imageId: uploaded.id }
+      updateCf1()
+    } catch (err) {
+      alert('圖片上傳失敗：' + err.message)
+    } finally {
+      cf1Uploading.value[index] = false
+    }
+  }
+  input.click()
+}
+
+const setCf1Padding = (index, field, value) => {
+  const item = cf1Items.value[index]
+  if (!item) return
+  if (!item.padding) item.padding = {}
+  const key = paddingDeviceKey.value
+  if (!item.padding[key]) item.padding[key] = { top: 0, right: 0, bottom: 0, left: 0 }
+  item.padding[key][field] = value !== '' ? Number(value) : 0
+  updateCf1()
+}
+
+const removeCf1Image = (index) => {
+  cf1Items.value[index] = { ...cf1Items.value[index], image: null, imageId: null }
+  updateCf1()
 }
 
 const handleUploadCarouselWall = async () => {
@@ -2536,6 +2693,19 @@ const setPvFpPadding = (section, value) => {
   color: #666;
   padding-bottom: 8px;
   border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.padding-device-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: #E8572A;
+  background: rgba(232, 87, 42, 0.08);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: auto;
 }
 
 .metadata-section { margin-top: 24px; padding-top: 20px; border-top: 2px dashed #e5e5e5; }
@@ -3248,5 +3418,80 @@ const setPvFpPadding = (section, value) => {
     transform: rotate(180deg);
     color: #E8572A;
   }
+}
+
+.cf1-size-row {
+  display: flex;
+  gap: 8px;
+}
+
+.cf1-size-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.cf1-size-label {
+  font-size: 12px;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.cf1-size-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cf1-size-unit {
+  font-size: 12px;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.cf1-hint {
+  padding: 20px 12px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+  margin-top: 8px;
+
+  p { margin: 0; }
+}
+
+.cf1-item-section {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.cf1-image-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf1-preview-img {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.remove-img-btn {
+  padding: 4px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+  &:hover { border-color: #dc3545; color: #dc3545; }
 }
 </style>

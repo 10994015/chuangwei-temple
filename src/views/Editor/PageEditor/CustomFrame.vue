@@ -16,7 +16,7 @@
     <div class="frame-container" :style="frameContainerStyle">
 
       <!-- 雙層框架 -->
-      <template v-if="isDoubleRowLayout">
+      <template v-if="isDoubleRowLayout && !isMobile">
         <div class="double-row" :style="doubleRowStyle">
           <div
             v-for="(element, index) in doubleRowSplit.row1"
@@ -65,7 +65,7 @@
       </template>
 
       <!-- 複合框架 A/B/C/D -->
-      <template v-else-if="isCompositeLayout && compositeInfo">
+      <template v-else-if="isCompositeLayout && compositeInfo && !isMobile">
         <div class="composite-frame">
           <div class="composite-col composite-col--left" :style="{ width: compositeInfo.leftWidth }">
             <div
@@ -115,25 +115,25 @@
         </div>
       </template>
 
-      <!-- 單層框架 -->
+      <!-- 單層框架 / 手機版回退 -->
       <div v-else class="frame-grid" :style="gridStyle">
         <div
-          v-for="(element, index) in displayElements"
-          :key="`cell-${index}`"
+          v-for="({ element, origIndex }) in reorderedWithIndex"
+          :key="`cell-${origIndex}`"
           class="grid-cell"
-          :class="cellClass(element, index)"
+          :class="cellClass(element, origIndex)"
           :style="{ padding: getCellPadding(element) }"
-          @click.stop="handleCellClick(index, element)"
-          @dragover="handleDragOver($event, index)"
+          @click.stop="handleCellClick(origIndex, element)"
+          @dragover="handleDragOver($event, origIndex)"
           @dragleave="handleDragLeave"
-          @drop="handleDrop($event, index)"
+          @drop="handleDrop($event, origIndex)"
         >
           <FrameElementRenderer
             :element="element"
-            :cell-index="index"
-            :cell-key="`cell-${index}`"
+            :cell-index="origIndex"
+            :cell-key="`cell-${origIndex}`"
             :is-edit-mode="true"
-            :is-drag-over="dragOverCell === index"
+            :is-drag-over="dragOverCell === origIndex"
             @delete="handleDeleteElement"
           />
         </div>
@@ -156,7 +156,8 @@ const props = defineProps({
   basemapIndex:    { type: Number,  required: true },
   selectedElement: { type: Object,  default: null },
   selectedCell:    { type: Object,  default: null },
-  selectedFrame:   { type: Object,  default: null }
+  selectedFrame:   { type: Object,  default: null },
+  device:          { type: String,  default: 'desktop' },
 })
 
 const emit = defineEmits([
@@ -220,6 +221,35 @@ const doubleLayoutCols = computed(() => {
 const isDoubleRowLayout  = computed(() => doubleLayoutCols.value > 0)
 const isCompositeLayout  = computed(() => ['A', 'B', 'C', 'D'].includes(frameLayout.value))
 
+const isMobile = computed(() => props.device === 'mobile')
+const isTablet = computed(() => props.device === 'tablet')
+
+const isMultiColumnLayout  = computed(() => ['A', 'B', 'C', 'D', '2_2', '2_3', '2_4'].includes(frameLayout.value))
+const isSingleRowMultiCol  = computed(() => ['1_2', '1_3', '1_4'].includes(frameLayout.value))
+
+// 手機模式下重新依欄位排列元素（同 CustomFramePreview），並保留原始索引供編輯互動使用
+const reorderedWithIndex = computed(() => {
+  const elements = displayElements.value
+  const layout   = frameLayout.value
+
+  const byColumn = (els, cols, rows) => {
+    const result = []
+    for (let col = 0; col < cols; col++) {
+      for (let row = 0; row < rows; row++) {
+        const origIndex = row * cols + col
+        result.push({ element: els[origIndex], origIndex })
+      }
+    }
+    return result
+  }
+
+  if (layout === '2_2' && isMobile.value) return byColumn(elements, 2, 2)
+  if (layout === '2_3' && isMobile.value) return byColumn(elements, 3, 2)
+  if (layout === '2_4' && (isMobile.value || isTablet.value)) return byColumn(elements, 4, 2)
+
+  return elements.map((element, origIndex) => ({ element, origIndex }))
+})
+
 const doubleRowSplit = computed(() => {
   if (!isDoubleRowLayout.value) return null
   const cols = doubleLayoutCols.value
@@ -249,12 +279,34 @@ const frameContainerStyle = computed(() => {
 
 const gridStyle = computed(() => {
   const layout = frameLayout.value
+
+  if (isMobile.value && (isMultiColumnLayout.value || isSingleRowMultiCol.value)) {
+    return { display: 'grid', gridTemplateColumns: '1fr', gap: '0' }
+  }
+  if (isTablet.value && isSingleRowMultiCol.value) {
+    return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0' }
+  }
+  if (isTablet.value && isMultiColumnLayout.value) {
+    switch (layout) {
+      case '2_2': return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '0' }
+      case '2_3': return { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '0' }
+      case '2_4': return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0' }
+      default:    return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0' }
+    }
+  }
+
   const singleRowLayouts = ['1_1', '1_2', '1_3', '1_4']
   if (singleRowLayouts.includes(layout)) {
     const widths = displayElements.value.map(el => el?.width || '1fr')
     return { display: 'grid', gridTemplateColumns: widths.join(' '), gap: '0' }
   }
-  return { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0' }
+
+  switch (layout) {
+    case '2_2': return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '0' }
+    case '2_3': return { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '0' }
+    case '2_4': return { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '0' }
+    default:    return { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0' }
+  }
 })
 
 const isFrameSelected   = computed(() => props.selectedFrame === props.frame)
@@ -267,9 +319,15 @@ const cellClass = (element, index) => ({
   'empty-cell':  !element || !element.type
 })
 
+const DEVICE_KEY_MAP = { desktop: 'pc', tablet: 'tablet', mobile: 'phone' }
+
 const getCellPadding = (element) => {
   if (!element?.padding) return '20px'
-  const { top = 20, right = 20, bottom = 20, left = 20 } = element.padding
+  const p   = element.padding
+  const key = DEVICE_KEY_MAP[props.device] || 'pc'
+  // 巢狀結構
+  const sub = (p.pc !== undefined || p.tablet !== undefined || p.phone !== undefined) ? p[key] : p
+  const { top = 20, right = 20, bottom = 20, left = 20 } = sub || {}
   return `${top}px ${right}px ${bottom}px ${left}px`
 }
 
@@ -365,7 +423,11 @@ const createElementFromDrag = (dragData, index) => {
   return {
     type: apiType, value,
     metadata: { color: null, fontSize: null, fontWeight: null, textAlign: null, width: null, height: null, backgroundColor: null },
-    padding: { top: 20, right: 20, bottom: 20, left: 20 },
+    padding: {
+      pc:     { top: 20, right: 20, bottom: 20, left: 20 },
+      tablet: { top: 20, right: 20, bottom: 20, left: 20 },
+      phone:  { top: 20, right: 20, bottom: 20, left: 20 },
+    },
     width: getInitialCellWidth(frameLayout.value, index)
   }
 }
@@ -519,4 +581,5 @@ const getInitialCellWidth = (layout, cellIndex) => {
 
   .drop-hint { color: #ccc; }
 }
+
 </style>

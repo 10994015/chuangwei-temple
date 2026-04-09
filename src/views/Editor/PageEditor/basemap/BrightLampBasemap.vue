@@ -8,15 +8,6 @@
     <div class="scene">
       <img class="scene__bg" :src="bgSrc" alt="" aria-hidden="true" />
 
-      <!-- 左後柱 -->
-      <img class="scene__pillar scene__pillar--left-back"  :src="pillarSrc" alt="" aria-hidden="true" />
-      <!-- 右後柱 -->
-      <img class="scene__pillar scene__pillar--right-back" :src="pillarSrc" alt="" aria-hidden="true" />
-      <!-- 左前柱 -->
-      <img class="scene__pillar scene__pillar--left-front"  :src="pillarSrc" alt="" aria-hidden="true" />
-      <!-- 右前柱 -->
-      <img class="scene__pillar scene__pillar--right-front" :src="pillarSrc" alt="" aria-hidden="true" />
-
       <!-- 主神像 -->
       <img class="scene__main" :src="mainSrc" alt="主神像" />
     </div>
@@ -150,8 +141,7 @@ const mainSrc = computed(() => props.mainImgSrc || '/images/bright-light/main.jp
 const BORDER_OPTIONS = { border: '/images/bright-light/border.png' }
 const borderSrc = computed(() => BORDER_OPTIONS[props.borderOption] ?? BORDER_OPTIONS.border)
 
-const PILLAR_OPTIONS = { pillar: '/images/bright-light/pillar.png' }
-const pillarSrc = computed(() => PILLAR_OPTIONS[props.pillarOption] ?? PILLAR_OPTIONS.pillar)
+
 
 const emit = defineEmits([])
 
@@ -209,48 +199,7 @@ const handleDetailSearch = () => {}
   display: block;
 }
 
-/* ==================== 燈柱共用基礎 ==================== */
-.scene__pillar {
-  position: absolute;
-  top: 0;
-  width: auto;
-  object-fit: contain;
-  object-position: bottom;
-}
-
-/*
-  後方兩根：較小、較暗、輕微模糊，製造景深感
-  z-index 低於前方柱子，但高於背景
-*/
-.scene__pillar--left-back,
-.scene__pillar--right-back {
-  height: 88%;
-  max-width: 9%;
-  opacity: 0.75;
-  filter: brightness(0.7) blur(1px) drop-shadow(0 0 12px rgba(255, 160, 0, 0.25));
-  z-index: 1;
-}
-
-.scene__pillar--left-back  { left: 16%; }
-.scene__pillar--right-back { right: 16%; transform: scaleX(-1); }
-
-/*
-  前方兩根：較大、正常亮度清晰，帶明顯光暈
-  z-index 高於後方柱子
-*/
-.scene__pillar--left-front,
-.scene__pillar--right-front {
-  height: 100%;
-  max-width: 11%;
-  opacity: 1;
-  filter: drop-shadow(0 0 28px rgba(255, 180, 0, 0.5));
-  z-index: 2;
-}
-
-.scene__pillar--left-front  { left: 6%; }
-.scene__pillar--right-front { right: 6%; transform: scaleX(-1); }
-
-/* 主神像：z-index 介於前後柱之間，讓前方柱子在神像前面 */
+/* 主神像 */
 .scene__main {
   position: absolute;
   top: 0;

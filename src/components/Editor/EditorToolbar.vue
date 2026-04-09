@@ -35,6 +35,42 @@
       <span v-if="hasUnsavedChanges" class="unsaved-indicator" :title="t('editorToolbar.unsavedTitle')">
         {{ t('editorToolbar.unsavedLabel') }}
       </span>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- 裝置預覽切換 -->
+      <div class="device-toggle">
+        <button
+          class="device-btn"
+          :class="{ active: currentDevice === 'desktop' }"
+          @click="$emit('device-change', 'desktop')"
+          title="電腦版"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>
+          </svg>
+        </button>
+        <button
+          class="device-btn"
+          :class="{ active: currentDevice === 'tablet' }"
+          @click="$emit('device-change', 'tablet')"
+          title="平板版"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+        </button>
+        <button
+          class="device-btn"
+          :class="{ active: currentDevice === 'mobile' }"
+          @click="$emit('device-change', 'mobile')"
+          title="手機版"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+        </button>
+      </div>
     </div>
     
     <div class="toolbar-right">
@@ -86,6 +122,10 @@ const props = defineProps({
   currentPageSlug: {
     type: String,
     default: null
+  },
+  currentDevice: {
+    type: String,
+    default: 'desktop'
   }
 })
 
@@ -99,7 +139,8 @@ const emit = defineEmits([
   'save',
   'delete',
   'go-to-website',
-  'publish'
+  'publish',
+  'device-change'
 ])
 
 // 從 store 取得 domainName
@@ -182,7 +223,7 @@ const handleGoToWebsite = () => {
 .locale-select {
   padding: 8px 16px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 20px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -197,7 +238,7 @@ const handleGoToWebsite = () => {
 .btn {
   padding: 8px 16px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 20px;
   background: #fff;
   font-size: 14px;
   cursor: pointer;
@@ -261,5 +302,44 @@ const handleGoToWebsite = () => {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
+}
+
+.device-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 3px;
+}
+
+.device-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.2s;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: #555;
+    background: rgba(0,0,0,0.06);
+  }
+
+  &.active {
+    background: #fff;
+    color: #E8572A;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
 }
 </style>

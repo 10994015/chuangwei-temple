@@ -15,6 +15,7 @@
         :locales="pageEditorStore.locales"
         :has-unsaved-changes="hasUnsavedChanges"
         :current-page-slug="pageEditorStore.currentPageSlug"
+        :current-device="currentDevice"
         @locale-change="handleLocaleChange"
         @change-page="handlePageChange"
         @settings="handleSettings"
@@ -25,11 +26,19 @@
         @delete="handleDelete"
         @go-to-website="handleGoToWebsite"
         @publish="handlePublish"
+        @device-change="currentDevice = $event"
       />
 
       <div v-if="pageEditorStore.isLoading" class="loading-overlay">
         <div class="loading-spinner">{{ t('editorLayout.loading') }}</div>
       </div>
+
+      <transition name="notice-slide">
+        <div v-if="showTemplateNotice" class="template-notice">
+          <span>📋 已套用新模板，內容尚未儲存，請記得點「儲存草稿」以保留變更。</span>
+          <button @click="showTemplateNotice = false" class="close-btn">✕</button>
+        </div>
+      </transition>
 
       <div v-if="pageEditorStore.error" class="error-banner">
         <span>⚠️ {{ pageEditorStore.error }}</span>
@@ -57,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, provide } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePageEditorStore } from '@/stores/pageEditor'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
@@ -73,7 +82,26 @@ const pageEditorStore = usePageEditorStore()
 
 const showPublishDialog = ref(false)
 const publishDialogRef = ref(null)
-const hasUnsavedChanges = ref(false)
+const showTemplateNotice = ref(false)
+const currentDevice = ref('desktop')
+
+// 每個 slug 獨立追蹤是否有未儲存的變更
+const unsavedSlugs = ref(new Set())
+const hasUnsavedChanges = computed(() => unsavedSlugs.value.size > 0)
+
+const markDirty = (slug) => {
+  if (!slug) return
+  const next = new Set(unsavedSlugs.value)
+  next.add(slug)
+  unsavedSlugs.value = next
+}
+const markClean = (slug) => {
+  if (!slug) return
+  const next = new Set(unsavedSlugs.value)
+  next.delete(slug)
+  unsavedSlugs.value = next
+}
+const markAllClean = () => { unsavedSlugs.value = new Set() }
 
 const isPreviewRoute = computed(() => route.name === 'app.temple.preview')
 
@@ -137,17 +165,18 @@ const syncLocaleToUrl = (newLocale) => {
 }
 
 provide('setUnsavedChanges', (value) => {
-  hasUnsavedChanges.value = value
+  value ? markDirty(pageEditorStore.currentPageSlug) : markClean(pageEditorStore.currentPageSlug)
 })
 
 provide('pageEditorStore', pageEditorStore)
+provide('currentDevice', currentDevice)
 
 watch(
   () => pageEditorStore.currentPageBasemaps,
   () => {
     if (isPreviewRoute.value) return
     if (isTemplatePreviewMode.value) return
-    hasUnsavedChanges.value = true
+    markDirty(pageEditorStore.currentPageSlug)
   },
   { deep: true }
 )
@@ -155,6 +184,7 @@ watch(
 const getTempleId = () => route.params.templeId
 
 onMounted(async () => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
   if (isPreviewRoute.value) return
 
   const templeId = getTempleId()
@@ -205,7 +235,8 @@ onMounted(async () => {
         }
       })
 
-      hasUnsavedChanges.value = true
+      markDirty(initialSlug)
+      showTemplateNotice.value = true
     } else {
       // 一般進入：打 all-draft-page 載入草稿
       const slugFromQuery = route.query.slug
@@ -222,7 +253,7 @@ onMounted(async () => {
         }
       })
 
-      hasUnsavedChanges.value = false
+      markAllClean()
     }
   } catch (error) {
     console.error('EditorLayout 初始化失敗:', error)
@@ -237,7 +268,7 @@ const handlePageChange = async (slug) => {
   if (!templeId || !slug) return
   router.replace({ query: { ...route.query, slug, locale: pageEditorStore.currentLocale } })
   await pageEditorStore.switchPageWithLocale(slug, pageEditorStore.currentLocale)
-  hasUnsavedChanges.value = false
+  markClean(slug)
 }
 
 const handleLocaleChange = async (newLocale) => {
@@ -254,14 +285,18 @@ const handleLocaleChange = async (newLocale) => {
 
     await pageEditorStore.reloadCurrentPage(newLocale)
 
-    hasUnsavedChanges.value = false
+    markClean(currentSlug)
   } catch (error) {
     console.error('語言切換失敗:', error)
     pageEditorStore.error = t('editorLayout.errorLocaleSwitch') + error.message
   }
 }
 
+const confirmLeave = () =>
+  !hasUnsavedChanges.value || confirm(t('editorLayout.confirmLeaveUnsaved'))
+
 const handleSettings = () => {
+  if (!confirmLeave()) return
   const templeId = getTempleId()
   if (templeId) {
     router.push({ name: 'app.temple.website-settings', params: { templeId } })
@@ -269,6 +304,7 @@ const handleSettings = () => {
 }
 
 const handleSelectTemplate = () => {
+  if (!confirmLeave()) return
   const templeId = getTempleId()
   if (templeId) {
     router.push({ name: 'app.temple.template-selection', params: { templeId } })
@@ -276,6 +312,7 @@ const handleSelectTemplate = () => {
 }
 
 const handleUpgrade = () => {
+  if (!confirmLeave()) return
   const templeId = getTempleId()
   if (templeId) {
     router.push({ name: 'app.temple.pricing-plans', params: { templeId } })
@@ -304,7 +341,8 @@ const handleSave = async () => {
     const success = await pageEditorStore.saveCurrentPage()
     if (success) {
       alert(t('editorLayout.alertSaveSuccess'))
-      hasUnsavedChanges.value = false
+      markClean(pageEditorStore.currentPageSlug)
+      showTemplateNotice.value = false
     } else {
       alert(t('editorLayout.alertSaveFail'))
     }
@@ -328,7 +366,7 @@ const handleDelete = async () => {
   try {
     const success = await pageEditorStore.deleteDraft(currentSlug, templeId)
     if (success) {
-      hasUnsavedChanges.value = false
+      markClean(currentSlug)
     } else {
       alert(t('editorLayout.alertDeleteFail') + (pageEditorStore.error || t('editorLayout.unknownError')))
     }
@@ -336,6 +374,17 @@ const handleDelete = async () => {
     alert(t('editorLayout.alertDeleteError') + error.message)
   }
 }
+
+const handleBeforeUnload = (e) => {
+  if (hasUnsavedChanges.value) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
 
 const handleGoToWebsite = () => {}
 
@@ -360,7 +409,7 @@ const handleConfirmPublish = async () => {
         if (publishDialogRef.value) publishDialogRef.value.resetPublishing()
         return
       }
-      hasUnsavedChanges.value = false
+      markClean(pageEditorStore.currentPageSlug)
     }
 
     const publishSuccess = await pageEditorStore.publishWebsite(
@@ -371,7 +420,7 @@ const handleConfirmPublish = async () => {
     if (publishSuccess) {
       showPublishDialog.value = false
       alert(t('editorLayout.alertPublishSuccess'))
-      hasUnsavedChanges.value = false
+      markAllClean()
     } else {
       alert(t('editorLayout.alertPublishFail') + (pageEditorStore.error || t('editorLayout.unknownError')))
     }
@@ -420,6 +469,35 @@ const handleCancelPublish = () => {
   color: #333;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+.template-notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  background: #e8f4fd;
+  border-bottom: 1px solid #90caf9;
+  color: #1565c0;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 100;
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #1565c0;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.7;
+    &:hover { opacity: 1; }
+  }
+}
+
+.notice-slide-enter-active { transition: all 0.3s ease; }
+.notice-slide-leave-active { transition: all 0.25s ease; }
+.notice-slide-enter-from   { opacity: 0; transform: translateY(-8px); }
+.notice-slide-leave-to     { opacity: 0; transform: translateY(-8px); }
 
 .error-banner {
   display: flex;

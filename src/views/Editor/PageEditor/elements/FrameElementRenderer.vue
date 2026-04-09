@@ -209,6 +209,8 @@ const getButtonStyle = (element) => {
   if (fontSize)   style.fontSize        = fontSize
   if (fontWeight) style.fontWeight      = fontWeight
   if (bgColor)    style.backgroundColor = bgColor
+  const borderRadius = getMeta(m, 'borderRadius', 'border_radius')
+  if (borderRadius) style.borderRadius = borderRadius
   return style
 }
 </script>

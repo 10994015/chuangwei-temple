@@ -10,6 +10,7 @@ const route = useRoute()
 
 const pageEditorStore = inject('pageEditorStore')
 const setUnsavedChanges = inject('setUnsavedChanges')
+const currentDevice = inject('currentDevice')
 
 watch(
   () => pageEditorStore.currentPageBasemaps,
@@ -111,7 +112,11 @@ const elementDefaults = {
     },
     content: {},
     metadata: {},
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: {
+      pc:     { top: 0, right: 0, bottom: 0, left: 0 },
+      tablet: { top: 0, right: 0, bottom: 0, left: 0 },
+      phone:  { top: 0, right: 0, bottom: 0, left: 0 },
+    },
     width: '100%',
   }
 }
@@ -216,6 +221,7 @@ const handleUpdateLogo = (logoData) => {
       :current-page-slug="pageEditorStore.currentPageSlug"
       :locales="pageEditorStore.locales"
       :current-locale="pageEditorStore.currentLocale"
+      :device="currentDevice"
       @select-basemap="handleSelectBasemap"
       @select-frame="handleSelectFrame"
       @select-element="handleSelectElement"

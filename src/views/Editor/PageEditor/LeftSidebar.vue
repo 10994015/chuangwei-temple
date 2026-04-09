@@ -263,6 +263,7 @@ const frameDisplayKeyMap = {
   'PV_INDEX_PRODUCT':   'leftSidebar.pvIndexProduct',
   'PV_INDEX_SERVICE':   'leftSidebar.pvIndexService',
   'PV_PRODUCT_LIST':    'leftSidebar.pvProductList',
+  'PV_CUSTOM_FRAME1':   'leftSidebar.pvCustomFrame1',
 }
 const getFrameDisplayName = (frameType) => {
   return frameDisplayKeyMap[frameType] ? t(frameDisplayKeyMap[frameType]) : frameType

@@ -253,9 +253,14 @@ const getCellStyle = (element, index) => {
   return { padding }
 }
 
+const DEVICE_KEY_MAP = { desktop: 'pc', tablet: 'tablet', mobile: 'phone' }
+
 const getCellPadding = (element) => {
   if (!element?.padding) return '20px'
-  const { top = 20, right = 20, bottom = 20, left = 20 } = element.padding
+  const p   = element.padding
+  const key = DEVICE_KEY_MAP[props.device] || 'pc'
+  const sub = (p.pc !== undefined || p.tablet !== undefined || p.phone !== undefined) ? p[key] : p
+  const { top = 20, right = 20, bottom = 20, left = 20 } = sub || {}
   return `${top}px ${right}px ${bottom}px ${left}px`
 }
 </script>

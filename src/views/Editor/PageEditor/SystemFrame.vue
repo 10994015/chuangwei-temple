@@ -44,6 +44,7 @@
         :current-page-slug="currentPageSlug"
         :locales="locales"
         :current-locale="currentLocale"
+        :device="device"
         @select-logo="handleSelectLogo"
         @update-logo="handleUpdateLogo"
         @delete-logo="handleDeleteLogo"
@@ -65,6 +66,7 @@
         v-bind="frameData"
         :footer-bg-color="frame?.data?.footerBgColor"
         :footer-text-color="frame?.data?.footerTextColor"
+        :device="device"
       />
 
       <!-- 輪播牆 (CAROUSEL_WALL) -->
@@ -82,7 +84,7 @@
         class="carousel-wall-clickable"
         @click.stop="handleSelectFrame(frame)"
       >
-        <PvHeroBasemap v-bind="frameData" />
+        <PvHeroBasemap v-bind="frameData" :device="device" />
       </div>
 
       <!-- 首圖 (FIRST_PICTURE) -->
@@ -100,7 +102,7 @@
         :frame-data="frameData"
         :frame="frame"
         :is-selected="isFrameSelected"
-        :selected-sub-section="frame?.pvSubSection || null"
+        :selected-sub-section="isFrameSelected ? editorSubSection : null"
         @select-frame="handleSelectFrame"
         @select-sub-section="handleSelectSubSection"
       />
@@ -109,25 +111,25 @@
       <NewsBasemap v-else-if="frameType === 'INDEX_NEWS'" v-bind="frameData" />
 
       <!-- 首頁-最新消息 v2 (PV_INDEX_NEWS) -->
-      <PvNewsBasemap v-else-if="frameType === 'PV_INDEX_NEWS'" v-bind="frameData" />
+      <PvNewsBasemap v-else-if="frameType === 'PV_INDEX_NEWS'" v-bind="frameData" :device="device" />
 
       <!-- 消息列表 (NEWS_LIST) -->
       <NewsListBasemap v-else-if="frameType === 'NEWS_LIST'" v-bind="frameData" />
 
       <!-- 消息列表 v2 (PV_NEWS_LIST) -->
-      <PvNewsListBasemap v-else-if="frameType === 'PV_NEWS_LIST'" v-bind="frameData" />
+      <PvNewsListBasemap v-else-if="frameType === 'PV_NEWS_LIST'" v-bind="frameData" :device="device" />
 
       <!-- 首頁-商品標幅 (INDEX_PRODUCT) -->
       <ProductsBasemap v-else-if="frameType === 'INDEX_PRODUCT'" v-bind="frameData" />
 
       <!-- 首頁-商品標幅 v2 (PV_INDEX_PRODUCT) -->
-      <PvProductsBasemap v-else-if="frameType === 'PV_INDEX_PRODUCT'" v-bind="frameData" />
+      <PvProductsBasemap v-else-if="frameType === 'PV_INDEX_PRODUCT'" v-bind="frameData" :device="device" />
 
       <!-- 首頁-活動橫幅 (INDEX_EVENT) -->
       <EventsBasemap v-else-if="frameType === 'INDEX_EVENT'" v-bind="frameData" />
 
       <!-- 首頁-服務 v2 (PV_INDEX_SERVICE) -->
-      <PvServicesBasemap v-else-if="frameType === 'PV_INDEX_SERVICE'" v-bind="frameData" />
+      <PvServicesBasemap v-else-if="frameType === 'PV_INDEX_SERVICE'" v-bind="frameData" :device="device" />
 
       <!-- 首頁-捐獻區 (INDEX_DONATION) -->
       <DonationBasemap
@@ -143,7 +145,7 @@
       <ProductListBasemap v-else-if="frameType === 'PRODUCT_LIST'" v-bind="frameData" />
 
       <!-- 商品列表 v2 (PV_PRODUCT_LIST) -->
-      <PvProductListBasemap v-else-if="frameType === 'PV_PRODUCT_LIST'" v-bind="frameData" />
+      <PvProductListBasemap v-else-if="frameType === 'PV_PRODUCT_LIST'" v-bind="frameData" :device="device" />
 
       <!-- 相簿列表 (ALBUM_LIST) -->
       <AlbumListBasemap v-else-if="frameType === 'ALBUM_LIST'" v-bind="frameData" />
@@ -157,6 +159,18 @@
       <!-- 光明燈 (BRIGHT_LAMP) -->
       <BrightLampBasemap v-else-if="frameType === 'BRIGHT_LAMP'" v-bind="frameData" />
 
+      <!-- 數位生態系統自訂框架 (PV_CUSTOM_FRAME1) -->
+      <PvCustomFrame1Basemap
+        v-else-if="frameType === 'PV_CUSTOM_FRAME1'"
+        :items="frameData.items"
+        :device="device"
+        :is-edit-mode="true"
+        :frame="frame"
+        :selected-element="isFrameSelected ? selectedElement : null"
+        @select-element="handleSelectElement"
+        @select-frame="handleSelectFrame"
+      />
+
       <!-- 未知類型 -->
       <div v-else class="unknown-frame">
         <p>未知系統框架類型: {{ frameType }}</p>
@@ -166,7 +180,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject, ref } from 'vue'
 import NavbarBasemap from './basemap/NavbarBasemap.vue'
 import PvNavbarBasemap from './basemap/PvNavbarBasemap.vue'
 import PvHeroBasemap from './basemap/PvHeroBasemap.vue'
@@ -176,6 +190,7 @@ import PvNewsListBasemap from './basemap/PvNewsListBasemap.vue'
 import PvProductsBasemap from './basemap/PvProductsBasemap.vue'
 import PvProductListBasemap from './basemap/PvProductListBasemap.vue'
 import PvServicesBasemap from './basemap/PvServicesBasemap.vue'
+import PvCustomFrame1Basemap from './basemap/PvCustomFrame1Basemap.vue'
 import PvFooterBasemap from './basemap/PvFooterBasemap.vue'
 import FooterBasemap from './basemap/FooterBasemap.vue'
 import HeroBasemap from './basemap/HeroBasemap.vue'
@@ -201,6 +216,7 @@ const props = defineProps({
   currentPageSlug: { type: String, default: null },
   locales:         { type: Array,  default: () => [] },
   currentLocale:   { type: String, default: 'ZH-TW' },
+  device:          { type: String, default: 'desktop' },
 })
 
 const emit = defineEmits([
@@ -278,11 +294,13 @@ const frameTextStyle = computed(() => {
   return THEME_PRESETS.light
 })
 
+const editorSubSection = inject('editorSubSection', ref(null))
+
 const isLogoSelected  = computed(() => props.selectedElement?.type === 'logo')
 const isFrameSelected = computed(() => props.selectedFrame === props.frame)
 
 // PV_HEADER 跟 HEADER 一樣有自己的點擊邏輯，不需要容器層攔截
-const SELF_HANDLED_TYPES = ['CAROUSEL_WALL', 'PV_CAROUSEL_WALL', 'FIRST_PICTURE', 'PV_PORTAL_PICTURE', 'HEADER', 'PV_HEADER']
+const SELF_HANDLED_TYPES = ['CAROUSEL_WALL', 'PV_CAROUSEL_WALL', 'FIRST_PICTURE', 'PV_PORTAL_PICTURE', 'HEADER', 'PV_HEADER', 'PV_CUSTOM_FRAME1']
 const isClickableFrame = computed(() =>
   !SELF_HANDLED_TYPES.includes(props.frameType)
 )

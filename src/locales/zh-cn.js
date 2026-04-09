@@ -101,6 +101,7 @@ export default {
     pvIndexProduct:  '首页-商品标幅 Pv',
     pvIndexService:  '首页-服务 Pv',
     pvProductList:   '商品列表 Pv',
+    pvCustomFrame1:  '数字生态系统',
     single11: '单层 1-1',
     single12: '单层 1-2',
     single13: '单层 1-3',
@@ -301,6 +302,7 @@ export default {
     fontSize: '字体大小',
     fontWeight: '字体粗细',
     fontWeightDefault: '预设',
+    borderRadius: '圆角 (px)',
     textAlign: '文字对齐',
     alignLeft: '靠左',
     alignCenter: '居中',
@@ -456,6 +458,7 @@ export default {
     alertPublishFail:      '发布失败：',
     alertPublishError:     '发布失败：',
     unknownError:          '未知错误',
+    confirmLeaveUnsaved:   '您有尚未储存的变更，确定要离开吗？',
   },
   publishDialog: {
     title:         '发布网站',

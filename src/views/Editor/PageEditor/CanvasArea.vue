@@ -1,8 +1,10 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, provide, onMounted, onUnmounted } from 'vue'
 import BasemapWrapper from './basemap/BasemapWrapper.vue'
 import SystemFrame from './SystemFrame.vue'
 import CustomFrame from './CustomFrame.vue'
+
+const DEVICE_WIDTH = { desktop: null, tablet: 768, mobile: 390 }
 
 const props = defineProps({
   basemaps:        { type: Array,  default: () => [] },
@@ -13,6 +15,22 @@ const props = defineProps({
   currentPageSlug: { type: String, default: null },
   locales:         { type: Array,  default: () => [] },
   currentLocale:   { type: String, default: 'ZH-TW' },
+  device:          { type: String, default: 'desktop' },
+})
+
+const deviceFrameStyle = computed(() => {
+  const w = DEVICE_WIDTH[props.device]
+  if (!w) return {}
+  return { width: w + 'px', margin: '0 auto', boxShadow: '0 0 0 1px #ddd, 0 4px 24px rgba(0,0,0,0.12)' }
+})
+
+const isSwitching = ref(false)
+let switchTimer = null
+
+watch(() => props.device, () => {
+  if (switchTimer) clearTimeout(switchTimer)
+  isSwitching.value = true
+  switchTimer = setTimeout(() => { isSwitching.value = false }, 400)
 })
 
 const emit = defineEmits([
@@ -70,15 +88,17 @@ const handleBasemapClick = (basemap) => {
   emit('select-basemap', basemap)
 }
 
+// 子區塊選取狀態：只存在前端，不寫進 frame 物件，不會被序列化送出
+const selectedSubSection = ref(null)
+provide('editorSubSection', selectedSubSection)
+
 const handleSelectFrame = (frame) => {
+  selectedSubSection.value = null
   emit('select-frame', frame)
 }
 
 const handleSelectSubSection = (sub) => {
-  const frame = props.selectedFrame
-  if (frame) {
-    frame.pvSubSection = sub
-  }
+  selectedSubSection.value = sub
   emit('select-sub-section', sub)
 }
 
@@ -170,7 +190,7 @@ const getBasemapKey = (basemap, index) => {
 
 <template>
   <div ref="canvasRef" class="canvas-area" :class="{ 'is-dragging': isDragging }">
-    <div class="temple-website">
+    <div class="temple-website" :style="deviceFrameStyle" :class="{ 'device-switching': isSwitching }">
       <template v-for="(basemap, index) in basemaps" :key="getBasemapKey(basemap, index)">
         <BasemapWrapper
           :index="index"
@@ -234,6 +254,7 @@ const getBasemapKey = (basemap, index) => {
                 :current-page-slug="currentPageSlug"
                 :locales="locales"
                 :current-locale="currentLocale"
+                :device="device"
                 class="relative-frame"
                 @select-element="handleSelectElement"
                 @update-element="handleUpdateElement"
@@ -253,6 +274,7 @@ const getBasemapKey = (basemap, index) => {
                 :selected-element="selectedElement"
                 :selected-cell="selectedCell"
                 :selected-frame="selectedFrame"
+                :device="device"
                 class="relative-frame"
                 @drop-to-cell="handleDropToCell"
                 @delete-element="handleDeleteElement"
@@ -303,6 +325,20 @@ const getBasemapKey = (basemap, index) => {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
   color: #333;
   background: #fff;
+  transition: width 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+              box-shadow 0.38s ease,
+              margin 0.38s ease;
+  transform-origin: top center;
+}
+
+.temple-website.device-switching {
+  animation: device-switch 0.38s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes device-switch {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
 }
 
 .scroll-top-btn {
