@@ -154,6 +154,7 @@ const getTempleId = () => route.params.templeId
 
 // 返回管理後台
 const handleBackToDashboard = () => {
+  if (!confirm('確定要返回後台嗎？未儲存的變更將會遺失。')) return
   const templeId = getTempleId()
   if (templeId) {
     router.push({

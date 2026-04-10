@@ -11,7 +11,7 @@
           v-for="(src, i) in clonedImages"
           :key="i"
           class="pv-slide"
-          :class="{ 'is-active': i === currentIndex + 1 }"
+          :class="{ 'is-active': i === currentIndex + 2 }"
           :style="{ width: slideWidth + 'px' }"
         >
           <img :src="src" :alt="`輪播圖片 ${i + 1}`" class="pv-img" />
@@ -73,11 +73,11 @@ const isJumping     = ref(false)
 let autoplayTimer   = null
 let resizeObserver  = null
 
-const SIDE_RATIO = 0.04
+const SIDE_RATIO = 0.10
 
 const carouselHeight = computed(() => props.carouselWallHeight || 600)
 
-const sideRatio = computed(() => viewportWidth.value <= 768 ? 0.08 : SIDE_RATIO)
+const sideRatio = computed(() => viewportWidth.value <= 768 ? 0.14 : SIDE_RATIO)
 const sidePx = computed(() => Math.floor(viewportWidth.value * sideRatio.value))
 
 const displayImages = computed(() => {
@@ -92,11 +92,17 @@ const displayImages = computed(() => {
   ]
 })
 
-// 頭尾各加一張 clone 實現無限循環
+// 頭尾各加兩張 clone，讓切換時旁邊永遠有圖
 const clonedImages = computed(() => {
   const imgs = displayImages.value
   if (imgs.length <= 1) return imgs
-  return [imgs[imgs.length - 1], ...imgs, imgs[0]]
+  return [
+    imgs[imgs.length - 2] ?? imgs[imgs.length - 1],
+    imgs[imgs.length - 1],
+    ...imgs,
+    imgs[0],
+    imgs[1] ?? imgs[0],
+  ]
 })
 
 const slideWidth = computed(() => {
@@ -108,7 +114,7 @@ const slideWidth = computed(() => {
 const trackStyle = computed(() => {
   if (!slideWidth.value) return {}
   const isSingle = displayImages.value.length <= 1
-  const offset = isSingle ? 0 : (currentIndex.value + 1) * slideWidth.value
+  const offset = isSingle ? 0 : (currentIndex.value + 2) * slideWidth.value
   return { transform: `translateX(-${offset}px)` }
 })
 
@@ -207,6 +213,7 @@ onUnmounted(() => {
 
   &.no-transition {
     transition: none;
+    .pv-slide { transition: none; }
   }
 }
 
@@ -251,8 +258,8 @@ onUnmounted(() => {
 
   svg { width: 18px; height: 18px; }
 
-  &--left  { left: 13%; }
-  &--right { right: 13%; }
+  &--left  { left: 4%; }
+  &--right { right: 4%; }
 
   &:hover {
     background: #fff;
@@ -294,8 +301,8 @@ onUnmounted(() => {
     width: 34px;
     height: 34px;
     svg { width: 15px; height: 15px; }
-    &--left  { left: 10%; }
-    &--right { right: 10%; }
+    &--left  { left: 6%; }
+    &--right { right: 6%; }
   }
 }
 </style>

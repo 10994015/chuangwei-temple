@@ -184,7 +184,6 @@ watch(
 const getTempleId = () => route.params.templeId
 
 onMounted(async () => {
-  window.addEventListener('beforeunload', handleBeforeUnload)
   if (isPreviewRoute.value) return
 
   const templeId = getTempleId()
@@ -375,16 +374,7 @@ const handleDelete = async () => {
   }
 }
 
-const handleBeforeUnload = (e) => {
-  if (hasUnsavedChanges.value) {
-    e.preventDefault()
-    e.returnValue = ''
-  }
-}
-
-onUnmounted(() => {
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-})
+onUnmounted(() => {})
 
 const handleGoToWebsite = () => {}
 
