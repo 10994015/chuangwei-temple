@@ -1,18 +1,13 @@
 <template>
   <div class="account-create">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="bc-root">後台管理</span>
-      <span class="bc-sep">›</span>
-      <span class="bc-link" @click="handleBack">帳號管理</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- 返回 -->
     <button class="back-btn" @click="handleBack">← 返回上一頁</button>
 
     <!-- 標題 -->
-    <h1 class="page-title">新增帳號</h1>
-    <p class="page-subtitle">帳號建立成功後將會寄送密碼設定連結至Email</p>
+    <h1 class="page-title">{{ isEditMode ? '編輯帳號' : '新增帳號' }}</h1>
 
     <!-- 表單卡片 -->
     <div class="main-card">
@@ -39,7 +34,8 @@
           v-model="form.name"
           type="text"
           class="form-input"
-          :class="{ 'input-error': errors.name }"
+          :class="{ 'input-error': errors.name, 'input-disabled': isEditMode }"
+          :disabled="isEditMode"
           placeholder="請輸入姓名"
         />
         <p v-if="errors.name" class="error-msg">{{ errors.name }}</p>
@@ -52,7 +48,8 @@
           v-model="form.username"
           type="text"
           class="form-input"
-          :class="{ 'input-error': errors.username }"
+          :class="{ 'input-error': errors.username, 'input-disabled': isEditMode }"
+          :disabled="isEditMode"
           placeholder="請輸入帳號"
         />
         <p v-if="errors.username" class="error-msg">{{ errors.username }}</p>
@@ -65,7 +62,8 @@
           v-model="form.email"
           type="email"
           class="form-input"
-          :class="{ 'input-error': errors.email }"
+          :class="{ 'input-error': errors.email, 'input-disabled': isEditMode }"
+          :disabled="isEditMode"
           placeholder="example@temple.com"
         />
         <p v-if="errors.email" class="error-msg">{{ errors.email }}</p>
@@ -74,8 +72,8 @@
       <!-- 底部操作 -->
       <div class="card-actions">
         <button class="btn-primary" @click="handleSubmit" :disabled="isSubmitting">
-          <span v-if="isSubmitting">建立中...</span>
-          <span v-else>確認新增</span>
+          <span v-if="isSubmitting">{{ isEditMode ? '儲存中...' : '建立中...' }}</span>
+          <span v-else>{{ isEditMode ? '確認儲存' : '確認新增' }}</span>
         </button>
         <button class="btn-secondary" @click="handleBack">取消</button>
       </div>
@@ -84,23 +82,36 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAccountStore } from '@/stores/account'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
-const router = useRouter()
-const route  = useRoute()
+const router       = useRouter()
+const route        = useRoute()
+const accountStore = useAccountStore()
+const templeId     = route.params.templeId
+const userId       = route.params.userId   // 有值代表編輯模式
 
+const isEditMode   = computed(() => !!userId)
 const isSubmitting = ref(false)
 
-// 模擬角色清單（串 API 後替換）
-const roleOptions = ref([
-  { id: 1, name: '超級管理員' },
-  { id: 2, name: '管理員' },
-  { id: 3, name: '編輯者' },
-  { id: 4, name: '檢視者' },
-  { id: 5, name: '解籤師' },
-  { id: 6, name: '客服人員' },
-])
+const roleOptions = computed(() =>
+  accountStore.permissionRoles.map(r => ({ id: r.roleId, name: r.roleName }))
+)
+
+onMounted(async () => {
+  await accountStore.fetchPermissionRoles(templeId)
+  if (isEditMode.value) {
+    const data = await accountStore.fetchAccountById(templeId, userId)
+    if (data) {
+      form.role     = data.roleId       || ''
+      form.name     = data.name         || ''
+      form.username = data.credential   || ''
+      form.email    = data.email        || ''
+    }
+  }
+})
 
 const form = reactive({
   role:     '',
@@ -140,11 +151,29 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
-    // TODO: 串 API
-    console.log('新增帳號:', { ...form })
-    await new Promise(r => setTimeout(r, 600)) // 模擬 API
-    alert('帳號已建立，密碼設定連結將寄至 ' + form.email)
-    handleBack()
+    if (isEditMode.value) {
+      const result = await accountStore.updateAccountPermissionRole(templeId, userId, { roleId: form.role })
+      if (result.success) {
+        alert('帳號角色已更新')
+        handleBack()
+      } else {
+        alert(result.error || '更新失敗，請再試一次')
+      }
+    } else {
+      const payload = {
+        credential: form.username,
+        name:       form.name,
+        email:      form.email,
+        roleId:     form.role,
+      }
+      const result = await accountStore.createAccount(templeId, payload)
+      if (result.success) {
+        alert('帳號已建立')
+        handleBack()
+      } else {
+        alert(result.error || '新增帳號失敗，請再試一次')
+      }
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -156,6 +185,12 @@ const handleBack = () => {
     params: { templeId: route.params.templeId }
   })
 }
+
+const breadcrumbs = computed(() => [
+  { text: '後台管理' },
+  { text: '帳號管理', onClick: handleBack },
+  { text: isEditMode.value ? '編輯帳號' : '新增帳號' },
+])
 </script>
 
 <style scoped>
@@ -164,16 +199,6 @@ const handleBack = () => {
   min-height: 100%;
   background: #F3F4F6;
 }
-
-/* 麵包屑 */
-.breadcrumb {
-  font-size: 13px;
-  color: #999;
-  margin-bottom: 16px;
-}
-.bc-sep  { margin: 0 6px; }
-.bc-link { color: #999; cursor: pointer; transition: color 0.15s; }
-.bc-link:hover { color: #E8572A; text-decoration: underline; }
 
 /* 返回 */
 .back-btn {
@@ -239,7 +264,8 @@ const handleBack = () => {
   border-color: #E8572A;
   box-shadow: 0 0 0 3px rgba(232,87,42,0.1);
 }
-.form-input.input-error { border-color: #e53e3e; }
+.form-input.input-error    { border-color: #e53e3e; }
+.form-input.input-disabled { background: #f5f5f5; color: #888; cursor: not-allowed; }
 
 .form-select {
   appearance: none;

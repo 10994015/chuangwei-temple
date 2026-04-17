@@ -16,6 +16,7 @@ import EditorLayout from '@/layouts/EditorLayout.vue'
 import CustomerLayout from '@/layouts/CustomerLayout.vue'
 import MemberProfileView from '@/views/Customer/MemberProfileView.vue'
 import TempleLayout from '@/layouts/TempleLayout.vue'
+import OperationsLayout from '@/layouts/OperationsLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,6 +35,34 @@ const router = createRouter({
             breadcrumbs: [{ text: 'CMS編輯器版面設計', to: null }],
             requiresAuth: false
           }
+        },
+
+        // ── 維運後台（OperationsLayout 側邊欄）──
+        {
+          path: 'operations',
+          component: OperationsLayout,
+          meta: { requiresAuth: true },
+          children: [
+            { path: '', redirect: { name: 'app.operations.user-management' } },
+            { path: 'dashboard',        name: 'app.operations.dashboard',        component: () => import('@/views/Operations/OperationsDashboardView.vue'),    meta: { title: '營運總覽',    requiresAuth: true } },
+            { path: 'user-management',  name: 'app.operations.user-management',  component: () => import('@/views/Operations/OperationsUserMgmtView.vue'),     meta: { title: '用戶管理',    requiresAuth: true } },
+            { path: 'user-review',      name: 'app.operations.user-review',      component: () => import('@/views/Operations/OperationsUserReviewView.vue'),    meta: { title: '用戶審核',    requiresAuth: true } },
+            { path: 'creator-review',   name: 'app.operations.creator-review',   component: () => import('@/views/Operations/OperationsCreatorReviewView.vue'), meta: { title: '創作者審核',  requiresAuth: true } },
+            { path: 'orders',           name: 'app.operations.orders',           component: () => import('@/views/Operations/OperationsOrdersView.vue'),        meta: { title: '訂單管理',    requiresAuth: true } },
+            { path: 'lanterns',         name: 'app.operations.lanterns',         component: () => import('@/views/Operations/OperationsLanternsView.vue'),      meta: { title: '數位光明燈管理', requiresAuth: true } },
+            { path: 'finance',          name: 'app.operations.finance',          component: () => import('@/views/Operations/OperationsFinanceView.vue'),       meta: { title: '財務管理',    requiresAuth: true } },
+            { path: 'plans',            name: 'app.operations.plans',            component: () => import('@/views/Operations/OperationsPlansView.vue'),         meta: { title: '方案管理',    requiresAuth: true } },
+            { path: 'ads',              name: 'app.operations.ads',              component: () => import('@/views/Operations/OperationsAdsView.vue'),           meta: { title: '廣告管理',    requiresAuth: true } },
+            { path: 'notifications',    name: 'app.operations.notifications',    component: () => import('@/views/Operations/OperationsNotificationsView.vue'), meta: { title: '通知管理',    requiresAuth: true } },
+            { path: 'support',          name: 'app.operations.support',          component: () => import('@/views/Operations/OperationsSupportView.vue'),       meta: { title: '客服管理',    requiresAuth: true } },
+            { path: 'reports',          name: 'app.operations.reports',          component: () => import('@/views/Operations/OperationsReportsView.vue'),       meta: { title: '報表中心',    requiresAuth: true } },
+            { path: 'maintenance',          name: 'app.operations.maintenance',       component: () => import('@/views/Operations/OperationsMaintenanceView.vue'),   meta: { title: '營運維報',    requiresAuth: true } },
+            { path: 'maintenance/account/new',          name: 'app.operations.account-create', component: () => import('@/views/Operations/OperationsAccountFormView.vue'), meta: { title: '新增帳號', requiresAuth: true } },
+            { path: 'maintenance/account/:userId/edit', name: 'app.operations.account-edit',   component: () => import('@/views/Operations/OperationsAccountFormView.vue'), meta: { title: '編輯帳號', requiresAuth: true } },
+            { path: 'maintenance/role/new',        name: 'app.operations.role-create', component: () => import('@/views/Operations/OperationsRoleFormView.vue'), meta: { title: '新增權限角色', requiresAuth: true } },
+            { path: 'maintenance/role/:roleId/edit', name: 'app.operations.role-edit', component: () => import('@/views/Operations/OperationsRoleFormView.vue'), meta: { title: '編輯權限角色', requiresAuth: true } },
+            { path: 'settings',         name: 'app.operations.settings',         component: () => import('@/views/Operations/OperationsSettingsView.vue'),      meta: { title: '系統設定',    requiresAuth: true } },
+          ]
         },
 
         // ── 香客帳號管理（CustomerLayout 側邊欄）──
@@ -92,7 +121,9 @@ const router = createRouter({
 
             // ── 帳號管理 ──
             { path: 'account-management',             name: 'app.temple.account-management', component: () => import('@/views/Temple/AccountManagementView.vue'), meta: { title: '帳號管理',     requiresAuth: true } },
-            { path: 'account-management/create',      name: 'app.temple.account-create',     component: () => import('@/views/Temple/AccountCreateView.vue'),     meta: { title: '新增帳號',     requiresAuth: true } },
+            { path: 'account-management/invite',       name: 'app.temple.account-invite',     component: () => import('@/views/Temple/AccountInviteView.vue'),      meta: { title: '權限指派',     requiresAuth: true } },
+            { path: 'account-management/create',        name: 'app.temple.account-create', component: () => import('@/views/Temple/AccountCreateView.vue'), meta: { title: '新增帳號', requiresAuth: true } },
+            { path: 'account-management/edit/:userId', name: 'app.temple.account-edit',  component: () => import('@/views/Temple/AccountCreateView.vue'), meta: { title: '編輯帳號', requiresAuth: true } },
             { path: 'account-management/role/new',    name: 'app.temple.role-create',        component: () => import('@/views/Temple/RoleEditView.vue'),          meta: { title: '新增權限角色', requiresAuth: true } },
             { path: 'account-management/role/:roleId',name: 'app.temple.role-edit',          component: () => import('@/views/Temple/RoleEditView.vue'),          meta: { title: '編輯權限角色', requiresAuth: true } },
 
@@ -166,6 +197,14 @@ const router = createRouter({
           meta: { title: '頁面預覽', requiresAuth: true }
         }
       ]
+    },
+
+    // ── 登入頁 ──
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/views/LoginView.vue'),
+      meta: { title: '登入', requiresAuth: false }
     },
 
     // ── 初始密碼設定 ──

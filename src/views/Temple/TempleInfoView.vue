@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -129,16 +130,17 @@ const handleDeleteAsset = (id) => {
 }
 
 const goAssetCreate = () => router.push({ name: 'app.temple.asset-create', params: { templeId } })
+
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '宮廟資料管理' },
+]
 </script>
 
 <template>
   <div class="temple-info-view">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="breadcrumb-link">後台管理</span>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current">宮廟資料管理</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- Tab 列 -->
     <div class="tab-bar">
@@ -365,10 +367,6 @@ const goAssetCreate = () => router.push({ name: 'app.temple.asset-create', param
   font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif; display: flex; flex-direction: column; gap: 20px;
 }
 
-.breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 14px; }
-.breadcrumb-link { color: #6b7280; cursor: pointer; &:hover { color: #E8572A; } }
-.breadcrumb-sep { color: #9ca3af; font-size: 16px; }
-.breadcrumb-current { color: #E8572A; font-weight: 500; }
 
 .tab-bar { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; }
 .tab-btn {

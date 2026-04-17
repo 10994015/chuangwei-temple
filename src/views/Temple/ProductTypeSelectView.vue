@@ -1,13 +1,6 @@
 <template>
   <div class="product-select-page">
-    <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="bc-root">後台管理</span>
-      <span class="bc-sep">›</span>
-      <router-link :to="{ name: 'app.temple.activity-management', params: { templeId } }" class="bc-link">
-        活動與上架管理
-      </router-link>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- 返回按鈕 -->
     <button class="back-btn" @click="goBack">
@@ -37,11 +30,18 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()
 
 const templeId = computed(() => route.params.templeId)
+
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '活動與上架管理', onClick: () => router.push({ name: 'app.temple.activity-management', params: { templeId: templeId.value }, query: { tab: 'products' } }) },
+  { text: '選擇商品類型' },
+]
 
 const productTypes = [
   { key: 'self',    name: '自行上架商品', desc: '自行設定商品資訊、規格、價格等完整內容' },
@@ -73,12 +73,6 @@ const goBack = () => {
   min-height: 100%;
   background: #F3F4F6;
 }
-
-/* 麵包屑 */
-.breadcrumb { font-size: 13px; color: #999; margin-bottom: 20px; }
-.bc-sep { margin: 0 6px; }
-.bc-link { color: #E8572A; text-decoration: none; font-weight: 500; }
-.bc-link:hover { text-decoration: underline; }
 
 /* 返回 */
 .back-btn {

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -124,6 +125,11 @@ const hotServices = ref([
   { name: '問事服務', count: 145 },
 ])
 
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '宮廟總覽' },
+]
+
 onMounted(() => {
   console.log('DashboardView mounted, temple:', currentTemple.value)
 })
@@ -132,11 +138,7 @@ onMounted(() => {
 <template>
   <div class="dashboard-view">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="breadcrumb-link">後台管理</span>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current">宮廟總覽</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- 統計卡片 -->
     <div class="stats-grid">
@@ -303,27 +305,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-// ========== 麵包屑 ==========
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.breadcrumb-link {
-  color: #6b7280;
-  cursor: pointer;
-  &:hover { color: #E8572A; }
-}
-
-.breadcrumb-sep { color: #9ca3af; font-size: 16px; }
-
-.breadcrumb-current {
-  color: #E8572A;
-  font-weight: 500;
 }
 
 // ========== 統計卡片 ==========

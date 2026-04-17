@@ -1,11 +1,6 @@
 <template>
   <div class="activity-mgmt">
-    <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="bc-root">後台管理</span>
-      <span class="bc-sep">›</span>
-      <span class="bc-current">活動與上架管理</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- Tab 導航 -->
     <div class="tab-nav">
@@ -405,10 +400,16 @@
 <script setup>
 import { ref, computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()
 const templeId = computed(() => route.params.templeId)
+
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '活動與上架管理' },
+]
 
 const VALID_TABS = ['events', 'services', 'products', 'donations', 'shipping']
 
@@ -562,9 +563,6 @@ const resetShipping = () => {
 }
 
 /* 麵包屑 */
-.breadcrumb { font-size: 13px; color: #999; margin-bottom: 20px; }
-.bc-sep { margin: 0 6px; }
-.bc-current { color: #333; font-weight: 500; }
 
 /* Tab */
 .tab-nav {

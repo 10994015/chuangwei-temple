@@ -45,6 +45,7 @@
             {{ personal.birthday }}
             <div v-if="personal.birthday" class="lunar-text">{{ getLunar(personal.birthday) }}</div>
           </div>
+
         </div>
         <div class="view-field">
           <div class="view-label">身分證字號</div>
@@ -83,7 +84,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">生日</label>
-          <input v-model="personalDraft.birthday" class="form-input" placeholder="年/月/日" />
+          <input v-model="personalDraft.birthday" type="date" class="form-input" />
           <div v-if="personalDraft.birthday" class="lunar-text">{{ getLunar(personalDraft.birthday) }}</div>
         </div>
         <div class="form-group">
@@ -122,17 +123,15 @@
             <label class="form-label">性別</label>
             <div class="select-wrap">
               <select v-model="familyForm.gender" class="form-select">
-                <option value="男">男</option>
-                <option value="女">女</option>
-                <option value="其他">其他</option>
+                <option value="MALE">男</option>
+                <option value="FEMALE">女</option>
               </select>
               <span class="select-arrow">▾</span>
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">生日</label>
-            <input v-model="familyForm.birthday" class="form-input" placeholder="年 /月/日" />
-            <div v-if="familyForm.birthday" class="lunar-text">{{ getLunar(familyForm.birthday) }}</div>
+            <input v-model="familyForm.birthDate" type="date" class="form-input" />
           </div>
           <div class="form-group">
             <label class="form-label">電話</label>
@@ -148,11 +147,12 @@
           </div>
         </div>
         <div class="sub-form-actions">
-          <button class="btn-primary" @click="saveFamily">
-            {{ familyEditIndex !== null ? '儲存變更' : '新增' }}
+          <button class="btn-primary" @click="saveFamily" :disabled="familySubmitting">
+            <span v-if="familySubmitting">儲存中...</span>
+            <span v-else>{{ familyEditId ? '儲存變更' : '新增' }}</span>
           </button>
           <button class="btn-cancel-outline" @click="cancelFamily">
-            {{ familyEditIndex !== null ? '取消變更' : '取消新增' }}
+            {{ familyEditId ? '取消變更' : '取消新增' }}
           </button>
         </div>
       </div>
@@ -163,7 +163,8 @@
       </button>
 
       <!-- 列表 -->
-      <table class="data-table" v-if="familyList.length > 0">
+      <div v-if="memberStore.isFamilyLoading" style="color:#aaa;font-size:13px;padding:12px 0;">載入中...</div>
+      <table class="data-table" v-else-if="memberStore.families.length > 0">
         <thead>
           <tr>
             <th>姓名</th>
@@ -176,23 +177,21 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, idx) in familyList" :key="idx">
+          <tr v-for="item in memberStore.families" :key="item.id">
             <td>{{ item.name }}</td>
-            <td>{{ item.gender }}</td>
-            <td>
-              <div>{{ item.birthday }}</div>
-              <div class="lunar-text-sm">{{ getLunar(item.birthday) }}</div>
-            </td>
+            <td>{{ item.gender === 'MALE' ? '男' : item.gender === 'FEMALE' ? '女' : '' }}</td>
+            <td>{{ item.birthDate ? item.birthDate.slice(0, 10) : '' }}</td>
             <td>{{ item.address }}</td>
             <td>{{ item.email }}</td>
             <td>{{ item.phone }}</td>
             <td class="ops-cell">
-              <button class="op-btn" @click="editFamily(idx)" title="編輯">✏</button>
-              <button class="op-btn op-btn-del" @click="deleteFamily(idx)" title="刪除">🗑</button>
+              <button class="op-btn" @click="editFamily(item)" title="編輯">✏</button>
+              <button class="op-btn op-btn-del" @click="removeFamilyItem(item)" title="刪除">🗑</button>
             </td>
           </tr>
         </tbody>
       </table>
+      <div v-else class="empty-hint">暫無家人資訊</div>
     </div>
 
     <!-- ═══════════════════════════════
@@ -211,11 +210,15 @@
           </div>
           <div class="form-group">
             <label class="form-label">統一編號</label>
-            <input v-model="companyForm.taxId" class="form-input" placeholder="請輸入統一編號" />
+            <input v-model="companyForm.uniformBusinessNumber" class="form-input" placeholder="請輸入統一編號" />
           </div>
           <div class="form-group">
             <label class="form-label">公司電話</label>
             <input v-model="companyForm.phone" class="form-input" placeholder="請輸入公司電話" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">公司 Email</label>
+            <input v-model="companyForm.email" class="form-input" placeholder="請輸入公司 Email" />
           </div>
           <div class="form-group">
             <label class="form-label">公司地址</label>
@@ -226,16 +229,17 @@
             <input v-model="companyForm.ownerName" class="form-input" placeholder="請輸入負責人姓名" />
           </div>
           <div class="form-group">
-            <label class="form-label">負責人地址</label>
-            <input v-model="companyForm.ownerAddress" class="form-input" placeholder="請輸入負責人地址" />
+            <label class="form-label">負責人電話</label>
+            <input v-model="companyForm.ownerPhone" class="form-input" placeholder="請輸入負責人電話" />
           </div>
         </div>
         <div class="sub-form-actions">
-          <button class="btn-primary" @click="saveCompany">
-            {{ companyEditIndex !== null ? '儲存變更' : '新增' }}
+          <button class="btn-primary" @click="saveCompany" :disabled="companySubmitting">
+            <span v-if="companySubmitting">儲存中...</span>
+            <span v-else>{{ companyEditId ? '儲存變更' : '新增' }}</span>
           </button>
           <button class="btn-cancel-outline" @click="cancelCompany">
-            {{ companyEditIndex !== null ? '取消變更' : '取消新增' }}
+            {{ companyEditId ? '取消變更' : '取消新增' }}
           </button>
         </div>
       </div>
@@ -246,63 +250,105 @@
       </button>
 
       <!-- 列表 -->
-      <table class="data-table" v-if="companyList.length > 0">
+      <div v-if="memberStore.isCompanyLoading" style="color:#aaa;font-size:13px;padding:12px 0;">載入中...</div>
+      <table class="data-table" v-else-if="memberStore.companies.length > 0">
         <thead>
           <tr>
             <th>公司名稱</th>
             <th>統一編號</th>
             <th>公司電話</th>
+            <th>公司 Email</th>
             <th>公司地址</th>
             <th>負責人姓名</th>
-            <th>負責人地址</th>
+            <th>負責人電話</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, idx) in companyList" :key="idx">
+          <tr v-for="item in memberStore.companies" :key="item.id">
             <td>{{ item.name }}</td>
-            <td>{{ item.taxId }}</td>
+            <td>{{ item.uniformBusinessNumber }}</td>
             <td>{{ item.phone }}</td>
+            <td>{{ item.email }}</td>
             <td>{{ item.address }}</td>
             <td>{{ item.ownerName }}</td>
-            <td>{{ item.ownerAddress }}</td>
+            <td>{{ item.ownerPhone }}</td>
             <td class="ops-cell">
-              <button class="op-btn" @click="editCompany(idx)" title="編輯">✏</button>
-              <button class="op-btn op-btn-del" @click="deleteCompany(idx)" title="刪除">🗑</button>
+              <button class="op-btn" @click="editCompany(item)" title="編輯">✏</button>
+              <button class="op-btn op-btn-del" @click="removeCompanyItem(item)" title="刪除">🗑</button>
             </td>
           </tr>
         </tbody>
       </table>
+      <div v-else class="empty-hint">暫無公司資訊</div>
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useMemberStore } from '@/stores/member'
+
+const memberStore = useMemberStore()
 
 // ── 個人資訊 ──
 const personal = reactive({
-  name: '陳大明',
-  gender: '男',
-  birthday: '1990/05/20',
-  idNumber: 'F12*******',
-  phone: '0912-345-678',
-  email: 'chen@example.com',
-  address: '台北市信義區信義路五段 7 號',
+  name: '',
+  gender: '',
+  birthday: '',
+  idNumber: '',
+  phone: '',
+  email: '',
+  address: '',
 })
 
 const personalEditing = ref(false)
-const personalDraft = reactive({ ...personal })
+const personalDraft = reactive({ name: '', gender: '', birthday: '', idNumber: '', phone: '', email: '', address: '' })
+
+const fillPersonal = (data) => {
+  personal.name     = data.name     || ''
+  personal.gender   = data.gender === 'MALE' ? '男' : data.gender === 'FEMALE' ? '女' : ''
+  personal.birthday = data.birthDate ? data.birthDate.slice(0, 10) : ''
+  personal.idNumber = data.identificationNumber || ''
+  personal.phone    = data.phone    || ''
+  personal.email    = data.email    || ''
+  personal.address  = data.address  || ''
+}
+
+onMounted(async () => {
+  const data = await memberStore.fetchProfile()
+  if (data) fillPersonal(data)
+  await memberStore.fetchFamilies()
+  await memberStore.fetchCompanies()
+})
 
 const startEditPersonal = () => {
   Object.assign(personalDraft, personal)
   personalEditing.value = true
 }
-const savePersonal = () => {
-  Object.assign(personal, personalDraft)
-  personalEditing.value = false
-  console.log('個人資訊儲存', personal)
+const savePersonal = async () => {
+  const genderMap = { '男': 'MALE', '女': 'FEMALE' }
+  const payload = {
+    name:                 personalDraft.name,
+    identificationNumber: personalDraft.idNumber,
+    gender:               genderMap[personalDraft.gender] || personalDraft.gender,
+    birthDate:            personalDraft.birthday || undefined,
+    phone:                personalDraft.phone,
+    email:                personalDraft.email,
+    address:              personalDraft.address,
+  }
+  // remove undefined fields
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k])
+
+  const result = await memberStore.updateProfile(payload)
+  if (result.success) {
+    fillPersonal(result.data)
+    personalEditing.value = false
+    alert('個人資訊已儲存')
+  } else {
+    alert(result.error || '儲存失敗，請再試一次')
+  }
 }
 const cancelPersonal = () => {
   personalEditing.value = false
@@ -319,73 +365,125 @@ const getLunar = (dateStr) => {
 }
 
 // ── 家人資訊 ──
-const familyList = ref([
-  { name: '王小明', gender: '男', birthday: '1985/03/15', address: '台北市中正區中山路 100 號', email: 'wang@example.com', phone: '0912-345-678' },
-])
 const familyFormVisible = ref(false)
-const familyEditIndex = ref(null)
-const familyForm = reactive({ name: '', gender: '男', birthday: '', phone: '', email: '', address: '' })
+const familyEditId      = ref(null)
+const familySubmitting  = ref(false)
+const familyForm = reactive({ name: '', gender: 'MALE', birthDate: '', phone: '', email: '', address: '' })
 
 const openFamilyAdd = () => {
-  familyEditIndex.value = null
-  Object.assign(familyForm, { name: '', gender: '男', birthday: '', phone: '', email: '', address: '' })
+  familyEditId.value = null
+  Object.assign(familyForm, { name: '', gender: 'MALE', birthDate: '', phone: '', email: '', address: '' })
   familyFormVisible.value = true
 }
-const editFamily = (idx) => {
-  familyEditIndex.value = idx
-  Object.assign(familyForm, { ...familyList.value[idx] })
+
+const editFamily = (item) => {
+  familyEditId.value = item.id
+  Object.assign(familyForm, {
+    name:      item.name      || '',
+    gender:    item.gender    || 'MALE',
+    birthDate: item.birthDate ? item.birthDate.slice(0, 10) : '',
+    phone:     item.phone     || '',
+    email:     item.email     || '',
+    address:   item.address   || '',
+  })
   familyFormVisible.value = true
 }
-const saveFamily = () => {
-  if (familyEditIndex.value !== null) {
-    Object.assign(familyList.value[familyEditIndex.value], { ...familyForm })
-  } else {
-    familyList.value.push({ ...familyForm })
+
+const saveFamily = async () => {
+  const payload = {
+    name:      familyForm.name,
+    gender:    familyForm.gender,
+    birthDate: familyForm.birthDate || undefined,
+    phone:     familyForm.phone,
+    email:     familyForm.email,
+    address:   familyForm.address,
   }
-  familyFormVisible.value = false
-  familyEditIndex.value = null
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k])
+
+  familySubmitting.value = true
+  try {
+    const result = familyEditId.value
+      ? await memberStore.updateFamily(familyEditId.value, payload)
+      : await memberStore.createFamily(payload)
+
+    if (result.success) {
+      await memberStore.fetchFamilies()
+      familyFormVisible.value = false
+      familyEditId.value = null
+    } else {
+      alert(result.error || '儲存失敗')
+    }
+  } finally {
+    familySubmitting.value = false
+  }
 }
+
 const cancelFamily = () => {
   familyFormVisible.value = false
-  familyEditIndex.value = null
+  familyEditId.value = null
 }
-const deleteFamily = (idx) => {
-  familyList.value.splice(idx, 1)
+
+const removeFamilyItem = async (item) => {
+  if (!confirm(`確定要刪除「${item.name}」的家人資料嗎？`)) return
+  const result = await memberStore.deleteFamily(item.id)
+  if (!result.success) alert(result.error || '刪除失敗')
 }
 
 // ── 公司資訊 ──
-const companyList = ref([
-  { name: '宮掌櫃科技有限公司', taxId: '12345678', phone: '02-1234-5678', address: '台北市信義區信義路五段 7 號', ownerName: '陳大明', ownerAddress: '台北市信義區信義路五段 7 號' },
-])
 const companyFormVisible = ref(false)
-const companyEditIndex = ref(null)
-const companyForm = reactive({ name: '', taxId: '', phone: '', address: '', ownerName: '', ownerAddress: '' })
+const companyEditId      = ref(null)
+const companySubmitting  = ref(false)
+const emptyCompanyForm   = () => ({ name: '', uniformBusinessNumber: '', phone: '', email: '', address: '', ownerName: '', ownerPhone: '' })
+const companyForm = reactive(emptyCompanyForm())
 
 const openCompanyAdd = () => {
-  companyEditIndex.value = null
-  Object.assign(companyForm, { name: '', taxId: '', phone: '', address: '', ownerName: '', ownerAddress: '' })
+  companyEditId.value = null
+  Object.assign(companyForm, emptyCompanyForm())
   companyFormVisible.value = true
 }
-const editCompany = (idx) => {
-  companyEditIndex.value = idx
-  Object.assign(companyForm, { ...companyList.value[idx] })
+
+const editCompany = (item) => {
+  companyEditId.value = item.id
+  Object.assign(companyForm, {
+    name:                  item.name                  || '',
+    uniformBusinessNumber: item.uniformBusinessNumber || '',
+    phone:                 item.phone                 || '',
+    email:                 item.email                 || '',
+    address:               item.address               || '',
+    ownerName:             item.ownerName             || '',
+    ownerPhone:            item.ownerPhone            || '',
+  })
   companyFormVisible.value = true
 }
-const saveCompany = () => {
-  if (companyEditIndex.value !== null) {
-    Object.assign(companyList.value[companyEditIndex.value], { ...companyForm })
-  } else {
-    companyList.value.push({ ...companyForm })
+
+const saveCompany = async () => {
+  const payload = { ...companyForm }
+  companySubmitting.value = true
+  try {
+    const result = companyEditId.value
+      ? await memberStore.updateCompany(companyEditId.value, payload)
+      : await memberStore.createCompany(payload)
+    if (result.success) {
+      await memberStore.fetchCompanies()
+      companyFormVisible.value = false
+      companyEditId.value = null
+    } else {
+      alert(result.error || '儲存失敗')
+    }
+  } finally {
+    companySubmitting.value = false
   }
-  companyFormVisible.value = false
-  companyEditIndex.value = null
 }
+
 const cancelCompany = () => {
   companyFormVisible.value = false
-  companyEditIndex.value = null
+  companyEditId.value = null
 }
-const deleteCompany = (idx) => {
-  companyList.value.splice(idx, 1)
+
+const removeCompanyItem = async (item) => {
+  if (!confirm(`確定要刪除「${item.name}」的公司資料嗎？`)) return
+  const result = await memberStore.deleteCompany(item.id)
+  if (!result.success) alert(result.error || '刪除失敗')
 }
 </script>
 
@@ -613,6 +711,13 @@ const deleteCompany = (idx) => {
 .data-table tbody tr:last-child td { border-bottom: none; }
 
 /* 操作欄 */
+.empty-hint {
+  font-size: 13px;
+  color: #bbb;
+  padding: 16px 0;
+  text-align: center;
+}
+
 .ops-cell {
   display: flex;
   gap: 8px;

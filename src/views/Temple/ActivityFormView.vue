@@ -1,12 +1,6 @@
 <template>
   <div class="activity-form-page">
-    <nav class="breadcrumb">
-      後台管理
-      <span class="sep">›</span>
-      <router-link :to="{ name: 'app.temple.activity-management', params: { templeId } }" class="bc-link">
-        活動與上架管理
-      </router-link>
-    </nav>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <button class="back-btn" @click="$router.back()">← 返回上一頁</button>
 
@@ -211,6 +205,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -218,6 +213,12 @@ const router = useRouter()
 const templeId = computed(() => route.params.templeId)
 const activityId = computed(() => route.params.activityId)
 const isEdit = computed(() => !!activityId.value)
+
+const breadcrumbs = computed(() => [
+  { text: '後台管理' },
+  { text: '活動與上架管理', onClick: () => router.back() },
+  { text: isEdit.value ? '編輯活動' : '新增活動' },
+])
 
 // ==================== 表單狀態 ====================
 
@@ -380,12 +381,6 @@ onMounted(() => {
   background: #f0f2f5;
   min-height: 100%;
 }
-
-/* breadcrumb */
-.breadcrumb { font-size: 13px; color: #999; margin-bottom: 16px; }
-.breadcrumb .sep { margin: 0 6px; }
-.bc-link { color: #E8572A; text-decoration: none; font-weight: 500; }
-.bc-link:hover { text-decoration: underline; }
 
 /* back */
 .back-btn {

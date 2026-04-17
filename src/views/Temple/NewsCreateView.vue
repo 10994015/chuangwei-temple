@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import NewsFormCard from '@/components/News/NewsFormCard.vue'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const router = useRouter()
 
@@ -51,16 +52,18 @@ const handleCancel = () => {
     router.back()
   }
 }
+
+const breadcrumbs = computed(() => [
+  { text: '後台管理' },
+  { text: '最新消息管理', onClick: () => router.back() },
+  { text: '新增消息' },
+])
 </script>
 
 <template>
   <div class="news-create-view">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="breadcrumb-link">後台管理</span>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current">最新消息管理</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- 返回 -->
     <button class="back-btn" @click="router.back()">
@@ -99,13 +102,6 @@ const handleCancel = () => {
   flex-direction: column;
   gap: 20px;
 }
-
-.breadcrumb {
-  display: flex; align-items: center; gap: 4px; font-size: 14px;
-}
-.breadcrumb-link { color: #6b7280; cursor: pointer; &:hover { color: #E8572A; } }
-.breadcrumb-sep  { color: #9ca3af; font-size: 16px; }
-.breadcrumb-current { color: #E8572A; font-weight: 500; }
 
 .back-btn {
   display: inline-flex; align-items: center; gap: 6px;

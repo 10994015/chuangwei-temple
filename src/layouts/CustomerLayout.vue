@@ -136,7 +136,7 @@ const handleLogout = async () => {
   display: flex;
   min-height: calc(100vh - 64px);
   background: #f3f4f6;
-  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  font-family: 'Noto Sans TC', sans-serif;
 }
 
 // ========== 遮罩 ==========
@@ -257,7 +257,7 @@ const handleLogout = async () => {
   cursor: pointer;
   font-size: 14px;
   color: #374151;
-  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  font-family: 'Noto Sans TC', sans-serif;
   transition: background-color 0.15s;
   white-space: nowrap;
 
@@ -302,7 +302,7 @@ const handleLogout = async () => {
   cursor: pointer;
   font-size: 13px;
   color: #6b7280;
-  font-family: 'Microsoft YaHei', '微軟正黑體', sans-serif;
+  font-family: 'Noto Sans TC', sans-serif;
   transition: color 0.2s;
   white-space: nowrap;
   overflow: hidden;

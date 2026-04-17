@@ -179,6 +179,7 @@ const handleDetailSearch = () => {}
   flex-direction: column;
   align-items: center;
   overflow: hidden;
+  background-color: #0E0903;
 }
 
 /* ==================== 場景圖層 ==================== */
@@ -197,6 +198,7 @@ const handleDetailSearch = () => {}
   object-fit: cover;
   object-position: center top;
   display: block;
+  z-index: 1;
 }
 
 /* 主神像 */
@@ -211,7 +213,7 @@ const handleDetailSearch = () => {}
   object-fit: contain;
   object-position: top center;
   display: block;
-  z-index: 1;
+  z-index: 0;
 }
 
 /* ==================== 搜尋面板 ==================== */

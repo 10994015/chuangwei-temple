@@ -7,31 +7,36 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const templeId = computed(() => route.params.templeId)
-
 const userName = computed(() => authStore.user?.name || '使用者')
 const userEmail = computed(() => authStore.user?.email || 'user@example.com')
 
 const isCollapsed = ref(false)
 const isMobileOpen = ref(false)
 
-const navItems = computed(() => [
-  { label: '宮廟總覽',     path: `/${templeId.value}/dashboard` },
-  { label: '宮廟資料管理', path: `/${templeId.value}/temple-info` },
-  { label: '最新消息管理', path: `/${templeId.value}/news` },
-  { label: '活動與上架管理', path: `/${templeId.value}/activity-management` },
-  { label: '集影繪管理',   path: `/${templeId.value}/gallery` },
-  { label: '靈籤司管理',   path: `/${templeId.value}/divination` },
-  { label: '印刷管理',     path: `/${templeId.value}/print` },
-  { label: '訂單管理',     path: `/${templeId.value}/orders` },
-  { label: '香客資料管理', path: `/${templeId.value}/customers` },
-  { label: '數位光明燈管理', path: `/${templeId.value}/lanterns` },
-  { label: '方案與帳單',   path: `/${templeId.value}/billing` },
-  { label: '廣告管理',     path: `/${templeId.value}/ads` },
-  { label: '帳號管理',     path: `/${templeId.value}/account-management` },
-])
+const navItems = [
+  { label: '營運總覽',       path: '/operations/dashboard' },
+  { label: '用戶管理',       path: '/operations/user-management', hasChildren: true },
+  { label: '用戶審核',       path: '/operations/user-review' },
+  { label: '創作者審核',     path: '/operations/creator-review' },
+  { label: '訂單管理',       path: '/operations/orders' },
+  { label: '數位光明燈管理', path: '/operations/lanterns' },
+  { label: '財務管理',       path: '/operations/finance' },
+  { label: '方案管理',       path: '/operations/plans' },
+  { label: '廣告管理',       path: '/operations/ads' },
+  { label: '通知管理',       path: '/operations/notifications' },
+  { label: '客服管理',       path: '/operations/support' },
+  { label: '報表中心',       path: '/operations/reports' },
+  { label: '營運權限',       path: '/operations/maintenance' },
+  { label: '系統設定',       path: '/operations/settings' },
+]
 
-const isActive = (path) => route.path === path
+const expandedItems = ref({ '/operations/user-management': false })
+
+const isActive = (path) => route.path.startsWith(path)
+
+const toggleExpand = (path) => {
+  expandedItems.value[path] = !expandedItems.value[path]
+}
 
 const handleLogout = async () => {
   if (confirm('確定要登出嗎？')) {
@@ -44,14 +49,17 @@ const goToFrontend = () => {
   router.push('/')
 }
 
-const navigate = (path) => {
+const navigate = (path, hasChildren) => {
+  if (hasChildren) {
+    toggleExpand(path)
+  }
   router.push(path)
   isMobileOpen.value = false
 }
 </script>
 
 <template>
-  <div class="temple-layout" :class="{ 'sidebar-collapsed': isCollapsed }">
+  <div class="operations-layout" :class="{ 'sidebar-collapsed': isCollapsed }">
 
     <!-- 手機版遮罩 -->
     <div
@@ -70,28 +78,64 @@ const navigate = (path) => {
         </svg>
       </button>
 
+      <!-- 系統標題 -->
+      <div class="sidebar-brand">
+        <div class="brand-title">維運管理後台</div>
+        <div class="brand-subtitle">宮掌櫃平台管理中心</div>
+      </div>
+
       <!-- 使用者資訊 -->
       <div class="user-info">
         <div class="user-avatar">{{ userName.charAt(0) }}</div>
         <div class="user-text">
-          <p class="user-label">使用者</p>
+          <p class="user-label">{{ userName }}</p>
           <p class="user-email">{{ userEmail }}</p>
         </div>
       </div>
 
       <!-- 導覽選單 -->
       <nav class="sidebar-nav">
-        <button
-          v-for="item in navItems"
-          :key="item.path"
-          class="nav-item"
-          :class="{ active: isActive(item.path) }"
-          @click="navigate(item.path)"
-          :title="isCollapsed ? item.label : ''"
-        >
-          <span class="nav-dot" />
-          <span class="nav-label">{{ item.label }}</span>
-        </button>
+        <template v-for="item in navItems" :key="item.path">
+          <button
+            class="nav-item"
+            :class="{ active: isActive(item.path) }"
+            @click="navigate(item.path, item.hasChildren)"
+            :title="isCollapsed ? item.label : ''"
+          >
+            <span class="nav-dot" />
+            <span class="nav-label">{{ item.label }}</span>
+            <svg
+              v-if="item.hasChildren && !isCollapsed"
+              class="nav-chevron"
+              :class="{ expanded: expandedItems[item.path] }"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <!-- 子選單：用戶管理 -->
+          <div
+            v-if="item.hasChildren && (expandedItems[item.path] || isActive(item.path))"
+            class="nav-sub"
+          >
+            <button
+              class="nav-sub-item"
+              :class="{ active: route.path === '/operations/user-management' && !route.path.includes('creator') }"
+              @click="router.push('/operations/user-management'); isMobileOpen = false"
+            >
+              宮廟管理
+            </button>
+            <button
+              class="nav-sub-item"
+              :class="{ active: route.path.includes('creator-management') }"
+              @click="router.push('/operations/user-management'); isMobileOpen = false"
+            >
+              創作者管理
+            </button>
+          </div>
+        </template>
       </nav>
 
       <!-- 底部按鈕 -->
@@ -126,7 +170,7 @@ const navigate = (path) => {
 </template>
 
 <style scoped lang="scss">
-.temple-layout {
+.operations-layout {
   display: flex;
   min-height: calc(100vh - 64px);
   background: #f3f4f6;
@@ -182,6 +226,28 @@ const navigate = (path) => {
   transition: transform 0.25s ease;
 
   &.rotated { transform: rotate(180deg); }
+}
+
+// ========== 系統標題 ==========
+.sidebar-brand {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #E8572A;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.brand-subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
 }
 
 // ========== 使用者資訊 ==========
@@ -277,7 +343,49 @@ const navigate = (path) => {
 }
 
 .nav-label {
+  flex: 1;
   transition: opacity 0.2s;
+}
+
+.nav-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  opacity: 0.6;
+
+  &.expanded { transform: rotate(180deg); }
+}
+
+// ========== 子選單 ==========
+.nav-sub {
+  background: #fafafa;
+  border-left: 2px solid #E8572A;
+  margin-left: 16px;
+}
+
+.nav-sub-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #6b7280;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
+
+  &:hover { background-color: #f3f4f6; color: #374151; }
+
+  &.active {
+    color: #E8572A;
+    font-weight: 500;
+    background-color: #fff7f3;
+  }
 }
 
 // ========== 底部按鈕 ==========
@@ -346,15 +454,22 @@ const navigate = (path) => {
 .sidebar-collapsed .sidebar {
   width: 48px;
 
+  .sidebar-brand,
   .user-text,
   .nav-label,
+  .nav-chevron,
   .btn-label { opacity: 0; width: 0; overflow: hidden; }
+
+  .brand-title,
+  .brand-subtitle { display: none; }
 
   .collapse-toggle { justify-content: center; }
 
   .user-info { justify-content: center; padding: 12px 8px; }
 
   .nav-item { justify-content: center; padding: 10px 0; }
+
+  .nav-sub { display: none; }
 
   .sidebar-footer { padding: 12px 6px; }
 
@@ -401,14 +516,18 @@ const navigate = (path) => {
     height: calc(100vh - 64px);
     transform: translateX(-100%);
     transition: transform 0.25s ease, width 0.25s ease;
-    width: 250px !important; // 手機版固定寬度，不受收合影響
+    width: 250px !important;
 
     &.mobile-open { transform: translateX(0); }
 
-    // 手機版強制展開顯示文字
+    .sidebar-brand,
     .user-text,
     .nav-label,
+    .nav-chevron,
     .btn-label { opacity: 1 !important; width: auto !important; overflow: visible !important; }
+
+    .brand-title,
+    .brand-subtitle { display: block !important; }
 
     .collapse-toggle { display: none; }
     .user-info { justify-content: flex-start !important; padding: 12px 16px !important; }
@@ -417,7 +536,6 @@ const navigate = (path) => {
   }
 
   .sidebar-collapsed .sidebar {
-    // 手機版不套用收合樣式
     .nav-item { justify-content: flex-start; padding: 10px 16px; }
   }
 }

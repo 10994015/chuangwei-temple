@@ -98,7 +98,8 @@ export const useAuthStore = defineStore('auth', () => {
       credentials.password = await hashSHA256(credentials.password)
       
       const response = await axiosClient.post('/login', credentials)
-      
+        console.log(response.data);
+        
       if (response.status === 202) {
         return {
           success: true,

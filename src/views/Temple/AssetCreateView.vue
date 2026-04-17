@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -57,18 +58,18 @@ const handleSubmit = () => {
   alert('新增成功！')
   goBack()
 }
+
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '宮廟資料管理', onClick: goBack },
+  { text: '新增資產' },
+]
 </script>
 
 <template>
   <div class="asset-create-view">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="bc-link">後台管理</span>
-      <span class="bc-sep">›</span>
-      <span class="bc-link" @click="goBack">宮廟資料管理</span>
-      <span class="bc-sep">›</span>
-      <span class="bc-current">新增資產</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- Tab 列 -->
     <div class="tab-bar">
@@ -169,10 +170,6 @@ const handleSubmit = () => {
   gap: 16px;
 }
 
-.breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 14px; }
-.bc-link { color: #6b7280; cursor: pointer; &:hover { color: #E8572A; } }
-.bc-sep { color: #9ca3af; font-size: 16px; }
-.bc-current { color: #E8572A; font-weight: 500; }
 
 .tab-bar { display: flex; border-bottom: 1px solid #e5e7eb; }
 .tab-btn {

@@ -1,5 +1,6 @@
 <template>
   <div class="activity-detail-page">
+    <AppBreadcrumb :items="breadcrumbs" />
     <button class="back-btn" @click="$router.back()">← 返回上一頁</button>
 
     <div class="card">
@@ -61,11 +62,19 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const route = useRoute()
+const router = useRouter()
 const templeId = computed(() => route.params.templeId)
 const activityId = computed(() => route.params.activityId)
+
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '活動與上架管理', onClick: () => router.back() },
+  { text: '活動詳情' },
+]
 
 const activity = ref({
   name: '',

@@ -3,21 +3,28 @@ import router from '@/router'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import axiosClient from '@/axios'
 import LoginModal from './LoginModal.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
 
-// 導航選單項目
-const navItems = [
-  { label: '關於我們', path: '/about' },
-  { label: '最新消息', path: '/news' },
-  { label: '精選館藏品', path: '/collections' },
-  { label: '宮廟地圖', path: '/map' },
-  { label: '關於數位生態', path: '/digital' },
-  { label: '靈籤司', path: '/divination' },
-  { label: '聯絡我們', path: '/contact' }
-]
+// 導航選單項目（動態從 API 撈取）
+const navItems = ref([])
+const headerLogoUrl = ref('')
+
+const fetchNavItems = async () => {
+  try {
+    const response = await axiosClient.get('/frontend/web-site/tab', { params: { locale: 'ZH-TW' } })
+    console.log("6564654545",response.data);
+    
+    const data = response.data?.data || {}
+    headerLogoUrl.value = data.headerImgUrl || ''
+    navItems.value = (data.tabs || []).map(tab => ({ label: tab.label, path: `/${tab.slug}` }))
+  } catch (err) {
+    console.error('獲取導覽列失敗:', err)
+  }
+}
 
 // 當前語言
 const currentLanguage = ref('繁體中文')
@@ -48,6 +55,11 @@ const templeRolesList = computed(() => {
   return authStore.templeRoles || []
 })
 
+// 是否有維運後台權限（systemPermissions 不為空）
+const hasOperationsAccess = computed(() => {
+  return (authStore.systemPermissions || []).length > 0
+})
+
 // 處理導航點擊
 const handleNavClick = (path) => {
   console.log('導航至:', path)
@@ -74,6 +86,8 @@ const handleAdminOption = (option) => {
   if (option === 'customer-account') {
     // 香客帳號管理
     router.push('/customer-account')
+  } else if (option === 'operations') {
+    router.push('/operations')
   } else {
     // 宮廟後台（使用 templeId）
     router.push(`/${option}/dashboard`)
@@ -104,10 +118,11 @@ const closeAdminMenu = () => {
   showAdminMenu.value = false
 }
 
-// 開啟登入彈窗
+// 開啟登入：跳轉至 manage.domain.com，登入後回到前一頁
 const openLoginModal = () => {
-  showLoginModal.value = true
-  document.body.style.overflow = 'hidden' // 防止背景滾動
+  const currentPath = route.path
+  const redirectPath = (currentPath && currentPath !== '/') ? currentPath : '/customer-account'
+  router.push({ path: '/login', query: { redirect: redirectPath } })
 }
 
 // 關閉登入彈窗
@@ -144,6 +159,7 @@ onMounted(async () => {
   } catch (error) {
     console.log('未登入或 token 已過期')
   }
+  fetchNavItems()
 })
 
 // 手機版選單
@@ -172,7 +188,7 @@ watch(() => route.path, () => {
     <div class="header-container">
       <!-- Logo 區域 -->
       <div class="logo-section" @click="router.push('/')">
-        <img src="/home-logo.png" width="150" alt="宮掌櫃">
+        <img :src="headerLogoUrl || '/home-logo.png'" width="150" alt="宮掌櫃">
       </div>
 
       <!-- 導航選單 -->
@@ -232,8 +248,20 @@ watch(() => route.path, () => {
           <!-- 管理後台下拉選單 -->
           <Transition name="dropdown">
             <div v-if="showAdminMenu" class="admin-dropdown">
+              <!-- 維運後台（有 systemPermissions 才顯示） -->
+              <template v-if="hasOperationsAccess">
+                <button
+                  class="admin-option"
+                  :class="{ 'active': route.path.startsWith('/operations') }"
+                  @click="handleAdminOption('operations')"
+                >
+                  維運後台
+                </button>
+                <div class="dropdown-divider"></div>
+              </template>
+
               <!-- 香客帳號管理（固定選項） -->
-              <button 
+              <button
                 class="admin-option"
                 :class="{ 'active': route.path === '/customer-account' }"
                 @click="handleAdminOption('customer-account')"
@@ -339,6 +367,14 @@ watch(() => route.path, () => {
 
             <!-- 管理後台 -->
             <div class="mobile-section-label">管理後台</div>
+            <button
+              v-if="hasOperationsAccess"
+              class="mobile-action-btn"
+              :class="{ active: route.path.startsWith('/operations') }"
+              @click="handleAdminOption('operations'); closeMobileMenu()"
+            >
+              維運後台
+            </button>
             <button class="mobile-action-btn" @click="handleAdminOption('customer-account'); closeMobileMenu()">
               香客帳號管理
             </button>

@@ -1,13 +1,6 @@
 <template>
   <div class="service-form-page">
-    <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="bc-root">後台管理</span>
-      <span class="bc-sep">›</span>
-      <router-link :to="{ name: 'app.temple.activity-management', params: { templeId } }" class="bc-link">
-        活動與上架管理
-      </router-link>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- 返回按鈕 -->
     <button class="back-btn" @click="goBack">
@@ -237,6 +230,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,6 +238,12 @@ const router = useRouter()
 const templeId = computed(() => route.params.templeId)
 const serviceId = computed(() => route.params.serviceId)
 const isEdit = computed(() => !!serviceId.value)
+
+const breadcrumbs = computed(() => [
+  { text: '後台管理' },
+  { text: '活動與上架管理', onClick: goBack },
+  { text: isEdit.value ? '編輯服務' : '新增服務' },
+])
 
 // 靜態選項資料
 const serviceCategories = ref([
@@ -379,12 +379,6 @@ onMounted(() => {
   min-height: 100%;
   background: #F3F4F6;
 }
-
-/* 麵包屑 */
-.breadcrumb { font-size: 13px; color: #999; margin-bottom: 16px; }
-.bc-sep { margin: 0 6px; }
-.bc-link { color: #E8572A; text-decoration: none; font-weight: 500; }
-.bc-link:hover { text-decoration: underline; }
 
 /* 返回按鈕 */
 .back-btn {

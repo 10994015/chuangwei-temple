@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -58,18 +59,18 @@ const handleSubmit = () => {
   alert('新增成功！')
   goBack()
 }
+
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '宮廟資料管理', onClick: goBack },
+  { text: '新增神尊' },
+]
 </script>
 
 <template>
   <div class="deity-create-view">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="bc-link">後台管理</span>
-      <span class="bc-sep">›</span>
-      <span class="bc-link" @click="goBack">宮廟資料管理</span>
-      <span class="bc-sep">›</span>
-      <span class="bc-current">新增神尊</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- Tab 列（靜態顯示，active 停在神尊管理）-->
     <div class="tab-bar">
@@ -196,20 +197,6 @@ const handleSubmit = () => {
   gap: 16px;
 }
 
-// ── 麵包屑 ──
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-.bc-link {
-  color: #6b7280;
-  cursor: pointer;
-  &:hover { color: #E8572A; }
-}
-.bc-sep { color: #9ca3af; font-size: 16px; }
-.bc-current { color: #E8572A; font-weight: 500; }
 
 // ── Tab 列 ──
 .tab-bar {

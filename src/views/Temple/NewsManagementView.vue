@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 const router = useRouter()
 const templeId = computed(() => router.currentRoute.value.params.templeId)
 
@@ -89,6 +90,11 @@ const viewNews = (id) => {
 const editNews = (id) => {
   router.push(`/${templeId.value}/news/${id}/edit`)
 }
+const breadcrumbs = [
+  { text: '後台管理' },
+  { text: '最新消息管理' },
+]
+
 // status badge class
 const badgeClass = (status) => {
   if (status === '已發佈')  return 'badge-published'
@@ -100,11 +106,7 @@ const badgeClass = (status) => {
 <template>
   <div class="news-view" @click="showStatusDropdown = false; showTypeDropdown = false">
     <!-- 麵包屑 -->
-    <div class="breadcrumb">
-      <span class="breadcrumb-link">後台管理</span>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current">最新消息管理</span>
-    </div>
+    <AppBreadcrumb :items="breadcrumbs" />
 
     <!-- 新增按鈕 -->
     <div>
@@ -245,17 +247,6 @@ const badgeClass = (status) => {
   flex-direction: column;
   gap: 20px;
 }
-
-// ── 麵包屑 ──
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-.breadcrumb-link { color: #6b7280; cursor: pointer; &:hover { color: #E8572A; } }
-.breadcrumb-sep  { color: #9ca3af; font-size: 16px; }
-.breadcrumb-current { color: #E8572A; font-weight: 500; }
 
 // ── 新增按鈕 ──
 .btn-add {
