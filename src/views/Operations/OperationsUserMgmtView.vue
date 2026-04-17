@@ -4,12 +4,11 @@ import { useOperationsStore } from '@/stores/operations'
 
 const operationsStore = useOperationsStore()
 
-const activeTab = ref('temple')
+const activeTab = ref('customer')
 
 const tabs = [
-  { key: 'temple',   label: '宮廟管理' },
-  { key: 'creator',  label: '創作者管理' },
   { key: 'customer', label: '香客管理' },
+  { key: 'creator',  label: '創作者管理' },
   { key: 'review',   label: '用戶審核' },
 ]
 
@@ -17,35 +16,6 @@ const pageTitle = computed(() => {
   const found = tabs.find(t => t.key === activeTab.value)
   return found?.label || ''
 })
-
-// ── 宮廟管理（API）──
-const filterKeyword   = ref('')
-const filterPlan      = ref('')
-const filterStatus    = ref('')
-const filterDateStart = ref('')
-const filterDateEnd   = ref('')
-const currentPage     = ref(1)
-
-const loadOperationUsers = () => {
-  operationsStore.fetchOperationUsers({
-    q:        filterKeyword.value,
-    status:   filterStatus.value,
-    page:     currentPage.value,
-    pageSize: 10,
-  })
-}
-
-const onTempleSearch = () => {
-  currentPage.value = 1
-  loadOperationUsers()
-}
-
-const goPage = (page) => {
-  if (page >= 1 && page <= operationsStore.operationUsersTotalPages) {
-    currentPage.value = page
-    loadOperationUsers()
-  }
-}
 
 // ── 創作者管理 ──
 const creatorQ                = ref('')
@@ -144,14 +114,13 @@ const goReviewPage = (page) => {
 }
 
 watch(activeTab, (tab) => {
-  if (tab === 'temple')   loadOperationUsers()
   if (tab === 'creator')  loadDesigners()
   if (tab === 'customer') loadCustomers()
   if (tab === 'review')   loadDesignerApplications()
 })
 
 onMounted(() => {
-  loadOperationUsers()
+  loadCustomers()
 })
 </script>
 
@@ -174,131 +143,8 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- ══ 宮廟管理 ══ -->
-    <template v-if="activeTab === 'temple'">
-      <div class="filter-card">
-        <div class="filter-row">
-          <div class="filter-field">
-            <label class="filter-label">關鍵字</label>
-            <input v-model="filterKeyword" type="text" class="filter-input" placeholder="請輸入關鍵字" @keydown.enter="onTempleSearch" />
-          </div>
-          <div class="filter-field">
-            <label class="filter-label">方案類型</label>
-            <select v-model="filterPlan" class="filter-select">
-              <option value="">選擇類型</option>
-              <option value="Free">Free</option>
-              <option value="Basic">Basic</option>
-              <option value="Pro">Pro</option>
-              <option value="Enterprise">Enterprise</option>
-            </select>
-          </div>
-          <div class="filter-field">
-            <label class="filter-label">狀態</label>
-            <select v-model="filterStatus" class="filter-select" @change="onTempleSearch">
-              <option value="">選擇狀態</option>
-              <option value="OPEN">啟用</option>
-              <option value="INVALID">停用</option>
-              <option value="LOCK">封鎖</option>
-            </select>
-          </div>
-          <div class="filter-field date-range">
-            <label class="filter-label">審核日期</label>
-            <div class="date-row">
-              <input v-model="filterDateStart" type="date" class="filter-input date-input" placeholder="開始日期" />
-              <span class="date-sep">~</span>
-              <input v-model="filterDateEnd" type="date" class="filter-input date-input" placeholder="結束日期" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="action-row">
-        <button class="btn-add">+ 新增宮廟</button>
-        <div class="action-right">
-          <button class="btn-outlined">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-            下載資料統計表
-          </button>
-          <button class="btn-outlined">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-            匯出當前篩選結果
-          </button>
-        </div>
-      </div>
-
-      <div class="table-card">
-        <div v-if="operationsStore.isOperationUsersLoading" class="loading-row">載入中...</div>
-        <div class="table-wrap" v-else>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>宮廟名稱</th>
-                <th>方案類型</th>
-                <th>聯絡人/聯絡電話</th>
-                <th>電話</th>
-                <th>地址</th>
-                <th>信箱</th>
-                <th>審核日期</th>
-                <th>狀態</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="operationsStore.operationUsers.length === 0">
-                <td colspan="9" class="td-empty">暫無資料</td>
-              </tr>
-              <tr v-for="row in operationsStore.operationUsers" :key="row.id">
-                <td>{{ row.name }}</td>
-                <td>{{ row.roleName || '-' }}</td>
-                <td>
-                  <div><strong>{{ row.credential }}</strong></div>
-                  <div class="sub-text">{{ row.phone || '-' }}</div>
-                </td>
-                <td>{{ row.phone || '-' }}</td>
-                <td class="td-ellipsis">{{ row.address || '-' }}</td>
-                <td>{{ row.email }}</td>
-                <td>{{ fmtDate(row.createdAt) }}</td>
-                <td>
-                  <span class="badge" :class="{
-                    'badge-active':   row.status === 'OPEN',
-                    'badge-inactive': row.status === 'INVALID',
-                    'badge-lock':     row.status === 'LOCK',
-                  }">
-                    {{ statusMap[row.status] || row.status }}
-                  </span>
-                </td>
-                <td>
-                  <div class="action-btns">
-                    <button class="icon-btn" title="查看">
-                      <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
-                    </button>
-                    <button class="icon-btn" title="詳情">
-                      <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="pagination" v-if="!operationsStore.isOperationUsersLoading">
-          <button class="page-btn" :disabled="currentPage === 1" @click="goPage(currentPage - 1)">上一頁</button>
-          <template v-if="operationsStore.operationUsersTotalPages > 0">
-            <button
-              v-for="p in operationsStore.operationUsersTotalPages" :key="p"
-              class="page-btn page-num"
-              :class="{ current: p === currentPage }"
-              @click="goPage(p)"
-            >{{ p }}</button>
-          </template>
-          <button v-else class="page-btn page-num current">1</button>
-          <button class="page-btn" :disabled="currentPage === operationsStore.operationUsersTotalPages || operationsStore.operationUsersTotalPages === 0" @click="goPage(currentPage + 1)">下一頁</button>
-        </div>
-      </div>
-    </template>
-
     <!-- ══ 創作者管理 ══ -->
-    <template v-else-if="activeTab === 'creator'">
+    <template v-if="activeTab === 'creator'">
       <!-- 篩選 -->
       <div class="filter-card">
         <div class="filter-row">
