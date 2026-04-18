@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       vueDevTools(),
-      basicSsl(),
+      ...(env.VITE_BASIC_SSL === 'true' ? [basicSsl()] : []),
     ],
     resolve: {
       alias: {

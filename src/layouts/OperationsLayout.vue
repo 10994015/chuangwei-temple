@@ -15,7 +15,7 @@ const isMobileOpen = ref(false)
 
 const navItems = [
   { label: '營運總覽',       path: '/operations/dashboard' },
-  { label: '用戶管理',       path: '/operations/user-management', hasChildren: true },
+  { label: '用戶管理',       path: '/operations/user-management' },
   { label: '用戶審核',       path: '/operations/user-review' },
   { label: '創作者審核',     path: '/operations/creator-review' },
   { label: '訂單管理',       path: '/operations/orders' },
@@ -30,13 +30,7 @@ const navItems = [
   { label: '系統設定',       path: '/operations/settings' },
 ]
 
-const expandedItems = ref({ '/operations/user-management': false })
-
 const isActive = (path) => route.path.startsWith(path)
-
-const toggleExpand = (path) => {
-  expandedItems.value[path] = !expandedItems.value[path]
-}
 
 const handleLogout = async () => {
   if (confirm('確定要登出嗎？')) {
@@ -49,10 +43,7 @@ const goToFrontend = () => {
   router.push('/')
 }
 
-const navigate = (path, hasChildren) => {
-  if (hasChildren) {
-    toggleExpand(path)
-  }
+const navigate = (path) => {
   router.push(path)
   isMobileOpen.value = false
 }
@@ -95,47 +86,17 @@ const navigate = (path, hasChildren) => {
 
       <!-- 導覽選單 -->
       <nav class="sidebar-nav">
-        <template v-for="item in navItems" :key="item.path">
-          <button
-            class="nav-item"
-            :class="{ active: isActive(item.path) }"
-            @click="navigate(item.path, item.hasChildren)"
-            :title="isCollapsed ? item.label : ''"
-          >
-            <span class="nav-dot" />
-            <span class="nav-label">{{ item.label }}</span>
-            <svg
-              v-if="item.hasChildren && !isCollapsed"
-              class="nav-chevron"
-              :class="{ expanded: expandedItems[item.path] }"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-
-          <!-- 子選單：用戶管理 -->
-          <div
-            v-if="item.hasChildren && (expandedItems[item.path] || isActive(item.path))"
-            class="nav-sub"
-          >
-            <button
-              class="nav-sub-item"
-              :class="{ active: route.path === '/operations/user-management' && !route.path.includes('creator') }"
-              @click="router.push('/operations/user-management'); isMobileOpen = false"
-            >
-              宮廟管理
-            </button>
-            <button
-              class="nav-sub-item"
-              :class="{ active: route.path.includes('creator-management') }"
-              @click="router.push('/operations/user-management'); isMobileOpen = false"
-            >
-              創作者管理
-            </button>
-          </div>
-        </template>
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          class="nav-item"
+          :class="{ active: isActive(item.path) }"
+          @click="navigate(item.path)"
+          :title="isCollapsed ? item.label : ''"
+        >
+          <span class="nav-dot" />
+          <span class="nav-label">{{ item.label }}</span>
+        </button>
       </nav>
 
       <!-- 底部按鈕 -->
