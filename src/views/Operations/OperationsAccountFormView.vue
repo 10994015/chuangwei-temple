@@ -28,7 +28,7 @@ const editForm = ref({
 // 角色清單
 const roleOptions = ref([])
 
-const cancel = () => router.push({ name: 'app.operations.maintenance' })
+const cancel = () => router.push({ name: 'app.operations.maintenance', query: { tab: 'account' } })
 
 const save = async () => {
   if (isEdit.value) {
@@ -56,7 +56,7 @@ const save = async () => {
       })
       alert('帳號新增成功')
     }
-    router.push({ name: 'app.operations.maintenance' })
+    router.push({ name: 'app.operations.maintenance', query: { tab: 'account' } })
   } catch (err) {
     console.error('儲存失敗:', err)
     alert('儲存失敗，請確認資料後重試')
@@ -95,6 +95,12 @@ onMounted(async () => {
       <span class="current">{{ isEdit ? '編輯帳號' : '新增帳號' }}</span>
     </nav>
 
+    <div class="back-row">
+      <button class="btn-back" @click="cancel">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+        返回
+      </button>
+    </div>
     <h1 class="page-title">{{ isEdit ? '編輯帳號' : '新增帳號' }}</h1>
 
     <div v-if="isLoading" class="loading">載入中...</div>
@@ -179,6 +185,25 @@ onMounted(async () => {
   .sep { color: #d1d5db; }
   .current { color: #E8572A; }
   .link { cursor: pointer; &:hover { color: #374151; } }
+}
+
+.back-row {
+  margin-bottom: 12px;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif;
+  &:hover { background: #f9fafb; }
 }
 
 .page-title {

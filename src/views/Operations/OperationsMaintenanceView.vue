@@ -1,9 +1,10 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useOperationsStore } from '@/stores/operations'
 
 const router = useRouter()
+const route  = useRoute()
 
 const operationsStore = useOperationsStore()
 
@@ -56,6 +57,7 @@ const roleFilterDateStart = ref('')
 const roleFilterDateEnd   = ref('')
 const rolePage        = ref(1)
 const expandedRoles   = ref(new Set())
+const roleOptions     = ref([])
 
 const loadRoles = () => {
   operationsStore.fetchRoles({
@@ -109,11 +111,22 @@ const confirmDeleteRole = async (row) => {
   }
 }
 
+const loadRoleOptions = async () => {
+  if (roleOptions.value.length === 0) {
+    roleOptions.value = await operationsStore.fetchTenantPermissionRoles()
+  }
+}
+
 watch(activeTab, (tab) => {
-  if (tab === 'roles') loadRoles()
+  if (tab === 'roles') { loadRoles(); loadRoleOptions() }
 })
 
-onMounted(() => {
+onMounted(async () => {
+  const tabKeys = tabs.map(t => t.key)
+  if (route.query.tab && tabKeys.includes(route.query.tab)) {
+    activeTab.value = route.query.tab
+  }
+  if (activeTab.value === 'roles') loadRoleOptions()
   loadAccounts()
 })
 </script>
@@ -251,8 +264,11 @@ onMounted(() => {
         </div>
         <div class="filter-field">
           <label class="filter-label">角色</label>
-          <select class="filter-select">
+          <select v-model="roleFilterName" class="filter-select" @change="onRoleSearch">
             <option value="">選擇角色</option>
+            <option v-for="r in roleOptions" :key="r.roleId" :value="r.roleName">
+              {{ r.roleName }}
+            </option>
           </select>
         </div>
         <div class="filter-field">
