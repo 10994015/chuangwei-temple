@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useOperationsStore } from '@/stores/operations'
 
+const router = useRouter()
 const operationsStore = useOperationsStore()
 
 const activeTab = ref('customer')
@@ -224,7 +226,7 @@ onMounted(() => {
               <tr v-if="operationsStore.designers.length === 0">
                 <td colspan="8" class="td-empty">暫無資料</td>
               </tr>
-              <tr v-for="row in operationsStore.designers" :key="row.designerApplicationId">
+              <tr v-for="row in operationsStore.designers" :key="row.userId" style="cursor:pointer" @click="router.push({ name: 'app.operations.designer-detail', params: { applicationId: row.userId } })">
                 <td><strong>{{ row.name }}</strong></td>
                 <td>{{ row.type === 'COMPANY' ? '公司' : row.type === 'PERSONAL' ? '香客' : row.type }}</td>
                 <td>{{ row.phone }}</td>
@@ -322,9 +324,10 @@ onMounted(() => {
                 <td>{{ fmtDate(row.createdAt) }}</td>
                 <td>
                   <div class="action-btns">
-                    <button class="icon-btn" title="查看">
+                    <button class="icon-btn" title="查看" @click="router.push({ name: 'app.operations.review-detail', params: { userId: row.userId, applicationId: row.id } })">
                       <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
                     </button>
+                    <button class="btn-review-sm" @click="router.push({ name: 'app.operations.review-edit', params: { userId: row.userId, applicationId: row.id } })">審核</button>
                   </div>
                 </td>
               </tr>
@@ -423,7 +426,7 @@ onMounted(() => {
                 </td>
                 <td>
                   <div class="action-btns">
-                    <button class="icon-btn" title="查看">
+                    <button class="icon-btn" title="查看" @click="router.push({ name: 'app.operations.customer-detail', params: { userId: row.id } })">
                       <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
                     </button>
                   </div>
@@ -697,6 +700,20 @@ onMounted(() => {
 
 // ── action buttons ──
 .action-btns { display: flex; gap: 6px; align-items: center; }
+
+.btn-review-sm {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #E8572A;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif;
+  white-space: nowrap;
+  &:hover { background: #d04a20; }
+}
 
 .icon-btn {
   display: flex;

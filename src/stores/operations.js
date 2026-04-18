@@ -44,6 +44,8 @@ export const useOperationsStore = defineStore('operations', () => {
         designers.value       = payload.data        || []
         designersTotal.value  = payload.total       || 0
         designersTotalPages.value = payload.totalPages ?? Math.ceil((payload.total || 0) / pageSize)
+        console.log('[創作者] 第一筆資料:', designers.value[0])
+
       } else {
         designers.value = []
       }
@@ -125,9 +127,9 @@ export const useOperationsStore = defineStore('operations', () => {
     return response.data
   }
 
-  // DELETE /api/backend/user/{id}
+  // DELETE /api/backend/user/{id}/operation
   const deleteOperationUser = async (id) => {
-    const response = await axiosClient.delete(`/backend/user/${id}`)
+    const response = await axiosClient.delete(`/backend/user/${id}/operation`)
     return response.data
   }
 
@@ -295,6 +297,30 @@ export const useOperationsStore = defineStore('operations', () => {
   const customersTotalPages = ref(1)
   const isCustomerLoading   = ref(false)
 
+  // GET /api/backend/user/{id}
+  const fetchCustomerDetail = async (id) => {
+    const response = await axiosClient.get(`/backend/user/${id}`)
+    return response.data?.data || null
+  }
+
+  // PATCH /api/backend/user/{id}/designer-application/{designerApplicationId}
+  const updateDesignerApplicationReview = async (userId, designerApplicationId, body) => {
+    const response = await axiosClient.patch(`/backend/user/${userId}/designer-application/${designerApplicationId}`, body)
+    return response.data
+  }
+
+  // GET /api/backend/user/{id}/designer-application/{designerApplicationId}
+  const fetchDesignerApplicationDetail = async (userId, designerApplicationId) => {
+    const response = await axiosClient.get(`/backend/user/${userId}/designer-application/${designerApplicationId}`)
+    return response.data?.data || null
+  }
+
+  // GET /api/backend/user/designer-application/file/{id}/view
+  const fetchDesignerApplicationFile = async (id) => {
+    const response = await axiosClient.get(`/backend/user/designer-application/file/${id}/view`)
+    return response.data?.data || null
+  }
+
   // GET /api/backend/user/
   const fetchCustomers = async (params = {}) => {
     isCustomerLoading.value = true
@@ -377,5 +403,9 @@ export const useOperationsStore = defineStore('operations', () => {
     customersTotalPages,
     isCustomerLoading,
     fetchCustomers,
+    fetchCustomerDetail,
+    fetchDesignerApplicationDetail,
+    updateDesignerApplicationReview,
+    fetchDesignerApplicationFile,
   }
 })

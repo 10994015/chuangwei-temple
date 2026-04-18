@@ -61,6 +61,10 @@ const router = createRouter({
             { path: 'maintenance/account/:userId/edit', name: 'app.operations.account-edit',   component: () => import('@/views/Operations/OperationsAccountFormView.vue'), meta: { title: '編輯帳號', requiresAuth: true } },
             { path: 'maintenance/role/new',        name: 'app.operations.role-create', component: () => import('@/views/Operations/OperationsRoleFormView.vue'), meta: { title: '新增權限角色', requiresAuth: true } },
             { path: 'maintenance/role/:roleId/edit', name: 'app.operations.role-edit', component: () => import('@/views/Operations/OperationsRoleFormView.vue'), meta: { title: '編輯權限角色', requiresAuth: true } },
+            { path: 'user-management/review/:userId/:applicationId/edit', name: 'app.operations.review-edit', component: () => import('@/views/Operations/OperationsReviewFormView.vue'), meta: { title: '審核操作', requiresAuth: true } },
+            { path: 'user-management/review/:userId/:applicationId', name: 'app.operations.review-detail', component: () => import('@/views/Operations/OperationsReviewDetailView.vue'), meta: { title: '用戶審核詳細', requiresAuth: true } },
+            { path: 'user-management/designer/:applicationId', name: 'app.operations.designer-detail', component: () => import('@/views/Operations/OperationsDesignerDetailView.vue'), meta: { title: '創作者詳細資料', requiresAuth: true } },
+            { path: 'user-management/customer/:userId', name: 'app.operations.customer-detail', component: () => import('@/views/Operations/OperationsCustomerDetailView.vue'), meta: { title: '香客詳細資料', requiresAuth: true } },
             { path: 'settings',         name: 'app.operations.settings',         component: () => import('@/views/Operations/OperationsSettingsView.vue'),      meta: { title: '系統設定',    requiresAuth: true } },
           ]
         },
