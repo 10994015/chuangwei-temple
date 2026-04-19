@@ -11,7 +11,7 @@ const activeTab = ref('customer')
 const tabs = [
   { key: 'customer', label: '香客管理' },
   { key: 'creator',  label: '創作者管理' },
-  { key: 'review',   label: '用戶審核' },
+  { key: 'review',   label: '創作者審核' },
 ]
 
 const pageTitle = computed(() => {
@@ -87,7 +87,7 @@ const goCustomerPage = (page) => {
   }
 }
 
-// ── 用戶審核 ──
+// ── 創作者審核 ──
 const reviewRoleFilter  = ref('')
 const reviewStartAt     = ref('')
 const reviewEndAt       = ref('')
@@ -273,7 +273,7 @@ onMounted(() => {
       </div>
     </template>
 
-    <!-- ══ 用戶審核 ══ -->
+    <!-- ══ 創作者審核 ══ -->
     <template v-else-if="activeTab === 'review'">
       <div class="filter-card">
         <div class="filter-row">
