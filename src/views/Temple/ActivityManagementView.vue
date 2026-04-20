@@ -19,7 +19,7 @@
         <div class="filter-item">
           <div class="filter-label">關鍵字</div>
           <div class="search-wrap">
-            <span class="search-icon">🔍</span>
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input v-model="eventFilter.keyword" class="filter-input" placeholder="搜尋活動名稱..." />
           </div>
         </div>
@@ -80,15 +80,17 @@
         <div class="filter-item">
           <div class="filter-label">關鍵字</div>
           <div class="search-wrap">
-            <span class="search-icon">🔍</span>
-            <input v-model="serviceFilter.keyword" class="filter-input" placeholder="搜尋服務名稱..." />
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input v-model="serviceFilter.keyword" class="filter-input" placeholder="搜尋服務名稱..." @keydown.enter="onServiceSearch" />
           </div>
         </div>
         <div class="filter-item">
           <div class="filter-label">服務類別</div>
           <select v-model="serviceFilter.category" class="filter-select">
-            <option value="">全部分類</option>
-            <option v-for="c in serviceCategories" :key="c" :value="c">{{ c }}</option>
+            <option value="">全部類別</option>
+            <option value="1">法事</option>
+            <option value="2">祈福</option>
+            <option value="3">祭祀</option>
           </select>
         </div>
         <div class="filter-item">
@@ -101,11 +103,11 @@
         </div>
         <div class="filter-item">
           <div class="filter-label">開始日期</div>
-          <input v-model="serviceFilter.startDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
+          <input v-model="serviceFilter.startDate" type="date" class="filter-input filter-date" />
         </div>
         <div class="filter-item">
           <div class="filter-label">結束日期</div>
-          <input v-model="serviceFilter.endDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
+          <input v-model="serviceFilter.endDate" type="date" class="filter-input filter-date" />
         </div>
         <div class="filter-item">
           <div class="filter-label">關聯活動</div>
@@ -115,12 +117,11 @@
           </select>
         </div>
         <div class="filter-item">
-          <div class="filter-label">狀態</div>
-          <select v-model="serviceFilter.status" class="filter-select">
+          <div class="filter-label">發佈狀態</div>
+          <select v-model="serviceFilter.status" class="filter-select" @change="onServiceSearch">
             <option value="">全部狀態</option>
-            <option value="已發佈">已發佈</option>
-            <option value="草稿">草稿</option>
-            <option value="排程中">排程中</option>
+            <option value="OPEN">上架</option>
+            <option value="CLOSE">下架</option>
           </select>
         </div>
       </div>
@@ -129,33 +130,43 @@
         <button class="btn-export">⬇ 匯出當前篩選結果</button>
       </div>
       <div class="table-wrap">
-        <table class="data-table">
+        <div v-if="templeStore.isServicesLoading" class="loading-row">載入中...</div>
+        <table v-else class="data-table">
           <thead><tr>
             <th>服務名稱</th><th>價格</th><th>開始日期</th><th>結束日期</th><th>關聯活動</th><th>報名人數</th><th>發佈狀態</th><th class="col-action">操作</th>
           </tr></thead>
           <tbody>
-            <tr v-for="item in services" :key="item.id">
-              <td class="td-bold">{{ item.name }}</td>
-              <td>NT$ {{ item.price.toLocaleString() }}</td>
-              <td>{{ item.startDate }}</td>
-              <td>{{ item.endDate }}</td>
-              <td>{{ item.event || '無' }}</td>
-              <td>{{ item.registered }} / {{ item.capacity }}</td>
-              <td><span class="badge" :class="statusClass(item.status)">{{ item.status }}</span></td>
+            <tr v-if="templeStore.services.length === 0">
+              <td colspan="8" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
+            </tr>
+            <tr v-for="item in templeStore.services" :key="item.id">
+              <td class="td-bold">{{ item.nameZhTw }}</td>
+              <td>{{ item.skus?.[0]?.price != null ? `NT$ ${Number(item.skus[0].price).toLocaleString()}` : '-' }}</td>
+              <td>{{ item.startAt ? item.startAt.slice(0, 10).replace(/-/g, '/') : '-' }}</td>
+              <td>{{ item.endAt ? item.endAt.slice(0, 10).replace(/-/g, '/') : '-' }}</td>
+              <td>{{ item.events?.map(e => e.name).join('、') || '-' }}</td>
+              <td>{{ item.registrationCount ?? '-' }}</td>
+              <td>
+                <span class="badge" :class="item.status === 'OPEN' ? 'badge-published' : 'badge-draft'">
+                  {{ item.status === 'OPEN' ? '上架' : '下架' }}
+                </span>
+              </td>
               <td class="col-action">
-                <button class="icon-btn">⬇</button>
                 <button class="icon-btn" @click="goViewService(item.id)">👁</button>
                 <button class="icon-btn" @click="goEditService(item.id)">✏️</button>
-                <button class="icon-btn del">🗑️</button>
+                <button class="icon-btn del" @click="handleDeleteService(item.id)">🗑️</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="pagination">
-        <button class="page-btn">上一頁</button>
-        <button class="page-btn page-num active">1</button>
-        <button class="page-btn">下一頁</button>
+      <div class="pagination" v-if="!templeStore.isServicesLoading">
+        <button class="page-btn" :disabled="servicePage === 1" @click="goServicePage(servicePage - 1)">上一頁</button>
+        <template v-if="templeStore.servicesTotalPages > 0">
+          <button v-for="p in templeStore.servicesTotalPages" :key="p" class="page-btn page-num" :class="{ active: p === servicePage }" @click="goServicePage(p)">{{ p }}</button>
+        </template>
+        <button v-else class="page-btn page-num active">1</button>
+        <button class="page-btn" :disabled="servicePage === templeStore.servicesTotalPages || templeStore.servicesTotalPages === 0" @click="goServicePage(servicePage + 1)">下一頁</button>
       </div>
     </div>
 
@@ -168,8 +179,12 @@
         <div class="filter-item">
           <div class="filter-label">關鍵字</div>
           <div class="search-wrap">
-            <span class="search-icon">🔍</span>
-            <input v-model="productFilter.keyword" class="filter-input" placeholder="搜尋商品或規格名稱..." />
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input v-model="productFilter.keyword" class="filter-input" placeholder="搜尋商品或規格名稱..." @keydown.enter="onProductSearch" />
+            <button class="btn-search" @click="onProductSearch">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              搜尋
+            </button>
           </div>
         </div>
         <div class="filter-item">
@@ -215,22 +230,26 @@
         <button class="btn-export">⬇ 匯出當前篩選結果</button>
       </div>
       <div class="table-wrap">
-        <table class="data-table">
+        <div v-if="templeStore.isPhysicalProductsLoading" class="loading-row">載入中...</div>
+        <table v-else class="data-table">
           <thead><tr>
-            <th>商品名稱</th><th>規格</th><th>價格</th><th>上架日期</th><th>下架日期</th><th>關聯活動</th><th>庫存</th><th>發佈狀態</th><th class="col-action">操作</th>
+            <th>商品名稱</th><th>上架日期</th><th>下架日期</th><th>關聯活動</th><th>發佈狀態</th><th class="col-action">操作</th>
           </tr></thead>
           <tbody>
-            <tr v-for="item in products" :key="item.id">
-              <td class="td-bold">{{ item.name }}</td>
-              <td>{{ item.spec }}</td>
-              <td>NT$ {{ item.price.toLocaleString() }}</td>
-              <td>{{ item.onDate }}</td>
-              <td>{{ item.offDate || '常駐' }}</td>
-              <td>{{ item.event || '-' }}</td>
-              <td>{{ item.stock || '-' }}</td>
-              <td><span class="badge" :class="statusClass(item.status)">{{ item.status }}</span></td>
+            <tr v-if="templeStore.physicalProducts.length === 0">
+              <td colspan="6" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
+            </tr>
+            <tr v-for="item in templeStore.physicalProducts" :key="item.id">
+              <td class="td-bold">{{ item.nameZhTw }}</td>
+              <td>{{ item.publishAt ? item.publishAt.slice(0, 10).replace(/-/g, '/') : '-' }}</td>
+              <td>{{ item.unpublishAt ? item.unpublishAt.slice(0, 10).replace(/-/g, '/') : '常駐' }}</td>
+              <td>{{ item.events?.map(e => e.name).join('、') || '-' }}</td>
+              <td>
+                <span class="badge" :class="item.status === 'OPEN' ? 'badge-published' : 'badge-draft'">
+                  {{ item.status === 'OPEN' ? '上架' : '下架' }}
+                </span>
+              </td>
               <td class="col-action">
-                <button class="icon-btn">⬇</button>
                 <button class="icon-btn" @click="goViewProduct(item.id)">👁</button>
                 <button class="icon-btn" @click="goEditProduct(item.id)">✏️</button>
                 <button class="icon-btn del">🗑️</button>
@@ -239,10 +258,13 @@
           </tbody>
         </table>
       </div>
-      <div class="pagination">
-        <button class="page-btn">上一頁</button>
-        <button class="page-btn page-num active">1</button>
-        <button class="page-btn">下一頁</button>
+      <div class="pagination" v-if="!templeStore.isPhysicalProductsLoading">
+        <button class="page-btn" :disabled="productPage === 1" @click="goProductPage(productPage - 1)">上一頁</button>
+        <template v-if="templeStore.physicalProductsTotalPages > 0">
+          <button v-for="p in templeStore.physicalProductsTotalPages" :key="p" class="page-btn page-num" :class="{ active: p === productPage }" @click="goProductPage(p)">{{ p }}</button>
+        </template>
+        <button v-else class="page-btn page-num active">1</button>
+        <button class="page-btn" :disabled="productPage === templeStore.physicalProductsTotalPages || templeStore.physicalProductsTotalPages === 0" @click="goProductPage(productPage + 1)">下一頁</button>
       </div>
     </div>
 
@@ -277,14 +299,15 @@
       </div>
 
       <div class="toolbar">
-        <button class="btn-primary btn-settings" @click="goDonationSettings">⚙ 捐款設定</button>
+        <button class="btn-primary" @click="goCreateDonation">+ 新增捐款商品</button>
+        <button class="btn-secondary btn-settings" @click="goDonationSettings">⚙ 捐款設定</button>
       </div>
 
       <div class="filter-grid filter-grid-4">
         <div class="filter-item">
           <div class="filter-label">關鍵字</div>
           <div class="search-wrap">
-            <span class="search-icon">🔍</span>
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input v-model="donationFilter.keyword" class="filter-input" placeholder="搜尋捐款人、付款人、訂單編號..." />
           </div>
         </div>
@@ -319,28 +342,37 @@
       </div>
 
       <div class="table-wrap">
-        <table class="data-table">
+        <div v-if="templeStore.isDonationProductsLoading" class="loading-row">載入中...</div>
+        <table v-else class="data-table">
           <thead><tr>
-            <th>捐款人</th><th>付款人</th><th>類別</th><th>金額</th><th>捐款日期</th><th class="col-action">操作</th>
+            <th>商品名稱</th><th>關聯活動</th><th>發佈狀態</th><th class="col-action">操作</th>
           </tr></thead>
           <tbody>
-            <tr v-for="item in donations" :key="item.id">
-              <td class="td-bold">{{ item.donor }}</td>
-              <td class="td-bold">{{ item.payer }}</td>
-              <td>{{ item.category }}</td>
-              <td class="td-orange">NT$ {{ item.amount.toLocaleString() }}</td>
-              <td>{{ item.date }}</td>
+            <tr v-if="templeStore.donationProducts.length === 0">
+              <td colspan="4" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
+            </tr>
+            <tr v-for="item in templeStore.donationProducts" :key="item.id">
+              <td class="td-bold">{{ item.nameZhTw }}</td>
+              <td>{{ (item.events || []).map(e => e.name).join('、') || '-' }}</td>
+              <td>
+                <span class="badge" :class="item.status === 'OPEN' ? 'badge-published' : 'badge-draft'">
+                  {{ item.status === 'OPEN' ? '上架' : '下架' }}
+                </span>
+              </td>
               <td class="col-action">
-                <button class="icon-btn">👁</button>
+                <button class="icon-btn" title="查看" @click="goViewDonation(item.id)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="pagination">
-        <button class="page-btn">上一頁</button>
-        <button class="page-btn page-num active">1</button>
-        <button class="page-btn">下一頁</button>
+        <button class="page-btn" :disabled="donationPage <= 1" @click="goDonationPage(donationPage - 1)">上一頁</button>
+        <button v-for="p in templeStore.donationProductsTotalPages" :key="p"
+          class="page-btn page-num" :class="{ active: p === donationPage }" @click="goDonationPage(p)">{{ p }}</button>
+        <button class="page-btn" :disabled="donationPage >= templeStore.donationProductsTotalPages" @click="goDonationPage(donationPage + 1)">下一頁</button>
       </div>
     </div>
 
@@ -398,13 +430,15 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
+import { useTempleStore } from '@/stores/temple'
 
 const route = useRoute()
 const router = useRouter()
 const templeId = computed(() => route.params.templeId)
+const templeStore = useTempleStore()
 
 const breadcrumbs = [
   { text: '後台管理' },
@@ -439,6 +473,18 @@ watch(() => route.query.tab, (val) => {
   }
 })
 
+watch(activeTab, (tab) => {
+  if (tab === 'services')  loadServices()
+  if (tab === 'products')  loadProducts()
+  if (tab === 'donations') loadDonations()
+})
+
+onMounted(() => {
+  if (activeTab.value === 'services')  loadServices()
+  if (activeTab.value === 'products')  loadProducts()
+  if (activeTab.value === 'donations') loadDonations()
+})
+
 // ── 導航方法（帶 tab query 讓子頁面返回時恢復） ──
 const goCreateActivity = () => {
   router.push({ name: 'app.temple.activity-create', params: { templeId: templeId.value } })
@@ -458,8 +504,22 @@ const goViewService = (id) => {
 const goEditService = (id) => {
   router.push({ name: 'app.temple.service-edit', params: { templeId: templeId.value, serviceId: id } })
 }
+const handleDeleteService = async (id) => {
+  if (!confirm('確定要刪除此服務嗎？')) return
+  try {
+    await templeStore.deleteService(templeId.value, id)
+    alert('刪除成功！')
+    loadServices()
+  } catch (err) {
+    console.error('刪除服務失敗:', err)
+    alert('刪除失敗，請稍後再試')
+  }
+}
 const goDonationSettings = () => {
   router.push({ name: 'app.temple.donation-settings', params: { templeId: templeId.value } })
+}
+const goCreateDonation = () => {
+  router.push({ name: 'app.temple.donation-create', params: { templeId: templeId.value } })
 }
 const goSelectProductType = () => {
   router.push({ name: 'app.temple.product-select', params: { templeId: templeId.value } })
@@ -494,25 +554,62 @@ const filteredEvents = computed(() => events.value.filter(e => {
 const eventNames = computed(() => events.value.map(e => e.name))
 
 // ── 服務管理 ──
-const serviceFilter = reactive({ keyword: '', category: '', minPrice: '', maxPrice: '', startDate: '', endDate: '', event: '', status: '' })
-const serviceCategories = ['法會服務', '一般服務']
-const services = ref([
-  { id: 1, name: '普渡法會供品', price: 500,  startDate: '2024-07-01', endDate: '2024-08-20', event: '中元普渡法會', registered: 15, capacity: 20,  status: '已發佈' },
-  { id: 2, name: '普渡供品代辦', price: 300,  startDate: '2024-07-01', endDate: '2024-08-20', event: '中元普渡法會', registered: 8,  capacity: 15,  status: '已發佈' },
-  { id: 3, name: '祈福點燈',     price: 1000, startDate: '2024-01-01', endDate: '2024-12-31', event: '',           registered: 45, capacity: 108, status: '已發佈' },
-  { id: 4, name: '法會報名',     price: 800,  startDate: '2024-03-01', endDate: '2024-03-25', event: '春節祈福法會', registered: 12, capacity: 30,  status: '排程中' },
-])
+const serviceFilter = reactive({ keyword: '', category: '', status: '', minPrice: '', maxPrice: '', startDate: '', endDate: '', event: '' })
+const servicePage = ref(1)
+
+const loadServices = () => {
+  templeStore.fetchServices(templeId.value, {
+    name:       serviceFilter.keyword,
+    categoryId: serviceFilter.category,
+    status:     serviceFilter.status,
+    page:       servicePage.value,
+    pageSize:   10,
+  })
+}
+
+const onServiceSearch = () => {
+  servicePage.value = 1
+  loadServices()
+}
+
+const goServicePage = (page) => {
+  if (page >= 1 && page <= templeStore.servicesTotalPages) {
+    servicePage.value = page
+    loadServices()
+  }
+}
 
 // ── 商品管理 ──
 const productFilter = reactive({ keyword: '', category: '', minPrice: '', maxPrice: '', onDate: '', offDate: '', event: '', permanent: false })
 const productCategories = ['法器', '香品', '福袋', '護身符']
-const products = ref([
-  { id: 1, name: '平安福袋',   spec: '小福袋', price: 200,  onDate: '2024-01-01', offDate: null,         event: '',         stock: null,        status: '已發佈' },
-  { id: 2, name: '平安福袋',   spec: '大福袋', price: 500,  onDate: '2024-01-01', offDate: null,         event: '',         stock: null,        status: '已發佈' },
-  { id: 3, name: '媽祖護身符', spec: '標準款', price: 300,  onDate: '2024-01-01', offDate: null,         event: '',         stock: null,        status: '已發佈' },
-  { id: 4, name: '檀香環香',   spec: '一盒',   price: 180,  onDate: '2024-01-01', offDate: null,         event: '',         stock: '167 / 500', status: '已發佈' },
-  { id: 5, name: '春節供品組', spec: '基本組', price: 800,  onDate: '2024-01-20', offDate: '2024-02-20', event: '春節祈福法會', stock: '45 / 100',  status: '排程中' },
-])
+const productPage = ref(1)
+
+const loadProducts = () => {
+  templeStore.fetchPhysicalProducts(templeId.value, {
+    name:       productFilter.keyword  || undefined,
+    categoryId: productFilter.category || undefined,
+    page:       productPage.value,
+    pageSize:   10,
+  })
+}
+
+const onProductSearch = () => {
+  productPage.value = 1
+  loadProducts()
+}
+
+let productSearchTimer = null
+watch(() => productFilter.keyword, () => {
+  clearTimeout(productSearchTimer)
+  productSearchTimer = setTimeout(() => { onProductSearch() }, 400)
+})
+
+const goProductPage = (page) => {
+  if (page >= 1 && page <= templeStore.physicalProductsTotalPages) {
+    productPage.value = page
+    loadProducts()
+  }
+}
 
 // ── 捐款管理 ──
 const donationFilter = reactive({ keyword: '', startDate: '', endDate: '', category: '', minAmount: '', maxAmount: '' })
@@ -522,12 +619,38 @@ const donationRanking = ref([
   { name: '李美華', amount: '120k' },
   { name: '陳志強', amount: '98k' },
 ])
-const donations = ref([
-  { id: 1, donor: '王大明', payer: '王大明', category: '一般捐款', amount: 5000,  date: '2024-02-20' },
-  { id: 2, donor: '李美華', payer: '李志明', category: '建廟基金', amount: 10000, date: '2024-02-18' },
-  { id: 3, donor: '陳志強', payer: '陳志強', category: '功德金',   amount: 3000,  date: '2024-02-15' },
-  { id: 4, donor: '張美玲', payer: '張美玲', category: '修繕基金', amount: 2000,  date: '2024-02-10' },
-])
+const donationPage = ref(1)
+
+const loadDonations = () => {
+  templeStore.fetchDonationProducts(templeId.value, {
+    name:     donationFilter.keyword  || undefined,
+    categoryId: donationFilter.category || undefined,
+    page:     donationPage.value,
+    pageSize: 10,
+  })
+}
+
+const onDonationSearch = () => {
+  donationPage.value = 1
+  loadDonations()
+}
+
+const goDonationPage = (page) => {
+  if (page >= 1 && page <= templeStore.donationProductsTotalPages) {
+    donationPage.value = page
+    loadDonations()
+  }
+}
+
+const goViewDonation = (id) => {
+  router.push({ name: 'app.temple.donation-detail', params: { templeId: templeId.value, donationId: id } })
+}
+
+let donationSearchTimer = null
+watch(() => donationFilter.keyword, () => {
+  clearTimeout(donationSearchTimer)
+  donationSearchTimer = setTimeout(() => { onDonationSearch() }, 400)
+})
 
 // ── 運費管理 ──
 let tierIdCounter = 3
@@ -630,6 +753,14 @@ const resetShipping = () => {
 .filter-date::placeholder { color: #aaa; }
 .search-wrap .filter-input { border: none; padding: 0; outline: none; box-shadow: none; }
 .search-wrap .filter-input:focus { box-shadow: none; }
+.btn-search {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  padding: 5px 12px; background: #E8572A; color: #fff; border: none;
+  border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-search:hover { background: #c94a22; }
+.btn-search svg { flex-shrink: 0; }
 .filter-select {
   width: 100%; padding: 9px 32px 9px 12px; border: 1px solid #ddd; border-radius: 8px;
   font-size: 14px; color: #333; background: #fff; appearance: none;
