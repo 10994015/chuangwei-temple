@@ -20,23 +20,18 @@
           <div class="filter-label">關鍵字</div>
           <div class="search-wrap">
             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="eventFilter.keyword" class="filter-input" placeholder="搜尋活動名稱..." />
+            <input v-model="eventFilter.keyword" class="filter-input" placeholder="搜尋活動名稱..." @keydown.enter="onEventSearch" />
           </div>
         </div>
         <div class="filter-item">
-          <div class="filter-label">活動類別</div>
-          <select v-model="eventFilter.category" class="filter-select">
+          <div class="filter-label">狀態</div>
+          <select v-model="eventFilter.status" class="filter-select" @change="onEventSearch">
             <option value="">全部</option>
-            <option v-for="c in eventCategories" :key="c" :value="c">{{ c }}</option>
+            <option value="PUBLISHED">已發佈</option>
+            <option value="DRAFT">草稿</option>
+            <option value="SCHEDULED">排程中</option>
+            <option value="ARCHIVED">已封存</option>
           </select>
-        </div>
-        <div class="filter-item">
-          <div class="filter-label">活動開始日期</div>
-          <input v-model="eventFilter.startDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
-        </div>
-        <div class="filter-item">
-          <div class="filter-label">活動結束日期</div>
-          <input v-model="eventFilter.endDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
         </div>
       </div>
       <div class="export-bar">
@@ -44,30 +39,37 @@
         <button class="btn-export">⬇ 匯出當前篩選結果</button>
       </div>
       <div class="table-wrap">
-        <table class="data-table">
+        <div v-if="templeStore.isEventsLoading" class="loading-row">載入中...</div>
+        <table v-else class="data-table">
           <thead><tr>
-            <th>活動名稱</th><th>類別</th><th>活動開始日期</th><th>活動結束日期</th><th>發佈狀態</th><th class="col-action">操作</th>
+            <th>活動名稱</th><th>活動開始日期</th><th>活動結束日期</th><th>發佈狀態</th><th class="col-action">操作</th>
           </tr></thead>
           <tbody>
-            <tr v-for="item in filteredEvents" :key="item.id">
-              <td class="td-bold">{{ item.name }}</td>
-              <td>{{ item.category }}</td>
-              <td>{{ item.startDate }}</td>
-              <td>{{ item.endDate }}</td>
-              <td><span class="badge" :class="statusClass(item.status)">{{ item.status }}</span></td>
+            <tr v-if="templeStore.events.length === 0">
+              <td colspan="5" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
+            </tr>
+            <tr v-for="item in templeStore.events" :key="item.id">
+              <td class="td-bold">{{ item.nameZhTw }}</td>
+              <td>{{ item.startAt }}</td>
+              <td>{{ item.endAt }}</td>
+              <td><span class="badge" :class="eventStatusClass(item.status)">{{ eventStatusLabel(item.status) }}</span></td>
               <td class="col-action">
                 <button class="icon-btn" @click="goViewActivity(item.id)">👁</button>
                 <button class="icon-btn" @click="goEditActivity(item.id)">✏️</button>
-                <button class="icon-btn del">🗑️</button>
+                <button class="icon-btn del" @click="handleDeleteActivity(item.id)">🗑️</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="pagination">
-        <button class="page-btn">上一頁</button>
-        <button class="page-btn page-num active">1</button>
-        <button class="page-btn">下一頁</button>
+      <div v-if="templeStore.eventsTotalPages > 1" class="pagination">
+        <button class="page-btn" @click="goEventPage(eventPage - 1)" :disabled="eventPage === 1">上一頁</button>
+        <button
+          v-for="p in templeStore.eventsTotalPages" :key="p"
+          class="page-btn page-num" :class="{ active: p === eventPage }"
+          @click="goEventPage(p)"
+        >{{ p }}</button>
+        <button class="page-btn" @click="goEventPage(eventPage + 1)" :disabled="eventPage === templeStore.eventsTotalPages">下一頁</button>
       </div>
     </div>
 
@@ -189,7 +191,7 @@
         </div>
         <div class="filter-item">
           <div class="filter-label">商品類別</div>
-          <select v-model="productFilter.category" class="filter-select">
+          <select v-model="productFilter.category" class="filter-select" @change="onProductSearch">
             <option value="">全部分類</option>
             <option v-for="c in productCategories" :key="c" :value="c">{{ c }}</option>
           </select>
@@ -214,7 +216,7 @@
           <div class="filter-label">關聯活動</div>
           <select v-model="productFilter.event" class="filter-select">
             <option value="">全部</option>
-            <option v-for="e in eventNames" :key="e" :value="e">{{ e }}</option>
+            <option v-for="e in templeStore.events" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
           </select>
         </div>
         <div class="filter-item">
@@ -252,7 +254,7 @@
               <td class="col-action">
                 <button class="icon-btn" @click="goViewProduct(item.id)">👁</button>
                 <button class="icon-btn" @click="goEditProduct(item.id)">✏️</button>
-                <button class="icon-btn del">🗑️</button>
+                <button class="icon-btn del" @click="handleDeleteProduct(item.id)">🗑️</button>
               </td>
             </tr>
           </tbody>
@@ -300,7 +302,6 @@
 
       <div class="toolbar">
         <button class="btn-primary" @click="goCreateDonation">+ 新增捐款商品</button>
-        <button class="btn-secondary btn-settings" @click="goDonationSettings">⚙ 捐款設定</button>
       </div>
 
       <div class="filter-grid filter-grid-4">
@@ -321,7 +322,7 @@
         </div>
         <div class="filter-item">
           <div class="filter-label">捐款類別</div>
-          <select v-model="donationFilter.category" class="filter-select">
+          <select v-model="donationFilter.category" class="filter-select" @change="onDonationSearch">
             <option value="">全部類別</option>
             <option v-for="c in donationCategories" :key="c" :value="c">{{ c }}</option>
           </select>
@@ -363,6 +364,7 @@
                 <button class="icon-btn" title="查看" @click="goViewDonation(item.id)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
+                <button class="icon-btn del" @click="handleDeleteDonation(item.id)">🗑️</button>
               </td>
             </tr>
           </tbody>
@@ -377,52 +379,121 @@
     </div>
 
     <!-- ===== 運費管理 ===== -->
-    <div v-if="activeTab === 'shipping'" class="tab-content shipping-tab">
-      <h2 class="section-title">普通運費設定</h2>
-      <p class="section-desc">設定根據訂單總金額自動計算的運費級距，系統將依據訂單金額自動套用對應的運費。</p>
+    <div v-if="activeTab === 'shipping'" class="tab-content">
+      <div class="toolbar">
+        <button class="btn-primary" @click="goCreateShippingRule">＋ 新增運費規則</button>
+      </div>
 
-      <div v-for="(tier, idx) in shippingTiers" :key="tier.id" class="tier-card">
-        <div class="tier-header">
-          <span class="tier-title">級距 {{ idx + 1 }}</span>
-          <button class="tier-delete" @click="removeTier(idx)">✕</button>
-        </div>
-        <div class="tier-fields">
-          <div class="tier-field">
-            <label class="tier-label">最低金額 (元)</label>
-            <input v-model="tier.min" type="number" class="tier-input" />
-          </div>
-          <div class="tier-field tier-field-max">
-            <label class="tier-label">最高金額 (元)</label>
-            <div class="tier-max-row">
-              <input v-model="tier.max" type="number" class="tier-input tier-input-max" :disabled="tier.isAbove" :placeholder="tier.isAbove ? String(tier.min) : ''" />
-              <label class="above-label">
-                <input type="checkbox" v-model="tier.isAbove" class="above-checkbox" @change="onAboveChange(tier)" />
-                以上
-              </label>
+      <div v-if="templeStore.isShippingRulesLoading" class="loading-state">載入中...</div>
+
+      <template v-else>
+        <div v-if="templeStore.shippingRules.length === 0" class="empty-state">尚無運費規則</div>
+
+        <div v-else class="folder-list">
+          <div
+            v-for="(rule, idx) in templeStore.shippingRules"
+            :key="rule.id"
+            class="folder-item"
+            :class="{ open: expandedRules.has(rule.id), 'drag-over': dragOverIndex === idx }"
+            draggable="true"
+            @dragstart="onDragStart(idx)"
+            @dragover.prevent="onDragOver(idx)"
+            @dragleave="onDragLeave"
+            @drop="onDrop(idx)"
+            @dragend="onDragEnd"
+          >
+            <!-- 資料夾標題列 -->
+            <div class="folder-header" @click="toggleRule(rule.id)">
+              <span class="drag-handle" @click.stop title="拖曳排序">⠿</span>
+              <span class="folder-arrow">{{ expandedRules.has(rule.id) ? '▾' : '▸' }}</span>
+              <span class="folder-name">{{ rule.name }}</span>
+              <span class="folder-type">{{ shippingTypeLabel(rule.type) }}</span>
+              <span class="badge" :class="rule.status === 'OPEN' ? 'badge-published' : 'badge-draft'">
+                {{ rule.status === 'OPEN' ? '啟用' : '停用' }}
+              </span>
+              <div class="folder-actions" @click.stop>
+                <button class="icon-btn" @click="goViewShippingRule(rule.id)">✏️</button>
+                <button class="icon-btn del" @click="handleDeleteShippingRule(rule.id)">🗑️</button>
+              </div>
+            </div>
+
+            <!-- 展開內容：tiers -->
+            <div v-if="expandedRules.has(rule.id)" class="folder-body">
+              <div v-if="rule.type === 'TIERED' && rule.tiers && rule.tiers.length">
+                <table class="tier-table">
+                  <thead>
+                    <tr>
+                      <th>最低金額 (元)</th>
+                      <th>最高金額 (元)</th>
+                      <th>運費 (元)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="tier in rule.tiers" :key="tier.id">
+                      <td>{{ tier.minValue }}</td>
+                      <td>{{ tier.maxValue === null ? '以上' : tier.maxValue }}</td>
+                      <td>{{ tier.fee }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div v-else-if="rule.type === 'FLAT'" class="flat-desc">
+                固定運費，無級距設定
+              </div>
+              <div v-else-if="rule.type === 'FREE'" class="flat-desc">
+                免運費
+              </div>
+              <div v-else class="flat-desc">無資料</div>
             </div>
           </div>
-          <div class="tier-field">
-            <label class="tier-label">運費 (元)</label>
-            <input v-model="tier.fee" type="number" class="tier-input" />
-          </div>
         </div>
-        <div class="tier-preview">
-          預覽：{{ tierPreview(tier) }}
-        </div>
+      </template>
+    </div>
+
+    <!-- ===== 數位光明燈管理 ===== -->
+    <div v-if="activeTab === 'lanterns'" class="tab-content">
+      <div class="toolbar">
+        <button class="btn-primary" @click="goCreateLamp">＋ 新增燈種</button>
+        <button class="btn-secondary">↑ 增加燈位數量</button>
       </div>
-
-      <button class="btn-add-tier" @click="addTier">＋ 新增級距</button>
-
-      <div class="shipping-actions">
-        <button class="btn-secondary" @click="resetShipping">取消變更</button>
-        <button class="btn-primary btn-save">儲存變更</button>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>燈種名稱</th>
+            <th>關聯活動</th>
+            <th>是否開發票</th>
+            <th>發佈狀態</th>
+            <th class="col-action">操作</th>
+          </tr></thead>
+          <tbody>
+            <tr v-if="templeStore.isLampProductsLoading">
+              <td colspan="5" style="text-align:center;color:#aaa;padding:32px">載入中...</td>
+            </tr>
+            <tr v-else-if="templeStore.lampProducts.length === 0">
+              <td colspan="5" style="text-align:center;color:#aaa;padding:32px">尚無燈種資料</td>
+            </tr>
+            <tr v-for="item in templeStore.lampProducts" :key="item.id">
+              <td class="td-bold">{{ item.nameZhTw }}</td>
+              <td>{{ item.events?.map(e => e.name).join('、') || '-' }}</td>
+              <td>{{ item.isInvoiceSupported ? '是' : '否' }}</td>
+              <td><span class="badge" :class="lanternStatusClass(item.status)">{{ lanternStatusLabel(item.status) }}</span></td>
+              <td class="col-action">
+                <button class="icon-btn">👁</button>
+                <button class="icon-btn">✏️</button>
+                <button class="icon-btn del" @click="handleDeleteLamp(item.id)">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      <div class="shipping-notice">
-        <div class="notice-title">💡 運費計算說明</div>
-        <p><strong>普通運費：</strong>系統會依據訂單總金額自動套用對應級距的運費。例如訂單金額為 $800，則套用級距 2 的運費 $60。</p>
-        <p><strong>特殊運費：</strong>若訂單中包含標註為「特殊運費」的商品，則該商品將使用其獨立設定的運費，不受普通運費級距影響。</p>
-        <p><strong>混合運費：</strong>當訂單同時包含普通商品與特殊商品時，系統將分別計算並加總兩種運費。</p>
+      <div v-if="templeStore.lampProductsTotalPages > 1" class="pagination">
+        <button class="page-btn" @click="goLampPage(lampPage - 1)" :disabled="lampPage === 1">上一頁</button>
+        <button
+          v-for="p in templeStore.lampProductsTotalPages" :key="p"
+          class="page-btn page-num" :class="{ active: p === lampPage }"
+          @click="goLampPage(p)"
+        >{{ p }}</button>
+        <button class="page-btn" @click="goLampPage(lampPage + 1)" :disabled="lampPage === templeStore.lampProductsTotalPages">下一頁</button>
       </div>
     </div>
 
@@ -445,7 +516,7 @@ const breadcrumbs = [
   { text: '活動與上架管理' },
 ]
 
-const VALID_TABS = ['events', 'services', 'products', 'donations', 'shipping']
+const VALID_TABS = ['events', 'services', 'products', 'donations', 'shipping', 'lanterns']
 
 const tabs = [
   { key: 'events',    label: '活動管理' },
@@ -453,6 +524,7 @@ const tabs = [
   { key: 'products',  label: '商品管理' },
   { key: 'donations', label: '捐款管理' },
   { key: 'shipping',  label: '運費管理' },
+  { key: 'lanterns',  label: '數位光明燈管理' },
 ]
 
 // 從 route.query.tab 初始化，fallback 到 'events'
@@ -474,15 +546,21 @@ watch(() => route.query.tab, (val) => {
 })
 
 watch(activeTab, (tab) => {
+  if (tab === 'events')    loadEvents()
   if (tab === 'services')  loadServices()
   if (tab === 'products')  loadProducts()
   if (tab === 'donations') loadDonations()
+  if (tab === 'shipping')  loadShippingRules()
+  if (tab === 'lanterns')  loadLamps()
 })
 
 onMounted(() => {
+  if (activeTab.value === 'events')    loadEvents()
   if (activeTab.value === 'services')  loadServices()
   if (activeTab.value === 'products')  loadProducts()
   if (activeTab.value === 'donations') loadDonations()
+  if (activeTab.value === 'shipping')  loadShippingRules()
+  if (activeTab.value === 'lanterns')  loadLamps()
 })
 
 // ── 導航方法（帶 tab query 讓子頁面返回時恢復） ──
@@ -512,11 +590,56 @@ const handleDeleteService = async (id) => {
     loadServices()
   } catch (err) {
     console.error('刪除服務失敗:', err)
-    alert('刪除失敗，請稍後再試')
+    alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
   }
 }
-const goDonationSettings = () => {
-  router.push({ name: 'app.temple.donation-settings', params: { templeId: templeId.value } })
+
+const handleDeleteActivity = async (id) => {
+  if (!confirm('確定要刪除此活動嗎？')) return
+  try {
+    await templeStore.deleteEvent(templeId.value, id)
+    alert('刪除成功！')
+    loadEvents()
+  } catch (err) {
+    console.error('刪除活動失敗:', err)
+    alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
+  }
+}
+
+const handleDeleteProduct = async (id) => {
+  if (!confirm('確定要刪除此商品嗎？')) return
+  try {
+    await templeStore.deletePhysicalProduct(templeId.value, id)
+    alert('刪除成功！')
+    loadProducts()
+  } catch (err) {
+    console.error('刪除商品失敗:', err)
+    alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
+  }
+}
+
+const handleDeleteDonation = async (id) => {
+  if (!confirm('確定要刪除此捐款商品嗎？')) return
+  try {
+    await templeStore.deleteDonationProduct(templeId.value, id)
+    alert('刪除成功！')
+    loadDonations()
+  } catch (err) {
+    console.error('刪除捐款商品失敗:', err)
+    alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
+  }
+}
+
+const handleDeleteLamp = async (id) => {
+  if (!confirm('確定要刪除此燈種嗎？')) return
+  try {
+    await templeStore.deleteLampProduct(templeId.value, id)
+    alert('刪除成功！')
+    loadLamps()
+  } catch (err) {
+    console.error('刪除燈種失敗:', err)
+    alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
+  }
 }
 const goCreateDonation = () => {
   router.push({ name: 'app.temple.donation-create', params: { templeId: templeId.value } })
@@ -531,27 +654,43 @@ const goEditProduct = (id) => {
   router.push({ name: 'app.temple.product-edit', params: { templeId: templeId.value, productId: id } })
 }
 
-// ── 狀態 badge ──
-const statusClass = (s) => ({
-  'badge-published': s === '已發佈',
-  'badge-draft':     s === '草稿',
-  'badge-scheduled': s === '排程中',
+// ── 活動管理 ──
+const eventFilter = reactive({ keyword: '', status: '' })
+const eventPage = ref(1)
+
+const eventStatusLabel = (s) => {
+  if (s === 'PUBLISHED') return '已發佈'
+  if (s === 'DRAFT')     return '草稿'
+  if (s === 'SCHEDULED') return '排程中'
+  if (s === 'ARCHIVED')  return '已封存'
+  return s
+}
+const eventStatusClass = (s) => ({
+  'badge-published': s === 'PUBLISHED',
+  'badge-draft':     s === 'DRAFT',
+  'badge-scheduled': s === 'SCHEDULED',
 })
 
-// ── 活動管理 ──
-const eventFilter = reactive({ keyword: '', category: '', startDate: '', endDate: '' })
-const eventCategories = ['法會', '慶典', '遶境']
-const events = ref([
-  { id: 1, name: '春節祈福法會', category: '法會', startDate: '2024-02-10', endDate: '2024-02-15', status: '已發佈' },
-  { id: 3, name: '中元普渡法會', category: '法會', startDate: '2024-08-18', endDate: '2024-08-20', status: '草稿' },
-  { id: 4, name: '獨立服務', category: '遶境', startDate: '2024-03-25', endDate: '2024-03-26', status: '排程中' },
-])
-const filteredEvents = computed(() => events.value.filter(e => {
-  if (eventFilter.keyword && !e.name.includes(eventFilter.keyword)) return false
-  if (eventFilter.category && e.category !== eventFilter.category) return false
-  return true
-}))
-const eventNames = computed(() => events.value.map(e => e.name))
+const loadEvents = () => {
+  templeStore.fetchEvents(templeId.value, {
+    name:     eventFilter.keyword,
+    status:   eventFilter.status,
+    page:     eventPage.value,
+    pageSize: 10,
+  })
+}
+
+const onEventSearch = () => {
+  eventPage.value = 1
+  loadEvents()
+}
+
+const goEventPage = (page) => {
+  if (page >= 1 && page <= templeStore.eventsTotalPages) {
+    eventPage.value = page
+    loadEvents()
+  }
+}
 
 // ── 服務管理 ──
 const serviceFilter = reactive({ keyword: '', category: '', status: '', minPrice: '', maxPrice: '', startDate: '', endDate: '', event: '' })
@@ -653,28 +792,105 @@ watch(() => donationFilter.keyword, () => {
 })
 
 // ── 運費管理 ──
-let tierIdCounter = 3
-const shippingTiers = ref([
-  { id: 1, min: 0,    max: 500,  fee: 100, isAbove: false },
-  { id: 2, min: 501,  max: 1000, fee: 60,  isAbove: false },
-  { id: 3, min: 1001, max: 1000, fee: 0,   isAbove: true  },
-])
-const tierPreview = (tier) => {
-  if (tier.isAbove) return `訂單金額 $${tier.min} 以上，運費 $${tier.fee}`
-  return `訂單金額 $${tier.min} - $${tier.max}，運費 $${tier.fee}`
+const expandedRules = ref(new Set())
+
+const toggleRule = (id) => {
+  if (expandedRules.value.has(id)) {
+    expandedRules.value.delete(id)
+  } else {
+    expandedRules.value.add(id)
+  }
 }
-const addTier = () => {
-  const last = shippingTiers.value[shippingTiers.value.length - 1]
-  shippingTiers.value.push({ id: ++tierIdCounter, min: last ? Number(last.max) + 1 : 0, max: 0, fee: 0, isAbove: false })
+
+const shippingTypeLabel = (type) => {
+  if (type === 'FLAT')   return '固定運費'
+  if (type === 'TIERED') return '級距運費'
+  if (type === 'FREE')   return '免運費'
+  return type
 }
-const removeTier = (idx) => { shippingTiers.value.splice(idx, 1) }
-const onAboveChange = (tier) => { if (tier.isAbove) tier.max = tier.min }
-const resetShipping = () => {
-  shippingTiers.value = [
-    { id: 1, min: 0,    max: 500,  fee: 100, isAbove: false },
-    { id: 2, min: 501,  max: 1000, fee: 60,  isAbove: false },
-    { id: 3, min: 1001, max: 1000, fee: 0,   isAbove: true  },
-  ]
+
+const loadShippingRules = () => {
+  templeStore.fetchShippingRules(templeId.value)
+}
+
+// ── 拖曳排序 ──
+const dragFromIndex = ref(null)
+const dragOverIndex = ref(null)
+
+const onDragStart = (idx) => { dragFromIndex.value = idx }
+const onDragOver  = (idx) => { dragOverIndex.value = idx }
+const onDragLeave = ()    => { dragOverIndex.value = null }
+const onDragEnd   = ()    => { dragFromIndex.value = null; dragOverIndex.value = null }
+
+const onDrop = async (toIndex) => {
+  const fromIndex = dragFromIndex.value
+  dragOverIndex.value = null
+  dragFromIndex.value = null
+  if (fromIndex === null || fromIndex === toIndex) return
+
+  // 本地先重排
+  const rules = [...templeStore.shippingRules]
+  const [moved] = rules.splice(fromIndex, 1)
+  rules.splice(toIndex, 0, moved)
+  templeStore.shippingRules.splice(0, templeStore.shippingRules.length, ...rules)
+
+  // 呼叫 API，priority 為 1-based
+  try {
+    await templeStore.updateShippingRulePriority(templeId.value, moved.id, toIndex + 1)
+  } catch (err) {
+    console.error('更新排序失敗:', err)
+    loadShippingRules() // 失敗時還原
+  }
+}
+
+// ── 數位光明燈管理 ──
+const lampPage = ref(1)
+
+const loadLamps = () => {
+  templeStore.fetchLampProducts(templeId.value, { page: lampPage.value, pageSize: 10 })
+}
+
+const goLampPage = (page) => {
+  if (page >= 1 && page <= templeStore.lampProductsTotalPages) {
+    lampPage.value = page
+    loadLamps()
+  }
+}
+
+const lanternStatusLabel = (status) => {
+  const map = { OPEN: '上架中', FROZEN: '凍結', SCHEDULED: '排程中', DRAFT: '草稿', CLOSE: '已下架' }
+  return map[status] || status
+}
+const lanternStatusClass = (status) => ({
+  'badge-published':  status === 'OPEN',
+  'badge-frozen':     status === 'FROZEN',
+  'badge-scheduled':  status === 'SCHEDULED',
+  'badge-draft':      status === 'DRAFT',
+  'badge-closed':     status === 'CLOSE',
+})
+
+const goCreateShippingRule = () => {
+  router.push({ name: 'app.temple.shipping-create', params: { templeId: templeId.value } })
+}
+
+const goCreateLamp = () => {
+  router.push({ name: 'app.temple.lamp-create', params: { templeId: templeId.value } })
+}
+
+const goViewShippingRule = (id) => {
+  router.push({ name: 'app.temple.shipping-detail', params: { templeId: templeId.value, ruleId: id } })
+}
+
+const handleDeleteShippingRule = async (id) => {
+  if (!confirm('確定要刪除此運費規則嗎？')) return
+  try {
+    await templeStore.deleteShippingRule(templeId.value, id)
+    alert('刪除成功')
+    loadShippingRules()
+  } catch (err) {
+    console.error('刪除運費規則失敗:', err)
+    alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
+  }
 }
 </script>
 
@@ -808,6 +1024,8 @@ const resetShipping = () => {
 .badge-published  { background: #e6f9f0; color: #27a163; }
 .badge-draft      { background: #f5f5f5; color: #888; }
 .badge-scheduled  { background: #fff8e6; color: #d4860a; }
+.badge-frozen     { background: #e0f2fe; color: #0369a1; }
+.badge-closed     { background: #f3f4f6; color: #6b7280; }
 
 /* 分頁 */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; }
@@ -831,33 +1049,32 @@ const resetShipping = () => {
 .ranking-no { color: #333; font-weight: 500; }
 .ranking-amount { color: #E8572A; font-weight: 600; }
 
-/* 運費管理 */
-.shipping-tab { max-width: 100%; }
-.section-title { font-size: 1.4rem; font-weight: 700; color: #1a1a1a; margin: 0 0 8px; }
-.section-desc { font-size: 13px; color: #777; margin: 0 0 24px; }
-.tier-card { background: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.tier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.tier-title { font-size: 15px; font-weight: 600; color: #222; }
-.tier-delete { background: none; border: none; color: #e53e3e; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; line-height: 1; }
-.tier-delete:hover { background: #fff0f0; }
-.tier-fields { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 16px; align-items: end; margin-bottom: 16px; }
-.tier-label { font-size: 13px; color: #555; margin-bottom: 6px; display: block; font-weight: 500; }
-.tier-input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; color: #333; box-sizing: border-box; transition: border-color 0.2s; }
-.tier-input:focus { outline: none; border-color: #E8572A; }
-.tier-input:disabled { background: #f5f5f5; color: #aaa; }
-.tier-field-max { display: flex; flex-direction: column; }
-.tier-field-max > label { margin-bottom: 6px; font-size: 13px; color: #555; font-weight: 500; }
-.tier-max-row { display: flex; align-items: center; gap: 10px; }
-.tier-input-max { flex: 1; }
-.above-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #444; margin-top: 8px; cursor: pointer; }
-.above-checkbox { accent-color: #E8572A; width: 14px; height: 14px; }
-.tier-preview { font-size: 13px; color: #888; padding-top: 12px; border-top: 1px dashed #eee; }
-.btn-add-tier { display: block; width: 200px; margin: 8px auto 24px; padding: 10px 0; background: none; border: 1px dashed #ccc; border-radius: 20px; font-size: 14px; color: #888; cursor: pointer; text-align: center; transition: border-color 0.2s, color 0.2s; }
-.btn-add-tier:hover { border-color: #E8572A; color: #E8572A; }
-.shipping-actions { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 32px; }
-.shipping-notice { background: #eef3ff; border-radius: 12px; padding: 20px 24px; }
-.notice-title { font-weight: 700; color: #3355cc; margin-bottom: 12px; font-size: 14px; }
-.shipping-notice p { font-size: 13px; color: #334; margin: 0 0 8px; line-height: 1.7; }
-.shipping-notice p:last-child { margin: 0; }
-.shipping-notice strong { color: #223; }
+/* 運費管理 — folder 樣式 */
+.folder-list { display: flex; flex-direction: column; gap: 10px; }
+.folder-item { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
+.folder-item[draggable="true"] { cursor: grab; }
+.folder-item[draggable="true"]:active { cursor: grabbing; }
+.folder-item.drag-over { outline: 2px dashed #E8572A; outline-offset: -2px; background: #fff8f5; border-radius: 12px; }
+.drag-handle { font-size: 16px; color: #ccc; cursor: grab; padding: 0 2px; flex-shrink: 0; user-select: none; }
+.drag-handle:hover { color: #E8572A; }
+.folder-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; cursor: pointer; user-select: none;
+  transition: background 0.15s;
+}
+.folder-header:hover { background: #fafafa; }
+.folder-item.open .folder-header { background: #fff8f5; }
+.folder-arrow { font-size: 13px; color: #E8572A; width: 14px; flex-shrink: 0; }
+.folder-name { flex: 1; font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.folder-type { font-size: 13px; color: #888; margin-right: 8px; }
+.folder-actions { display: flex; gap: 4px; margin-left: 8px; }
+.folder-body { border-top: 1px solid #f0f0f0; padding: 20px 24px; }
+.tier-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tier-table th { text-align: left; padding: 8px 12px; font-size: 13px; font-weight: 600; color: #555; background: #fafafa; border-bottom: 1px solid #eee; }
+.tier-table td { padding: 10px 12px; color: #333; border-bottom: 1px solid #f5f5f5; }
+.tier-table tr:last-child td { border-bottom: none; }
+.flat-desc { font-size: 14px; color: #888; }
+.loading-state { text-align: center; padding: 60px; color: #aaa; font-size: 14px; }
+.empty-state { text-align: center; padding: 60px; color: #aaa; font-size: 14px; }
+
 </style>

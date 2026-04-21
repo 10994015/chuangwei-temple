@@ -610,7 +610,7 @@ const handleSubmit = async () => {
     isEditing.value = false
   } catch (err) {
     console.error('商品更新失敗:', err)
-    alert('操作失敗，請稍後再試')
+    alert(err?.response?.data?.message || '操作失敗，請稍後再試')
   } finally { isSaving.value = false }
 }
 

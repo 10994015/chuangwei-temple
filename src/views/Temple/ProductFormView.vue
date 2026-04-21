@@ -533,6 +533,7 @@ const fillForm = (data) => {
   mainImages.value        = (data.imgs || []).map(img => ({ url: img.url, file: null, id: img.id }))
   form.specs = (data.skus || []).map(sku => ({
     id:                   specIdCounter++,
+    skuId:                sku.id || null,
     nameZhTw:             sku.nameZhTw || '',
     price:                sku.price ?? '',
     stock:                sku.stock === -1 ? '' : (sku.stock ?? ''),
@@ -563,6 +564,7 @@ const buildPayload = (status) => ({
   unpublishAt:        form.isPermanent ? null : toApiDateTime(form.unpublishAt),
   imgIds:             mainImages.value.map(img => img.id).filter(id => id !== null),
   skus: form.specs.map(spec => ({
+    ...(spec.skuId ? { id: spec.skuId } : {}),
     nameZhTw:             spec.nameZhTw,
     price:                Number(spec.price),
     stock:                spec.unlimitedStock ? -1 : Number(spec.stock),
@@ -589,7 +591,7 @@ const handleSubmit = async (status) => {
     goBack()
   } catch (err) {
     console.error(isEdit.value ? '商品更新失敗:' : '商品新增失敗:', err)
-    alert('操作失敗，請稍後再試')
+    alert(err?.response?.data?.message || '操作失敗，請稍後再試')
   } finally {
     isSaving.value = false
   }

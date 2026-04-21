@@ -46,12 +46,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">關聯活動（可多選）</label>
-          <div class="select-wrap">
-            <select v-model="form.eventIds" class="form-select" multiple size="3">
-              <option v-for="e in bindableEvents" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
-            </select>
-          </div>
-          <span class="field-hint">按住 Ctrl 可多選</span>
+          <MultiSelectTag v-model="form.eventIds" :options="bindableEventOptions" placeholder="點擊選擇活動..." />
         </div>
       </div>
 
@@ -523,6 +518,9 @@ const serviceItems = ref([
 ])
 
 const bindableEvents = ref([])
+const bindableEventOptions = computed(() =>
+  bindableEvents.value.map(e => ({ value: e.id, label: e.nameZhTw }))
+)
 
 const ritualDocuments = ref([
   { id: 1, name: '標準疏文' },
@@ -707,7 +705,7 @@ const handleSubmit = async (status) => {
     goBack()
   } catch (err) {
     console.error('服務操作失敗:', err)
-    alert('操作失敗，請稍後再試')
+    alert(err?.response?.data?.message || '操作失敗，請稍後再試')
   } finally {
     isSaving.value = false
   }

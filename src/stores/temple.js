@@ -90,6 +90,68 @@ export const useTempleStore = defineStore('temple', () => {
     }
   }
 
+  // ── 活動管理 ──
+  const events          = ref([])
+  const eventsTotal     = ref(0)
+  const eventsTotalPages = ref(1)
+  const isEventsLoading = ref(false)
+
+  // GET /api/tenant/{tid}/event
+  const fetchEvents = async (tid, params = {}) => {
+    isEventsLoading.value = true
+    try {
+      const query = {
+        page:      params.page      || 1,
+        pageSize:  params.pageSize  || 10,
+        sortBy:    'createdAt',
+        sortOrder: 'DESC',
+      }
+      if (params.name)       query.name       = params.name
+      if (params.categoryId) query.categoryId = params.categoryId
+      if (params.status)     query.status     = params.status
+      const res = await axiosClient.get(`/tenant/${tid}/event`, { params: query })
+      if (res.status === 200 && res.data.data) {
+        const payload = res.data.data
+        events.value           = payload.data       || []
+        eventsTotal.value      = payload.total      || 0
+        eventsTotalPages.value = payload.totalPages ?? Math.ceil((payload.total || 0) / (params.pageSize || 10))
+      } else {
+        events.value = []
+      }
+      return events.value
+    } catch (err) {
+      console.error('獲取活動列表失敗:', err)
+      events.value = []
+      return []
+    } finally {
+      isEventsLoading.value = false
+    }
+  }
+
+  // DELETE /api/tenant/{tid}/event/{id}
+  const deleteEvent = async (tid, id) => {
+    const res = await axiosClient.delete(`/tenant/${tid}/event/${id}`)
+    return res.data
+  }
+
+  // DELETE /api/tenant/{tid}/product/physical/{id}
+  const deletePhysicalProduct = async (tid, id) => {
+    const res = await axiosClient.delete(`/tenant/${tid}/product/physical/${id}`)
+    return res.data
+  }
+
+  // DELETE /api/tenant/{tid}/product/lamp/{id}
+  const deleteLampProduct = async (tid, id) => {
+    const res = await axiosClient.delete(`/tenant/${tid}/product/lamp/${id}`)
+    return res.data
+  }
+
+  // DELETE /api/tenant/{tid}/product/donation/{id}
+  const deleteDonationProduct = async (tid, id) => {
+    const res = await axiosClient.delete(`/tenant/${tid}/product/donation/${id}`)
+    return res.data
+  }
+
   // DELETE /api/tenant/{tid}/product/service/{id}
   const deleteService = async (tid, id) => {
     const res = await axiosClient.delete(`/tenant/${tid}/product/service/${id}`)
@@ -232,6 +294,99 @@ export const useTempleStore = defineStore('temple', () => {
     }
   }
 
+  // ── 點燈商品管理 ──
+  const lampProducts          = ref([])
+  const lampProductsTotal     = ref(0)
+  const lampProductsTotalPages = ref(1)
+  const isLampProductsLoading = ref(false)
+
+  // POST /api/tenant/{tid}/product/lamp
+  const createLampProduct = async (tid, payload) => {
+    const res = await axiosClient.post(`/tenant/${tid}/product/lamp`, payload)
+    return res.data
+  }
+
+  // GET /api/tenant/{tid}/product/lamp
+  const fetchLampProducts = async (tid, params = {}) => {
+    isLampProductsLoading.value = true
+    try {
+      const query = { page: params.page || 1, pageSize: params.pageSize || 10, sortBy: 'createdAt', sortOrder: 'DESC' }
+      if (params.name)       query.name       = params.name
+      if (params.categoryId) query.categoryId = params.categoryId
+      if (params.itemId)     query.itemId     = params.itemId
+      const res = await axiosClient.get(`/tenant/${tid}/product/lamp`, { params: query })
+      if (res.status === 200 && res.data.data) {
+        const payload = res.data.data
+        lampProducts.value           = payload.data       || []
+        lampProductsTotal.value      = payload.total      || 0
+        lampProductsTotalPages.value = payload.totalPages ?? Math.ceil((payload.total || 0) / (params.pageSize || 10))
+      } else {
+        lampProducts.value = []
+      }
+      return lampProducts.value
+    } catch (err) {
+      console.error('獲取點燈商品列表失敗:', err)
+      lampProducts.value = []
+      return []
+    } finally {
+      isLampProductsLoading.value = false
+    }
+  }
+
+  // ── 運費規則 ──
+  const shippingRules          = ref([])
+  const isShippingRulesLoading = ref(false)
+
+  // POST /api/tenant/{tid}/shipping/rule
+  const createShippingRule = async (tid, payload) => {
+    const res = await axiosClient.post(`/tenant/${tid}/shipping/rule`, payload)
+    return res.data
+  }
+
+  // GET /api/tenant/{tid}/shipping/rule/{id}
+  const fetchShippingRule = async (tid, id) => {
+    const res = await axiosClient.get(`/tenant/${tid}/shipping/rule/${id}`)
+    return res.data?.data || null
+  }
+
+  // PATCH /api/tenant/{tid}/shipping/rule/{id}
+  const updateShippingRule = async (tid, id, payload) => {
+    const res = await axiosClient.patch(`/tenant/${tid}/shipping/rule/${id}`, payload)
+    return res.data
+  }
+
+  // DELETE /api/tenant/{tid}/shipping/rule/{id}
+  const deleteShippingRule = async (tid, id) => {
+    const res = await axiosClient.delete(`/tenant/${tid}/shipping/rule/${id}`)
+    return res.data
+  }
+
+  // PATCH /api/tenant/{tid}/shipping/rule/{id}/priority
+  const updateShippingRulePriority = async (tid, id, priority) => {
+    const res = await axiosClient.patch(`/tenant/${tid}/shipping/rule/${id}/priority`, { priority })
+    return res.data
+  }
+
+  // GET /api/tenant/{tid}/shipping/rule
+  const fetchShippingRules = async (tid, params = {}) => {
+    isShippingRulesLoading.value = true
+    try {
+      const query = {}
+      if (params.name)   query.name   = params.name
+      if (params.type)   query.type   = params.type
+      if (params.status) query.status = params.status
+      const res = await axiosClient.get(`/tenant/${tid}/shipping/rule`, { params: query })
+      shippingRules.value = res.data?.data || []
+      return shippingRules.value
+    } catch (err) {
+      console.error('獲取運費規則失敗:', err)
+      shippingRules.value = []
+      return []
+    } finally {
+      isShippingRulesLoading.value = false
+    }
+  }
+
   return {
     services,
     servicesTotal,
@@ -241,6 +396,15 @@ export const useTempleStore = defineStore('temple', () => {
     createService,
     fetchService,
     updateService,
+    events,
+    eventsTotal,
+    eventsTotalPages,
+    isEventsLoading,
+    fetchEvents,
+    deleteEvent,
+    deletePhysicalProduct,
+    deleteLampProduct,
+    deleteDonationProduct,
     deleteService,
     uploadMainImages,
     uploadSkuImages,
@@ -261,5 +425,19 @@ export const useTempleStore = defineStore('temple', () => {
     donationProductsTotalPages,
     isDonationProductsLoading,
     fetchDonationProducts,
+    lampProducts,
+    lampProductsTotal,
+    lampProductsTotalPages,
+    isLampProductsLoading,
+    fetchLampProducts,
+    createLampProduct,
+    shippingRules,
+    isShippingRulesLoading,
+    fetchShippingRules,
+    createShippingRule,
+    fetchShippingRule,
+    updateShippingRule,
+    deleteShippingRule,
+    updateShippingRulePriority,
   }
 })
