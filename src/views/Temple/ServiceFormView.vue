@@ -34,7 +34,7 @@
           <label class="form-label">服務類別 <span class="required">*</span></label>
           <div class="input-with-btn">
             <div class="select-wrap" :class="{ error: errors.categoryId }">
-              <select v-model.number="form.categoryId" class="form-select">
+              <select v-model="form.categoryId" class="form-select">
                 <option value="">點擊選擇類別...</option>
                 <option v-for="c in serviceCategories" :key="c.value" :value="c.value">{{ c.label }}</option>
               </select>
@@ -373,12 +373,7 @@ const breadcrumbs = computed(() => [
   { text: isEdit.value ? '編輯服務' : '新增服務' },
 ])
 
-const serviceCategories = ref([
-  { value: 1, label: '點燈服務' },
-  { value: 2, label: '祈福服務' },
-  { value: 3, label: '一般服務' },
-  { value: 4, label: '法會服務' },
-])
+const serviceCategories = ref([])
 
 // ── 服務類別管理 Modal ──
 const showCategoryModal   = ref(false)
@@ -388,7 +383,7 @@ const newCategoryName     = ref('')
 const newCategoryInputRef = ref(null)
 const editingCategoryId   = ref(null)
 const editingCategoryName = ref('')
-let   catIdCounter        = 5
+
 
 const filteredCategories = computed(() =>
   serviceCategories.value.filter(c =>
@@ -410,12 +405,19 @@ const startAddCategory = async () => {
   newCategoryInputRef.value?.focus()
 }
 
-const confirmAddCategory = () => {
+const confirmAddCategory = async () => {
   const name = newCategoryName.value.trim()
   if (!name) return
-  serviceCategories.value.push({ value: catIdCounter++, label: name })
-  newCategoryName.value  = ''
-  isAddingCategory.value = false
+  try {
+    if (!form.itemId) { alert('請先選擇服務項目，再新增服務類別'); return }
+    await templeStore.createServiceCategory(templeId.value, { name, parentId: form.itemId })
+    const list = await templeStore.fetchServiceCategories(templeId.value)
+    serviceCategories.value = list.map(i => ({ value: i.id, label: i.name }))
+    newCategoryName.value  = ''
+    isAddingCategory.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增類別失敗，請稍後再試')
+  }
 }
 
 const cancelAddCategory = () => {
@@ -449,7 +451,7 @@ const newTagName     = ref('')
 const newTagInputRef = ref(null)
 const editingTagId   = ref(null)
 const editingTagName = ref('')
-let   tagIdCounter   = 100
+
 
 const filteredTags = computed(() =>
   tagOptions.value.filter(t =>
@@ -471,12 +473,19 @@ const startAddTag = async () => {
   newTagInputRef.value?.focus()
 }
 
-const confirmAddTag = () => {
+const confirmAddTag = async () => {
   const name = newTagName.value.trim()
   if (!name) return
-  tagOptions.value.push({ value: name, label: name })
-  newTagName.value  = ''
-  isAddingTag.value = false
+  try {
+    await templeStore.createLabelCategory(templeId.value, { name, parentId: labelParentId.value })
+    const list = await templeStore.fetchLabelCategories(templeId.value)
+    if (list.length) labelParentId.value = list[0].parentId
+    tagOptions.value  = list.map(i => ({ value: i.id, label: i.name }))
+    newTagName.value  = ''
+    isAddingTag.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增標籤失敗，請稍後再試')
+  }
 }
 
 const cancelAddTag = () => {
@@ -509,13 +518,7 @@ const deleteTag = (value) => {
   form.tags = form.tags.filter(v => v !== value)
 }
 
-const serviceItems = ref([
-  { value: 'item-001', label: '光明燈服務' },
-  { value: 'item-002', label: '法會報名' },
-  { value: 'item-003', label: '祈福禮包' },
-  { value: 'item-004', label: '收驚服務' },
-  { value: 'item-005', label: '安太歲' },
-])
+const serviceItems = ref([])
 
 const bindableEvents = ref([])
 const bindableEventOptions = computed(() =>
@@ -531,12 +534,8 @@ const certificates = ref([
   { id: 1, name: '標準感謝狀' },
 ])
 
-const tagOptions = ref([
-  { value: '熱門', label: '熱門' },
-  { value: '推薦', label: '推薦' },
-  { value: '新上架', label: '新上架' },
-  { value: '限量', label: '限量' },
-])
+const tagOptions    = ref([])
+const labelParentId = ref(null)
 
 const mainImages = ref([])
 
@@ -716,6 +715,13 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  templeStore.fetchServiceItems(templeId.value)
+    .then(r => { serviceItems.value = r.map(i => ({ value: i.id, label: i.name })) })
+  templeStore.fetchServiceCategories(templeId.value)
+    .then(r => { serviceCategories.value = r.map(i => ({ value: i.id, label: i.name })) })
+  templeStore.fetchLabelCategories(templeId.value)
+    .then(r => { if (r.length) labelParentId.value = r[0].parentId; tagOptions.value = r.map(i => ({ value: i.id, label: i.name })) })
+
   // 載入可綁定活動（編輯帶 productId，新增不帶）
   bindableEvents.value = await templeStore.fetchBindableEvents(
     templeId.value,

@@ -183,10 +183,6 @@
           <div class="search-wrap">
             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input v-model="productFilter.keyword" class="filter-input" placeholder="搜尋商品或規格名稱..." @keydown.enter="onProductSearch" />
-            <button class="btn-search" @click="onProductSearch">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              搜尋
-            </button>
           </div>
         </div>
         <div class="filter-item">

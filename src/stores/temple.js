@@ -76,6 +76,84 @@ export const useTempleStore = defineStore('temple', () => {
     return res.data?.data || []
   }
 
+  // POST /api/tenant/{tid}/product/service-category 新增服務類別
+  const createServiceCategory = async (tid, payload) => {
+    const res = await axiosClient.post(`/tenant/${tid}/product/service-category`, payload)
+    return res.data
+  }
+
+  // GET /api/tenant/{tid}/product/service-category 查詢服務類別列表
+  const fetchServiceCategories = async (tid) => {
+    try {
+      const res = await axiosClient.get(`/tenant/${tid}/product/service-category`, {
+        params: { page: 1, pageSize: 100, sortBy: 'sequence', sortOrder: 'ASC' },
+      })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
+  // GET /api/tenant/{tid}/product/service-item 查詢服務項目列表
+  const fetchServiceItems = async (tid) => {
+    try {
+      const res = await axiosClient.get(`/tenant/${tid}/product/service-item`, {
+        params: { page: 1, pageSize: 100, sortBy: 'sequence', sortOrder: 'ASC' },
+      })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
+  // GET /api/tenant/{tid}/product/label-category 查詢標籤類別列表
+  const fetchLabelCategories = async (tid) => {
+    try {
+      const res = await axiosClient.get(`/tenant/${tid}/product/label-category`, {
+        params: { page: 1, pageSize: 100, sortBy: 'sequence', sortOrder: 'ASC' },
+      })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
+  // POST /api/tenant/{tid}/product/label-category 新增標籤類別
+  const createLabelCategory = async (tid, payload) => {
+    const res = await axiosClient.post(`/tenant/${tid}/product/label-category`, payload)
+    return res.data
+  }
+
+  // POST /api/tenant/{tid}/product/product-category 新增商品類別
+  const createProductCategory = async (tid, payload) => {
+    const res = await axiosClient.post(`/tenant/${tid}/product/product-category`, payload)
+    return res.data
+  }
+
+  // GET /api/tenant/{tid}/product/product-category 查詢商品類別列表
+  const fetchProductCategories = async (tid, params = {}) => {
+    try {
+      const query = { page: 1, pageSize: 100, sortBy: 'sequence', sortOrder: 'ASC' }
+      if (params.name) query.name = params.name
+      const res = await axiosClient.get(`/tenant/${tid}/product/product-category`, { params: query })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
+  // GET /api/tenant/{tid}/product/product-item 查詢商品項目列表
+  const fetchProductItems = async (tid, params = {}) => {
+    try {
+      const query = { page: 1, pageSize: 100, sortBy: 'sequence', sortOrder: 'ASC' }
+      if (params.name) query.name = params.name
+      const res = await axiosClient.get(`/tenant/${tid}/product/product-item`, { params: query })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
   // GET /api/tenant/{tid}/product/event 查詢可綁定活動列表
   const fetchBindableEvents = async (tid, productId = null) => {
     try {
@@ -406,6 +484,14 @@ export const useTempleStore = defineStore('temple', () => {
     deleteLampProduct,
     deleteDonationProduct,
     deleteService,
+    createServiceCategory,
+    fetchServiceCategories,
+    fetchServiceItems,
+    fetchLabelCategories,
+    createLabelCategory,
+    createProductCategory,
+    fetchProductCategories,
+    fetchProductItems,
     uploadMainImages,
     uploadSkuImages,
     fetchBindableEvents,

@@ -66,12 +66,7 @@
           <div class="form-group">
             <label class="form-label">關聯活動</label>
             <template v-if="isEditing">
-              <div class="select-wrap">
-                <select v-model="form.eventIds" class="form-select" multiple size="3">
-                  <option v-for="e in bindableEvents" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
-                </select>
-              </div>
-              <span class="field-hint">按住 Ctrl 可多選</span>
+              <MultiSelectTag v-model="form.eventIds" :options="bindableEventOptions" placeholder="點擊選擇活動..." />
             </template>
             <div v-else class="field-value">{{ getEventNames(form.eventIds) }}</div>
           </div>
@@ -437,31 +432,16 @@ const breadcrumbs = computed(() => [
 ])
 
 // ── 下拉選項 ──
-const productCategories = ref([
-  { value: 'cat-001', label: '禮品' },
-  { value: 'cat-002', label: '香品' },
-  { value: 'cat-003', label: '紀念品' },
-  { value: 'cat-004', label: '一般商品' },
-])
+const productCategories = ref([])
 
-const productItems = ref([
-  { value: 'item-001', label: '平安燈' },
-  { value: 'item-002', label: '香品組合' },
-  { value: 'item-003', label: '紀念品' },
-  { value: 'item-004', label: '法器' },
-  { value: 'item-005', label: '一般商品' },
-])
+const productItems = ref([])
 
 const bindableEvents  = ref([])
+const bindableEventOptions = computed(() => bindableEvents.value.map(e => ({ value: e.id, label: e.nameZhTw })))
 const ritualDocuments = ref([{ id: 1, name: '標準疏文' }, { id: 2, name: '自訂疏文' }])
 const certificates    = ref([{ id: 1, name: '標準感謝狀' }])
-const tagOptions      = ref([
-  { value: '熱門', label: '熱門' },
-  { value: '推薦', label: '推薦' },
-  { value: '限時', label: '限時' },
-  { value: '新品', label: '新品' },
-  { value: '特價', label: '特價' },
-])
+const tagOptions    = ref([])
+const labelParentId = ref(null)
 
 const shippingMap = { FREE: '無運費', STANDARD: '普通運費', SPECIAL: '特殊運費' }
 
@@ -630,7 +610,10 @@ onMounted(async () => {
   try {
     const [data] = await Promise.all([
       templeStore.fetchPhysicalProduct(templeId.value, productId.value),
-      templeStore.fetchBindableEvents(templeId.value, productId.value).then(r => { bindableEvents.value = r }),
+      templeStore.fetchBindableEvents(templeId.value).then(r => { bindableEvents.value = r }),
+      templeStore.fetchProductItems(templeId.value).then(r => { productItems.value = r.map(i => ({ value: i.id, label: i.name })) }),
+      templeStore.fetchProductCategories(templeId.value).then(r => { productCategories.value = r.map(i => ({ value: i.id, label: i.name })) }),
+      templeStore.fetchLabelCategories(templeId.value).then(r => { if (r.length) labelParentId.value = r[0].parentId; tagOptions.value = r.map(i => ({ value: i.id, label: i.name })) }),
     ])
     console.log('商品詳情 data:', data)
     if (data) fillForm(data)
@@ -654,7 +637,20 @@ const filteredCategories = computed(() =>
 )
 const openCategoryModal   = () => { categorySearch.value = ''; isAddingCategory.value = false; newCategoryName.value = ''; editingCategoryId.value = null; showCategoryModal.value = true }
 const startAddCategory    = async () => { isAddingCategory.value = true; await nextTick(); newCategoryInputRef.value?.focus() }
-const confirmAddCategory  = () => { const name = newCategoryName.value.trim(); if (!name) return; productCategories.value.push({ value: `cat-${catIdCounter++}`, label: name }); newCategoryName.value = ''; isAddingCategory.value = false }
+const confirmAddCategory  = async () => {
+  const name = newCategoryName.value.trim()
+  if (!name) return
+  try {
+    if (!form.itemId) { alert('請先選擇商品項目，再新增商品類別'); return }
+    await templeStore.createProductCategory(templeId.value, { name, parentId: form.itemId })
+    const list = await templeStore.fetchProductCategories(templeId.value)
+    productCategories.value = list.map(i => ({ value: i.id, label: i.name }))
+    newCategoryName.value = ''
+    isAddingCategory.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增類別失敗，請稍後再試')
+  }
+}
 const cancelAddCategory   = () => { newCategoryName.value = ''; isAddingCategory.value = false }
 const startEditCategory   = (cat) => { editingCategoryId.value = cat.value; editingCategoryName.value = cat.label }
 const confirmEditCategory = (cat) => { const name = editingCategoryName.value.trim(); if (!name) return; const t = productCategories.value.find(c => c.value === cat.value); if (t) t.label = name; editingCategoryId.value = null }
@@ -672,7 +668,20 @@ const editingTagName = ref('')
 const filteredTags  = computed(() => tagOptions.value.filter(t => !tagSearch.value || t.label.includes(tagSearch.value)))
 const openTagModal  = () => { tagSearch.value = ''; isAddingTag.value = false; newTagName.value = ''; editingTagId.value = null; showTagModal.value = true }
 const startAddTag   = async () => { isAddingTag.value = true; await nextTick(); newTagInputRef.value?.focus() }
-const confirmAddTag = () => { const name = newTagName.value.trim(); if (!name) return; tagOptions.value.push({ value: name, label: name }); newTagName.value = ''; isAddingTag.value = false }
+const confirmAddTag = async () => {
+  const name = newTagName.value.trim()
+  if (!name) return
+  try {
+    await templeStore.createLabelCategory(templeId.value, { name, parentId: labelParentId.value })
+    const list = await templeStore.fetchLabelCategories(templeId.value)
+    if (list.length) labelParentId.value = list[0].parentId
+    tagOptions.value  = list.map(i => ({ value: i.id, label: i.name }))
+    newTagName.value  = ''
+    isAddingTag.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增標籤失敗，請稍後再試')
+  }
+}
 const cancelAddTag  = () => { newTagName.value = ''; isAddingTag.value = false }
 const startEditTag  = (tag) => { editingTagId.value = tag.value; editingTagName.value = tag.label }
 const confirmEditTag = (tag) => {

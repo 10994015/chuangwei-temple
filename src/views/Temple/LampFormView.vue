@@ -310,11 +310,8 @@ const categories = ref([
   { id: 'cat-003', name: '平安服務' },
 ])
 const events = ref([])
-const tags = ref([
-  { value: 'tag-001', label: '熱門' },
-  { value: 'tag-002', label: '推薦' },
-  { value: 'tag-003', label: '限時' },
-])
+const tags          = ref([])
+const labelParentId = ref(null)
 
 // ── 主圖 ──
 const mainImages     = ref([])
@@ -493,7 +490,7 @@ const newTagName     = ref('')
 const newTagInputRef = ref(null)
 const editingTagId   = ref(null)
 const editingTagName = ref('')
-let   tagIdCounter   = 100
+
 
 const filteredTags = computed(() =>
   tags.value.filter(t => !tagSearch.value || t.label.includes(tagSearch.value))
@@ -510,12 +507,19 @@ const startAddTag = async () => {
   await nextTick()
   newTagInputRef.value?.focus()
 }
-const confirmAddTag = () => {
+const confirmAddTag = async () => {
   const name = newTagName.value.trim()
   if (!name) return
-  tags.value.push({ value: `tag-${tagIdCounter++}`, label: name })
-  newTagName.value  = ''
-  isAddingTag.value = false
+  try {
+    await templeStore.createLabelCategory(templeId.value, { name, parentId: labelParentId.value })
+    const list = await templeStore.fetchLabelCategories(templeId.value)
+    if (list.length) labelParentId.value = list[0].parentId
+    tags.value        = list.map(i => ({ value: i.id, label: i.name }))
+    newTagName.value  = ''
+    isAddingTag.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增標籤失敗，請稍後再試')
+  }
 }
 const cancelAddTag = () => {
   newTagName.value  = ''
@@ -544,6 +548,8 @@ const goBack = () => {
 onMounted(async () => {
   const data = await templeStore.fetchBindableEvents(templeId.value)
   events.value = data.map(e => ({ value: e.id, label: e.nameZhTw }))
+  templeStore.fetchLabelCategories(templeId.value)
+    .then(r => { if (r.length) labelParentId.value = r[0].parentId; tags.value = r.map(i => ({ value: i.id, label: i.name })) })
 })
 </script>
 

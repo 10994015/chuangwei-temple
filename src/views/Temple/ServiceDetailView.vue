@@ -54,7 +54,7 @@
             <template v-if="isEditing">
               <div class="input-with-btn">
                 <div class="select-wrap">
-                  <select v-model.number="form.categoryId" class="form-select">
+                  <select v-model="form.categoryId" class="form-select">
                     <option value="">點擊選擇類別...</option>
                     <option v-for="c in serviceCategories" :key="c.value" :value="c.value">{{ c.label }}</option>
                   </select>
@@ -68,12 +68,7 @@
           <div class="form-group">
             <label class="form-label">關聯活動</label>
             <template v-if="isEditing">
-              <div class="select-wrap">
-                <select v-model="form.eventIds" class="form-select" multiple size="3">
-                  <option v-for="e in bindableEvents" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
-                </select>
-              </div>
-              <span class="field-hint">按住 Ctrl 可多選</span>
+              <MultiSelectTag v-model="form.eventIds" :options="bindableEventOptions" placeholder="點擊選擇活動..." />
             </template>
             <div v-else class="field-value">{{ getEventNames(form.eventIds) }}</div>
           </div>
@@ -443,28 +438,14 @@ const breadcrumbs = computed(() => [
   { text: '服務詳情' },
 ])
 
-const serviceCategories = ref([
-  { value: 1, label: '點燈服務' },
-  { value: 2, label: '祈福服務' },
-  { value: 3, label: '一般服務' },
-  { value: 4, label: '法會服務' },
-])
-const serviceItems = ref([
-  { value: 'item-001', label: '光明燈服務' },
-  { value: 'item-002', label: '法會報名' },
-  { value: 'item-003', label: '祈福禮包' },
-  { value: 'item-004', label: '收驚服務' },
-  { value: 'item-005', label: '安太歲' },
-])
+const serviceCategories = ref([])
+const serviceItems = ref([])
 const bindableEvents  = ref([])
+const bindableEventOptions = computed(() => bindableEvents.value.map(e => ({ value: e.id, label: e.nameZhTw })))
 const ritualDocuments = ref([{ id: 1, name: '標準疏文' }, { id: 2, name: '自訂疏文' }])
 const certificates    = ref([{ id: 1, name: '標準感謝狀' }])
-const tagOptions      = ref([
-  { value: '熱門', label: '熱門' },
-  { value: '推薦', label: '推薦' },
-  { value: '新上架', label: '新上架' },
-  { value: '限量', label: '限量' },
-])
+const tagOptions    = ref([])
+const labelParentId = ref(null)
 
 const shippingMap = { FREE: '無運費', STANDARD: '普通運費', SPECIAL: '特殊運費' }
 
@@ -566,6 +547,7 @@ const buildPayload = () => ({
   unpublishAt:        form.isPermanent ? null : toApiDateTime(form.unpublishAt),
   imgIds:             mainImages.value.map(img => img.id).filter(id => id !== null),
   skus: form.specs.map(spec => ({
+    ...(spec.skuId ? { id: spec.skuId } : {}),
     nameZhTw:             spec.nameZhTw,
     price:                Number(spec.price),
     stock:                spec.unlimitedQty ? -1 : Number(spec.stock),
@@ -596,7 +578,8 @@ const fillForm = (data) => {
   form.isPermanent        = !data.publishAt && !data.unpublishAt
   mainImages.value        = (data.imgs || []).map(img => ({ url: img.url, file: null, id: img.id }))
   form.specs = (data.skus || []).map(sku => ({
-    id: ++specIdCounter,
+    id:    ++specIdCounter,
+    skuId: sku.id || null,
     nameZhTw: sku.nameZhTw || '', price: sku.price ?? '',
     stock: sku.stock === -1 ? '' : (sku.stock ?? ''),
     unlimitedQty: sku.stock === -1, isCompanyPurchasable: sku.isCompanyPurchasable ?? false,
@@ -633,7 +616,7 @@ const newCategoryName     = ref('')
 const newCategoryInputRef = ref(null)
 const editingCategoryId   = ref(null)
 const editingCategoryName = ref('')
-let   catIdCounter        = 5
+
 
 const filteredCategories = computed(() =>
   serviceCategories.value.filter(c => !categorySearch.value || c.label.includes(categorySearch.value))
@@ -644,10 +627,18 @@ const openCategoryModal = () => {
   showCategoryModal.value = true
 }
 const startAddCategory = async () => { isAddingCategory.value = true; await nextTick(); newCategoryInputRef.value?.focus() }
-const confirmAddCategory = () => {
-  const name = newCategoryName.value.trim(); if (!name) return
-  serviceCategories.value.push({ value: catIdCounter++, label: name })
-  newCategoryName.value = ''; isAddingCategory.value = false
+const confirmAddCategory = async () => {
+  const name = newCategoryName.value.trim()
+  if (!name) return
+  try {
+    if (!form.itemId) { alert('請先選擇服務項目，再新增服務類別'); return }
+    await templeStore.createServiceCategory(templeId.value, { name, parentId: form.itemId })
+    const list = await templeStore.fetchServiceCategories(templeId.value)
+    serviceCategories.value = list.map(i => ({ value: i.id, label: i.name }))
+    newCategoryName.value = ''; isAddingCategory.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增類別失敗，請稍後再試')
+  }
 }
 const cancelAddCategory = () => { newCategoryName.value = ''; isAddingCategory.value = false }
 const startEditCategory = (cat) => { editingCategoryId.value = cat.value; editingCategoryName.value = cat.label }
@@ -680,10 +671,18 @@ const openTagModal = () => {
   showTagModal.value = true
 }
 const startAddTag = async () => { isAddingTag.value = true; await nextTick(); newTagInputRef.value?.focus() }
-const confirmAddTag = () => {
-  const name = newTagName.value.trim(); if (!name) return
-  tagOptions.value.push({ value: name, label: name })
-  newTagName.value = ''; isAddingTag.value = false
+const confirmAddTag = async () => {
+  const name = newTagName.value.trim()
+  if (!name) return
+  try {
+    await templeStore.createLabelCategory(templeId.value, { name, parentId: labelParentId.value })
+    const list = await templeStore.fetchLabelCategories(templeId.value)
+    if (list.length) labelParentId.value = list[0].parentId
+    tagOptions.value  = list.map(i => ({ value: i.id, label: i.name }))
+    newTagName.value = ''; isAddingTag.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增標籤失敗，請稍後再試')
+  }
 }
 const cancelAddTag = () => { newTagName.value = ''; isAddingTag.value = false }
 const startEditTag = (tag) => { editingTagId.value = tag.value; editingTagName.value = tag.label }
@@ -707,7 +706,10 @@ onMounted(async () => {
   try {
     const [data] = await Promise.all([
       templeStore.fetchService(templeId.value, serviceId.value),
-      templeStore.fetchBindableEvents(templeId.value, serviceId.value).then(r => { bindableEvents.value = r }),
+      templeStore.fetchBindableEvents(templeId.value).then(r => { bindableEvents.value = r }),
+      templeStore.fetchServiceItems(templeId.value).then(r => { serviceItems.value = r.map(i => ({ value: i.id, label: i.name })) }),
+      templeStore.fetchServiceCategories(templeId.value).then(r => { serviceCategories.value = r.map(i => ({ value: i.id, label: i.name })) }),
+      templeStore.fetchLabelCategories(templeId.value).then(r => { if (r.length) labelParentId.value = r[0].parentId; tagOptions.value = r.map(i => ({ value: i.id, label: i.name })) }),
     ])
     if (data) fillForm(data)
   } catch (err) {
