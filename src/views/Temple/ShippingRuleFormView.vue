@@ -96,7 +96,14 @@
       </button>
       <button class="btn-cancel" type="button" @click="goBack">取消</button>
     </div>
+
+  <div class="shipping-info-box">
+    <div class="shipping-info-title">💡 運費計算說明</div>
+    <p><strong>普通運費：</strong>系統會依據訂單總金額自動套用對應級距的運費。例如訂單金額為 $800，則套用級距 2 的運費 $60。</p>
+    <p><strong>特殊運費：</strong>若訂單中包含標註為「特殊運費」的商品，則該商品將使用其獨立設定的運費，不受普通運費級距影響。</p>
+    <p><strong>混合運費：</strong>當訂單同時包含普通商品與特殊商品時，系統將分別計算並加總兩種運費。</p>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -208,6 +215,10 @@ const goBack = () => {
 .btn-add-tier { display: block; padding: 10px 20px; background: none; border: 1px dashed #ccc; border-radius: 8px; font-size: 13px; color: #888; cursor: pointer; transition: border-color 0.2s, color 0.2s; margin-top: 4px; }
 .btn-add-tier:hover { border-color: #E8572A; color: #E8572A; }
 .form-actions { display: flex; justify-content: flex-end; gap: 12px; padding-bottom: 20px; }
+.shipping-info-box { background: #eef3ff; border: 1px solid #c7d7f9; border-radius: 12px; padding: 20px 24px; margin-top: 24px; }
+.shipping-info-title { font-size: 14px; font-weight: 700; color: #3b5bdb; margin-bottom: 12px; }
+.shipping-info-box p { margin: 0 0 8px; font-size: 13.5px; color: #374151; line-height: 1.7; }
+.shipping-info-box p:last-child { margin-bottom: 0; }
 .btn-primary { padding: 10px 28px; background: #E8572A; color: #fff; border: none; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 .btn-primary:hover:not(:disabled) { background: #d14a1f; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }

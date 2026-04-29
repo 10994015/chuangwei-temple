@@ -17,10 +17,10 @@
           <span v-if="errors.nameZhTw" class="error-msg">{{ errors.nameZhTw }}</span>
         </div>
         <div class="form-group">
-          <label class="form-label">項目 <span class="required">*</span></label>
+          <label class="form-label">服務項目 <span class="required">*</span></label>
           <div class="select-wrap">
             <select v-model="form.itemId" class="form-select" :class="{ error: errors.itemId }">
-              <option value="">點擊選擇項目...</option>
+              <option value="">點擊選擇服務項目...</option>
               <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
             </select>
             <span class="select-arrow">▾</span>
@@ -85,18 +85,6 @@
         </div>
       </div>
 
-      <!-- 特殊號設定 -->
-      <div class="section-title">特殊號設定（選填）</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">特殊號碼設定（以逗號間隔）</label>
-          <input v-model="form.specialSlotNumbers" class="form-input" placeholder="888,1688,..." />
-        </div>
-        <div class="form-group">
-          <label class="form-label">特殊號商品價格（元）</label>
-          <input v-model.number="form.specialSlotPrice" type="number" min="0" class="form-input" placeholder="0" />
-        </div>
-      </div>
     </div>
 
     <!-- 商品頁設定 -->
@@ -144,6 +132,15 @@
             <input v-model.number="spec.slotSelectFee" type="number" min="0" class="form-input" placeholder="0" />
           </div>
         </div>
+
+        <!-- 特殊號設定（僅特殊號顯示） -->
+        <template v-if="spec.nameZhTw === '特殊號'">
+          <div class="section-title" style="margin-top:16px;margin-bottom:8px">特殊號設定（選填）</div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">特殊號碼設定（以逗號間隔）</label>
+            <input v-model="form.specialSlotNumbers" class="form-input" placeholder="888,1688,..." />
+          </div>
+        </template>
 
         <!-- 公司行號 -->
         <div>
@@ -298,17 +295,8 @@ const breadcrumbs = computed(() => [
   { text: '新增燈種' },
 ])
 
-// ── 假資料 ──
-const items = ref([
-  { id: 'item-001', name: '光明燈' },
-  { id: 'item-002', name: '太歲燈' },
-  { id: 'item-003', name: '平安燈' },
-])
-const categories = ref([
-  { id: 'cat-001', name: '光明燈服務' },
-  { id: 'cat-002', name: '太歲服務' },
-  { id: 'cat-003', name: '平安服務' },
-])
+const items      = ref([])
+const categories = ref([])
 const events = ref([])
 const tags          = ref([])
 const labelParentId = ref(null)
@@ -438,7 +426,6 @@ const newCategoryName     = ref('')
 const newCategoryInputRef = ref(null)
 const editingCategoryId   = ref(null)
 const editingCategoryName = ref('')
-let   catIdCounter        = 100
 
 const filteredCategories = computed(() =>
   categories.value.filter(c => !categorySearch.value || c.name.includes(categorySearch.value))
@@ -455,12 +442,19 @@ const startAddCategory = async () => {
   await nextTick()
   newCategoryInputRef.value?.focus()
 }
-const confirmAddCategory = () => {
+const confirmAddCategory = async () => {
   const name = newCategoryName.value.trim()
   if (!name) return
-  categories.value.push({ id: `cat-${catIdCounter++}`, name })
-  newCategoryName.value  = ''
-  isAddingCategory.value = false
+  try {
+    if (!form.itemId) { alert('請先選擇服務項目，再新增服務類別'); return }
+    await templeStore.createServiceCategory(templeId.value, { name, parentId: form.itemId })
+    const list = await templeStore.fetchServiceCategories(templeId.value)
+    categories.value = list.map(i => ({ id: i.id, name: i.name }))
+    newCategoryName.value  = ''
+    isAddingCategory.value = false
+  } catch (err) {
+    alert(err?.response?.data?.message || '新增類別失敗，請稍後再試')
+  }
 }
 const cancelAddCategory = () => {
   newCategoryName.value  = ''
@@ -550,6 +544,10 @@ onMounted(async () => {
   events.value = data.map(e => ({ value: e.id, label: e.nameZhTw }))
   templeStore.fetchLabelCategories(templeId.value)
     .then(r => { if (r.length) labelParentId.value = r[0].parentId; tags.value = r.map(i => ({ value: i.id, label: i.name })) })
+  templeStore.fetchServiceItems(templeId.value)
+    .then(r => { items.value = r.map(i => ({ id: i.id, name: i.name })) })
+  templeStore.fetchServiceCategories(templeId.value)
+    .then(r => { categories.value = r.map(i => ({ id: i.id, name: i.name })) })
 })
 </script>
 

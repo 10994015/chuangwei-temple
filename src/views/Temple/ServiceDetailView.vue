@@ -442,8 +442,8 @@ const serviceCategories = ref([])
 const serviceItems = ref([])
 const bindableEvents  = ref([])
 const bindableEventOptions = computed(() => bindableEvents.value.map(e => ({ value: e.id, label: e.nameZhTw })))
-const ritualDocuments = ref([{ id: 1, name: '標準疏文' }, { id: 2, name: '自訂疏文' }])
-const certificates    = ref([{ id: 1, name: '標準感謝狀' }])
+const ritualDocuments = ref([])
+const certificates    = ref([])
 const tagOptions    = ref([])
 const labelParentId = ref(null)
 
@@ -710,6 +710,8 @@ onMounted(async () => {
       templeStore.fetchServiceItems(templeId.value).then(r => { serviceItems.value = r.map(i => ({ value: i.id, label: i.name })) }),
       templeStore.fetchServiceCategories(templeId.value).then(r => { serviceCategories.value = r.map(i => ({ value: i.id, label: i.name })) }),
       templeStore.fetchLabelCategories(templeId.value).then(r => { if (r.length) labelParentId.value = r[0].parentId; tagOptions.value = r.map(i => ({ value: i.id, label: i.name })) }),
+      templeStore.fetchRitualDocuments(templeId.value).then(r => { ritualDocuments.value = r.map(i => ({ id: i.id, name: i.name })) }),
+      templeStore.fetchCertificates(templeId.value).then(r => { certificates.value = r.map(i => ({ id: i.id, name: i.name })) }),
     ])
     if (data) fillForm(data)
   } catch (err) {

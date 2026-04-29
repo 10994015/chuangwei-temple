@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 import { useTempleStore } from '@/stores/temple'
@@ -135,14 +135,8 @@ const breadcrumbs = computed(() => [
   { text: '新增捐款商品' },
 ])
 
-const ritualDocuments = ref([
-  { id: 1, name: '標準疏文' },
-  { id: 2, name: '自訂疏文' },
-])
-
-const certificates = ref([
-  { id: 1, name: '標準感謝狀' },
-])
+const ritualDocuments = ref([])
+const certificates    = ref([])
 
 // ── 主圖 ──
 const mainImages = ref([])
@@ -222,6 +216,13 @@ const handleSubmit = async (status) => {
 const goBack = () => {
   router.push({ name: 'app.temple.activity-management', params: { templeId: templeId.value }, query: { tab: 'donations' } })
 }
+
+onMounted(() => {
+  templeStore.fetchRitualDocuments(templeId.value)
+    .then(r => { ritualDocuments.value = r.map(i => ({ id: i.id, name: i.name })) })
+  templeStore.fetchCertificates(templeId.value)
+    .then(r => { certificates.value = r.map(i => ({ id: i.id, name: i.name })) })
+})
 
 </script>
 

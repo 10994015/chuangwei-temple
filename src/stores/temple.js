@@ -18,6 +18,11 @@ export const useTempleStore = defineStore('temple', () => {
         name       = '',
         categoryId = '',
         status     = '',
+        eventId    = '',
+        startAt    = '',
+        endAt      = '',
+        minPrice   = '',
+        maxPrice   = '',
         sortBy     = 'createdAt',
         sortOrder  = 'DESC',
         page       = 1,
@@ -28,10 +33,17 @@ export const useTempleStore = defineStore('temple', () => {
       if (name)       query.name       = name
       if (categoryId) query.categoryId = categoryId
       if (status)     query.status     = status
+      if (eventId)    query.eventId    = eventId
+      if (startAt)    query.startAt    = startAt
+      if (endAt)      query.endAt      = endAt
+      if (minPrice)   query.minPrice   = minPrice
+      if (maxPrice)   query.maxPrice   = maxPrice
 
       const res = await axiosClient.get(`/tenant/${tid}/product/service`, { params: query })
+      console.log('[fetchServices] response:', res.data)
       if (res.status === 200 && res.data.data) {
         const payload = res.data.data
+        console.log('[fetchServices] items:', payload.data)
         services.value           = payload.data       || []
         servicesTotal.value      = payload.total      || 0
         servicesTotalPages.value = payload.totalPages ?? Math.ceil((payload.total || 0) / pageSize)
@@ -99,6 +111,30 @@ export const useTempleStore = defineStore('temple', () => {
     try {
       const res = await axiosClient.get(`/tenant/${tid}/product/service-item`, {
         params: { page: 1, pageSize: 100, sortBy: 'sequence', sortOrder: 'ASC' },
+      })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
+  // GET /api/tenant/{tid}/product/ritual 查詢疏文列表
+  const fetchRitualDocuments = async (tid) => {
+    try {
+      const res = await axiosClient.get(`/tenant/${tid}/product/ritual`, {
+        params: { page: 1, pageSize: 100, sortBy: 'createdAt', sortOrder: 'DESC' },
+      })
+      return res.data?.data?.data || []
+    } catch {
+      return []
+    }
+  }
+
+  // GET /api/tenant/{tid}/product/certificate 查詢感謝狀列表
+  const fetchCertificates = async (tid) => {
+    try {
+      const res = await axiosClient.get(`/tenant/${tid}/product/certificate`, {
+        params: { page: 1, pageSize: 100, sortBy: 'createdAt', sortOrder: 'DESC' },
       })
       return res.data?.data?.data || []
     } catch {
@@ -280,6 +316,12 @@ export const useTempleStore = defineStore('temple', () => {
         name       = '',
         categoryId = '',
         itemId     = '',
+        eventId    = '',
+        status     = '',
+        startAt    = '',
+        endAt      = '',
+        minPrice   = '',
+        maxPrice   = '',
         sortBy     = 'createdAt',
         sortOrder  = 'DESC',
         page       = 1,
@@ -290,6 +332,12 @@ export const useTempleStore = defineStore('temple', () => {
       if (name)       query.name       = name
       if (categoryId) query.categoryId = categoryId
       if (itemId)     query.itemId     = itemId
+      if (eventId)    query.eventId    = eventId
+      if (status)     query.status     = status
+      if (startAt)    query.startAt    = startAt
+      if (endAt)      query.endAt      = endAt
+      if (minPrice)   query.minPrice   = minPrice
+      if (maxPrice)   query.maxPrice   = maxPrice
 
       const res = await axiosClient.get(`/tenant/${tid}/product/physical`, { params: query })
       if (res.status === 200 && res.data.data) {
@@ -342,6 +390,10 @@ export const useTempleStore = defineStore('temple', () => {
         name       = '',
         categoryId = '',
         itemId     = '',
+        startAt    = '',
+        endAt      = '',
+        minPrice   = '',
+        maxPrice   = '',
         sortBy     = 'createdAt',
         sortOrder  = 'DESC',
         page       = 1,
@@ -352,6 +404,10 @@ export const useTempleStore = defineStore('temple', () => {
       if (name)       query.name       = name
       if (categoryId) query.categoryId = categoryId
       if (itemId)     query.itemId     = itemId
+      if (startAt)    query.startAt    = startAt
+      if (endAt)      query.endAt      = endAt
+      if (minPrice)   query.minPrice   = minPrice
+      if (maxPrice)   query.maxPrice   = maxPrice
 
       const res = await axiosClient.get(`/tenant/${tid}/product/donation`, { params: query })
       if (res.status === 200 && res.data.data) {
@@ -392,6 +448,12 @@ export const useTempleStore = defineStore('temple', () => {
       if (params.name)       query.name       = params.name
       if (params.categoryId) query.categoryId = params.categoryId
       if (params.itemId)     query.itemId     = params.itemId
+      if (params.status)     query.status     = params.status
+      if (params.eventId)    query.eventId    = params.eventId
+      if (params.startAt)    query.startAt    = params.startAt
+      if (params.endAt)      query.endAt      = params.endAt
+      if (params.minPrice)   query.minPrice   = params.minPrice
+      if (params.maxPrice)   query.maxPrice   = params.maxPrice
       const res = await axiosClient.get(`/tenant/${tid}/product/lamp`, { params: query })
       if (res.status === 200 && res.data.data) {
         const payload = res.data.data
@@ -487,6 +549,8 @@ export const useTempleStore = defineStore('temple', () => {
     createServiceCategory,
     fetchServiceCategories,
     fetchServiceItems,
+    fetchRitualDocuments,
+    fetchCertificates,
     fetchLabelCategories,
     createLabelCategory,
     createProductCategory,

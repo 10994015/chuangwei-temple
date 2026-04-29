@@ -429,7 +429,7 @@ export const useAuthStore = defineStore('auth', () => {
       credentials.password = hashedPassword
       credentials.confirmPassword = hashedConfirmPassword
       
-      const response = await axiosClient.post('/register', credentials)
+      const response = await axiosClient.post('/user/register', credentials)
       
       if (response.status === 202 || response.status === 200) {
         return { success: true }
@@ -510,7 +510,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const sendResetPasswordEmail = async (email) => {
     try {
-      const response = await axiosClient.post('/change-password', { email })
+      const response = await axiosClient.post('/user/change-password', { email })
       
       if (response.status === 202 || response.status === 200) {
         return { success: true }

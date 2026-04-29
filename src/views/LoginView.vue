@@ -162,9 +162,15 @@ const handleLogin = async () => {
 
       <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
 
+      <div class="forgot-row">
+        <a class="forgot-link" @click="router.push('/forgot-password')">忘記密碼？</a>
+      </div>
+
       <button class="btn-login" @click="handleLogin" :disabled="isLoading || isGoogleLoading">
         {{ isLoading ? '登入中...' : '登入' }}
       </button>
+
+      <p class="register-link">還沒有帳號？<a @click="router.push('/register')">立即註冊</a></p>
     </div>
   </div>
 </template>
@@ -294,5 +300,31 @@ const handleLogin = async () => {
 
   &:hover:not(:disabled) { background: #d04a20; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.forgot-row {
+  text-align: right;
+  margin: -6px 0 10px;
+}
+
+.forgot-link {
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+  &:hover { color: #E8572A; text-decoration: underline; }
+}
+
+.register-link {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin: 16px 0 0;
+
+  a {
+    color: #E8572A;
+    cursor: pointer;
+    font-weight: 500;
+    &:hover { text-decoration: underline; }
+  }
 }
 </style>

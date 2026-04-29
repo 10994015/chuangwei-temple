@@ -217,6 +217,22 @@ const router = createRouter({
       meta: { title: '登入', requiresAuth: false }
     },
 
+    // ── 註冊頁 ──
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('@/views/RegisterView.vue'),
+      meta: { title: '註冊', requiresAuth: false }
+    },
+
+    // ── 忘記密碼 ──
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/views/ForgotPasswordView.vue'),
+      meta: { title: '忘記密碼', requiresAuth: false }
+    },
+
     // ── 初始密碼設定 ──
     {
       path: '/init-password/:token',

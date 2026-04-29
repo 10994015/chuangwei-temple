@@ -647,7 +647,7 @@ const deleteRole = async (role) => {
 }
 
 .col-check { width: 48px; }
-.col-action { width: 150px; }
+.col-action { width: 150px; text-align: left; }
 
 .td-name { font-weight: 500; color: #1a1a1a; }
 

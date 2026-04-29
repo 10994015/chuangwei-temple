@@ -88,7 +88,7 @@
         </div>
         <div class="filter-item">
           <div class="filter-label">服務類別</div>
-          <select v-model="serviceFilter.category" class="filter-select">
+          <select v-model="serviceFilter.category" class="filter-select" @change="onServiceSearch">
             <option value="">全部類別</option>
             <option value="1">法事</option>
             <option value="2">祈福</option>
@@ -97,25 +97,25 @@
         </div>
         <div class="filter-item">
           <div class="filter-label">最低價格</div>
-          <input v-model="serviceFilter.minPrice" type="number" class="filter-input" placeholder="最低價格" />
+          <input v-model="serviceFilter.minPrice" type="number" class="filter-input" placeholder="最低價格" @change="onServiceSearch" />
         </div>
         <div class="filter-item">
           <div class="filter-label">最高價格</div>
-          <input v-model="serviceFilter.maxPrice" type="number" class="filter-input" placeholder="最高價格" />
+          <input v-model="serviceFilter.maxPrice" type="number" class="filter-input" placeholder="最高價格" @change="onServiceSearch" />
         </div>
         <div class="filter-item">
-          <div class="filter-label">開始日期</div>
-          <input v-model="serviceFilter.startDate" type="date" class="filter-input filter-date" />
+          <div class="filter-label">商品建立時間起</div>
+          <input v-model="serviceFilter.startDate" type="date" class="filter-input filter-date" @change="onServiceSearch" />
         </div>
         <div class="filter-item">
-          <div class="filter-label">結束日期</div>
-          <input v-model="serviceFilter.endDate" type="date" class="filter-input filter-date" />
+          <div class="filter-label">商品建立時間迄</div>
+          <input v-model="serviceFilter.endDate" type="date" class="filter-input filter-date" @change="onServiceSearch" />
         </div>
         <div class="filter-item">
           <div class="filter-label">關聯活動</div>
-          <select v-model="serviceFilter.event" class="filter-select">
+          <select v-model="serviceFilter.event" class="filter-select" @change="onServiceSearch">
             <option value="">全部</option>
-            <option v-for="e in eventNames" :key="e" :value="e">{{ e }}</option>
+            <option v-for="e in templeStore.events" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
           </select>
         </div>
         <div class="filter-item">
@@ -135,15 +135,16 @@
         <div v-if="templeStore.isServicesLoading" class="loading-row">載入中...</div>
         <table v-else class="data-table">
           <thead><tr>
-            <th>服務名稱</th><th>價格</th><th>開始日期</th><th>結束日期</th><th>關聯活動</th><th>報名人數</th><th>發佈狀態</th><th class="col-action">操作</th>
+            <th>服務名稱</th><th>價格</th><th>商品數量</th><th>開始日期</th><th>結束日期</th><th>關聯活動</th><th>報名人數</th><th>發佈狀態</th><th class="col-action">操作</th>
           </tr></thead>
           <tbody>
             <tr v-if="templeStore.services.length === 0">
-              <td colspan="8" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
+              <td colspan="9" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
             </tr>
             <tr v-for="item in templeStore.services" :key="item.id">
               <td class="td-bold">{{ item.nameZhTw }}</td>
-              <td>{{ item.skus?.[0]?.price != null ? `NT$ ${Number(item.skus[0].price).toLocaleString()}` : '-' }}</td>
+              <td>{{ item.price ?? '-' }}</td>
+              <td>{{ item.allStock ?? '-' }}</td>
               <td>{{ item.startAt ? item.startAt.slice(0, 10).replace(/-/g, '/') : '-' }}</td>
               <td>{{ item.endAt ? item.endAt.slice(0, 10).replace(/-/g, '/') : '-' }}</td>
               <td>{{ item.events?.map(e => e.name).join('、') || '-' }}</td>
@@ -194,23 +195,23 @@
         </div>
         <div class="filter-item">
           <div class="filter-label">最低價格</div>
-          <input v-model="productFilter.minPrice" type="number" class="filter-input" placeholder="最低價格" />
+          <input v-model="productFilter.minPrice" type="number" class="filter-input" placeholder="最低價格" @change="onProductSearch" />
         </div>
         <div class="filter-item">
           <div class="filter-label">最高價格</div>
-          <input v-model="productFilter.maxPrice" type="number" class="filter-input" placeholder="最高價格" />
+          <input v-model="productFilter.maxPrice" type="number" class="filter-input" placeholder="最高價格" @change="onProductSearch" />
         </div>
         <div class="filter-item">
           <div class="filter-label">上架日期</div>
-          <input v-model="productFilter.onDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
+          <input v-model="productFilter.onDate" type="date" class="filter-input filter-date" @change="onProductSearch" />
         </div>
         <div class="filter-item">
           <div class="filter-label">下架日期</div>
-          <input v-model="productFilter.offDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
+          <input v-model="productFilter.offDate" type="date" class="filter-input filter-date" @change="onProductSearch" />
         </div>
         <div class="filter-item">
           <div class="filter-label">關聯活動</div>
-          <select v-model="productFilter.event" class="filter-select">
+          <select v-model="productFilter.event" class="filter-select" @change="onProductSearch">
             <option value="">全部</option>
             <option v-for="e in templeStore.events" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
           </select>
@@ -218,7 +219,7 @@
         <div class="filter-item">
           <div class="filter-label">篩選條件</div>
           <label class="checkbox-label">
-            <input type="checkbox" v-model="productFilter.permanent" />
+            <input type="checkbox" v-model="productFilter.permanent" @change="onProductSearch" />
             常駐商品
           </label>
         </div>
@@ -305,31 +306,16 @@
           <div class="filter-label">關鍵字</div>
           <div class="search-wrap">
             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="donationFilter.keyword" class="filter-input" placeholder="搜尋捐款人、付款人、訂單編號..." />
+            <input v-model="donationFilter.keyword" class="filter-input" placeholder="搜尋捐款人、付款人、訂單編號..." @keydown.enter="onDonationSearch" />
           </div>
         </div>
         <div class="filter-item">
           <div class="filter-label">起始日期</div>
-          <input v-model="donationFilter.startDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
+          <input v-model="donationFilter.startDate" type="date" class="filter-input filter-date" @change="onDonationSearch" />
         </div>
         <div class="filter-item">
-          <div class="filter-label">結束日期</div>
-          <input v-model="donationFilter.endDate" type="date" class="filter-input filter-date" placeholder="年 /月/日" />
-        </div>
-        <div class="filter-item">
-          <div class="filter-label">捐款類別</div>
-          <select v-model="donationFilter.category" class="filter-select" @change="onDonationSearch">
-            <option value="">全部類別</option>
-            <option v-for="c in donationCategories" :key="c" :value="c">{{ c }}</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <div class="filter-label">最低金額</div>
-          <input v-model="donationFilter.minAmount" type="number" class="filter-input" placeholder="輸入最低金額..." />
-        </div>
-        <div class="filter-item">
-          <div class="filter-label">最高金額</div>
-          <input v-model="donationFilter.maxAmount" type="number" class="filter-input" placeholder="輸入最高金額..." />
+          <div class="filter-label">商品建立時間迄</div>
+          <input v-model="donationFilter.endDate" type="date" class="filter-input filter-date" @change="onDonationSearch" />
         </div>
       </div>
 
@@ -342,15 +328,17 @@
         <div v-if="templeStore.isDonationProductsLoading" class="loading-row">載入中...</div>
         <table v-else class="data-table">
           <thead><tr>
-            <th>商品名稱</th><th>關聯活動</th><th>發佈狀態</th><th class="col-action">操作</th>
+            <th>商品名稱</th><th>上架時間</th><th>下架時間</th><th>是否開發票</th><th>發佈狀態</th><th class="col-action">操作</th>
           </tr></thead>
           <tbody>
             <tr v-if="templeStore.donationProducts.length === 0">
-              <td colspan="4" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
+              <td colspan="6" style="text-align:center; padding: 32px; color: #9ca3af;">暫無資料</td>
             </tr>
             <tr v-for="item in templeStore.donationProducts" :key="item.id">
               <td class="td-bold">{{ item.nameZhTw }}</td>
-              <td>{{ (item.events || []).map(e => e.name).join('、') || '-' }}</td>
+              <td>{{ item.publishAt ? item.publishAt.slice(0, 10).replace(/-/g, '/') : '-' }}</td>
+              <td>{{ item.unpublishAt ? item.unpublishAt.slice(0, 10).replace(/-/g, '/') : '常駐' }}</td>
+              <td>{{ item.isInvoiceSupported ? '是' : '否' }}</td>
               <td>
                 <span class="badge" :class="item.status === 'OPEN' ? 'badge-published' : 'badge-draft'">
                   {{ item.status === 'OPEN' ? '上架' : '下架' }}
@@ -444,6 +432,13 @@
           </div>
         </div>
       </template>
+
+      <div class="shipping-info-box">
+        <div class="shipping-info-title">💡 運費計算說明</div>
+        <p><strong>普通運費：</strong>系統會依據訂單總金額自動套用對應級距的運費。例如訂單金額為 $800，則套用級距 2 的運費 $60。</p>
+        <p><strong>特殊運費：</strong>若訂單中包含標註為「特殊運費」的商品，則該商品將使用其獨立設定的運費，不受普通運費級距影響。</p>
+        <p><strong>混合運費：</strong>當訂單同時包含普通商品與特殊商品時，系統將分別計算並加總兩種運費。</p>
+      </div>
     </div>
 
     <!-- ===== 數位光明燈管理 ===== -->
@@ -451,6 +446,56 @@
       <div class="toolbar">
         <button class="btn-primary" @click="goCreateLamp">＋ 新增燈種</button>
         <button class="btn-secondary">↑ 增加燈位數量</button>
+      </div>
+      <div class="filter-grid filter-grid-4">
+        <div class="filter-item">
+          <div class="filter-label">關鍵字</div>
+          <div class="search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input v-model="lampFilter.keyword" class="filter-input" placeholder="搜尋燈種名稱..." @keydown.enter="onLampSearch" />
+          </div>
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">燈種類別</div>
+          <select v-model="lampFilter.category" class="filter-select" @change="onLampSearch">
+            <option value="">全部類別</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">最低價格</div>
+          <input v-model="lampFilter.minPrice" type="number" class="filter-input" placeholder="最低價格" @change="onLampSearch" />
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">最高價格</div>
+          <input v-model="lampFilter.maxPrice" type="number" class="filter-input" placeholder="最高價格" @change="onLampSearch" />
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">商品建立時間起</div>
+          <input v-model="lampFilter.startDate" type="date" class="filter-input filter-date" @change="onLampSearch" />
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">商品建立時間迄</div>
+          <input v-model="lampFilter.endDate" type="date" class="filter-input filter-date" @change="onLampSearch" />
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">關聯活動</div>
+          <select v-model="lampFilter.event" class="filter-select" @change="onLampSearch">
+            <option value="">全部</option>
+            <option v-for="e in templeStore.events" :key="e.id" :value="e.id">{{ e.nameZhTw }}</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <div class="filter-label">發佈狀態</div>
+          <select v-model="lampFilter.status" class="filter-select" @change="onLampSearch">
+            <option value="">全部狀態</option>
+            <option value="OPEN">上架</option>
+            <option value="CLOSE">下架</option>
+          </select>
+        </div>
+      </div>
+      <div class="export-bar">
+        <button class="btn-export">⬇ 下載資料統計表</button>
+        <button class="btn-export">⬇ 匯出當前篩選結果</button>
       </div>
       <div class="table-wrap">
         <table class="data-table">
@@ -519,8 +564,8 @@ const tabs = [
   { key: 'services',  label: '服務管理' },
   { key: 'products',  label: '商品管理' },
   { key: 'donations', label: '捐款管理' },
-  { key: 'shipping',  label: '運費管理' },
   { key: 'lanterns',  label: '數位光明燈管理' },
+  { key: 'shipping',  label: '運費管理' },
 ]
 
 // 從 route.query.tab 初始化，fallback 到 'events'
@@ -681,6 +726,12 @@ const onEventSearch = () => {
   loadEvents()
 }
 
+let eventSearchTimer = null
+watch(() => eventFilter.keyword, () => {
+  clearTimeout(eventSearchTimer)
+  eventSearchTimer = setTimeout(() => { onEventSearch() }, 400)
+})
+
 const goEventPage = (page) => {
   if (page >= 1 && page <= templeStore.eventsTotalPages) {
     eventPage.value = page
@@ -694,9 +745,14 @@ const servicePage = ref(1)
 
 const loadServices = () => {
   templeStore.fetchServices(templeId.value, {
-    name:       serviceFilter.keyword,
-    categoryId: serviceFilter.category,
-    status:     serviceFilter.status,
+    name:       serviceFilter.keyword   || undefined,
+    categoryId: serviceFilter.category  || undefined,
+    status:     serviceFilter.status    || undefined,
+    eventId:    serviceFilter.event     || undefined,
+    startAt:    serviceFilter.startDate || undefined,
+    endAt:      serviceFilter.endDate   || undefined,
+    minPrice:   serviceFilter.minPrice  || undefined,
+    maxPrice:   serviceFilter.maxPrice  || undefined,
     page:       servicePage.value,
     pageSize:   10,
   })
@@ -706,6 +762,12 @@ const onServiceSearch = () => {
   servicePage.value = 1
   loadServices()
 }
+
+let serviceSearchTimer = null
+watch(() => serviceFilter.keyword, () => {
+  clearTimeout(serviceSearchTimer)
+  serviceSearchTimer = setTimeout(() => { onServiceSearch() }, 400)
+})
 
 const goServicePage = (page) => {
   if (page >= 1 && page <= templeStore.servicesTotalPages) {
@@ -723,6 +785,11 @@ const loadProducts = () => {
   templeStore.fetchPhysicalProducts(templeId.value, {
     name:       productFilter.keyword  || undefined,
     categoryId: productFilter.category || undefined,
+    eventId:    productFilter.event    || undefined,
+    startAt:    productFilter.onDate   || undefined,
+    endAt:      productFilter.offDate  || undefined,
+    minPrice:   productFilter.minPrice || undefined,
+    maxPrice:   productFilter.maxPrice || undefined,
     page:       productPage.value,
     pageSize:   10,
   })
@@ -748,7 +815,6 @@ const goProductPage = (page) => {
 
 // ── 捐款管理 ──
 const donationFilter = reactive({ keyword: '', startDate: '', endDate: '', category: '', minAmount: '', maxAmount: '' })
-const donationCategories = ['一般捐款', '建廟基金', '功德金', '修繕基金']
 const donationRanking = ref([
   { name: '王大明', amount: '150k' },
   { name: '李美華', amount: '120k' },
@@ -758,10 +824,11 @@ const donationPage = ref(1)
 
 const loadDonations = () => {
   templeStore.fetchDonationProducts(templeId.value, {
-    name:     donationFilter.keyword  || undefined,
-    categoryId: donationFilter.category || undefined,
-    page:     donationPage.value,
-    pageSize: 10,
+    name:    donationFilter.keyword   || undefined,
+    startAt: donationFilter.startDate || undefined,
+    endAt:   donationFilter.endDate   || undefined,
+    page:       donationPage.value,
+    pageSize:   10,
   })
 }
 
@@ -840,11 +907,34 @@ const onDrop = async (toIndex) => {
 }
 
 // ── 數位光明燈管理 ──
+const lampFilter = reactive({ keyword: '', category: '', minPrice: '', maxPrice: '', startDate: '', endDate: '', event: '', status: '' })
 const lampPage = ref(1)
 
 const loadLamps = () => {
-  templeStore.fetchLampProducts(templeId.value, { page: lampPage.value, pageSize: 10 })
+  templeStore.fetchLampProducts(templeId.value, {
+    name:       lampFilter.keyword    || undefined,
+    categoryId: lampFilter.category   || undefined,
+    status:     lampFilter.status     || undefined,
+    eventId:    lampFilter.event      || undefined,
+    startAt:    lampFilter.startDate  || undefined,
+    endAt:      lampFilter.endDate    || undefined,
+    minPrice:   lampFilter.minPrice   || undefined,
+    maxPrice:   lampFilter.maxPrice   || undefined,
+    page:       lampPage.value,
+    pageSize:   10,
+  })
 }
+
+const onLampSearch = () => {
+  lampPage.value = 1
+  loadLamps()
+}
+
+let lampSearchTimer = null
+watch(() => lampFilter.keyword, () => {
+  clearTimeout(lampSearchTimer)
+  lampSearchTimer = setTimeout(() => { onLampSearch() }, 400)
+})
 
 const goLampPage = (page) => {
   if (page >= 1 && page <= templeStore.lampProductsTotalPages) {
@@ -1007,7 +1097,7 @@ const handleDeleteShippingRule = async (id) => {
 .data-table td { padding: 14px 16px; color: #333; vertical-align: middle; }
 .td-bold { font-weight: 600; }
 .td-orange { color: #E8572A; font-weight: 600; }
-.col-action { text-align: right; white-space: nowrap; }
+.col-action { text-align: left; white-space: nowrap; }
 .icon-btn {
   background: none; border: none; cursor: pointer;
   font-size: 14px; padding: 4px 5px; border-radius: 5px; transition: background 0.15s; opacity: 0.65;
@@ -1072,5 +1162,9 @@ const handleDeleteShippingRule = async (id) => {
 .flat-desc { font-size: 14px; color: #888; }
 .loading-state { text-align: center; padding: 60px; color: #aaa; font-size: 14px; }
 .empty-state { text-align: center; padding: 60px; color: #aaa; font-size: 14px; }
+.shipping-info-box { background: #eef3ff; border: 1px solid #c7d7f9; border-radius: 12px; padding: 20px 24px; margin-top: 24px; }
+.shipping-info-title { font-size: 14px; font-weight: 700; color: #3b5bdb; margin-bottom: 12px; }
+.shipping-info-box p { margin: 0 0 8px; font-size: 13.5px; color: #374151; line-height: 1.7; }
+.shipping-info-box p:last-child { margin-bottom: 0; }
 
 </style>

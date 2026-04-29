@@ -182,8 +182,8 @@ const breadcrumbs = computed(() => [
   { text: '捐款商品詳情' },
 ])
 
-const ritualDocuments = ref([{ id: 1, name: '標準疏文' }, { id: 2, name: '自訂疏文' }])
-const certificates    = ref([{ id: 1, name: '標準感謝狀' }])
+const ritualDocuments = ref([])
+const certificates    = ref([])
 
 const getLabelById = (list, id, keyField = 'value', labelField = 'label') => {
   if (!id && id !== 0) return '-'
@@ -282,6 +282,10 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  templeStore.fetchRitualDocuments(templeId.value)
+    .then(r => { ritualDocuments.value = r.map(i => ({ id: i.id, name: i.name })) })
+  templeStore.fetchCertificates(templeId.value)
+    .then(r => { certificates.value = r.map(i => ({ id: i.id, name: i.name })) })
   try {
     const data = await templeStore.fetchDonationProduct(templeId.value, donationId.value)
     if (data) fillForm(data)
