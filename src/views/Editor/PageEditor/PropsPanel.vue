@@ -187,9 +187,27 @@
               >
                 <div class="card-image-row">
                   <div class="drag-handle card-drag">⠿</div>
-                  <img :src="img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
+                  <img :src="img.srcDesktop || img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
                   <span class="card-index">{{ t('propsPanel.imgIndex', { n: index + 1 }) }}</span>
                   <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" :title="t('propsPanel.deleteImg')">✕</button>
+                </div>
+                <!-- 三裝置圖片上傳 -->
+                <div class="device-img-section">
+                  <div v-for="slot in carouselDeviceSlots" :key="slot.key" class="device-img-row">
+                    <span class="device-tag">{{ slot.label }}</span>
+                    <template v-if="img[slot.key]">
+                      <img :src="img[slot.key]" class="device-thumb" />
+                      <button class="device-remove-btn" @click="removeCarouselWallDeviceImg(index, slot.key)">✕</button>
+                    </template>
+                    <button
+                      v-else
+                      class="device-upload-btn"
+                      :disabled="carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key"
+                      @click="uploadCarouselWallDeviceImg(index, slot.key)"
+                    >
+                      {{ (carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key) ? '上傳中...' : '上傳' }}
+                    </button>
+                  </div>
                 </div>
                 <div class="card-field">
                   <label class="card-label">{{ t('propsPanel.cardTitle') }}</label>
@@ -298,9 +316,27 @@
               >
                 <div class="card-image-row">
                   <div class="drag-handle card-drag">⠿</div>
-                  <img :src="img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
+                  <img v-if="img.srcDesktop || img.src" :src="img.srcDesktop || img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
                   <span class="card-index">{{ t('propsPanel.imgIndex', { n: index + 1 }) }}</span>
                   <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" :title="t('propsPanel.deleteImg')">✕</button>
+                </div>
+                <!-- 三裝置圖片上傳 -->
+                <div class="device-img-section">
+                  <div v-for="slot in carouselDeviceSlots" :key="slot.key" class="device-img-row">
+                    <span class="device-tag">{{ slot.label }}</span>
+                    <template v-if="img[slot.key]">
+                      <img :src="img[slot.key]" class="device-thumb" />
+                      <button class="device-remove-btn" @click="removeCarouselWallDeviceImg(index, slot.key)">✕</button>
+                    </template>
+                    <button
+                      v-else
+                      class="device-upload-btn"
+                      :disabled="carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key"
+                      @click="uploadCarouselWallDeviceImg(index, slot.key)"
+                    >
+                      {{ (carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key) ? '上傳中...' : '上傳' }}
+                    </button>
+                  </div>
                 </div>
                 <div class="card-field">
                   <label class="card-label">{{ t('propsPanel.cardTitle') }}</label>
@@ -1681,6 +1717,12 @@ const carouselWallImages = computed(() =>
 )
 const isUploadingCarouselWall = ref(false)
 const carouselWallHeight = ref(600)
+const carouselDeviceSlots = [
+  { key: 'srcDesktop', label: '🖥 電腦' },
+  { key: 'srcTablet',  label: '📱 平板' },
+  { key: 'srcMobile',  label: '📱 手機' },
+]
+const carouselWallUploadingSlot = ref(null)
 const carouselWallAutoPlay = ref(true)
 const carouselWallInterval = ref(5000)
 const expandedCardStyles = ref([])
@@ -2414,7 +2456,7 @@ const handleUploadCarouselWall = async () => {
       for (const file of files) {
         const uploadedFile = await pageEditorStore.uploadImage(file)
         if (!uploadedFile) continue
-        props.selectedFrame.data.caroiselWallImgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl })
+        props.selectedFrame.data.caroiselWallImgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl, srcDesktop: uploadedFile.fileUrl })
       }
     } catch (error) {
       alert('輪播牆圖片上傳失敗: ' + error.message)
@@ -2430,6 +2472,38 @@ const removeCarouselWallImage = (index) => {
   const imgs = props.selectedFrame?.data?.caroiselWallImgs
   if (!imgs) return
   imgs.splice(index, 1)
+}
+
+const uploadCarouselWallDeviceImg = (index, key) => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      carouselWallUploadingSlot.value = { index, key }
+      const uploaded = await pageEditorStore.uploadImage(file)
+      if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
+      const imgs = props.selectedFrame?.data?.caroiselWallImgs
+      if (imgs && imgs[index]) {
+        imgs[index][key] = uploaded.fileUrl
+        if (!imgs[index].src) imgs[index].src = uploaded.fileUrl
+      }
+    } catch (err) {
+      alert('上傳失敗：' + err.message)
+    } finally {
+      carouselWallUploadingSlot.value = null
+    }
+  }
+  input.click()
+}
+
+const removeCarouselWallDeviceImg = (index, key) => {
+  const imgs = props.selectedFrame?.data?.caroiselWallImgs
+  if (imgs && imgs[index]) {
+    delete imgs[index][key]
+  }
 }
 
 const updateCarouselWallImageField = (index, field, value) => {
@@ -3569,5 +3643,64 @@ const setPvFpPadding = (section, value) => {
   color: #999;
   cursor: pointer;
   &:hover { border-color: #dc3545; color: #dc3545; }
+}
+
+.device-img-section {
+  padding: 6px 10px 8px;
+  border-top: 1px solid #ebebeb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.device-img-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.device-tag {
+  font-size: 11px;
+  color: #666;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.device-thumb {
+  width: 44px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.device-remove-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  &:hover { background: #dc2626; }
+}
+
+.device-upload-btn {
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px dashed #bbb;
+  border-radius: 4px;
+  background: #fafafa;
+  color: #555;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  &:hover:not(:disabled) { border-color: #E8572A; color: #E8572A; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 </style>

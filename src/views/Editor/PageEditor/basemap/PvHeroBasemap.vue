@@ -64,7 +64,15 @@ const props = defineProps({
   carouselWallHeight:   { type: Number,  default: 600 },
   carouselWallAutoPlay: { type: Boolean, default: true },
   carouselWallInterval: { type: Number,  default: 5000 },
+  device:               { type: String,  default: 'desktop' },
 })
+
+const getDeviceSrc = (img, device) => {
+  if (typeof img === 'string') return img
+  if (device === 'mobile') return img.srcMobile || img.srcTablet || img.srcDesktop || img.src
+  if (device === 'tablet') return img.srcTablet || img.srcDesktop || img.src
+  return img.srcDesktop || img.src
+}
 
 const currentIndex  = ref(0)
 const viewportRef   = ref(null)
@@ -82,8 +90,9 @@ const sidePx = computed(() => Math.floor(viewportWidth.value * sideRatio.value))
 
 const displayImages = computed(() => {
   const imgs = props.caroiselWallImgs
+  const device = props.device || 'desktop'
   if (imgs && imgs.length > 0) {
-    return imgs.map(img => (typeof img === 'object' ? img.src : img)).filter(Boolean)
+    return imgs.map(img => getDeviceSrc(img, device)).filter(Boolean)
   }
   return [
     'https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&h=700&fit=crop',

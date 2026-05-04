@@ -74,7 +74,14 @@ const props = defineProps({
   carouselWallAutoPlay: { type: Boolean, default: true },
   carouselWallInterval: { type: Number, default: 5000 },
   autoPlayInterval: { type: Number, default: null },
+  device: { type: String, default: 'desktop' },
 })
+
+const getDeviceSrc = (item, device) => {
+  if (device === 'mobile') return item.srcMobile || item.srcTablet || item.srcDesktop || item.src
+  if (device === 'tablet') return item.srcTablet || item.srcDesktop || item.src
+  return item.srcDesktop || item.src
+}
 
 const heroStyle = computed(() => {
   const h = props.carouselWallHeight
@@ -87,8 +94,9 @@ const effectiveInterval = computed(() => props.carouselWallInterval || props.aut
 
 const normalizedSlides = computed(() => {
   if (props.caroiselWallImgs && props.caroiselWallImgs.length > 0) {
+    const device = props.device || 'desktop'
     return props.caroiselWallImgs.map(item => ({
-      image: item.src,
+      image: getDeviceSrc(item, device),
       title: item.title || '',
       subtitle: item.subtitle || '',
       overlayOpacity: item.overlayOpacity ?? 40,

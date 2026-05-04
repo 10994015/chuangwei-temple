@@ -75,7 +75,7 @@
         class="carousel-wall-clickable"
         @click.stop="handleSelectFrame(frame)"
       >
-        <HeroBasemap v-bind="frameData" />
+        <HeroBasemap v-bind="frameData" :device="device" />
       </div>
 
       <!-- 輪播牆 v2 (PV_CAROUSEL_WALL) -->
