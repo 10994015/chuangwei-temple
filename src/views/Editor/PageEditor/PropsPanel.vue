@@ -366,8 +366,42 @@
           </div>
         </template>
 
-        <template v-else-if="selectedFrame.type === 'FOOTER'">
+        <template v-else-if="selectedFrame.type === 'FOOTER' || selectedFrame.type === 'PV_FOOTER'">
           <h4 class="section-title">{{ t('propsPanel.footerSettings') }}</h4>
+
+          <!-- Logo 圖片 -->
+          <div class="metadata-section">
+            <h5 class="subsection-title">Logo 圖片</h5>
+            <div class="prop-group">
+              <div class="image-upload">
+                <div v-if="isUploadingFooterLogo" class="uploading-state">
+                  <div class="spinner"></div>
+                  <span>上傳中...</span>
+                </div>
+                <img v-else-if="selectedFrame.data?.logoImgSrc" :src="selectedFrame.data.logoImgSrc" alt="Logo 預覽" class="preview-image logo-preview" />
+                <div v-else class="no-image"><span>尚未上傳 Logo</span></div>
+                <button @click="handleUploadFooterLogo" class="upload-btn" :disabled="isUploadingFooterLogo">
+                  {{ isUploadingFooterLogo ? '上傳中...' : (selectedFrame.data?.logoImgSrc ? '更換 Logo' : '上傳 Logo') }}
+                </button>
+                <button v-if="selectedFrame.data?.logoImgSrc" @click="removeFooterLogo" class="delete-logo-btn">移除 Logo</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 聯絡資訊 -->
+          <div class="metadata-section">
+            <h5 class="subsection-title">聯絡我們</h5>
+            <div class="prop-group">
+              <label>地址</label>
+              <input v-model="footerAddress" type="text" class="prop-input" placeholder="請輸入地址" @input="updateFooterContact" />
+            </div>
+            <div class="prop-group">
+              <label>電話</label>
+              <input v-model="footerPhone" type="text" class="prop-input" placeholder="請輸入電話" @input="updateFooterContact" />
+            </div>
+          </div>
+
+          <!-- 背景色 -->
           <div class="metadata-section">
             <h5 class="subsection-title">{{ t('propsPanel.bgColorSection') }}</h5>
             <div class="prop-group">
@@ -384,6 +418,7 @@
               </div>
             </div>
           </div>
+          <!-- 文字色 -->
           <div class="metadata-section">
             <h5 class="subsection-title">{{ t('propsPanel.textColorSection') }}</h5>
             <div class="prop-group">
@@ -1686,11 +1721,50 @@ const frameWidth = ref('1200')
 
 const footerBgColor = ref('#2d2d2d')
 const footerTextColor = ref('#ffffff')
+const footerAddress = ref('')
+const footerPhone = ref('')
+const isUploadingFooterLogo = ref(false)
 
 const updateFooterStyle = () => {
   if (!props.selectedFrame?.data) return
   props.selectedFrame.data.footerBgColor = footerBgColor.value
   props.selectedFrame.data.footerTextColor = footerTextColor.value
+}
+
+const updateFooterContact = () => {
+  if (!props.selectedFrame?.data) return
+  props.selectedFrame.data.tenantAddress = footerAddress.value
+  props.selectedFrame.data.tenantPhone   = footerPhone.value
+}
+
+const handleUploadFooterLogo = async () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      isUploadingFooterLogo.value = true
+      const uploaded = await pageEditorStore.uploadImage(file)
+      if (!uploaded) { alert('上傳失敗，請稍後再試'); return }
+      if (props.selectedFrame?.data) {
+        props.selectedFrame.data.logoImgId  = uploaded.id
+        props.selectedFrame.data.logoImgSrc = uploaded.fileUrl
+      }
+    } catch (err) {
+      alert('上傳失敗：' + err.message)
+    } finally {
+      isUploadingFooterLogo.value = false
+    }
+  }
+  input.click()
+}
+
+const removeFooterLogo = () => {
+  if (!props.selectedFrame?.data) return
+  props.selectedFrame.data.logoImgId  = null
+  props.selectedFrame.data.logoImgSrc = null
 }
 
 const donationBgColorA = ref('#8b7355')
@@ -1916,9 +1990,11 @@ watch(() => props.selectedFrame, (newVal) => {
     carouselWallAutoPlay.value = newVal.data?.carouselWallAutoPlay ?? true
     carouselWallInterval.value = newVal.data?.carouselWallInterval ?? 5000
   }
-  if (newVal?.type === 'FOOTER') {
+  if (newVal?.type === 'FOOTER' || newVal?.type === 'PV_FOOTER') {
     footerBgColor.value   = newVal.data?.footerBgColor   || '#2d2d2d'
     footerTextColor.value = newVal.data?.footerTextColor || '#ffffff'
+    footerAddress.value   = newVal.data?.tenantAddress   || ''
+    footerPhone.value     = newVal.data?.tenantPhone     || ''
   }
   if (newVal?.type === 'INDEX_DONATION') {
     const bg = newVal.data?.donationBgColor || 'linear-gradient(135deg, #8b7355 0%, #a0826d 100%)'

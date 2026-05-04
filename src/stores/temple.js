@@ -367,6 +367,7 @@ export const useTempleStore = defineStore('temple', () => {
   // GET /api/tenant/{tid}/product/donation/{id}
   const fetchDonationProduct = async (tid, id) => {
     const res = await axiosClient.get(`/tenant/${tid}/product/donation/${id}`)
+    console.log('[fetchDonationProduct] res.data:', res.data)
     return res.data?.data || null
   }
 
@@ -471,6 +472,18 @@ export const useTempleStore = defineStore('temple', () => {
     } finally {
       isLampProductsLoading.value = false
     }
+  }
+
+  // GET /api/tenant/{tid}/product/lamp/{id}
+  const fetchLamp = async (tid, id) => {
+    const res = await axiosClient.get(`/tenant/${tid}/product/lamp/${id}`)
+    return res.data?.data || null
+  }
+
+  // PATCH /api/tenant/{tid}/product/lamp/{id}
+  const updateLamp = async (tid, id, payload) => {
+    const res = await axiosClient.patch(`/tenant/${tid}/product/lamp/${id}`, payload)
+    return res.data
   }
 
   // ── 運費規則 ──
@@ -581,6 +594,8 @@ export const useTempleStore = defineStore('temple', () => {
     isLampProductsLoading,
     fetchLampProducts,
     createLampProduct,
+    fetchLamp,
+    updateLamp,
     shippingRules,
     isShippingRulesLoading,
     fetchShippingRules,

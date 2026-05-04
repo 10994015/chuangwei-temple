@@ -2,9 +2,12 @@
   <footer class="footer" :class="`device-${device}`" :style="footerStyle">
     <div class="footer-container">
       <div class="footer-content">
-        <!-- 品牌名稱 -->
+        <!-- 品牌名稱 / Logo -->
         <div class="footer-column brand-column">
-          <h3 class="footer-title">{{ displayName }}</h3>
+          <div class="footer-logo">
+            <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="footer-logo-img" />
+            <h3 v-else class="footer-title">{{ displayName }}</h3>
+          </div>
         </div>
         
         <!-- 連結欄 -->
@@ -62,7 +65,10 @@ const props = defineProps({
   // ✅ 新增：背景色與文字色（由 frameData 傳入）
   footerBgColor:   { type: String, default: null },
   footerTextColor: { type: String, default: null },
+  logoImgSrc:      { type: String, default: null },
 })
+
+const logoSrc = computed(() => props.logoImgSrc || null)
 
 const displayName    = computed(() => props.tenantName    || props.brandName || '宮廟名稱')
 const displayPhone   = computed(() => props.tenantPhone   || null)
@@ -114,6 +120,17 @@ const footerStyle = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+}
+
+.footer-logo-img {
+  max-width: 120px;
+  max-height: 48px;
+  object-fit: contain;
 }
 
 .footer-title {

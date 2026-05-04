@@ -217,6 +217,7 @@ const removeMainImage = (idx) => mainImages.value.splice(idx, 1)
 
 const form = reactive({
   status: '', nameZhTw: '',
+  itemId: '', categoryId: '', eventIds: [],
   ritualDocumentId: null, certificateId: null,
   isInvoiceSupported: false,
   publishAt: '', unpublishAt: '', isPermanent: false,
@@ -231,6 +232,10 @@ const fillForm = (data) => {
   form.nameZhTw           = data.nameZhTw || ''
   form.depictionZhTw      = data.depictionZhTw || ''
   form.isInvoiceSupported = data.isInvoiceSupported ?? false
+  form.itemId             = data.itemId || ''
+  form.categoryId         = data.categoryId || ''
+  form.eventIds           = (data.events || []).map(e => e.id)
+  // GET 回傳 ritualDocument/certificate 為名稱字串，ID 欄位名為 ritualDocumentId/certificateId
   form.ritualDocumentId   = data.ritualDocumentId || null
   form.certificateId      = data.certificateId || null
   form.publishAt          = isValidDatetime(data.publishAt)   ? data.publishAt.replace(' ', 'T').slice(0, 16)  : ''
@@ -242,7 +247,9 @@ const fillForm = (data) => {
 const toApiDateTime = (val) => val ? val.replace('T', ' ') + ':00' : null
 
 const buildPayload = () => ({
-  eventIds:           [],
+  itemId:             form.itemId     || undefined,
+  categoryId:         form.categoryId || undefined,
+  eventIds:           form.eventIds,
   ritualDocumentId:   form.ritualDocumentId || undefined,
   certificateId:      form.certificateId    || undefined,
   nameZhTw:           form.nameZhTw,
@@ -284,13 +291,19 @@ const goBack = () => {
 onMounted(async () => {
   templeStore.fetchRitualDocuments(templeId.value)
     .then(r => { ritualDocuments.value = r.map(i => ({ id: i.id, name: i.name })) })
+    .catch(e => console.warn('[DonationDetail] fetchRitualDocuments 失敗:', e))
   templeStore.fetchCertificates(templeId.value)
     .then(r => { certificates.value = r.map(i => ({ id: i.id, name: i.name })) })
+    .catch(e => console.warn('[DonationDetail] fetchCertificates 失敗:', e))
   try {
+    console.log('[DonationDetail] templeId:', templeId.value, 'donationId:', donationId.value)
     const data = await templeStore.fetchDonationProduct(templeId.value, donationId.value)
+    console.log('[DonationDetail] fetchDonationProduct 回傳:', data)
     if (data) fillForm(data)
+    else console.warn('[DonationDetail] data 為 null，fillForm 未執行')
   } catch (err) {
-    console.error('載入捐款商品資料失敗:', err)
+    console.error('[DonationDetail] 載入捐款商品資料失敗:', err)
+    alert('載入資料失敗：' + (err?.response?.data?.message || err?.message || '請稍後再試'))
   } finally { isLoading.value = false }
 })
 

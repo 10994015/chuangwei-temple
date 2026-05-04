@@ -519,8 +519,8 @@
               <td>{{ item.isInvoiceSupported ? '是' : '否' }}</td>
               <td><span class="badge" :class="lanternStatusClass(item.status)">{{ lanternStatusLabel(item.status) }}</span></td>
               <td class="col-action">
-                <button class="icon-btn">👁</button>
-                <button class="icon-btn">✏️</button>
+                <button class="icon-btn" @click="goViewLamp(item.id)">👁</button>
+                <button class="icon-btn" @click="goViewLamp(item.id)">✏️</button>
                 <button class="icon-btn del" @click="handleDeleteLamp(item.id)">🗑️</button>
               </td>
             </tr>
@@ -669,6 +669,10 @@ const handleDeleteDonation = async (id) => {
     console.error('刪除捐款商品失敗:', err)
     alert(err?.response?.data?.message || '刪除失敗，請稍後再試')
   }
+}
+
+const goViewLamp = (id) => {
+  router.push({ name: 'app.temple.lamp-detail', params: { templeId: templeId.value, lampId: id } })
 }
 
 const handleDeleteLamp = async (id) => {

@@ -137,7 +137,6 @@ const footerStyle = computed(() => {
   max-width: 120px;
   max-height: 40px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
 
 .pv-logo-icon {

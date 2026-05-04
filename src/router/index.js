@@ -146,6 +146,7 @@ const router = createRouter({
             { path: 'activity-management/shipping/create', name: 'app.temple.shipping-create', component: () => import('@/views/Temple/ShippingRuleFormView.vue'), meta: { title: '新增運費規則', requiresAuth: true } },
             { path: 'activity-management/shipping/:ruleId/detail', name: 'app.temple.shipping-detail', component: () => import('@/views/Temple/ShippingRuleDetailView.vue'), meta: { title: '運費規則詳情', requiresAuth: true } },
             { path: 'activity-management/lamp/create', name: 'app.temple.lamp-create', component: () => import('@/views/Temple/LampFormView.vue'), meta: { title: '新增燈種', requiresAuth: true } },
+            { path: 'activity-management/lamp/:lampId/detail', name: 'app.temple.lamp-detail', component: () => import('@/views/Temple/LampDetailView.vue'), meta: { title: '燈種詳情', requiresAuth: true } },
             { path: 'activity-management/product/select',          name: 'app.temple.product-select', component: () => import('@/views/Temple/ProductTypeSelectView.vue'), meta: { title: '選擇商品類型', requiresAuth: true } },
             { path: 'activity-management/product/create',                 name: 'app.temple.product-create', component: () => import('@/views/Temple/ProductFormView.vue'),   meta: { title: '新增商品', requiresAuth: true } },
             { path: 'activity-management/product/:productId/detail',    name: 'app.temple.product-detail', component: () => import('@/views/Temple/ProductDetailView.vue'), meta: { title: '商品詳情', requiresAuth: true } },
