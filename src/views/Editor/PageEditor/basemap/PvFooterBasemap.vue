@@ -14,7 +14,7 @@
                 <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
               </svg>
             </span>
-            <span class="pv-logo-name">{{ displayName }}</span>
+            <span v-if="displayName" class="pv-logo-name">{{ displayName }}</span>
           </div>
         </div>
 
@@ -71,7 +71,7 @@ const props = defineProps({
     type: Array,
     default: () => [
       ['關於我們', '最新消息', '關於數位生態'],
-      ['精選結緣品', '宮廟地圖', '靈籤司'],
+      ['寶緣堂精選', '宮廟地圖', '靈籤司'],
     ]
   },
   device:          { type: String, default: 'desktop' },
@@ -79,7 +79,7 @@ const props = defineProps({
   footerTextColor: { type: String, default: null },
 })
 
-const displayName = computed(() => props.tenantName || props.brandName || '宮掌櫃')
+const displayName = computed(() => props.tenantName || props.brandName || '')
 const displayPhone   = computed(() => props.tenantPhone   || null)
 const displayAddress = computed(() => props.tenantAddress || null)
 const displayEmail   = computed(() => props.tenantEmail   || null)

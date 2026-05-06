@@ -187,7 +187,7 @@
               >
                 <div class="card-image-row">
                   <div class="drag-handle card-drag">⠿</div>
-                  <img :src="img.srcDesktop || img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
+                  <img :src="img.desktopSrc" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
                   <span class="card-index">{{ t('propsPanel.imgIndex', { n: index + 1 }) }}</span>
                   <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" :title="t('propsPanel.deleteImg')">✕</button>
                 </div>
@@ -197,13 +197,13 @@
                     <span class="device-tag">{{ slot.label }}</span>
                     <template v-if="img[slot.key]">
                       <img :src="img[slot.key]" class="device-thumb" />
-                      <button class="device-remove-btn" @click="removeCarouselWallDeviceImg(index, slot.key)">✕</button>
+                      <button class="device-remove-btn" @click="removeCarouselWallDeviceImg(index, slot.key, slot.idKey)">✕</button>
                     </template>
                     <button
                       v-else
                       class="device-upload-btn"
                       :disabled="carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key"
-                      @click="uploadCarouselWallDeviceImg(index, slot.key)"
+                      @click="uploadCarouselWallDeviceImg(index, slot.key, slot.idKey)"
                     >
                       {{ (carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key) ? '上傳中...' : '上傳' }}
                     </button>
@@ -316,7 +316,7 @@
               >
                 <div class="card-image-row">
                   <div class="drag-handle card-drag">⠿</div>
-                  <img v-if="img.srcDesktop || img.src" :src="img.srcDesktop || img.src" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
+                  <img v-if="img.desktopSrc" :src="img.desktopSrc" :alt="t('propsPanel.imgAlt', { n: index + 1 })" class="card-thumbnail" />
                   <span class="card-index">{{ t('propsPanel.imgIndex', { n: index + 1 }) }}</span>
                   <button class="remove-image-btn card-remove" @click="removeCarouselWallImage(index)" :title="t('propsPanel.deleteImg')">✕</button>
                 </div>
@@ -326,13 +326,13 @@
                     <span class="device-tag">{{ slot.label }}</span>
                     <template v-if="img[slot.key]">
                       <img :src="img[slot.key]" class="device-thumb" />
-                      <button class="device-remove-btn" @click="removeCarouselWallDeviceImg(index, slot.key)">✕</button>
+                      <button class="device-remove-btn" @click="removeCarouselWallDeviceImg(index, slot.key, slot.idKey)">✕</button>
                     </template>
                     <button
                       v-else
                       class="device-upload-btn"
                       :disabled="carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key"
-                      @click="uploadCarouselWallDeviceImg(index, slot.key)"
+                      @click="uploadCarouselWallDeviceImg(index, slot.key, slot.idKey)"
                     >
                       {{ (carouselWallUploadingSlot?.index === index && carouselWallUploadingSlot?.key === slot.key) ? '上傳中...' : '上傳' }}
                     </button>
@@ -405,7 +405,7 @@
         <template v-else-if="selectedFrame.type === 'FOOTER' || selectedFrame.type === 'PV_FOOTER'">
           <h4 class="section-title">{{ t('propsPanel.footerSettings') }}</h4>
 
-          <!-- Logo 圖片 -->
+          <!-- Logo 圖片 + 名稱 -->
           <div class="metadata-section">
             <h5 class="subsection-title">Logo 圖片</h5>
             <div class="prop-group">
@@ -421,6 +421,10 @@
                 </button>
                 <button v-if="selectedFrame.data?.logoImgSrc" @click="removeFooterLogo" class="delete-logo-btn">移除 Logo</button>
               </div>
+            </div>
+            <div class="prop-group">
+              <label>名稱文字</label>
+              <input v-model="footerBrandName" type="text" class="prop-input" placeholder="請輸入名稱" @input="updateFooterBrandName" />
             </div>
           </div>
 
@@ -835,8 +839,8 @@
           <template v-if="selectedElement.element.itemIndex === 0 || selectedElement.element.itemIndex === 1">
             <div class="prop-group">
               <label>圖片</label>
-              <div v-if="cf1Items[selectedElement.element.itemIndex]?.image" class="cf1-image-preview">
-                <img :src="cf1Items[selectedElement.element.itemIndex].image" class="cf1-preview-img" />
+              <div v-if="cf1Items[selectedElement.element.itemIndex]?.imgSrc" class="cf1-image-preview">
+                <img :src="cf1Items[selectedElement.element.itemIndex].imgSrc" class="cf1-preview-img" />
                 <button class="remove-img-btn" @click="removeCf1Image(selectedElement.element.itemIndex)">移除</button>
               </div>
               <button v-else class="upload-btn" :disabled="cf1Uploading[selectedElement.element.itemIndex]" @click="handleUploadCf1Image(selectedElement.element.itemIndex)">
@@ -853,8 +857,8 @@
                     type="number"
                     class="prop-input cf1-size-input"
                     placeholder="自動"
-                    :value="cf1Items[selectedElement.element.itemIndex]?.imageWidth"
-                    @input="cf1Items[selectedElement.element.itemIndex].imageWidth = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.imgWidth"
+                    @input="cf1Items[selectedElement.element.itemIndex].imgWidth = $event.target.value ? Number($event.target.value) : null; updateCf1()"
                   />
                   <span class="cf1-size-unit">px</span>
                 </div>
@@ -864,8 +868,8 @@
                     type="number"
                     class="prop-input cf1-size-input"
                     placeholder="自動"
-                    :value="cf1Items[selectedElement.element.itemIndex]?.imageHeight"
-                    @input="cf1Items[selectedElement.element.itemIndex].imageHeight = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.imgHeight"
+                    @input="cf1Items[selectedElement.element.itemIndex].imgHeight = $event.target.value ? Number($event.target.value) : null; updateCf1()"
                   />
                   <span class="cf1-size-unit">px</span>
                 </div>
@@ -878,8 +882,8 @@
                   type="number"
                   class="prop-input cf1-size-input"
                   placeholder="0"
-                  :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderRadius"
-                  @input="cf1Items[selectedElement.element.itemIndex].imageBorderRadius = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                  :value="cf1Items[selectedElement.element.itemIndex]?.imgBorderRadius"
+                  @input="cf1Items[selectedElement.element.itemIndex].imgBorderRadius = $event.target.value ? Number($event.target.value) : null; updateCf1()"
                 />
                 <span class="cf1-size-unit">px</span>
               </div>
@@ -893,8 +897,8 @@
                     type="number"
                     class="prop-input cf1-size-input"
                     placeholder="0"
-                    :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderWidth"
-                    @input="cf1Items[selectedElement.element.itemIndex].imageBorderWidth = $event.target.value ? Number($event.target.value) : null; updateCf1()"
+                    :value="cf1Items[selectedElement.element.itemIndex]?.imgBorderWidth"
+                    @input="cf1Items[selectedElement.element.itemIndex].imgBorderWidth = $event.target.value ? Number($event.target.value) : null; updateCf1()"
                   />
                   <span class="cf1-size-unit">px</span>
                 </div>
@@ -904,15 +908,15 @@
                     <input
                       type="color"
                       class="prop-color"
-                      :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderColor || '#000000'"
-                      @input="cf1Items[selectedElement.element.itemIndex].imageBorderColor = $event.target.value; updateCf1()"
+                      :value="cf1Items[selectedElement.element.itemIndex]?.imgBorderColor || '#000000'"
+                      @input="cf1Items[selectedElement.element.itemIndex].imgBorderColor = $event.target.value; updateCf1()"
                     />
                     <input
                       type="text"
                       class="prop-input color-text"
                       placeholder="#000000"
-                      :value="cf1Items[selectedElement.element.itemIndex]?.imageBorderColor"
-                      @input="cf1Items[selectedElement.element.itemIndex].imageBorderColor = $event.target.value; updateCf1()"
+                      :value="cf1Items[selectedElement.element.itemIndex]?.imgBorderColor"
+                      @input="cf1Items[selectedElement.element.itemIndex].imgBorderColor = $event.target.value; updateCf1()"
                     />
                   </div>
                 </div>
@@ -1694,10 +1698,10 @@ const pvFpBtnLinkTypes   = ref([])
 
 // PV_CUSTOM_FRAME1
 const cf1Items           = ref([
-  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-  { title: '', description: '', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+  { title: '', description: '', imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
 ])
 const cf1Uploading = ref([false, false, false, false])
 
@@ -1718,9 +1722,9 @@ const carouselWallImages = computed(() =>
 const isUploadingCarouselWall = ref(false)
 const carouselWallHeight = ref(600)
 const carouselDeviceSlots = [
-  { key: 'srcDesktop', label: '🖥 電腦' },
-  { key: 'srcTablet',  label: '📱 平板' },
-  { key: 'srcMobile',  label: '📱 手機' },
+  { key: 'desktopSrc', idKey: 'desktopId', label: '🖥 電腦' },
+  { key: 'tabletSrc',  idKey: 'tabletId',  label: '📱 平板' },
+  { key: 'mobileSrc',  idKey: 'mobileId',  label: '📱 手機' },
 ]
 const carouselWallUploadingSlot = ref(null)
 const carouselWallAutoPlay = ref(true)
@@ -1765,6 +1769,7 @@ const footerBgColor = ref('#2d2d2d')
 const footerTextColor = ref('#ffffff')
 const footerAddress = ref('')
 const footerPhone = ref('')
+const footerBrandName = ref('')
 const isUploadingFooterLogo = ref(false)
 
 const updateFooterStyle = () => {
@@ -1777,6 +1782,11 @@ const updateFooterContact = () => {
   if (!props.selectedFrame?.data) return
   props.selectedFrame.data.tenantAddress = footerAddress.value
   props.selectedFrame.data.tenantPhone   = footerPhone.value
+}
+
+const updateFooterBrandName = () => {
+  if (!props.selectedFrame?.data) return
+  props.selectedFrame.data.brandName = footerBrandName.value
 }
 
 const handleUploadFooterLogo = async () => {
@@ -2037,6 +2047,7 @@ watch(() => props.selectedFrame, (newVal) => {
     footerTextColor.value = newVal.data?.footerTextColor || '#ffffff'
     footerAddress.value   = newVal.data?.tenantAddress   || ''
     footerPhone.value     = newVal.data?.tenantPhone     || ''
+    footerBrandName.value = newVal.data?.brandName       || newVal.data?.tenantName || ''
   }
   if (newVal?.type === 'INDEX_DONATION') {
     const bg = newVal.data?.donationBgColor || 'linear-gradient(135deg, #8b7355 0%, #a0826d 100%)'
@@ -2052,10 +2063,10 @@ watch(() => props.selectedFrame, (newVal) => {
   }
   if (newVal?.type === 'PV_CUSTOM_FRAME1') {
     const DEFAULT = [
-      { title: '宮廟地圖',     description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-      { title: '靈籤司',       description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-      { title: '主平台服務',   description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-      { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '宮廟地圖',     description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '靈籤司',       description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '主平台服務',   description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',          imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
     ]
     const src = newVal.data?.items || []
     cf1Items.value = DEFAULT.map((def, i) => ({ ...def, ...(src[i] || {}) }))
@@ -2071,10 +2082,10 @@ watch(() => props.selectedElement, (newVal) => {
   if (newVal?.element?.type === 'CF1_ITEM') {
     const frame = newVal.frame
     const DEFAULT = [
-      { title: '宮廟地圖',     description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-      { title: '靈籤司',       description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-      { title: '主平台服務',   description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
-      { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',          image: null, imageId: null, imageWidth: null, imageHeight: null, imageBorderRadius: null, imageBorderWidth: null, imageBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '宮廟地圖',     description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '靈籤司',       description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '主平台服務',   description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
+      { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',          imgSrc: null, imgId: null, imgWidth: null, imgHeight: null, imgBorderRadius: null, imgBorderWidth: null, imgBorderColor: null, padding: { pc: { top: 0, right: 0, bottom: 0, left: 0 }, tablet: { top: 0, right: 0, bottom: 0, left: 0 }, phone: { top: 0, right: 0, bottom: 0, left: 0 } } },
     ]
     const src = frame?.data?.items || []
     cf1Items.value = DEFAULT.map((def, i) => ({ ...def, ...(src[i] || {}) }))
@@ -2413,7 +2424,7 @@ const handleUploadCf1Image = async (index) => {
       cf1Uploading.value[index] = true
       const uploaded = await pageEditorStore.uploadImage(file)
       if (!uploaded) return
-      cf1Items.value[index] = { ...cf1Items.value[index], image: uploaded.fileUrl, imageId: uploaded.id }
+      cf1Items.value[index] = { ...cf1Items.value[index], imgSrc: uploaded.fileUrl, imgId: uploaded.id }
       updateCf1()
     } catch (err) {
       alert('圖片上傳失敗：' + err.message)
@@ -2456,7 +2467,7 @@ const handleUploadCarouselWall = async () => {
       for (const file of files) {
         const uploadedFile = await pageEditorStore.uploadImage(file)
         if (!uploadedFile) continue
-        props.selectedFrame.data.caroiselWallImgs.push({ id: uploadedFile.id, src: uploadedFile.fileUrl, srcDesktop: uploadedFile.fileUrl })
+        props.selectedFrame.data.caroiselWallImgs.push({ desktopId: uploadedFile.id, desktopSrc: uploadedFile.fileUrl })
       }
     } catch (error) {
       alert('輪播牆圖片上傳失敗: ' + error.message)
@@ -2474,7 +2485,7 @@ const removeCarouselWallImage = (index) => {
   imgs.splice(index, 1)
 }
 
-const uploadCarouselWallDeviceImg = (index, key) => {
+const uploadCarouselWallDeviceImg = (index, key, idKey) => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
@@ -2488,7 +2499,7 @@ const uploadCarouselWallDeviceImg = (index, key) => {
       const imgs = props.selectedFrame?.data?.caroiselWallImgs
       if (imgs && imgs[index]) {
         imgs[index][key] = uploaded.fileUrl
-        if (!imgs[index].src) imgs[index].src = uploaded.fileUrl
+        if (idKey) imgs[index][idKey] = uploaded.id
       }
     } catch (err) {
       alert('上傳失敗：' + err.message)
@@ -2499,10 +2510,11 @@ const uploadCarouselWallDeviceImg = (index, key) => {
   input.click()
 }
 
-const removeCarouselWallDeviceImg = (index, key) => {
+const removeCarouselWallDeviceImg = (index, key, idKey) => {
   const imgs = props.selectedFrame?.data?.caroiselWallImgs
   if (imgs && imgs[index]) {
     delete imgs[index][key]
+    if (idKey) delete imgs[index][idKey]
   }
 }
 

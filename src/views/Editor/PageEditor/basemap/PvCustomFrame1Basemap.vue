@@ -22,7 +22,7 @@
               <div class="pv-cf1-desc" v-html="item0.description"></div>
             </div>
             <div class="pv-cf1-hero-img" :style="imgStyle0">
-              <img v-if="item0.image" :src="item0.image" :alt="item0.title" class="pv-cf1-img" />
+              <img v-if="item0.imgSrc" :src="item0.imgSrc" :alt="item0.title" class="pv-cf1-img" />
               <div v-else class="pv-cf1-img-placeholder">
                 <span>{{ isEditMode ? '點擊卡片進行編輯' : '' }}</span>
               </div>
@@ -65,7 +65,7 @@
             <div class="pv-cf1-desc" v-html="item1.description"></div>
           </div>
           <div class="pv-cf1-side-img" :style="imgStyle1">
-            <img v-if="item1.image" :src="item1.image" :alt="item1.title" class="pv-cf1-img" />
+            <img v-if="item1.imgSrc" :src="item1.imgSrc" :alt="item1.title" class="pv-cf1-img" />
             <div v-else class="pv-cf1-img-placeholder pv-cf1-img-placeholder--side">
               <span>{{ isEditMode ? '點擊卡片進行編輯' : '' }}</span>
             </div>
@@ -108,10 +108,10 @@ const selectItem = (idx) => {
 }
 
 const DEFAULT_ITEMS = [
-  { title: '宮廟地圖',   description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', image: null, imageId: null },
-  { title: '靈籤司',     description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              image: null, imageId: null },
-  { title: '主平台服務', description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          image: null, imageId: null },
-  { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',      image: null, imageId: null },
+  { title: '宮廟地圖',   description: '整合全台宮廟資訊，提供地理搜尋、神明分類、活動查詢等多元曝光管道。', imgSrc: null, imgId: null },
+  { title: '靈籤司',     description: '解籤後智能推薦宮廟，將線上求籤信眾精準導流至實地參拜。',              imgSrc: null, imgId: null },
+  { title: '主平台服務', description: '匯聚宮廟完整資訊，成為信眾探索文化、查詢活動的一站式入口。',          imgSrc: null, imgId: null },
+  { title: '宮廟網站建置', description: '協助建置專屬數位門戶，提供客製化功能與獨立經營數位社群能力。',      imgSrc: null, imgId: null },
 ]
 
 const getItem = (index) => computed(() => {
@@ -144,10 +144,10 @@ const cardPadStyle3 = getCardPadStyle(item3)
 
 const getImgStyle = (item) => computed(() => {
   const style = {}
-  if (item.value.imageWidth)                style.width        = item.value.imageWidth + 'px'
-  if (item.value.imageHeight)               style.height       = item.value.imageHeight + 'px'
-  if (item.value.imageBorderRadius != null) style.borderRadius = item.value.imageBorderRadius + 'px'
-  if (item.value.imageBorderWidth)          style.border       = `${item.value.imageBorderWidth}px solid ${item.value.imageBorderColor || '#000000'}`
+  if (item.value.imgWidth)                style.width        = item.value.imgWidth + 'px'
+  if (item.value.imgHeight)               style.height       = item.value.imgHeight + 'px'
+  if (item.value.imgBorderRadius != null) style.borderRadius = item.value.imgBorderRadius + 'px'
+  if (item.value.imgBorderWidth)          style.border       = `${item.value.imgBorderWidth}px solid ${item.value.imgBorderColor || '#000000'}`
   return style
 })
 

@@ -28,6 +28,7 @@ const navItems = computed(() => [
   { label: '數位光明燈管理', path: `/${templeId.value}/lanterns` },
   { label: '方案與帳單',   path: `/${templeId.value}/billing` },
   { label: '廣告管理',     path: `/${templeId.value}/ads` },
+  { label: '網站模板管理', path: `/${templeId.value}/template-management` },
   { label: '帳號管理',     path: `/${templeId.value}/account-management` },
 ])
 

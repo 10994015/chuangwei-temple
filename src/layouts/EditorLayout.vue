@@ -16,6 +16,7 @@
         :has-unsaved-changes="hasUnsavedChanges"
         :current-page-slug="pageEditorStore.currentPageSlug"
         :current-device="currentDevice"
+        :is-backend-template-mode="isAnyTemplateMode"
         @locale-change="handleLocaleChange"
         @change-page="handlePageChange"
         @settings="handleSettings"
@@ -31,6 +32,18 @@
 
       <div v-if="pageEditorStore.isLoading" class="loading-overlay">
         <div class="loading-spinner">{{ t('editorLayout.loading') }}</div>
+      </div>
+
+      <!-- 後台模板編輯模式標記 -->
+      <div v-if="isBackendTemplateMode" class="backend-template-notice">
+        <span>🔧 後台模板編輯模式 — 目前編輯的是模板本身，非宮廟頁面</span>
+        <button @click="router.back()" class="close-btn">← 返回模板管理</button>
+      </div>
+
+      <!-- 前台模板編輯模式標記 -->
+      <div v-if="isFrontendTemplateMode" class="frontend-template-notice">
+        <span>✏️ 前台模板編輯模式 — 目前編輯的是您自己的模板內容</span>
+        <button @click="router.back()" class="close-btn">← 返回模板詳情</button>
       </div>
 
       <transition name="notice-slide">
@@ -73,6 +86,7 @@ import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
 import PublishDialog from '@/components/PublishDialog.vue'
 import { useI18n } from 'vue-i18n'
 import { fontGoogleMap, loadGoogleFont } from '@/composables/useGoogleFont'
+import axiosClient from '@/axios'
 
 const { locale, t } = useI18n()
 
@@ -108,6 +122,10 @@ const isPreviewRoute = computed(() => route.name === 'app.temple.preview')
 const isTemplatePreviewMode = computed(() =>
   route.name === 'app.temple.preview' && !!route.query.templateId
 )
+
+const isBackendTemplateMode  = computed(() => route.query.backendTemplateMode  === 'true')
+const isFrontendTemplateMode = computed(() => route.query.frontendTemplateMode === 'true')
+const isAnyTemplateMode      = computed(() => isBackendTemplateMode.value || isFrontendTemplateMode.value)
 
 const websiteSettings = computed(() => pageEditorStore.websiteSettings)
 
@@ -186,6 +204,33 @@ const getTempleId = () => route.params.templeId
 onMounted(async () => {
   if (isPreviewRoute.value) return
 
+  // ── 前台模板編輯模式：不需要 templeId，直接從 /frontend/web-template/{id}/all-draft-page 載入 ──
+  if (isFrontendTemplateMode.value) {
+    const tplId = route.query.templateId
+    if (!tplId) { pageEditorStore.error = '缺少模板 ID'; return }
+    pageEditorStore.resetStore()
+    pageEditorStore.locales = [{ locale: 'ZH-TW', label: '繁體中文' }]
+    const fLocale = route.query.locale || 'ZH-TW'
+    pageEditorStore.currentLocale = fLocale
+    locale.value = fLocale
+    try {
+      const res = await axiosClient.get(`/frontend/web-template/${tplId}/all-draft-page`)
+      const pages = res.data?.data || []
+      pages.forEach(p => { pageEditorStore.pageData[p.slug] = { data: p.contentJson || [] } })
+      const initialSlug = pages[0]?.slug || 'home'
+      pageEditorStore.currentPageSlug = initialSlug
+      await pageEditorStore.fetchFrontendTemplateSystemFrames(tplId, initialSlug)
+      router.replace({
+        query: { frontendTemplateMode: 'true', templateId: tplId, slug: initialSlug, locale: fLocale }
+      })
+      markAllClean()
+    } catch (e) {
+      console.error('前台模板載入失敗:', e)
+      pageEditorStore.error = '前台模板載入失敗'
+    }
+    return
+  }
+
   const templeId = getTempleId()
 
   if (!templeId) {
@@ -208,6 +253,29 @@ onMounted(async () => {
   try {
     await loadWebsiteSettings()
     await pageEditorStore.fetchLocales(templeId)
+
+    // ── 後台模板編輯模式：從 /backend/web-template/{id}/all-draft-page 載入 ──
+    if (isBackendTemplateMode.value) {
+      const tplId = route.query.templateId
+      const res   = await axiosClient.get(`/backend/web-template/${tplId}/all-draft-page`)
+      const pages = res.data?.data || []
+      pages.forEach(p => {
+        pageEditorStore.pageData[p.slug] = { data: p.contentJson || [] }
+      })
+      const initialSlug = pages[0]?.slug || 'home'
+      pageEditorStore.currentPageSlug = initialSlug
+      await pageEditorStore.fetchTemplateSystemFrames(tplId, initialSlug)
+      router.replace({
+        query: {
+          backendTemplateMode: 'true',
+          templateId: tplId,
+          slug:   initialSlug,
+          locale: pageEditorStore.currentLocale,
+        }
+      })
+      markAllClean()
+      return
+    }
 
     const templateId = route.query.templateId
     const BLANK_TEMPLATE_ID = 'blank-template'
@@ -263,10 +331,17 @@ onMounted(async () => {
 // ==================== 工具列事件處理 ====================
 
 const handlePageChange = async (slug) => {
-  const templeId = getTempleId()
-  if (!templeId || !slug) return
+  if (!slug) return
   router.replace({ query: { ...route.query, slug, locale: pageEditorStore.currentLocale } })
   await pageEditorStore.switchPageWithLocale(slug, pageEditorStore.currentLocale)
+  if (isFrontendTemplateMode.value) {
+    await pageEditorStore.fetchFrontendTemplateSystemFrames(route.query.templateId, slug)
+  } else if (isBackendTemplateMode.value) {
+    await pageEditorStore.fetchTemplateSystemFrames(route.query.templateId, slug)
+  } else {
+    const templeId = getTempleId()
+    if (templeId) await pageEditorStore.fetchSystemFrames(templeId, slug)
+  }
   markClean(slug)
 }
 
@@ -336,6 +411,53 @@ const handlePreview = () => {
 }
 
 const handleSave = async () => {
+  // 前台模板編輯模式：呼叫 PATCH /frontend/web-template/{id}/all-draft-page
+  if (isFrontendTemplateMode.value) {
+    const templateId = route.query.templateId
+    try {
+      const allPageContentJson = Object.entries(pageEditorStore.pageData).map(([slug, val]) => ({
+        slug,
+        contentJson: val.data || [],
+      }))
+      const res = await axiosClient.patch(`/frontend/web-template/${templateId}/all-draft-page`, {
+        allPageContentJson,
+      })
+      if (res.data?.statusCode === 200) {
+        alert('模板草稿已儲存！')
+        markAllClean()
+      } else {
+        alert('儲存失敗：' + (res.data?.message || '未知錯誤'))
+      }
+    } catch (e) {
+      alert('儲存失敗：' + (e.response?.data?.message || e.message))
+    }
+    return
+  }
+
+  // 後台模板編輯模式：呼叫 PATCH /backend/web-template/{id}/all-draft-page
+  if (isBackendTemplateMode.value) {
+    const templateId = route.query.templateId
+    try {
+      const allPageContentJson = Object.entries(pageEditorStore.pageData).map(([slug, val]) => ({
+        slug,
+        contentJson: val.data || [],
+      }))
+      const res = await axiosClient.patch(`/backend/web-template/${templateId}/all-draft-page`, {
+        deleteFileIds: [],
+        allPageContentJson,
+      })
+      if (res.data?.statusCode === 200) {
+        alert('模板草稿已儲存！')
+        markAllClean()
+      } else {
+        alert('儲存失敗：' + (res.data?.message || '未知錯誤'))
+      }
+    } catch (e) {
+      alert('儲存失敗：' + (e.response?.data?.message || e.message))
+    }
+    return
+  }
+
   try {
     const success = await pageEditorStore.saveCurrentPage()
     if (success) {
@@ -458,6 +580,56 @@ const handleCancelPublish = () => {
   font-weight: 500;
   color: #333;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.backend-template-notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  background: #fff3e0;
+  border-bottom: 2px solid #E8572A;
+  color: #b45309;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 100;
+
+  .close-btn {
+    background: none;
+    border: 1px solid #d97706;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #b45309;
+    cursor: pointer;
+    padding: 4px 12px;
+    transition: background 0.15s;
+    &:hover { background: #fde68a; }
+  }
+}
+
+.frontend-template-notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  background: #ecfdf5;
+  border-bottom: 2px solid #10b981;
+  color: #065f46;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 100;
+
+  .close-btn {
+    background: none;
+    border: 1px solid #10b981;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #065f46;
+    cursor: pointer;
+    padding: 4px 12px;
+    transition: background 0.15s;
+    &:hover { background: #d1fae5; }
+  }
 }
 
 .template-notice {

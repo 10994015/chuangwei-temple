@@ -75,22 +75,24 @@
     
     <div class="toolbar-right">
       <button class="btn btn-icon" @click="handleSettings">{{ t('editorToolbar.settings') }}</button>
-      <button class="btn btn-icon" @click="handleSelectTemplate">{{ t('editorToolbar.selectTemplate') }}</button>
-      <button class="btn btn-icon" @click="handleUpgrade">{{ t('editorToolbar.upgrade') }}</button>
+      <button v-if="!isBackendTemplateMode" class="btn btn-icon" @click="handleSelectTemplate">{{ t('editorToolbar.selectTemplate') }}</button>
+      <button v-if="!isBackendTemplateMode" class="btn btn-icon" @click="handleUpgrade">{{ t('editorToolbar.upgrade') }}</button>
       <div class="toolbar-divider"></div>
       <button class="btn btn-icon" @click="handlePreview">{{ t('editorToolbar.preview') }}</button>
       <button class="btn btn-icon" @click="handleSave">{{ t('editorToolbar.saveDraft') }}</button>
-      <button class="btn btn-icon btn-danger" @click="handleDelete">{{ t('editorToolbar.deleteDraft') }}</button>
-      <div class="toolbar-divider"></div>
-      <button
-        class="btn btn-icon btn-secondary"
-        @click="handleGoToWebsite"
-        :disabled="!domainName"
-        :title="domainName || t('editorToolbar.noWebsiteUrl')"
-      >
-        {{ t('editorToolbar.goToWebsite') }}
-      </button>
-      <button class="btn btn-primary" @click="handlePublish">{{ t('editorToolbar.publish') }}</button>
+      <button v-if="!isBackendTemplateMode" class="btn btn-icon btn-danger" @click="handleDelete">{{ t('editorToolbar.deleteDraft') }}</button>
+      <template v-if="!isBackendTemplateMode">
+        <div class="toolbar-divider"></div>
+        <button
+          class="btn btn-icon btn-secondary"
+          @click="handleGoToWebsite"
+          :disabled="!domainName"
+          :title="domainName || t('editorToolbar.noWebsiteUrl')"
+        >
+          {{ t('editorToolbar.goToWebsite') }}
+        </button>
+        <button class="btn btn-primary" @click="handlePublish">{{ t('editorToolbar.publish') }}</button>
+      </template>
     </div>
   </header>
 </template>
@@ -126,6 +128,10 @@ const props = defineProps({
   currentDevice: {
     type: String,
     default: 'desktop'
+  },
+  isBackendTemplateMode: {
+    type: Boolean,
+    default: false
   }
 })
 

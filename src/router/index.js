@@ -89,8 +89,11 @@ const router = createRouter({
                 isCustomerAccount: true
               }
             },
-            { path: 'orders', name: 'app.cms.customer-orders', component: () => import('@/views/Customer/OrdersView.vue'), meta: { title: '訂單紀錄', requiresAuth: true } },
-            { path: 'cart',   name: 'app.cms.customer-cart',   component: () => import('@/views/Customer/CartView.vue'),   meta: { title: '購物車',  requiresAuth: true } },
+            { path: 'orders',              name: 'app.cms.customer-orders',              component: () => import('@/views/Customer/OrdersView.vue'),                     meta: { title: '訂單紀錄',    requiresAuth: true } },
+            { path: 'cart',               name: 'app.cms.customer-cart',               component: () => import('@/views/Customer/CartView.vue'),                      meta: { title: '購物車',      requiresAuth: true } },
+            { path: 'template-management',              name: 'app.cms.customer-template-management', component: () => import('@/views/Customer/CustomerTemplateManagementView.vue'), meta: { title: '網站模板管理', requiresAuth: true } },
+            { path: 'template-management/create',      name: 'app.cms.customer-template-create',     component: () => import('@/views/Customer/CustomerTemplateFormView.vue'),       meta: { title: '新建模板',     requiresAuth: true } },
+            { path: 'template-management/:templateId', name: 'app.cms.customer-template-detail',     component: () => import('@/views/Customer/CustomerTemplateDetailView.vue'),    meta: { title: '模板詳細資訊', requiresAuth: true } },
           ]
         },
 
@@ -122,6 +125,11 @@ const router = createRouter({
             { path: 'news/create',              name: 'app.temple.news-create',    component: () => import('@/views/Temple/NewsCreateView.vue') },
             { path: 'news/:newsId/detail',      name: 'app.temple.news-detail',    component: () => import('@/views/Temple/NewsDetailView.vue') },
             { path: 'news/:newsId/edit',        name: 'app.temple.news-edit',      component: () => import('@/views/Temple/NewsEditView.vue') },
+
+            // ── 網站模板管理 ──
+            { path: 'template-management',              name: 'app.temple.template-management',  component: () => import('@/views/Temple/TemplateManagementView.vue'), meta: { title: '網站模板管理', requiresAuth: true } },
+            { path: 'template-management/create',      name: 'app.temple.template-create',     component: () => import('@/views/Temple/TemplateFormView.vue'),          meta: { title: '建立模板',     requiresAuth: true } },
+            { path: 'template-management/:templateId', name: 'app.temple.template-detail',     component: () => import('@/views/Temple/TemplateDetailView.vue'),         meta: { title: '模板詳細資訊', requiresAuth: true } },
 
             // ── 帳號管理 ──
             { path: 'account-management',             name: 'app.temple.account-management', component: () => import('@/views/Temple/AccountManagementView.vue'), meta: { title: '帳號管理',     requiresAuth: true } },
@@ -194,6 +202,12 @@ const router = createRouter({
           name: 'app.temple.page-editor',
           component: PageEditor,
           meta: { title: '頁面編輯器', requiresAuth: true }
+        },
+        {
+          path: 'frontend-template',
+          name: 'app.cms.frontend-template-editor',
+          component: PageEditor,
+          meta: { title: '前台模板編輯器', requiresAuth: true }
         },
         {
           path: ':templeId/website-settings',

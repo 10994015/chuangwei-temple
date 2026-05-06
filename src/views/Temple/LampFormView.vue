@@ -9,8 +9,8 @@
     <div class="form-card">
       <h2 class="form-title">新增燈種</h2>
 
-      <!-- 燈種名稱 / 項目 / 服務類別 -->
-      <div class="form-row form-row-3">
+      <!-- 燈種名稱 / 服務項目 -->
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">燈種名稱 <span class="required">*</span></label>
           <input v-model="form.nameZhTw" class="form-input" :class="{ error: errors.nameZhTw }" placeholder="請輸入燈種名稱" />
@@ -27,6 +27,10 @@
           </div>
           <span v-if="errors.itemId" class="error-msg">{{ errors.itemId }}</span>
         </div>
+      </div>
+
+      <!-- 服務類別 / 關聯活動 -->
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">服務類別 <span class="required">*</span></label>
           <div class="input-with-btn">
@@ -44,14 +48,14 @@
           </div>
           <span v-if="errors.categoryId" class="error-msg">{{ errors.categoryId }}</span>
         </div>
-      </div>
-
-      <!-- 關聯活動 / 標籤類別 -->
-      <div class="form-row">
         <div class="form-group">
           <label class="form-label">關聯活動</label>
           <MultiSelectTag v-model="form.eventIds" :options="events" placeholder="點擊選擇活動..." />
         </div>
+      </div>
+
+      <!-- 標籤類別 / 上架時間 -->
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">標籤類別</label>
           <div class="input-with-btn">
@@ -64,14 +68,14 @@
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- 上架時間 / 下架時間 / 是否開發票 -->
-      <div class="form-row form-row-3">
         <div class="form-group">
           <label class="form-label">上架時間</label>
           <input v-model="form.publishAt" type="datetime-local" class="form-input" />
         </div>
+      </div>
+
+      <!-- 下架時間 / 是否開發票 -->
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">下架時間</label>
           <input v-model="form.unpublishAt" type="datetime-local" class="form-input" />

@@ -115,6 +115,46 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     }
   }
 
+  const fetchTemplateSystemFrames = async (templateId, slug) => {
+    if (!templateId || !slug) return []
+
+    try {
+      const response = await axiosClient.get(`/backend/web-template/${templateId}/draft-page/${slug}/system-frame`)
+      const result = response.data
+
+      if (result.statusCode === 200 && Array.isArray(result.data)) {
+        systemFrames.value[slug] = result.data
+        return result.data
+      }
+
+      throw new Error(result.message || '載入模板系統框架失敗')
+    } catch (err) {
+      console.error(`載入模板系統框架失敗 (${slug}):`, err)
+      systemFrames.value[slug] = []
+      return []
+    }
+  }
+
+  const fetchFrontendTemplateSystemFrames = async (templateId, slug) => {
+    if (!templateId || !slug) return []
+
+    try {
+      const response = await axiosClient.get(`/frontend/web-template/${templateId}/draft-page/${slug}/system-frame`)
+      const result = response.data
+
+      if (result.statusCode === 200 && Array.isArray(result.data)) {
+        systemFrames.value[slug] = result.data
+        return result.data
+      }
+
+      throw new Error(result.message || '載入前台模板系統框架失敗')
+    } catch (err) {
+      console.error(`載入前台模板系統框架失敗 (${slug}):`, err)
+      systemFrames.value[slug] = []
+      return []
+    }
+  }
+
   /**
    * GET /api/tenant/{tid}/web-site/all-draft-page
    */
@@ -785,6 +825,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     isTemplateMode,
     fetchLocales,
     fetchSystemFrames,
+    fetchTemplateSystemFrames,
+    fetchFrontendTemplateSystemFrames,
     fetchAllPages,
     saveAllPages,
     saveCurrentPage,

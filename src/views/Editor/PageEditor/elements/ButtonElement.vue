@@ -66,7 +66,7 @@ const ensureUnit = (value, defaultValue) => {
 .element-button {
   display: inline-block;
   border-radius: 6px;
-  text-decoration: none;
+  text-decoration: none !important;
   font-weight: 500;
   transition: all 0.3s ease;
   cursor: pointer;

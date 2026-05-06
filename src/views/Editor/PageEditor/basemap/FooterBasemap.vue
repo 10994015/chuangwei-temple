@@ -6,7 +6,7 @@
         <div class="footer-column brand-column">
           <div class="footer-logo">
             <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="footer-logo-img" />
-            <h3 v-else class="footer-title">{{ displayName }}</h3>
+            <h3 v-if="displayName" class="footer-title">{{ displayName }}</h3>
           </div>
         </div>
         
@@ -70,7 +70,7 @@ const props = defineProps({
 
 const logoSrc = computed(() => props.logoImgSrc || null)
 
-const displayName    = computed(() => props.tenantName    || props.brandName || '宮廟名稱')
+const displayName    = computed(() => props.tenantName    || props.brandName || '')
 const displayPhone   = computed(() => props.tenantPhone   || null)
 const displayAddress = computed(() => props.tenantAddress || null)
 const displayEmail   = computed(() => props.tenantEmail   || null)

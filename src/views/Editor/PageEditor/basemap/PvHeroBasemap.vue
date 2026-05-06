@@ -11,7 +11,10 @@
           v-for="(src, i) in clonedImages"
           :key="i"
           class="pv-slide"
-          :class="{ 'is-active': i === currentIndex + 2 }"
+          :class="{
+            'is-active': i === (isSingle ? currentIndex : currentIndex + 2),
+            'is-single': isSingle,
+          }"
           :style="{ width: slideWidth + 'px' }"
         >
           <img :src="src" :alt="`輪播圖片 ${i + 1}`" class="pv-img" />
@@ -69,9 +72,9 @@ const props = defineProps({
 
 const getDeviceSrc = (img, device) => {
   if (typeof img === 'string') return img
-  if (device === 'mobile') return img.srcMobile || img.srcTablet || img.srcDesktop || img.src
-  if (device === 'tablet') return img.srcTablet || img.srcDesktop || img.src
-  return img.srcDesktop || img.src
+  if (device === 'mobile') return img.mobileSrc || img.tabletSrc || img.desktopSrc
+  if (device === 'tablet') return img.tabletSrc || img.desktopSrc
+  return img.desktopSrc
 }
 
 const currentIndex  = ref(0)
@@ -85,8 +88,10 @@ const SIDE_RATIO = 0.10
 
 const carouselHeight = computed(() => props.carouselWallHeight || 600)
 
+const isSingle = computed(() => displayImages.value.length <= 1)
+
 const sideRatio = computed(() => viewportWidth.value <= 768 ? 0.14 : SIDE_RATIO)
-const sidePx = computed(() => Math.floor(viewportWidth.value * sideRatio.value))
+const sidePx = computed(() => isSingle.value ? 0 : Math.floor(viewportWidth.value * sideRatio.value))
 
 const displayImages = computed(() => {
   const imgs = props.caroiselWallImgs
@@ -236,6 +241,14 @@ onUnmounted(() => {
 
   &.is-active {
     opacity: 1;
+  }
+
+  &.is-single {
+    padding: 0;
+
+    .pv-img {
+      border-radius: 0;
+    }
   }
 }
 

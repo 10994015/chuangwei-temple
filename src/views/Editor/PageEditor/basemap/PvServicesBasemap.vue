@@ -5,7 +5,7 @@
       <!-- 標題列 -->
       <div class="pv-section-header">
         <div class="pv-header-left">
-          <h2 class="pv-section-title">{{ t('eventsBasemap.serviceTitle') || '精選結緣品' }}</h2>
+          <h2 class="pv-section-title">{{ t('eventsBasemap.serviceTitle') || '寶緣堂精選' }}</h2>
           <p class="pv-section-subtitle">{{ t('eventsBasemap.serviceSubtitle') || '線上預約宮廟服務，虔誠祈福更便利' }}</p>
         </div>
         <div class="pv-header-right">

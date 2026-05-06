@@ -256,6 +256,7 @@ const getBasemapKey = (basemap, index) => {
                 :current-locale="currentLocale"
                 :device="device"
                 class="relative-frame"
+                :class="{ 'relative-frame-sticky': frame.type === 'HEADER' || frame.type === 'PV_HEADER' }"
                 @select-element="handleSelectElement"
                 @update-element="handleUpdateElement"
                 @delete-element="handleDeleteElement"
@@ -548,6 +549,10 @@ const getBasemapKey = (basemap, index) => {
 .relative-frame {
   position: relative;
   z-index: 2;
+}
+
+.relative-frame-sticky {
+  z-index: 100;
 }
 
 .canvas-area::-webkit-scrollbar { width: 8px; }

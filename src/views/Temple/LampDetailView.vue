@@ -417,7 +417,7 @@ const handleSubmit = async () => {
 }
 
 const goBack = () => {
-  router.push({ name: 'app.temple.activity-management', params: { templeId: templeId.value }, query: { tab: 'lamp' } })
+  router.push({ name: 'app.temple.activity-management', params: { templeId: templeId.value }, query: { tab: 'lanterns' } })
 }
 
 onMounted(async () => {

@@ -141,7 +141,7 @@ export default {
     searchPlaceholder: '搜尋商品或服務名稱',
     searchBtn: '搜尋',
     batchSelect: '批次選擇',
-    sectionTitle: '精選結緣品',
+    sectionTitle: '寶緣堂精選',
     featuredTitle: '精選推薦',
     imagePlaceholder: '商品圖片',
   },
@@ -169,7 +169,7 @@ export default {
     tagRecommended: '推薦',
     tagImportant: '重要',
     tagCeremony: '法會',
-    serviceTitle: '精選結緣品',
+    serviceTitle: '寶緣堂精選',
     serviceSubtitle: '線上預約宮廟服務，虔誠祈福更便利',
   },
   basemapWrapper: {

@@ -3,7 +3,7 @@
     <div class="pv-container">
 
       <!-- 大標題 -->
-      <h2 class="pv-page-title">{{ t('productListBasemap.sectionTitle') || '精選結緣品' }}</h2>
+      <h2 class="pv-page-title">{{ t('productListBasemap.sectionTitle') || '寶緣堂精選' }}</h2>
 
       <!-- 篩選欄 -->
       <div class="pv-filter-bar">

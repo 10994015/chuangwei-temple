@@ -21,6 +21,7 @@ const navItems = [
   { label: '打卡', path: '/customer-account/checkin', icon: 'pin' },
   { label: '我的最愛宮廟', path: '/customer-account/favorites', icon: 'heart' },
   { label: '購物車', path: '/customer-account/cart', icon: 'shopping' },
+  { label: '網站模板管理', path: '/customer-account/template-management', icon: 'template' },
 ]
 
 const isActive = (path) => route.path === path
@@ -100,6 +101,10 @@ const handleLogout = async () => {
           <!-- shopping icon -->
           <svg v-else-if="item.icon === 'shopping'" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+          </svg>
+          <!-- template icon -->
+          <svg v-else-if="item.icon === 'template'" class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h5a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm9 0a1 1 0 011-1h3a1 1 0 011 1v2a1 1 0 01-1 1h-3a1 1 0 01-1-1v-2zm0 5a1 1 0 011-1h3a1 1 0 011 1v1a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1z" />
           </svg>
 
           <span class="nav-label">{{ item.label }}</span>

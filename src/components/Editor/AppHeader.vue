@@ -21,7 +21,7 @@ const fetchNavItems = async () => {
     const data = response.data?.data || {}
     headerLogoUrl.value    = data.headerImgUrl || ''
     headerTenantName.value = data.tenantName || data.temple_name || ''
-    navItems.value = (data.tabs || []).map(tab => ({ label: tab.label, path: `/${tab.slug}` }))
+    navItems.value = (data.tabs || []).map(tab => ({ label: tab.label, url: tab.url || `/${tab.slug}` }))
   } catch (err) {
     console.error('獲取導覽列失敗:', err)
   }
@@ -55,11 +55,21 @@ const templeRolesList = computed(() => authStore.templeRoles || [])
 // 是否有維運後台權限（systemPermissions 不為空）
 const hasOperationsAccess = computed(() => (authStore.systemPermissions || []).length > 0)
 
-// 處理導航點擊 — 原本 commented out，維持原邏輯
-const handleNavClick = (path) => {
-  console.log('導航至:', path)
-  // TODO: 實作路由導航
-  // router.push(path)
+// 處理導航點擊
+const handleNavClick = (url) => {
+  if (!url) return
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    window.open(url, '_blank')
+  } else {
+    const slug = url.replace(/^\//, '')
+    if (slug && currentTempleId.value) {
+      router.push({
+        name: 'app.temple.preview',
+        params: { templeId: currentTempleId.value },
+        query: { slug },
+      })
+    }
+  }
 }
 
 // 處理網站管理點擊（動態路徑）
@@ -183,10 +193,9 @@ watch(() => route.path, () => {
       <nav class="nav-menu desktop-only">
         <a
           v-for="item in navItems"
-          :key="item.path"
+          :key="item.url"
           class="nav-item"
-          :class="{ active: route.path === item.path }"
-          @click="handleNavClick(item.path)"
+          @click="handleNavClick(item.url)"
         >{{ item.label }}</a>
       </nav>
 
@@ -280,10 +289,9 @@ watch(() => route.path, () => {
       <nav class="mobile-nav">
         <a
           v-for="item in navItems"
-          :key="item.path"
+          :key="item.url"
           class="mobile-nav-item"
-          :class="{ active: route.path === item.path }"
-          @click="handleNavClick(item.path); closeMobileMenu()"
+          @click="handleNavClick(item.url); closeMobileMenu()"
         >
           <span>{{ item.label }}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

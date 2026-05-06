@@ -78,9 +78,9 @@ const props = defineProps({
 })
 
 const getDeviceSrc = (item, device) => {
-  if (device === 'mobile') return item.srcMobile || item.srcTablet || item.srcDesktop || item.src
-  if (device === 'tablet') return item.srcTablet || item.srcDesktop || item.src
-  return item.srcDesktop || item.src
+  if (device === 'mobile') return item.mobileSrc || item.tabletSrc || item.desktopSrc
+  if (device === 'tablet') return item.tabletSrc || item.desktopSrc
+  return item.desktopSrc
 }
 
 const heroStyle = computed(() => {
@@ -105,7 +105,6 @@ const normalizedSlides = computed(() => {
       titleFontSize: item.titleFontSize ?? 48,
       subtitleColor: item.subtitleColor || '#eeeeee',
       subtitleFontSize: item.subtitleFontSize ?? 20,
-      id: item.id
     }))
   }
   if (props.slides && props.slides.length > 0) return props.slides
